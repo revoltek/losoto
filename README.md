@@ -1,4 +1,1 @@
-losoto
-======
-
-LOFAR solutions tool
+LoSoTo: LOFAR solutions tool
