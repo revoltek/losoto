@@ -30,6 +30,10 @@ import tables
 
 
 def make_instrumentdb(gdsfilename, instrument_name, globaldb):
+    """ Create an instrumentdb named as gdsfilename.instrument_name
+    which is like the gds file but points to the "instrument" parmdb tables
+    inside each MS.
+    """
     instrumentdb_name = os.path.join(globaldb,
             os.path.splitext(os.path.basename(gdsfilename))[0]
             + os.path.extsep + instrument_name)
@@ -169,6 +173,7 @@ class ClassMakeHDF5:
 
     def load_gds(
         self,
+        # TODO: wht is this a list?
         gdsfiles,
         clusterdesc,
         globaldb='globaldb',
@@ -182,18 +187,14 @@ class ClassMakeHDF5:
         self.instrument_name = instrument_name
         self.globaldb = globaldb
 
-        try:
-            os.mkdir(globaldb)
-        except OSError:
-            pass
+        if not os.path.exists(globaldb):
+            os.makedirs(globaldb)
 
         self.instrumentdb_name_list = []
         for gdsfile in gdsfiles:
             instrumentdb_name = os.path.splitext(gdsfile)[0] \
                 + os.path.extsep + instrument_name
-            print instrumentdb_name
             if not os.path.exists(instrumentdb_name):
-                print gdsfile, instrument_name, globaldb
                 instrumentdb_name = make_instrumentdb(gdsfile,
                         instrument_name, globaldb)
             self.instrumentdb_name_list.append(instrumentdb_name)
