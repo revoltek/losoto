@@ -173,7 +173,7 @@ class ClassMakeHDF5:
 
     def load_gds(
         self,
-        # TODO: wht is this a list?
+        # TODO: why is this a list?
         gdsfiles,
         clusterdesc,
         globaldb='globaldb',
