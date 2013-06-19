@@ -4,11 +4,13 @@ This library have tools to deal with LOFAR solution tables.
 
 - fetches parmdb tables from the cluster and creates an hdf5 file
 - easy access to hdf5 file
-- solutions smoothing
-- solutions interpolation
-- set to zero solutions
-- clock/tec separation
-
+- set to zero solutions (step: RESET)
+- clock/tec separation (step: CLOCKTEC)
+- flag outliers (step: FLAG)
+- solutions smoothing (step: SMOOTH)
+- solutions interpolation (step: INTERP)
+- make some inspection plots (step: PLOT)
+- apply solutions (step: APPLY)
 
 .
 ├── ClassMakeHDF5.py: globaldb/hdf5 creator

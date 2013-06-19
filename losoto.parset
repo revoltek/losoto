@@ -1,5 +1,5 @@
 
-LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, write, plot, apply]
+LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
 
 LoSoTo.DirectionalGain.Enable = F
 LoSoTo.Phasors.Enable = F
@@ -42,13 +42,6 @@ LoSoTo.Steps.interpolate.Antenna = []
 LoSoTo.Steps.interpolate.Pol = []
 LoSoTo.Steps.interpolate.Time = True
 LoSoTo.Steps.interpolate.Freq = True
-
-
-LoSoTo.Steps.write.Operation = WRITE
-LoSoTo.Steps.write.SolType = Gain
-LoSoTo.Steps.write.Antenna = []
-LoSoTo.Steps.write.Pol = []
-LoSoTo.Steps.write.Filename = output.hdf5
 
 
 LoSoTo.Steps.plot.Operation = PLOT
