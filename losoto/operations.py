@@ -1,11 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Set of operations that LoSoTo can perform
 # Each operation is a function
 
 def reset( step, parset, H ):
    """Set specific solutions to 0 (phase, rotang) or 1 (amp)
    """
-   npixels = parset.getInt('.'.join(["ExpIon.Steps", step, "npixels"]), 100 )
-   extent = parset.getFloat('.'.join(["ExpIon.Steps", step, "extent"]), 0 )
    return H
 
 
@@ -49,14 +50,14 @@ def apply( step, parset, H ):
    """
    raise Exception('Not yet implemented.')
 
+   import sys, os
+   import ModColor
    import numpy as np
+   from progressbar import ProgressBar
+
+   import lofar.stationresponse as lsr
    from pyrap.tables import table
    import _FastApply
-   import numpy.linalg
-   import ModColor
-   import lofar.stationresponse as lsr
-   import sys, os
-   from progressbar import ProgressBar
    
    # parameters
    MS = parset.getString('.'.join(["LoSoTo.Steps", step, "MS"]), '' )
@@ -96,10 +97,10 @@ def apply( step, parset, H ):
        SS = Amp*np.exp(1j*Pha)
    elif Method=="Clock":
        raise Exception('Not yet implemented.')
-       SS = np.exp(1j*(2.*np.pi*ThisFreq*self.Clock*1e-9))
+       #SS = np.exp(1j*(2.*np.pi*ThisFreq*self.Clock*1e-9))
    elif Method=="ClockTEC":
        raise Exception('Not yet implemented.')
-       SS = np.exp(1j*(2.*np.pi*ThisFreq*self.Clock*1e-9)+1j*self.K*self.TEC/freq)
+       #SS = np.exp(1j*(2.*np.pi*ThisFreq*self.Clock*1e-9)+1j*self.K*self.TEC/freq)
 
    if ApplyBeam:
        pBAR = ProgressBar('white', block='=', empty=' ',Title="Beam Calc")

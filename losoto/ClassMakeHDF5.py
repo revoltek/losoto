@@ -1,31 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-# from datetime import *
+import sys, os, time, re
 from math import *
-import time
-import re
-# import atexit
 
-# import 3rd party modules
 import numpy
-# from pylab import *
 import scipy.optimize
 
-# import user modules
-# from files import *
-# from acalc import *
-# import sphere
 import lofar.parmdb
 import lofar.parameterset
 import pyrap.tables as pt
-# from mpfit import *
-# from error import *
-# import readms
-# import io
-# import parmdbmain
 import tables
 
 
@@ -49,6 +33,8 @@ def make_instrumentdb(gdsfilename, instrument_name, globaldb):
 
 
 def splitgds(gdsname, wd='', id='part'):
+    """Split gds file in multiple files
+    """
     ps = lofar.parameterset.parameterset(gdsname)
     clusterdesc = ps.getString('ClusterDesc')
     starttime = ps.getString('StartTime')
@@ -146,11 +132,11 @@ class ClassMakeHDF5:
         self.polarizations = self.hdf5.root.polarizations
         self.N_pol = len(self.polarizations)
 
-        self.phases = self.hdf5.root.phases
         self.flags = self.hdf5.root.flags
 
         for varname in [
             'amplitudes',
+            'phases',
             'Clock',
             'TEC',
             'TECfit',
