@@ -16,9 +16,9 @@ import losoto.ClassMakeHDF5
 import optparse
 opt = optparse.OptionParser(usage='%prog parset [default: losoto.parset]', version='%prog '+losoto._version.__version__)
 opt.add_option('-v', '--verbose', help='GO VERBOSE! (default=False)', action='store_true', default=False)
-opt.add_option('-d', '--gds', help='Comma separated list of gds files used to construct the globaldb', type='string', default=None)
-opt.add_option('-c', '--clusterdesc', help='Cluster desc file (needed if -d is active)', type='string', default=None)
-opt.add_option('-g', '--globaldb', help='Globaldb in hdf5 format', type='string', default=None)
+opt.add_option('-d', '--gds', help='Comma separated list of gds files used to construct the globaldb', type='string', default='')
+opt.add_option('-c', '--clusterdesc', help='Cluster desc file (needed if -d is active)', type='string', default='')
+opt.add_option('-g', '--globaldb', help='Globaldb in hdf5 format', type='string', default='')
 (options, args) = opt.parse_args()
 
 verb = options.verbose

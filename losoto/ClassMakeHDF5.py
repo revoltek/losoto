@@ -114,7 +114,7 @@ class ClassMakeHDF5:
 
     def load_globaldb(self, globaldb):
         self.globaldb = globaldb
-        self.hdf5 = tables.openFile(os.path.join(globaldb,'ionmodel.hdf5'), 'r+')
+        self.hdf5 = tables.openFile(globaldb, 'r+')
 
         self.stations = self.hdf5.root.stations.cols.name
         self.station_positions = self.hdf5.root.stations.cols.position
