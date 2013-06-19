@@ -2,26 +2,72 @@
 LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, write, plot, apply]
 
 LoSoTo.DirectionalGain.Enable = F
-LoSoTo.Gain.Enable = T
-LoSoTo.Rotation.Enable = F
-LoSoTo.CommonRotation.Enable = F
 LoSoTo.Phasors.Enable = F
+LoSoTo.SolType = Gain
 LoSoTo.Antenna = []
-LoSoTo.Polarizations = [XX, YY]
+LoSoTo.Pol = [XX, YY]
 
 
 LoSoTo.Steps.reset.Operation = RESET
+LoSoTo.Steps.reset.SolType = Gain
+LoSoTo.Steps.reset.Antenna = []
+LoSoTo.Steps.reset.Pol = []
+
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
+LoSoTo.Steps.clocktec.SolType = Gain
+LoSoTo.Steps.clocktec.Antenna = []
+LoSoTo.Steps.clocktec.Pol = []
+LoSoTo.Steps.clocktec.Algorithm = 
+
 
 LoSoTo.Steps.flag.Operation = FLAG
+LoSoTo.Steps.flag.SolType = Gain
+LoSoTo.Steps.flag.Antenna = []
+LoSoTo.Steps.flag.Pol = []
+LoSoTo.Steps.flag.Sigma = 5
+
 
 LoSoTo.Steps.smooth.Operation = SMOOTH
+LoSoTo.Steps.smooth.SolType = Gain
+LoSoTo.Steps.smooth.Antenna = []
+LoSoTo.Steps.smooth.Pol = []
+LoSoTo.Steps.smooth.FWHM.Time = 10
+LoSoTo.Steps.smooth.FWHM.Freq = 10
+
 
 LoSoTo.Steps.interpolate.Operation = INTERP
+LoSoTo.Steps.interpolate.SolType = Gain
+LoSoTo.Steps.interpolate.Antenna = []
+LoSoTo.Steps.interpolate.Pol = []
+LoSoTo.Steps.interpolate.Time = True
+LoSoTo.Steps.interpolate.Freq = True
+
 
 LoSoTo.Steps.write.Operation = WRITE
+LoSoTo.Steps.write.SolType = Gain
+LoSoTo.Steps.write.Antenna = []
+LoSoTo.Steps.write.Pol = []
+LoSoTo.Steps.write.Filename = output.hdf5
+
 
 LoSoTo.Steps.plot.Operation = PLOT
+LoSoTo.Steps.plot.SolType = Gain
+LoSoTo.Steps.plot.Antenna = []
+LoSoTo.Steps.plot.Pol = []
+
 
 LoSoTo.Steps.apply.Operation = APPLY
+LoSoTo.Steps.apply.SolType = Gain
+LoSoTo.Steps.apply.Antenna = []
+LoSoTo.Steps.apply.Pol = []
+LoSoTo.Steps.apply.MS = target.MS
+LoSoTo.Steps.apply.Beam = True
+LoSoTo.Steps.apply.InCol = DATA
+LoSoTo.Steps.apply.OutCol = CORRECTED_DATA
+LoSoTo.Steps.apply.Method = RawNearest
+
+
+
+
+

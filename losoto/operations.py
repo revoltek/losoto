@@ -13,27 +13,39 @@ def clocktec( step, parset ):
    """
    raise Exception('Not yet implemented.')
 
+
 def flag( step, parset ):
    """Flag outliers
    """
+   raise Exception('Not yet implemented.')
+
 
 def smooth( step, parset ):
    """Smooth solutions
    """
+   raise Exception('Not yet implemented.')
+
 
 def interp( step, parset ):
    """Interpolate solutions in freq/time
    """
+   raise Exception('Not yet implemented.')
+
 
 def write( step, parset ):
    """Write solutions back to an hdf5 file
    """
+   raise Exception('Not yet implemented.')
+
 
 def plot( step, parset ):
    """Make some inspection plots
    """
+   raise Exception('Not yet implemented.')
+
 
 def apply( step, parset ):
    """Apply solution to a specific MS
    """
+   raise Exception('Not yet implemented.')
 
