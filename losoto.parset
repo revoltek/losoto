@@ -1,0 +1,25 @@
+LoSoTo.Steps = [convert, settozero, clocktec, flag, smooth, interpolate, write, plot, apply]
+LoSoTo.DirectionalGain.Enable = F
+LoSoTo.Gain.Enable = T
+LoSoTo.Rotation.Enable = F
+LoSoTo.CommonRotation.Enable = F
+LoSoTo.Phasors.Enable = F
+LoSoTo.Antenna = []
+LoSoTo.Polarizations = [XX, YY]
+
+
+LoSoTo.Steps.flag.Operation = SETTOZERO
+
+LoSoTo.Steps.clocktec.Operation = CLOCKTEC
+
+LoSoTo.Steps.flag.Operation = FLAG
+
+LoSoTo.Steps.smooth.Operation = SMOOTH
+
+LoSoTo.Steps.interpolate.Operation = INTERP
+
+LoSoTo.Steps.write.Operation = WRITE
+
+LoSoTo.Steps.plot.Operation = PLOT
+
+LoSoTo.Steps.apply.Operation = APPLY
