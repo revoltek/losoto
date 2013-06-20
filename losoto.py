@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # Authors:
-# Cyril Tasse
 # Francesco de Gasperin
+# Cyril Tasse
 # Reinout van Weeren
+# Maaijke Mevius
+# Bas van der Tol
 
 import sys, os
 import lofar.parameterset

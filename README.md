@@ -1,5 +1,12 @@
 LoSoTo: LOFAR solutions tool
 
+Author:
+Francesco de Gasperin (overall project)
+Cyril Tasse (APPLY)
+Reinout Van Weeren (SMOOTH)
+Maaijke Mevius (CLOCKTEC)
+Bas van der Tol (CLOCKTEC)
+
 This library have tools to deal with LOFAR solution tables.
 
 - fetches parmdb tables from the cluster and creates an hdf5 file

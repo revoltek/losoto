@@ -7,6 +7,7 @@
 def reset( step, parset, H ):
    """Set specific solutions to 0 (phase, rotang) or 1 (amp)
    """
+   blank = parset.getString('.'.join(["LoSoTo.Steps", step, "Blank"]), '' )
    return H
 
 
@@ -41,7 +42,22 @@ def interp( step, parset, H ):
 def plot( step, parset, H ):
    """Make some inspection plots
    """
-   raise Exception('Not yet implemented.')
+   import matplotlib.pyplot as plt
+   import matplotlib.cm as cm
+   import numpy as np
+   plottype = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
+   if plottype == '2D':
+       for i, ant in enumerate(H.stations):
+           fig = plt.figure()
+           ax = plt.subplot(121)
+           p = ax.pcolor(H.freqs[:], H.times[:], H.amplitudes[:,:,i,0,0],\
+                   vmin=abs(H.amplitudes[:,:,i,0,0]).min(), vmax=abs(H.amplitudes[:,:,i,0,0]).max())
+           ax = plt.subplot(122)
+           p = ax.pcolor(H.freqs[:], H.times[:], H.phases[:,:,i,0,0], vmin=-2*np.pi, vmax=2*np.pi)
+           plt.savefig(ant+'.png')
+           print "Save "+ant+'.png'
+   if plottype == '1D':
+       raise Exception('Not yet implemented.')
    return H
 
 

@@ -134,6 +134,7 @@ class ClassMakeHDF5:
 
         self.flags = self.hdf5.root.flags
 
+        # e.g. amplitudes.shape: (2157, 244, 37, 1, 2) -> (time, freq, station, ?, pol)
         for varname in [
             'amplitudes',
             'phases',
