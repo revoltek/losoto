@@ -1,59 +1,59 @@
+# Example of LoSoTo parset
+# Includes with all possible options
 
 LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
 
 LoSoTo.DirectionalGain.Enable = F
-LoSoTo.Phasors.Enable = F
-LoSoTo.SolType = Gain
-LoSoTo.Antenna = []
-LoSoTo.Pol = [XX, YY]
+LoSoTo.SolTypes = [Amp, Phase, Clock, TEC]
+LoSoTo.Stations = []
+LoSoTo.Pols = [XX, YY]
 
 
 LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.SolType = Gain
-LoSoTo.Steps.reset.Antenna = []
-LoSoTo.Steps.reset.Pol = []
+LoSoTo.Steps.reset.SolTypes = [Amp]
+LoSoTo.Steps.reset.Stations = []
+LoSoTo.Steps.reset.Pols = []
 
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.SolType = Gain
-LoSoTo.Steps.clocktec.Antenna = []
-LoSoTo.Steps.clocktec.Pol = []
+LoSoTo.Steps.clocktec.Stations = []
+LoSoTo.Steps.clocktec.Pols = []
 LoSoTo.Steps.clocktec.Algorithm = 
 
 
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.SolType = Gain
-LoSoTo.Steps.flag.Antenna = []
-LoSoTo.Steps.flag.Pol = []
+LoSoTo.Steps.flag.SolTypes = [Amp,Phase]
+LoSoTo.Steps.flag.Stations = []
+LoSoTo.Steps.flag.Pols = []
 LoSoTo.Steps.flag.Sigma = 5
 
 
 LoSoTo.Steps.smooth.Operation = SMOOTH
-LoSoTo.Steps.smooth.SolType = Gain
-LoSoTo.Steps.smooth.Antenna = []
-LoSoTo.Steps.smooth.Pol = []
+LoSoTo.Steps.smooth.SolTypes = [Amp]
+LoSoTo.Steps.smooth.Stations = []
+LoSoTo.Steps.smooth.Pols = []
 LoSoTo.Steps.smooth.FWHM.Time = 10
-LoSoTo.Steps.smooth.FWHM.Freq = 10
+LoSoTo.Steps.smooth.FWHM.Freq = 5
 
 
 LoSoTo.Steps.interpolate.Operation = INTERP
-LoSoTo.Steps.interpolate.SolType = Gain
-LoSoTo.Steps.interpolate.Antenna = []
-LoSoTo.Steps.interpolate.Pol = []
+LoSoTo.Steps.interpolate.SolTypes = [Amp]
+LoSoTo.Steps.interpolate.Stations = []
+LoSoTo.Steps.interpolate.Pols = []
 LoSoTo.Steps.interpolate.Time = True
 LoSoTo.Steps.interpolate.Freq = True
 
 
 LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.SolType = Gain
-LoSoTo.Steps.plot.Antenna = []
-LoSoTo.Steps.plot.Pol = []
+LoSoTo.Steps.plot.SolTypes = [Phase]
+LoSoTo.Steps.plot.Stations = []
+LoSoTo.Steps.plot.Pols = []
 
 
 LoSoTo.Steps.apply.Operation = APPLY
-LoSoTo.Steps.apply.SolType = Gain
-LoSoTo.Steps.apply.Antenna = []
-LoSoTo.Steps.apply.Pol = []
+LoSoTo.Steps.apply.SolTypes = [Amp]
+LoSoTo.Steps.apply.Stations = []
+LoSoTo.Steps.apply.Pols = []
 LoSoTo.Steps.apply.MS = target.MS
 LoSoTo.Steps.apply.Beam = True
 LoSoTo.Steps.apply.InCol = DATA

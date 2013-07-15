@@ -4,6 +4,8 @@
 # Set of operations that LoSoTo can perform
 # Each operation is a function
 
+from operations_lib import *
+
 def reset( step, parset, H ):
    """Set specific solutions to 0 (phase, rotang) or 1 (amp)
    """
@@ -28,7 +30,30 @@ def flag( step, parset, H ):
 def smooth( step, parset, H ):
    """Smooth solutions
    """
-   raise Exception('Not yet implemented.')
+   import scipy.ndimage.filters.median_filter as median_filter
+   import progressbar
+
+   stations = getStations( step, parset, H )
+   solTypes = getSolTypes ( step, parset, H )
+   pols = getPols( step, parset, H )
+
+   timeFWHM = parset.getInt('.'.join(["LoSoTo.Steps", step, "FWHM.Time"]), 10 )
+   freqFWHM = parset.getInt('.'.join(["LoSoTo.Steps", step, "FWHM.Freq"]), 5 )
+
+   pbar = progressbar(maxval=len(solTypes)*len(stations)*len(pols)).start()
+   i = 0
+
+   # run the filter
+   for solType in solTypes:
+       for station in stations: 
+           for pol in pols:
+               sols = getSols( H, solType, station, pol)
+               median_filter(sols, (timeFWHM, freqFWHM))
+               pbar.update(i)
+               i += 1
+
+   # save on the HDF5 file
+
    return H
 
 

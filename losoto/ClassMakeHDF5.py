@@ -113,6 +113,8 @@ class ClassMakeHDF5:
         self.DirectionalGainEnable = False
 
     def load_globaldb(self, globaldb):
+        """ Load the globaldb (HDF5 format) values
+        """
         self.globaldb = globaldb
         self.hdf5 = tables.openFile(globaldb, 'r+')
 
@@ -134,7 +136,7 @@ class ClassMakeHDF5:
 
         self.flags = self.hdf5.root.flags
 
-        # e.g. amplitudes.shape: (2157, 244, 37, 1, 2) -> (time, freq, station, ?, pol)
+        # e.g. amplitudes.shape: (2157, 244, 37, 1, 2) -> (time, freq, station, source, pol)
         for varname in [
             'amplitudes',
             'phases',
@@ -149,7 +151,7 @@ class ClassMakeHDF5:
             'facets',
             'facet_piercepoints',
             'n_list',
-            'STEC_facets',
+            'STEC_facets'
             ]:
             if varname in self.hdf5.root:
                 self.__dict__.update([(varname,
@@ -160,7 +162,6 @@ class ClassMakeHDF5:
 
     def load_gds(
         self,
-        # TODO: why is this a list?
         gdsfiles,
         clusterdesc,
         globaldb='globaldb',
@@ -226,6 +227,7 @@ class ClassMakeHDF5:
                       skydbfilename, skydbname))
         skydb = lofar.parmdb.parmdb(skydbname)
 
+        # Collect ANTENNA and FILED tables from the first MS
         gdsparset = lofar.parameterset.parameterset(gdsfile)
         msname = gdsparset.getString('Part0.FileName')
         mshostname = gdsparset.getString('Part0.FileSys').split(':')[0]
@@ -499,4 +501,8 @@ class ClassMakeHDF5:
         if self.flags.shape != self.phases.shape[0:2]:
             self.flags = numpy.zeros(self.phases.shape[0:2])
 
+    def create_HDF5(parmdbFile):
+        """Create an HDF5 file from a parmdb
+        """
+        pass
 
