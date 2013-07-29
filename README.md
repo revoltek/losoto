@@ -20,5 +20,8 @@ This library have tools to deal with LOFAR solution tables.
 Included tools:
 
 - H5parm_creator.py:
-    * fetches parmdb tables from the cluster
     * creates an h5parm file from a parmdb
+- H5parm_merge.py:
+    * merge multiple H5parm files into a single one
+- parmdb_collector.py:
+    * fetches parmdb tables from the cluster

@@ -500,9 +500,3 @@ class ClassMakeHDF5:
 
         if self.flags.shape != self.phases.shape[0:2]:
             self.flags = numpy.zeros(self.phases.shape[0:2])
-
-    def create_HDF5(parmdbFile):
-        """Create an HDF5 file from a parmdb
-        """
-        pass
-
