@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Retrieving ang writing back data in HDF5 format
+# Retrieving ang writing back data in H5parm format
 
 def getSols( H, solType, station=[], pol=[], source=[] ):
     """
