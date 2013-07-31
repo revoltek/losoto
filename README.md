@@ -25,3 +25,7 @@ Included tools:
     * merge multiple H5parm files into a single one
 - parmdb_collector.py:
     * fetches parmdb tables from the cluster
+
+Required packages:
+
+- pytables 3.0.0 (numpy >= 1.4.1 & numexpr >= 2.0.0)
