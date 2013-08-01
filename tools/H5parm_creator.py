@@ -9,7 +9,6 @@
 
 # Authors:
 # Francesco de Gasperin
-# Bas van der Tol
 _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
 
 import sys, os, glob
@@ -24,12 +23,13 @@ from losoto.h5parm import h5parm
 
 # Options
 import optparse
-opt = optparse.OptionParser(usage='%prog [-v] [-h H5parm] [-g globaldb/SBname] \n'\
+opt = optparse.OptionParser(usage='%prog [-v] [-p H5parm] [-g globaldb/SBname] \n'\
                 +_author, version='%prog '+losoto._version.__version__)
 opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
 opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
-opt.add_option('-g', '--globaldb', help='Output globaldb name (default=globaldb)', type='string', default='globaldb')
+opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
 opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default='')
+opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=9)', type='int', default='9')
 (options, args) = opt.parse_args()
 
 if options.verbose: losoto._logging.setVerbose()
@@ -38,6 +38,7 @@ h5parmFile = options.h5parm
 logging.info("H5parm filename = "+h5parmFile)
 globaldbFile = options.globaldb
 logging.info("globaldb filename = "+globaldbFile)
+complevel = options.complevel
 
 # Check is all the necessary files are available
 antennaFile = os.path.join(globaldbFile,'ANTENNA')
@@ -59,7 +60,7 @@ instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
     if os.path.isdir(instrumentdbFile) ]
 
 # open/create the h5parm file and the solution-set
-h5parm = h5parm(h5parmFile, readonly = False)
+h5parm = h5parm(h5parmFile, readonly = False, complevel = complevel)
 
 solsetName = options.solset
 solset = h5parm.makeSolset(solsetName)
@@ -75,7 +76,7 @@ logging.info('Found solution types: '+', '.join(solTypes))
 # Fill the rotation table
 if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
     soltabRot = h5parm.makeSoltab(solset, 'rotation', \
-            descriptor=np.dtype([('time', np.float16),('freq',np.float16),('ant', np.str_, 16),('dir', np.str_, 16),('flag', np.bool),('val', np.float32)]))
+            descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('flag', np.bool),('val', np.float64)]))
     
     logging.info('Filling table...')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*RotationAngle:*'))).start()
@@ -121,11 +122,11 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
 
     if 'Ampl' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabAmp = h5parm.makeSoltab(solset, 'amplitude', \
-                descriptor=np.dtype([('time', np.float16),('freq',np.float16),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float32)]))
+                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
     
     if 'Phase' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabPhase = h5parm.makeSoltab(solset, 'phase', \
-                descriptor=np.dtype([('time', np.float16),('freq',np.float16),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float32)]))
+                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
 
     logging.info('Filling tables...')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*Gain:*'))).start()
@@ -186,7 +187,7 @@ antennaNames = antennaTable.getcol('NAME')
 antennaPositions = antennaTable.getcol('POSITION')
 antennaTable.close()
 descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
-antennaTable = h5parm.h5parm.createTable(solset, 'antenna', descriptor, 'Antenna names and positions')
+antennaTable = h5parm.H.createTable(solset, 'antenna', descriptor, 'Antenna names and positions')
 antennaTable.append(zip(*(antennaNames,antennaPositions)))
 
 logging.info('Collecting informations from the FIELD table.')
@@ -196,7 +197,7 @@ pointing = phaseDir[0, 0, :]
 fieldTable.close()
 
 descriptor = np.dtype([('name', np.str_, 16),('dir', np.float32, 2)])
-sourceTable = h5parm.h5parm.createTable(solset, 'source', descriptor, 'Source names and directions')
+sourceTable = h5parm.H.createTable(solset, 'source', descriptor, 'Source names and directions')
 # add the field centre, that is also the direction for Gain and CommonRotationAngle
 sourceTable.append([('pointing',pointing)])
 
@@ -228,16 +229,6 @@ for source in set(dirs):
     vals.append([ra, dec])
 
 sourceTable.append(zip(*(dirs,vals)))
+logging.info("Total file size: "+str(h5parm.H.get_filesize()/1024./1024.)+" M")
+del h5parm
 logging.info('Done.')
-
-
-
-
-
-
-
-
-
-
-
-

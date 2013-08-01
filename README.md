@@ -3,9 +3,9 @@ LoSoTo: LOFAR solutions tool
 Author:
 Francesco de Gasperin (overall project)
 Cyril Tasse (APPLY)
-Reinout Van Weeren (SMOOTH)
+Reinout Van Weeren (SMOOTH, CLOCKTEC)
 Maaijke Mevius (CLOCKTEC)
-Bas van der Tol (CLOCKTEC)
+Bas van der Tol (CLOCKTEC, TOOLS)
 
 This library have tools to deal with LOFAR solution tables.
 
@@ -20,7 +20,7 @@ This library have tools to deal with LOFAR solution tables.
 Included tools:
 
 - H5parm_creator.py:
-    * creates an h5parm file from a parmdb
+    * creates an h5parm file from an MS or a globaldb created with parmdb_collector.py
 - H5parm_merge.py:
     * merge multiple H5parm files into a single one
 - parmdb_collector.py:

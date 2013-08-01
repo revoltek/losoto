@@ -14,22 +14,36 @@ if int(tables.__version__.split('.')[0]) < 3:
     sys.exit(1)
 
 class h5parm():
-    def __init__(self, h5parmFile, readonly = True):
+
+    def __init__(self, h5parmFile, readonly = True, complevel = 9):
+        """
+        Keyword arguments:
+        h5parmFile -- H5parm filename
+        readonly -- if True the table is open in readonly mode (default=True)
+        complevel -- compression level from 0 to 9 (default=9)
+        """
         if os.path.isfile(h5parmFile):
             if readonly:
-                self.h5parm = tables.openFile(h5parmFile, 'r')
+                self.H = tables.openFile(h5parmFile, 'r')
             else:
-                self.h5parm = tables.openFile(h5parmFile, 'a')
+                self.H = tables.openFile(h5parmFile, 'a')
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
             else:
                 # add a compression filter
-                f = tables.Filters(complevel=9, complib='zlib')
-                self.h5parm = tables.openFile(h5parmFile, filters=f, mode='w')
+                f = tables.Filters(complevel=complevel, complib='zlib')
+                self.H = tables.openFile(h5parmFile, filters=f, mode='w')
         
         # if the file is new add the version of the h5parm
         # in losoto._version.__h5parmVersion__
+
+
+    def __del__(self):
+        """
+        Flush and close the open table
+        """
+        self.H.close()
 
 
     def makeSolset(self, solsetName = ''):
@@ -38,7 +52,7 @@ class h5parm():
         then it falls back on the first available sol###
         """
 
-        if solsetName in self.getSolsets():
+        if solsetName in self.getSolsets().keys():
             logging.error('Solution set '+solsetName+' already present.')
             solsetName = ''
 
@@ -47,14 +61,14 @@ class h5parm():
             solsetName = self._fisrtAvailSolsetName()
         
         logging.info('Creating new solution-set '+solsetName+'.')
-        return self.h5parm.create_group("/", solsetName)
+        return self.H.create_group("/", solsetName)
 
 
     def getSolsets(self):
         """
-        Return a list of all the available solultion-sets
+        Return a dict with all the available solultion-sets (as a _ChildrenDict)
         """
-        return self.h5parm.root._v_children.keys()
+        return self.H.root._v_children
 
 
     def _fisrtAvailSolsetName(self):
@@ -63,18 +77,16 @@ class h5parm():
         has the form of "sol###"
         """
         nums = []
-        for solset in self.getSolsets():
-#            try:
+        for solset in self.getSolsets().keys():
+            try:
                 if solset[0:3] == 'sol':
                     nums.append(int(solset[3:6]))
-#            except:
-#                pass
+            except:
+                pass
 
         return "sol%03d" % min(list(set(range(1000)) - set(nums)))
 
 
-        # masked tables for flags implemented as http://pytables.github.io/cookbook/custom_data_types.html
-    
     def makeSoltab(self, solset=None, soltype=None, descriptor={}):
         """
         Create a solution-table into a specified solution-set
@@ -87,17 +99,46 @@ class h5parm():
         soltabName = self._fisrtAvailSoltabName(solset, soltype)
         logging.info('Creating new solution-table '+soltabName+'.')
 
-        return self.h5parm.createTable(solset, soltabName, descriptor, soltype)
+        return self.H.createTable(solset, soltabName, descriptor, soltype)
 
 
-    def getSoltab(self, solset=None):
+    def getSoltabs(self, solset=None):
         """
-        Return a list of all the available solultion-tables into a specified solution-set
+        Return a dict of all the available solultion-tables into a specified solution-set
+        Keyword arguments:
+        solset -- a solution-set name (String) or a Group instance
+        Output: 
+        A dict of all available solultion-tables 
         """
         if solset == None:
             raise Exception("Solution set not specified while querying for solution-tables list.")
+        if type(solset) is str:
+            solset = self.H.root._f_get_child(solset)
 
-        return solset._v_children.keys()
+        soltabs = {}
+        for soltabName, soltab in solset._v_children.iteritems():
+            if not (soltabName == 'antenna' or soltabName == 'source'):
+                soltabs[soltabName] = soltab
+
+        return soltabs
+
+
+    def getSoltab(self, solset=None, soltab=None):
+        """
+        Return a specific solution-table of a specific solution-set
+        Keyword arguments:
+        solset -- a solution-set name (String) or a Group instance
+        soltab -- a solution-table name (String)
+        """
+        if solset == None:
+            raise Exception("Solution-set not specified.")
+        if soltab == None:
+            raise Exception("Solution-table not specified.")
+
+        if type(solset) is str:
+            solset = self.H.root._f_get_child(solset)
+
+        return solset._f_get_child(soltab)
 
 
     def _fisrtAvailSoltabName(self, solset=None, soltype=None):
@@ -111,7 +152,7 @@ class h5parm():
             raise Exception("Solution type not specified while querying for solution-tables list.")
 
         nums = []
-        for soltab in self.getSoltab(solset):
+        for soltab in self.getSoltabs(solset):
             try:
                 if soltab[-4:] == soltype:
                     nums.append(int(soltab[-4:]))
@@ -130,26 +171,25 @@ class h5parm():
 
         soltab.append(val)
 
+     def getAnt(self):
+         pass
 
-def getSols( H, solType, station=[], pol=[], source=[] ):
-    """
-    Return solution array once selected for solType, station, pol and source.
-    solType must be specified.
-    """
+     def getSou(self):
+         pass
 
-    if solType == 'amp':
-        pass
+class solFetcher():
 
-    elif solType == 'phase':
-        pass
+    def __init__(self, table):
+        """
+        Keyword arguments:
+        tab -- table object
+        """
+        
+        self.t = table
 
-    elif solType == 'clock':
-        pass
 
-    elif solType == 'TEC':
-        pass
 
-    else:
-        print "ERROR: unknown solType", solType, "."
-        sys.exit(1)
+
+
+
 
