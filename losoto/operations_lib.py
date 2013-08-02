@@ -4,76 +4,165 @@
 # Some utilities for operations.py
 
 import sys
+import logging
 
 # TODO: add pattern matching
-def getStations( step, parset, H ):
+def getParAnts( step, parset, H ):
     """
-    Return the station array for this step.
+    Return the Ant array for this step.
     The order is:
     * local step value
     * global value
-    * default
+    * default = all
     """
-    allStations = H.stations.names
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Stations" ] )
+    allAnts = H.getAnt(getParSolsets(step, parset, H)).keys()
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Ant" ] )
     # local val
-    stations = parset.getStringVector( stepOptName, [] )
-    if stations == []:
+    Ants = parset.getStringVector( stepOptName, [] )
+    if Ants == []:
         # global val or default
-        stations = parset.getStringVector( "LoSoTo.Stations", allStations )
+        Ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
 
     # sanity check
-    for station in stations:
-        if station not in allStations:
-            print "ERROR: cannot find station", station, ", ignoring."
-            stations.remove(station)
-    return stations
+    for Ant in Ants:
+        if Ant not in allAnts:
+            logging.error("Cannot find Ant", Ant, ", ignoring.")
+            Ants.remove(Ant)
+    return Ants
 
 
-def getSolTypes( step, parset, H ):
+def getParSoltabs( step, parset, H ):
     """
-    Return the solTypes array for this step.
+    Return the solution-table array for this step.
     The order is:
     * local step value
     * global value
-    * default
+    * default = all
     """
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
+    allSoltabs = H.getSoltabs(getParSolsets(step, parset, H)).keys()
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
     # local val
-    solTypes = parset.getStringVector( stepOptName, [] )
-    if solTypes == []:
+    soltabs = parset.getStringVector( stepOptName, [] )
+    if soltabs == []:
         # global value or default
-        solTypes = parset.getStringVector( "LoSoTo.SolTypes", ['Amp'] )
+        soltabs = parset.getStringVector( "LoSoTo.Soltab", allSoltabs )
 
     # sanity check
-    for solType in solTypes:
-        if solType not in H.root:
-            print "ERROR: solution type", solType, " in not in the HDF5 file, ignoring"
-            solTypes.remove(solType)
+    for soltab in soltabs:
+        if soltab not in allSoltabs:
+            logging.error("Solution-table", soltab, " in not in the HDF5 file, ignoring")
+            soltabs.remove(soltab)
 
-    return solTypes
+    return soltabs
 
 
-def getPols( step, parset, H ):
+def getParSolsets( step, parset, H ):
+    """
+    Return the solution-set array for this step.
+    The order is:
+    * local step value
+    * global value
+    * default = all
+    """
+    allSolsets = H.getSolsets().keys()
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Solset" ] )
+    # local val
+    solsets = parset.getStringVector( stepOptName, [] )
+    if solsets == []:
+        # global value or default
+        solsets = parset.getStringVector( "LoSoTo.Solset", allSolsets )
+
+    # sanity check
+    for solset in solsets:
+        if solset not in allSolsets:
+            logging.error("Solution-set", solset, " in not in the HDF5 file, ignoring")
+            solsets.remove(solset)
+
+    return solsets
+
+
+def getParDirs( step, parset, H ):
+    """
+    Return the directions array for this step.
+    The order is:
+    * local step value
+    * global value
+    * default = []
+    """
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Dir" ] )
+    # local val
+    dirs = parset.getStringVector( stepOptName, [] )
+    if dirs == []:
+        dirs = parset.getStringVector( "LoSoTo.Dir", [] )
+        # global val or default
+
+    return dirs
+
+
+def getParPols( step, parset, H ):
     """
     Return the pols array for this step.
     The order is:
     * local step value
     * global value
-    * default
+    * default = []
     """
-    allPols = H.polarizations
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Pols" ] )
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Pol" ] )
     # local val
     pols = parset.getStringVector( stepOptName, [] )
     if pols == []:
-        pols = parset.getStringVector( "LoSoTo.Pols", ['XX','YY'] )
+        pols = parset.getStringVector( "LoSoTo.Pols", [] )
         # global val or default
 
-    # sanity check
-    for pol in pols:
-        if pol not in allPols:
-            print "ERROR: unknown solution typr", solType, ", ignoring."
-            pols.remove(pol)
-
     return pols
+
+
+def openSoltabs( H, solsets, soltabs ):
+    """
+    Return a list of soltab objects
+    """
+    allSoltabs = []
+    for solset in solsets:
+        for soltab in soltabs:
+            allSoltabs.append( H.getSoltab(solset, soltab) )
+
+    return allSoltabs
+
+
+def formatSelection(ant=[], pol=[], dir=[]):
+    """
+    return a string that can be used by the solFetcher as a selection criteria
+    """
+    s=''
+    if ant != []:
+        for a in ant:
+            if a == ant[0]: s = s+'('
+            else: s = s+' & '
+            s = s+'(ant == '+a+')'
+            if a == ant[-1]: s = s+')'
+    if pol != []:
+        for p in pol:
+            if p == pol[0]: s = s+'('
+            else: s = s+' & '
+            s = s+'(pol == '+p+') '
+            if p == pol[-1]: s = s+')'
+    if ant != []:
+        for d in dir:
+            if d == dir[0]: s = s+'('
+            else: s = s+' & '
+            s = s+'(dir == '+d+') '
+            if d == dir[-1]: s = s+')'
+
+    return s
+
+
+
+
+
+
+
+
+
+
+
+

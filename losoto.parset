@@ -3,57 +3,59 @@
 
 LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
 
-LoSoTo.DirectionalGain.Enable = F
-LoSoTo.SolTypes = [Amp, Phase, Clock, TEC]
-LoSoTo.Stations = []
-LoSoTo.Pols = [XX, YY]
+LoSoTo.Soltab = [amplitude000,phase000]
+LoSoTo.Solset = [sol000]
+LoSoTo.Ant = []
+LoSoTo.Pol = [XX, YY]
+LoSoTo.Dir = [pointing]
 
 
 LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.SolTypes = [Amp]
-LoSoTo.Steps.reset.Stations = []
-LoSoTo.Steps.reset.Pols = []
+LoSoTo.Steps.reset.Solset = [sol000]
+LoSoTo.Steps.reset.Soltab = [amplitude000]
+LoSoTo.Steps.reset.Ant = []
+LoSoTo.Steps.reset.Pol = []
 
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.Stations = []
-LoSoTo.Steps.clocktec.Pols = []
+LoSoTo.Steps.clocktec.Ant = []
+LoSoTo.Steps.clocktec.Pol = []
 LoSoTo.Steps.clocktec.Algorithm = 
 
 
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.SolTypes = [Amp,Phase]
-LoSoTo.Steps.flag.Stations = []
-LoSoTo.Steps.flag.Pols = []
+LoSoTo.Steps.flag.Soltab = [phase000]
+LoSoTo.Steps.flag.Ant = []
+LoSoTo.Steps.flag.Pol = []
 LoSoTo.Steps.flag.Sigma = 5
 
 
 LoSoTo.Steps.smooth.Operation = SMOOTH
-LoSoTo.Steps.smooth.SolTypes = [Amp]
-LoSoTo.Steps.smooth.Stations = []
-LoSoTo.Steps.smooth.Pols = []
+LoSoTo.Steps.smooth.Soltab = []
+LoSoTo.Steps.smooth.Ant = []
+LoSoTo.Steps.smooth.Pol = []
 LoSoTo.Steps.smooth.FWHM.Time = 10
 LoSoTo.Steps.smooth.FWHM.Freq = 5
 
 
 LoSoTo.Steps.interpolate.Operation = INTERP
-LoSoTo.Steps.interpolate.SolTypes = [Amp]
-LoSoTo.Steps.interpolate.Stations = []
-LoSoTo.Steps.interpolate.Pols = []
+LoSoTo.Steps.interpolate.Soltab = []
+LoSoTo.Steps.interpolate.Ant = []
+LoSoTo.Steps.interpolate.Pol = []
 LoSoTo.Steps.interpolate.Time = True
 LoSoTo.Steps.interpolate.Freq = True
 
 
 LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.SolTypes = [Phase]
-LoSoTo.Steps.plot.Stations = []
-LoSoTo.Steps.plot.Pols = []
+LoSoTo.Steps.plot.Soltab = [phase000]
+LoSoTo.Steps.plot.Ant = []
+LoSoTo.Steps.plot.Pol = []
 
 
 LoSoTo.Steps.apply.Operation = APPLY
-LoSoTo.Steps.apply.SolTypes = [Amp]
-LoSoTo.Steps.apply.Stations = []
-LoSoTo.Steps.apply.Pols = []
+LoSoTo.Steps.apply.Soltab = []
+LoSoTo.Steps.apply.Ant = []
+LoSoTo.Steps.apply.Pol = []
 LoSoTo.Steps.apply.MS = target.MS
 LoSoTo.Steps.apply.Beam = True
 LoSoTo.Steps.apply.InCol = DATA

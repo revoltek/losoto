@@ -15,6 +15,7 @@ import losoto.operations
 import losoto._version
 import losoto._logging
 from losoto.h5parm import h5parm
+import lofar.parameterset
 
 # Options
 import optparse
@@ -26,19 +27,19 @@ opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='st
 if options.verbose: losoto._logging.setVerbose()
 
 # Check options
-try: parsetFile = args[0]
-except: parsetFile = 'losoto.parset'
-try: h5parmFile = args[1]
+try: h5parmFile = args[0]
 except:
     logging.critical('Missing H5parm file.')
     sys.exit(1)
+try: parsetFile = args[1]
+except: parsetFile = 'losoto.parset'
 
 if not os.path.isfile(parsetFile):
     logging.critical("Missing parset file, I don't know what to do :'(")
     sys.exit(1)
 
 # Open the H5parm
-H = h5parm(h5parmFile)
+H = h5parm(h5parmFile, readonly=False)
 
 # from ~vdtol/Expion-2011-05-03/src
 parset = lofar.parameterset.parameterset( parsetFile )
@@ -56,7 +57,11 @@ operations = { "RESET": losoto.operations.reset,
 for step in steps:
    operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
    logging.info("--> Starting \'" + step + "\' step (operation: " + operation \
-           + ") on solution-set "+solset+".")
-   solset = operations[ operation ] ( step, parset, H, solset )
+           + ").")
+   returncode = operations[ operation ] ( step, parset, H )
+   if returncode != 0:
+      logging.error("Step incomplete. Try to continue anyway.")
+   else:
+      logging.info("Step completed successfully.")
 
 logging.info("Done.")

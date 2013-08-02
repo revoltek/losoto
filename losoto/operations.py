@@ -7,15 +7,34 @@
 from operations_lib import *
 
 def reset( step, parset, H ):
-   """Set specific solutions to 0 (phase, rotang) or 1 (amp)
+   """Set specific solutions to 1 (amp) and 0 for all the others
    """
-   blank = parset.getString('.'.join(["LoSoTo.Steps", step, "Blank"]), '' )
-   return H
+   solsets = getParSolsets( step, parset, H )
+   print solsets
+   soltabs = getParSoltabs( step, parset, H )
+   print soltabs
+   ant = getParAnts( step, parset, H )
+   pol = getParPols( step, parset, H )
+   dir = getParDirs( step, parset, H )
+    
+   for soltab in openSoltabs( H, solsets, soltabs):
+        t = solFetcher(soltab)
+        print formatSelection(ant=ant, pol=pol, dir=dir)
+        t.setSelection(formatSelection(ant=ant, pol=pol, dir=dir))
+        r = t.getRowsIterator()
+
+
+   return 0
 
 
 def clocktec( step, parset, H ):
    """Perform clock/tec separation
    """
+   solset = getParSolsets( step, parset, H )
+   soltab = getParSoltabs( step, parset, H )
+   ant = getParAnts( step, parset, H )
+   pol = getParPols( step, parset, H )
+
    raise Exception('Not yet implemented.')
    return H
 
@@ -23,6 +42,11 @@ def clocktec( step, parset, H ):
 def flag( step, parset, H ):
    """Flag outliers
    """
+   solset = getParSolsets( step, parset, H )
+   soltab = getParSoltabs( step, parset, H )
+   ant = getParAnts( step, parset, H )
+   pol = getParPols( step, parset, H )
+
    raise Exception('Not yet implemented.')
    return H
 
