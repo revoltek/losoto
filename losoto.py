@@ -46,19 +46,20 @@ parset = lofar.parameterset.parameterset( parsetFile )
 steps = parset.getStringVector( "LoSoTo.Steps", [] )
 
 # Possible operations, linked to relative function
-operations = { "RESET": losoto.operations.reset,
-               "CLOCKTEC": losoto.operations.clocktec,
-               "FLAG": losoto.operations.flag,
-               "SMOOTH": losoto.operations.smooth,
-               "INTERP": losoto.operations.interp,
-               "PLOT": losoto.operations.plot,
-               "APPLY": losoto.operations.apply }
+operations = { "RESET": losoto.operations.reset
+#               "CLOCKTEC": losoto.operations.clocktec,
+#               "FLAG": losoto.operations.flag,
+#               "SMOOTH": losoto.operations.smooth,
+#               "INTERP": losoto.operations.interp,
+#               "PLOT": losoto.operations.plot,
+#               "APPLY": losoto.operations.apply
+}
 
 for step in steps:
    operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
    logging.info("--> Starting \'" + step + "\' step (operation: " + operation \
            + ").")
-   returncode = operations[ operation ] ( step, parset, H )
+   returncode = operations[ operation ].run( step, parset, H )
    if returncode != 0:
       logging.error("Step incomplete. Try to continue anyway.")
    else:

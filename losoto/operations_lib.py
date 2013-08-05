@@ -96,7 +96,7 @@ def getParSolsets( step, parset, H ):
 
     # global value from soltab
     if solsets == []:
-        for soltab in parset.getStringVector( "LoSoTo.Soltab", [] )
+        for soltab in parset.getStringVector( "LoSoTo.Soltab", [] ):
             solsets.extend(soltab.split('/')[0])
 
     # global value from solset
