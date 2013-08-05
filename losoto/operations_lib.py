@@ -10,67 +10,105 @@ import logging
 def getParAnts( step, parset, H ):
     """
     Return the Ant array for this step.
+    If more then one solset is involved, return the intersection
     The order is:
     * local step value
     * global value
     * default = all
     """
-    allAnts = H.getAnt(getParSolsets(step, parset, H)).keys()
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Ant" ] )
+    allAnts = []
+    for solset in getParSolsets(step, parset, H):
+        allAnts.append(H.getAnt(solset).keys())
+    allAnts = set.intersection(*allAnts)
+
     # local val
-    Ants = parset.getStringVector( stepOptName, [] )
-    if Ants == []:
-        # global val or default
-        Ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Ant" ] )
+    ants = parset.getStringVector( stepOptName, [] )
+    
+    # global val or default
+    if ants == []:
+        ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
 
     # sanity check
-    for Ant in Ants:
-        if Ant not in allAnts:
+    for ant in ants:
+        if ant not in allAnts:
             logging.error("Cannot find Ant", Ant, ", ignoring.")
-            Ants.remove(Ant)
-    return Ants
+            ants.remove(Ant)
+
+    return ants
 
 
 def getParSoltabs( step, parset, H ):
     """
-    Return the solution-table array for this step.
+    Return the solution-table list (in ["solset/soltab",...] form) for this step.
+        - compatible with the solset parameters
+        - compatible the soltype parameters
     The order is:
     * local step value
     * global value
     * default = all
     """
-    allSoltabs = H.getSoltabs(getParSolsets(step, parset, H)).keys()
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
+
     # local val
-    soltabs = parset.getStringVector( stepOptName, [] )
-    if soltabs == []:
-        # global value or default
-        soltabs = parset.getStringVector( "LoSoTo.Soltab", allSoltabs )
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
+    ssst = parset.getStringVector( stepOptName, [] )
+
+    # global value
+    if ssst == []:
+        ssst = parset.getStringVector( "LoSoTo.Soltab", [] )
+
+    # default value
+    if ssst == []:
+        # add all the table in the globalSolset if defined,
+        # otherwise add all tables
+        for solset in getParSolsets( step, parset, H ):
+            for soltab in H.getSoltabs(solset).keys():
+                ssst.append(solset+'/'+soltab)
 
     # sanity check
-    for soltab in soltabs:
-        if soltab not in allSoltabs:
-            logging.error("Solution-table", soltab, " in not in the HDF5 file, ignoring")
-            soltabs.remove(soltab)
+    for s in ssst:
+        solset, soltab = s.split('/')
+        # check that soltab exists and that the declared solset is usable
+        if soltab not in H.getSoltabs(solset).keys() or\
+                solset not in getParSolsets( step, parset, H ):
+            logging.error("Solution-table", soltab, " not available, ignoring.")
+            ssst.remove(s)
 
-    return soltabs
+    return ssst
 
 
 def getParSolsets( step, parset, H ):
     """
-    Return the solution-set array for this step.
+    Return the solution-set list for this parset.
     The order is:
-    * local step value
-    * global value
+    * local step (from the Soltab parameter)
+    * global value (from the Soltab + Solset parameter)
     * default = all
     """
     allSolsets = H.getSolsets().keys()
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Solset" ] )
+
     # local val
-    solsets = parset.getStringVector( stepOptName, [] )
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
+    soltabs = parset.getStringVector( stepOptName, [] )
+    solsets = []
+    for soltab in soltabs:
+        solsets.append(soltab.split('/')[0])
+
+    # global value from soltab
     if solsets == []:
-        # global value or default
-        solsets = parset.getStringVector( "LoSoTo.Solset", allSolsets )
+        for soltab in parset.getStringVector( "LoSoTo.Soltab", [] )
+            solsets.extend(soltab.split('/')[0])
+
+    # global value from solset
+    gloabalSolsets = parset.getStringVector( "LoSoTo.Solset", allSolsets )
+    if solset != []:
+        solsets = list(set(solsets).intersection(set(globalSolset)))
+    else:
+        solsets = globalSolsets
+
+    # default value
+    if solsets == []:
+        solsets = allSolsets
 
     # sanity check
     for solset in solsets:
@@ -78,12 +116,34 @@ def getParSolsets( step, parset, H ):
             logging.error("Solution-set", solset, " in not in the HDF5 file, ignoring")
             solsets.remove(solset)
 
-    return solsets
+    return list(set(solsets))
+
+
+def getParSolType( step, parset, H ):
+    """
+    Return the SolType list for this step.
+    The order is:
+    * local step value
+    * global value
+    * default = [] (==all)
+    """
+
+    # local val
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
+    SolType = parset.getStringVector( stepOptName, [] )
+    
+    # global val or default
+    if SolTypes == []:
+        SolTypes = parset.getStringVector( "LoSoTo.solType", [] )
+
+    return solTypes
+
 
 
 def getParDirs( step, parset, H ):
     """
     Return the directions array for this step.
+        - check is all the toltb has this direction.
     The order is:
     * local step value
     * global value
@@ -102,6 +162,7 @@ def getParDirs( step, parset, H ):
 def getParPols( step, parset, H ):
     """
     Return the pols array for this step.
+        - check is all the toltb has this pol.
     The order is:
     * local step value
     * global value
@@ -117,16 +178,16 @@ def getParPols( step, parset, H ):
     return pols
 
 
-def openSoltabs( H, solsets, soltabs ):
+def openSoltabs( H, ss_sts ):
     """
-    Return a list of soltab objects
+    Return a list of soltab objects checking the Soltab and SolType parameters
     """
-    allSoltabs = []
-    for solset in solsets:
-        for soltab in soltabs:
-            allSoltabs.append( H.getSoltab(solset, soltab) )
+    soltabs = []
+    for ss_st in ss_sts:
+        ss, st = ss_st.split('/')
+        soltabs.append( H.getSoltab(ss, st) )
 
-    return allSoltabs
+    return soltabs
 
 
 def formatSelection(ant=[], pol=[], dir=[]):
@@ -154,15 +215,3 @@ def formatSelection(ant=[], pol=[], dir=[]):
             if d == dir[-1]: s = s+')'
 
     return s
-
-
-
-
-
-
-
-
-
-
-
-

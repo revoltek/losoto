@@ -1,18 +1,20 @@
 # Example of LoSoTo parset
 # Includes with all possible options
+#
+# step variable override global variable
 
 LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
 
-LoSoTo.Soltab = [amplitude000,phase000]
+LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.Solset = [sol000]
+LoSoTo.SolType = [pahse]
 LoSoTo.Ant = []
 LoSoTo.Pol = [XX, YY]
 LoSoTo.Dir = [pointing]
 
 
 LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.Solset = [sol000]
-LoSoTo.Steps.reset.Soltab = [amplitude000]
+LoSoTo.Steps.reset.Soltab = [sol000/amplitude000]
 LoSoTo.Steps.reset.Ant = []
 LoSoTo.Steps.reset.Pol = []
 
@@ -24,7 +26,7 @@ LoSoTo.Steps.clocktec.Algorithm =
 
 
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Soltab = [phase000]
+LoSoTo.Steps.flag.Soltab = [sol000/phase000]
 LoSoTo.Steps.flag.Ant = []
 LoSoTo.Steps.flag.Pol = []
 LoSoTo.Steps.flag.Sigma = 5
@@ -47,7 +49,7 @@ LoSoTo.Steps.interpolate.Freq = True
 
 
 LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.Soltab = [phase000]
+LoSoTo.Steps.plot.Soltab = [sol000/phase000]
 LoSoTo.Steps.plot.Ant = []
 LoSoTo.Steps.plot.Pol = []
 
@@ -61,8 +63,3 @@ LoSoTo.Steps.apply.Beam = True
 LoSoTo.Steps.apply.InCol = DATA
 LoSoTo.Steps.apply.OutCol = CORRECTED_DATA
 LoSoTo.Steps.apply.Method = RawNearest
-
-
-
-
-
