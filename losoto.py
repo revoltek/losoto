@@ -11,20 +11,19 @@ _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
 
 import sys, os
 import logging
-import losoto.operations
-import losoto._version
-import losoto._logging
-from losoto.h5parm import h5parm
+import _version
+import _logging
+from h5parm import h5parm
 import lofar.parameterset
 
 # Options
 import optparse
 opt = optparse.OptionParser(usage='%prog [-v] h5parm parset [default: losoto.parset] \n'
-        +_author, version='%prog '+losoto._version.__version__)
+        +_author, version='%prog '+_version.__version__)
 opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
 (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose()
+if options.verbose: _logging.setVerbose()
 
 # Check options
 try: h5parmFile = args[0]
@@ -46,13 +45,14 @@ parset = lofar.parameterset.parameterset( parsetFile )
 steps = parset.getStringVector( "LoSoTo.Steps", [] )
 
 # Possible operations, linked to relative function
-operations = { "RESET": losoto.operations.reset
-#               "CLOCKTEC": losoto.operations.clocktec,
-#               "FLAG": losoto.operations.flag,
-#               "SMOOTH": losoto.operations.smooth,
-#               "INTERP": losoto.operations.interp,
-#               "PLOT": losoto.operations.plot,
-#               "APPLY": losoto.operations.apply
+import operations
+operations = { "RESET": operations.reset
+#               "CLOCKTEC": operations.clocktec,
+#               "FLAG": operations.flag,
+#               "SMOOTH": operations.smooth,
+#               "INTERP": operations.interp,
+#               "PLOT": operations.plot,
+#               "APPLY": operations.apply
 }
 
 for step in steps:
