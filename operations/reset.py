@@ -24,7 +24,7 @@ def run( step, parset, H ):
    dir = getParDirs( step, parset, H )
    print dir
     
-   for soltab in openSoltabs( H, soltabs):
+   for soltab in openSoltabs( H, soltabs ):
         t = solFetcher(soltab)
         print formatSelection(ant=ant, pol=pol, dir=dir)
         t.setSelection(formatSelection(ant=ant, pol=pol, dir=dir))

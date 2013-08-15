@@ -33,6 +33,9 @@ except:
 try: parsetFile = args[1]
 except: parsetFile = 'losoto.parset'
 
+if not os.path.isfile(h5parmFile):
+    logging.critical("Missing h5parm file.")
+    sys.exit(1)
 if not os.path.isfile(parsetFile):
     logging.critical("Missing parset file, I don't know what to do :'(")
     sys.exit(1)

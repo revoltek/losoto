@@ -242,10 +242,30 @@ class solFetcher():
         """
         self.selection = selection
 
+    def makeSelection(self, append=False, *args):
+        """
+        Prepare a selection string based on the given arguments
+        """
+        if append:
+            s = self.selection + " & "
+        else:
+            s = ''
+        for arg in args:
+            axis = 
+            val = 
+            if val is list:
+                for v in val:
+                    s = s + "(" + axis + "==" + v + ") | "
+                s = s.replace_last('|', '&')
+            else:
+                s = s + "(" + axis + "==" + v + ") & "
+
+        self.selection = s[:-2]
+
 
     def getType(self):
         """
-        return the type of the solution-tables which is stored in the title
+        return the type of the solution-tables (it is stored in the title)
         """
 
         return self.t._v_title
@@ -271,7 +291,7 @@ class solFetcher():
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
-        notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which index multiple values, then a random value among those possible indexed by that axis is used!
+        notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
         """
 
         import numpy as np

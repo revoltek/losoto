@@ -119,7 +119,7 @@ def getParSolsets( step, parset, H ):
     return list(set(solsets))
 
 
-def getParSolType( step, parset, H ):
+def getParSolTypes( step, parset, H ):
     """
     Return the SolType list for this step.
     The order is:
@@ -188,30 +188,3 @@ def openSoltabs( H, ss_sts ):
         soltabs.append( H.getSoltab(ss, st) )
 
     return soltabs
-
-
-def formatSelection(ant=[], pol=[], dir=[]):
-    """
-    return a string that can be used by the solFetcher as a selection criteria
-    """
-    s=''
-    if ant != []:
-        for a in ant:
-            if a == ant[0]: s = s+'('
-            else: s = s+' & '
-            s = s+'(ant == \''+a+'\')'
-            if a == ant[-1]: s = s+')'
-    if pol != []:
-        for p in pol:
-            if p == pol[0]: s = s+'('
-            else: s = s+' & '
-            s = s+'(pol == \''+p+'\') '
-            if p == pol[-1]: s = s+')'
-    if dir != []:
-        for d in dir:
-            if d == dir[0]: s = s+'('
-            else: s = s+' & '
-            s = s+'(dir == \''+d+'\') '
-            if d == dir[-1]: s = s+')'
-
-    return s
