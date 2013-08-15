@@ -291,7 +291,14 @@ class solFetcher():
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
+<<<<<<< HEAD
         notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
+=======
+        notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which index multiple values, then a random value among those possible indexed by that axis is used!
+        Return:
+        ndarray of vals and a list with axis values in the form:
+        [(axisname1,[axisvals1]),(axisname2,[axisvals2]),...]
+>>>>>>> 07685ae23b781eea2552ddfa828f1f8e86a144c5
         """
 
         import numpy as np
