@@ -32,8 +32,8 @@ def getParAnts( step, parset, H ):
     # sanity check
     for ant in ants:
         if ant not in allAnts:
-            logging.error("Cannot find Ant", Ant, ", ignoring.")
-            ants.remove(Ant)
+            logging.error("Antenna \""+ant+"\" not found. Ignoring.")
+            ants.remove(ant)
 
     return ants
 
@@ -69,9 +69,9 @@ def getParSoltabs( step, parset, H ):
     for s in ssst:
         solset, soltab = s.split('/')
         # check that soltab exists and that the declared solset is usable
-        if soltab not in H.getSoltabs(solset).keys() or\
-                solset not in getParSolsets( step, parset, H ):
-            logging.error("Solution-table", soltab, " not available, ignoring.")
+        if solset not in getParSolsets( step, parset, H ) or \
+                soltab not in H.getSoltabs(solset).keys():
+            logging.error("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
             ssst.remove(s)
 
     return ssst
@@ -82,12 +82,13 @@ def getParSolsets( step, parset, H ):
     Return the solution-set list for this parset.
     The order is:
     * local step (from the Soltab parameter)
-    * global value (from the Soltab + Solset parameter)
+    * global value (from the Soltab)
+    * restrict to global Solset var
     * default = all
     """
     allSolsets = H.getSolsets().keys()
 
-    # local val
+    # local val from soltab
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
     soltabs = parset.getStringVector( stepOptName, [] )
     solsets = []
@@ -113,7 +114,7 @@ def getParSolsets( step, parset, H ):
     # sanity check
     for solset in solsets:
         if solset not in allSolsets:
-            logging.error("Solution-set", solset, " in not in the HDF5 file, ignoring")
+            logging.error("Solution-set \""+solset+"\" not found. Ignoring")
             solsets.remove(solset)
 
     return list(set(solsets))
@@ -130,11 +131,11 @@ def getParSolTypes( step, parset, H ):
 
     # local val
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
-    SolType = parset.getStringVector( stepOptName, [] )
+    solTypes = parset.getStringVector( stepOptName, [] )
     
     # global val or default
-    if SolTypes == []:
-        SolTypes = parset.getStringVector( "LoSoTo.solType", [] )
+    if solTypes == []:
+        solTypes = parset.getStringVector( "LoSoTo.solType", [] )
 
     return solTypes
 

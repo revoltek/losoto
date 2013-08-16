@@ -49,7 +49,8 @@ steps = parset.getStringVector( "LoSoTo.Steps", [] )
 
 # Possible operations, linked to relative function
 import operations
-operations = { "RESET": operations.reset
+operations = { "RESET": operations.reset,
+               "EXAMPLE": operations.example
 #               "CLOCKTEC": operations.clocktec,
 #               "FLAG": operations.flag,
 #               "SMOOTH": operations.smooth,
@@ -64,8 +65,9 @@ for step in steps:
            + ").")
    returncode = operations[ operation ].run( step, parset, H )
    if returncode != 0:
-      logging.error("Step incomplete. Try to continue anyway.")
+      logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
    else:
-      logging.info("Step completed successfully.")
+      logging.info("Step \'" + step + "\' completed successfully.")
 
+del H
 logging.info("Done.")

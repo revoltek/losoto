@@ -26,8 +26,8 @@ def run( step, parset, H ):
     
    for soltab in openSoltabs( H, soltabs ):
         t = solFetcher(soltab)
-        print formatSelection(ant=ant, pol=pol, dir=dir)
-        t.setSelection(formatSelection(ant=ant, pol=pol, dir=dir))
+        t.makeSelection(ant=ant, pol=pol, dir=dir)
+        print t.selection
         r = t.getRowsIterator()
 
 

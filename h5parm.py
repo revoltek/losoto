@@ -234,6 +234,21 @@ class solFetcher():
         self.t = table
         self.selection = selection
 
+
+    def __getattr__(self, axis):
+        """
+        link any attribute with an "axis name" to getValuesAxis("axis name")
+        """
+        if axis in self.getAxes(notAxes=[]):
+            # TODO: reallcy check that the order is always correct for the other axis!!!
+            if axis == 'val' or axis == 'flag':
+                return self.getValuesAxis(axis=axis, makeUnique=False)
+            else:
+                return self.getValuesAxis(axis=axis)
+        else:
+            raise AttributeError()
+
+
     def setSelection(self, selection = ''):
         """
         set a default selection criteria.
@@ -242,23 +257,30 @@ class solFetcher():
         """
         self.selection = selection
 
-    def makeSelection(self, append=False, *args):
+
+    def makeSelection(self, append=False, **args):
         """
         Prepare a selection string based on the given arguments
+        args are a list of valid axis of the form: {'pol':'XX','ant':['CS001HBA','CS002HBA']}
         """
         if append:
             s = self.selection + " & "
         else:
             s = ''
-        for arg in args:
-            axis = 
-            val = 
-            if val is list:
+        for axis, val in args.items():
+            # in case of list of single item, turn them into string
+            if isinstance(val, list) and len(val) == 1: val = val[0]
+            # iterate the list and add an entry for each element
+            if isinstance(val, list):
+                s += '( '
                 for v in val:
-                    s = s + "(" + axis + "==" + v + ") | "
-                s = s.replace_last('|', '&')
+                    s = s + "(" + axis + "=='" + v + "') | "
+                # replace the last "|" with a "&"
+                s = ') &'.join(s.rsplit('|', 1))
+            elif isinstance(val, str):
+                s = s + "(" + axis + "=='" + val + "') & "
             else:
-                s = s + "(" + axis + "==" + v + ") & "
+                logging.error('Cannot handle type: '+str(type(val))+'when setting selections.')
 
         self.selection = s[:-2]
 
@@ -271,37 +293,57 @@ class solFetcher():
         return self.t._v_title
 
 
-    def getRowsIterator(self, selection = ''):
+    def getRowsIterator(self, selection = None):
         """
         Return a row iterator give a certain selection
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         """
+        if selection == None: selection = self.selection
+
         if selection != '':
             return self.t.where(selection)
-        elif self.selection != '':
-            return self.t.where(self.selection)
         else:
             return self.t.iterrows()
 
 
-    def getValuesGrid(self, selection='', valAxis = "val", notAxes = ["flag"]):
+    def getValuesAxis(self, axis='', selection=None, makeUnique=True):
+        """
+        Return all the possible values present along a specific axis (no duplicates)
+        Keyword arguments:
+        axis -- the axis name
+        """
+
+        import numpy as np
+
+        if selection == None: selection = self.selection
+
+        if axis not in self.getAxes(notAxes=[]):
+            logging.error('Axis \"'+axis+'\" not found.')
+            return []
+
+        if makeUnique:
+            return np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) )
+        else:
+            return np.array( [ x[axis] for x in self.getRowsIterator(selection) ] )
+
+
+    def getValuesGrid(self, selection=None, valAxis = "val", notAxes = ["flag"]):
         """
         Try to create a simple matrix of values. NaNs will be returned where the values are not available.
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
-<<<<<<< HEAD
         notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
-=======
         notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which index multiple values, then a random value among those possible indexed by that axis is used!
         Return:
         ndarray of vals and a list with axis values in the form:
         [(axisname1,[axisvals1]),(axisname2,[axisvals2]),...]
->>>>>>> 07685ae23b781eea2552ddfa828f1f8e86a144c5
         """
 
         import numpy as np
+
+        if selection == None: selection = self.selection
 
         # retreive axes values in a list of tuples
         # [(axisname1,[axisvals1]),(axisname2,[axisvals2]),...]
