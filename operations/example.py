@@ -65,7 +65,7 @@ def run( step, parset, H ):
         # now get all values given this selection
         logging.info("Get data using t.val")
         val = t.val
-        logging.info("$ val is "+str(val[100]))
+        logging.info("$ val is "+str(val[100,0,0,0,0]))
         #print len(val)
         flag = t.flag
         #print len(flag)
@@ -81,14 +81,18 @@ def run( step, parset, H ):
         for i, row in enumerate(t.getRowsIterator()):
             if row['ant'] == 'CS001LBA' and row['time'] == thisTime:
                 logging.info("$ val is "+str(row['val']))
+            if row['ant'] == 'CS002LBA' and row['time'] == thisTime:
+                # update a specific cell value
+                row['val'] = '123456'
+                row.update()
 
         # another way to get the data is using the getValuesGrid()
         logging.info("Get data using getValuesGrid()")
-        grid, axis = t.getValuesGrid(selection='')
-        # axis name
-        print [i[0] for i in axis]
+        grid, axis = t.getValuesGrid(selection='') # note we reset the selection
+        # axis names
+        logging.info("Axes: "+str(t.getAxes()))
         # axis shape
-        print [len(i[1]) for i in axis]
+        print [len(i) for i in axis]
         # data array shape (same of axis shape)
         print grid.shape
         logging.info("$ val is "+str(grid[100,0,0,1,1]))
@@ -100,6 +104,9 @@ def run( step, parset, H ):
         logging.info("Frequencies are: "+str(t.freq))
         logging.info("Directions are: "+str(t.dir))
         logging.info("Polarizations are: "+str(t.pol))
+
+        # probably the fastest way to dump all the data
+        a=[row.fetch_all_fields() for row in t.t.where('(ant == \'CS002LBA\')')]
 
         return 0 # if everything went fine, otherwise 1
 

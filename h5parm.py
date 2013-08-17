@@ -26,6 +26,7 @@ class h5parm():
             if readonly:
                 self.H = tables.openFile(h5parmFile, 'r')
             else:
+                logging.warning('Appending to an existent file.')
                 self.H = tables.openFile(h5parmFile, 'a')
         else:
             if readonly:
@@ -222,32 +223,25 @@ class h5parm():
         return sources
 
 
-class solFetcher():
-
-    def __init__(self, table, selection = ''):
+class solHandler():
+    """
+    Generic class to pricipally handle selections
+    """
+    def __init__(self, table, selection = '', valAxes=['val','flag']):
         """
         Keyword arguments:
         tab -- table object
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
+        valAxes -- list of axis names which are not used to indexise the values
         """
         
+        if not isinstance( table, tables.table.Table):
+            logging.error("Object must be initialized with a tables.table.Table object.")
+            return
         self.t = table
         self.selection = selection
-
-
-    def __getattr__(self, axis):
-        """
-        link any attribute with an "axis name" to getValuesAxis("axis name")
-        """
-        if axis in self.getAxes(notAxes=[]):
-            # TODO: reallcy check that the order is always correct for the other axis!!!
-            if axis == 'val' or axis == 'flag':
-                return self.getValuesAxis(axis=axis, makeUnique=False)
-            else:
-                return self.getValuesAxis(axis=axis)
-        else:
-            raise AttributeError()
-
+        self.valAxes = valAxes
+ 
 
     def setSelection(self, selection = ''):
         """
@@ -292,7 +286,7 @@ class solFetcher():
 
         return self.t._v_title
 
-
+    
     def getRowsIterator(self, selection = None):
         """
         Return a row iterator give a certain selection
@@ -307,28 +301,65 @@ class solFetcher():
             return self.t.iterrows()
 
 
-    def getValuesAxis(self, axis='', selection=None, makeUnique=True):
+class solWriter(solHandler):
+
+    def __init__(self, table, selection = '', valAxes=['val','flag']):
+        solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
+
+    
+    def setCol(self, column = None, val = None, selection = None):
         """
-        Return all the possible values present along a specific axis (no duplicates)
+        Set the value of a specific column
+        """
+
+        if selection == None: selection = self.selection
+
+        for row in self.getRowsIterator(selection):
+            row[column] = val
+            row.update()
+
+
+class solFetcher(solHandler):
+
+    def __init__(self, table, selection = '', valAxes=['val','flag']):
+        solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
+
+
+    def __getattr__(self, axis):
+        """
+        link any attribute with an "axis name" to getValuesAxis("axis name") or to
+        getValuesGrid() if it is a valAxes
+        """
+        if axis in self.getAxes(valAxes = []):
+            if axis in self.valAxes:
+                return self.getValuesGrid(valAxis = axis, \
+                        valAxes = [a for a in self.valAxes if a != axis])[0]
+            else:
+                return self.getValuesAxis(axis=axis)
+        else:
+            raise AttributeError("Axis \""+axis+"\" not found.")
+
+
+    def getValuesAxis(self, axis='', selection=None):
+        """
+        Return a sorted list of all the possible values present along a specific axis (no duplicates)
         Keyword arguments:
         axis -- the axis name
+        selection --
         """
 
         import numpy as np
 
         if selection == None: selection = self.selection
 
-        if axis not in self.getAxes(notAxes=[]):
+        if axis not in self.getAxes(valAxes = []):
             logging.error('Axis \"'+axis+'\" not found.')
             return []
 
-        if makeUnique:
-            return np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) )
-        else:
-            return np.array( [ x[axis] for x in self.getRowsIterator(selection) ] )
+        return list(np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) ))
 
 
-    def getValuesGrid(self, selection=None, valAxis = "val", notAxes = ["flag"]):
+    def getValuesGrid(self, selection=None, valAxis = "val", valAxes = ["flag"]):
         """
         Try to create a simple matrix of values. NaNs will be returned where the values are not available.
         Keyword arguments:
@@ -338,40 +369,43 @@ class solFetcher():
         notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which index multiple values, then a random value among those possible indexed by that axis is used!
         Return:
         ndarray of vals and a list with axis values in the form:
-        [(axisname1,[axisvals1]),(axisname2,[axisvals2]),...]
+        [[axisvals1],[axisvals2],...]
+        NOTE: each axis is sorted
         """
 
         import numpy as np
 
         if selection == None: selection = self.selection
 
-        # retreive axes values in a list of tuples
-        # [(axisname1,[axisvals1]),(axisname2,[axisvals2]),...]
+        # retreive axes values in a list of numpy arrays
         axesVals = []
-        for axis in self.getAxes(notAxes = notAxes+[valAxis]):
-            axesVals.append((axis, np.unique(np.array([x[axis] for x in self.getRowsIterator(selection)]))))
-        
+        axesIdx = []
+        for axis in self.getAxes(valAxes = valAxes+[valAxis]):
+            axisVals, axisIdx = np.unique(np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ), return_inverse=True)
+            axesVals.append(axisVals)
+            axesIdx.append(axisIdx)
+
         # create an ndarray and fill it with NaNs
-        vals = np.ndarray(shape = [len(axis[1]) for axis in axesVals])
+        vals = np.ndarray(shape = [len(axis) for axis in axesVals])
         vals[:] = np.NAN
+
         # refill the array with the correct values when they are available
-        for row in self.getRowsIterator(selection):
-            pos = []
-            for axis in axesVals:
-                pos.append(np.where(axis[1]==row[axis[0]])[0])
-            vals[pos] = row[valAxis]
+        vals[axesIdx] = np.array( [ x[valAxis] for x in self.getRowsIterator(selection) ] )
 
         return vals, axesVals
 
 
-    def getAxes(self, notAxes = ["val","flag"]):
+    def getAxes(self, valAxes = None):
         """
         Return a list with all the axis names in the correct order for
         slicing the getValuesGrid() reurned list.
         Keyword arguments:
-        notAxes -- array of names of axes that are not to list
+        valAxes -- array of names of axes that are not to list
         """
+        # remove the values columns from the axes
+        if valAxes == None: valAxes = self.valAxes
+
         cols = list(self.t.colpathnames)
-        for notAxis in notAxes:
-            cols.remove(notAxis)
+        for valAxis in valAxes:
+            cols.remove(valAxis)
         return cols

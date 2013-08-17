@@ -13,22 +13,17 @@ logging.info('Loading RESET module.')
 def run( step, parset, H ):
    """Set specific solutions to 1 (amp) and 0 for all the others
    """
-   solsets = getParSolsets( step, parset, H )
-   print "Solsets", solsets
    soltabs = getParSoltabs( step, parset, H )
-   print "Soltabs", soltabs
    ant = getParAnts( step, parset, H )
-   print ant
    pol = getParPols( step, parset, H )
-   print pol
    dir = getParDirs( step, parset, H )
-   print dir
     
    for soltab in openSoltabs( H, soltabs ):
-        t = solFetcher(soltab)
+        t = solWriter(soltab)
         t.makeSelection(ant=ant, pol=pol, dir=dir)
-        print t.selection
-        r = t.getRowsIterator()
-
+        if t.getType() == 'amplitude':
+            t.setAxes('val', 1.)
+        else:
+            t.setAxes('val', 0.)
 
    return 0

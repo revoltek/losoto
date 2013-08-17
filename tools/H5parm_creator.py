@@ -112,7 +112,13 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
             for idxFreq, freq in enumerate(freqs):
                 rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [False]*len(times), val[:,idxFreq]))
                 h5parm.addRow(soltabRot, rows)
-pbar.finish()
+    pbar.finish()
+
+    # Index columns
+    logging.info('Indexing columns...')
+    for c in ['ant','freq','dir','time']:
+        col = soltabRot.colinstances[c]
+        col.create_index()
 
 # fil amplitude and phase tables
 if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
@@ -179,7 +185,16 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
                 else:
                     h5parm.addRow(soltabPhase, rows)
 
-pbar.finish()
+    pbar.finish()
+
+    # Index columns
+    logging.info('Indexing columns...')
+    for c in ['ant','freq','pol','dir','time']:
+        col = soltabAmp.colinstances[c]
+        col.create_index()
+        col = soltabPhase.colinstances[c]
+        col.create_index()
+
 
 logging.info('Collecting informations from the ANTENNA table.')
 antennaTable = pt.table(antennaFile)

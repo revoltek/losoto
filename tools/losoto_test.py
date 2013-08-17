@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This tool comapre the performances of H5parm with parmdb.
+# ./losoto_test.py -p ../examples/global-comp.h5 -g ../examples/L99289-cal_SB081.MS/instrument/ -s sol000
 
 # Authors:
 # Francesco de Gasperin
@@ -13,7 +14,7 @@ import logging
 import lofar.parmdb
 import losoto._version
 import losoto._logging
-from losoto.h5parm import h5parm
+from losoto.h5parm import h5parm, solFetcher
 
 # Options
 import optparse
@@ -28,7 +29,11 @@ losoto._logging.setVerbose()
 
 solset = options.solset
 h5parmFile = options.h5parm
-H = h5parm(h5parmFile)
+H5 = h5parm(h5parmFile)
+H = solFetcher(H5.getSoltab(solset,'amplitude000'))
+H.makeSelection(dir='3C196',ant='CS001LBA',pol='XX')
+H2 = solFetcher(H5.getSoltab(solset,'phase000'))
+H2.makeSelection(dir='3C196',ant='CS001LBA',pol='XX')
 logging.info("H5parm filename = "+h5parmFile)
 parmdbFile = options.parmdb
 P = lofar.parmdb.parmdb(parmdbFile)
@@ -43,8 +48,7 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-tab = H.getSoltab(solset, 'amplitude000')
-Hfreqs = np.array([x['freq'] for x in tab.where("(ant == 'CS001LBA') & (pol == 'XX') & (dir == '3C196')")])
+Hfreqs = H.freq
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
@@ -59,11 +63,12 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-tab = H.getSoltab(solset, 'amplitude000')
-Htimes = np.array([x['time'] for x in tab.where("(ant == 'CS001LBA') & (pol == 'XX') & (dir == '3C196')")])
+H.makeSelection(dir='3C196',ant='CS001LBA',pol='XX')
+Htimes = H.time
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
+print Htimes
 print "Equal?",(Ptimes == Htimes).all()
 
 # read amp solutions
@@ -77,8 +82,7 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-tab = H.getSoltab(solset, 'amplitude000')
-Hamp = np.array([x['val'] for x in tab.where("(ant == 'CS001LBA') & (pol == 'XX') & (dir == '3C196')")])
+Hamp = H.val
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
@@ -93,10 +97,8 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-tab = H.getSoltab(solset, 'amplitude000')
-Hamp = np.array([x['val'] for x in tab.where("(ant == 'CS001LBA') & (pol == 'XX') & (dir == '3C196')")])
-tab = H.getSoltab(solset, 'phase000')
-Hphase = np.array([x['val'] for x in tab.where("(ant == 'CS001LBA') & (pol == 'XX') & (dir == '3C196')")])
+Hamp = H.val
+Hphase = H2.val
 Hreal = (Hamp * (np.cos(Hphase) + np.sin(Hphase)*1j)).real
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
@@ -111,19 +113,22 @@ Prot = P.getValuesGrid('CommonRotationAngle:CS001LBA')['CommonRotationAngle:CS00
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
+H = solFetcher(H5.getSoltab(solset,'rotation000'))
+H.makeSelection(ant='CS001LBA', dir='pointing')
+
 start = time.clock()
-tab = H.getSoltab(solset, 'rotation000')
-Hrot = np.array([x['val'] for x in tab.where("(ant == 'CS001LBA') & (dir == 'pointing')")])
+Hrot = H.val[:,0,0,0]
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
+print "Equal?", (Prot == Hrot).all()
+
 start = time.clock()
-tab = H.getSoltab(solset, 'rotation000')
-Hrot2 = np.array([x['val'] for x in tab.iterrows() if x["ant"] == 'CS001LBA' and x['dir'] == 'pointing'])
+Hrot2 = np.array( [x['val'] for x in H.getRowsIterator()] )
 elapsed = (time.clock() - start)
 logging.info("H5parm2 -- "+str(elapsed)+" s.")
 
-print "Equal?", (Prot == Hrot).all()
+print "Equal?", (Prot == Hrot2).all()
 
 # read a slice in time
 logging.info("### Read all rotations for a dir/station (slice in time)")
@@ -134,18 +139,19 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-tab = H.getSoltab(solset, 'rotation000')
-Hrot = [x['val'] for x in tab.where("(time > 4.86887901e+09) & (time < 4.86888401e+09) & (ant == 'CS001LBA') & (dir == 'pointing')")]
+Hrot = [x['val'] for x in H.t.where("(time > 4.86887901e+09) & (time < 4.86888401e+09) & (ant == 'CS001LBA') & (dir == 'pointing')")]
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
-start = time.clock()
-tab = H.getSoltab(solset, 'rotation000')
-Hrot2 = [x['val'] for x in tab.iterrows() if x['time'] > 4.86887901e+09 and x['time'] < 4.86888401e+09 and x['ant'] == 'CS001LBA' and dir == 'pointing']
-elapsed = (time.clock() - start)
-logging.info("H5parm2 -- "+str(elapsed)+" s.")
-
 print "Equal?", (Prot == Hrot).all()
+
+
+# read whole file
+logging.info("### Read and tabulate the whole file")
+start = time.clock()
+val = H.getValuesGrid('')
+elapsed = (time.clock() - start)
+logging.info("H5parm -- "+str(elapsed)+" s.")
 
 del H
 del P
