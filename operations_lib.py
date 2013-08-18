@@ -30,7 +30,7 @@ def getParAnts( step, parset, H ):
         ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
 
     # sanity check
-    for ant in ants:
+    for ant in ants[:]:
         if ant not in allAnts:
             logging.error("Antenna \""+ant+"\" not found. Ignoring.")
             ants.remove(ant)
@@ -66,12 +66,16 @@ def getParSoltabs( step, parset, H ):
                 ssst.append(solset+'/'+soltab)
 
     # sanity check
-    for s in ssst:
+    allawedSolTypes = getParSolTypes( step, parset, H )
+    for s in ssst[:]:
         solset, soltab = s.split('/')
         # check that soltab exists and that the declared solset is usable
         if solset not in getParSolsets( step, parset, H ) or \
                 soltab not in H.getSoltabs(solset).keys():
             logging.error("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
+            ssst.remove(s)
+        # check if the soltab is compatible with the chosen solTypes
+        elif H.getSoltab(solset, soltab)._v_title not in allawedSolTypes and allawedSolTypes != []:
             ssst.remove(s)
 
     return ssst
@@ -112,7 +116,7 @@ def getParSolsets( step, parset, H ):
         solsets = allSolsets
 
     # sanity check
-    for solset in solsets:
+    for solset in solsets[:]:
         if solset not in allSolsets:
             logging.error("Solution-set \""+solset+"\" not found. Ignoring")
             solsets.remove(solset)
@@ -135,10 +139,9 @@ def getParSolTypes( step, parset, H ):
     
     # global val or default
     if solTypes == []:
-        solTypes = parset.getStringVector( "LoSoTo.solType", [] )
+        solTypes = parset.getStringVector( "LoSoTo.SolType", [] )
 
     return solTypes
-
 
 
 def getParDirs( step, parset, H ):

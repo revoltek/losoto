@@ -4,60 +4,39 @@
 # step variable override global variable
 
 LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
-
-LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
+# this is only global
 LoSoTo.Solset = [sol000]
+LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [pahse]
 LoSoTo.Ant = []
 LoSoTo.Pol = [XX, YY]
 LoSoTo.Dir = [pointing]
 
+LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
+LoSoTo.Steps.everystep.Ant = []
+LoSoTo.Steps.everystep.Pol = []
+LoSoTo.Steps.everystep.Dir = []
+LoSoTo.Steps.everystep.SolType = []
 
 LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.Soltab = [sol000/amplitude000]
-LoSoTo.Steps.reset.Ant = []
-LoSoTo.Steps.reset.Pol = []
-
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.Ant = []
-LoSoTo.Steps.clocktec.Pol = []
 LoSoTo.Steps.clocktec.Algorithm = 
 
-
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Soltab = [sol000/phase000]
-LoSoTo.Steps.flag.Ant = []
-LoSoTo.Steps.flag.Pol = []
 LoSoTo.Steps.flag.Sigma = 5
 
-
 LoSoTo.Steps.smooth.Operation = SMOOTH
-LoSoTo.Steps.smooth.Soltab = []
-LoSoTo.Steps.smooth.Ant = []
-LoSoTo.Steps.smooth.Pol = []
-LoSoTo.Steps.smooth.FWHM.Time = 10
-LoSoTo.Steps.smooth.FWHM.Freq = 5
-
+LoSoTo.Steps.smooth.FWHM = [10, 5]
+LoSoTo.Steps.smooth.Axes = [freq, time]
 
 LoSoTo.Steps.interpolate.Operation = INTERP
-LoSoTo.Steps.interpolate.Soltab = []
-LoSoTo.Steps.interpolate.Ant = []
-LoSoTo.Steps.interpolate.Pol = []
 LoSoTo.Steps.interpolate.Time = True
 LoSoTo.Steps.interpolate.Freq = True
 
-
 LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.Soltab = [sol000/phase000]
-LoSoTo.Steps.plot.Ant = []
-LoSoTo.Steps.plot.Pol = []
-
 
 LoSoTo.Steps.apply.Operation = APPLY
-LoSoTo.Steps.apply.Soltab = []
-LoSoTo.Steps.apply.Ant = []
-LoSoTo.Steps.apply.Pol = []
 LoSoTo.Steps.apply.MS = target.MS
 LoSoTo.Steps.apply.Beam = True
 LoSoTo.Steps.apply.InCol = DATA

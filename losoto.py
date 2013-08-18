@@ -50,10 +50,10 @@ steps = parset.getStringVector( "LoSoTo.Steps", [] )
 # Possible operations, linked to relative function
 import operations
 operations = { "RESET": operations.reset,
-               "EXAMPLE": operations.example
+               "EXAMPLE": operations.example,
 #               "CLOCKTEC": operations.clocktec,
 #               "FLAG": operations.flag,
-#               "SMOOTH": operations.smooth,
+               "SMOOTH": operations.smooth
 #               "INTERP": operations.interp,
 #               "PLOT": operations.plot,
 #               "APPLY": operations.apply

@@ -224,26 +224,27 @@ for tab in solset._v_leaves:
 dirs = set(dirs)
 dirs.remove('pointing')
 
-logging.info('Collecting informations from the sky table.')
-skydb = lofar.parmdb.parmdb(skydbFile)
-vals = []
-ra = dec = np.nan
-for source in set(dirs):
-    try:
-        ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
-        dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
-    except KeyError:
-        # Source not found in skymodel parmdb, try to find components
-        logging.error('Cannot find the source '+source+'. Trying components.')
-        ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values()).mean()
-        dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values()).mean()
-        if ra == np.nan or dec == np.nan:
-            logging.error('Cannot find the source '+source+'. I leave NaNs.')
-        else:
-            logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
-    vals.append([ra, dec])
+if dirs != []:
+    logging.info('Collecting informations from the sky table.')
+    skydb = lofar.parmdb.parmdb(skydbFile)
+    vals = []
+    ra = dec = np.nan
+    for source in set(dirs):
+        try:
+            ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
+            dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
+        except KeyError:
+            # Source not found in skymodel parmdb, try to find components
+            logging.error('Cannot find the source '+source+'. Trying components.')
+            ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values()).mean()
+            dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values()).mean()
+            if ra == np.nan or dec == np.nan:
+                logging.error('Cannot find the source '+source+'. I leave NaNs.')
+            else:
+                logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
+        vals.append([ra, dec])
+    sourceTable.append(zip(*(dirs,vals)))
 
-sourceTable.append(zip(*(dirs,vals)))
 logging.info("Total file size: "+str(h5parm.H.get_filesize()/1024./1024.)+" M")
 del h5parm
 logging.info('Done.')
