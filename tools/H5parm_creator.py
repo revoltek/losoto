@@ -202,6 +202,7 @@ antennaNames = antennaTable.getcol('NAME')
 antennaPositions = antennaTable.getcol('POSITION')
 antennaTable.close()
 descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
+# creating the antenna table
 antennaTable = h5parm.H.createTable(solset, 'antenna', descriptor, 'Antenna names and positions')
 antennaTable.append(zip(*(antennaNames,antennaPositions)))
 
@@ -211,6 +212,7 @@ phaseDir = fieldTable.getcol('PHASE_DIR')
 pointing = phaseDir[0, 0, :]
 fieldTable.close()
 
+# create the source table
 descriptor = np.dtype([('name', np.str_, 16),('dir', np.float32, 2)])
 sourceTable = h5parm.H.createTable(solset, 'source', descriptor, 'Source names and directions')
 # add the field centre, that is also the direction for Gain and CommonRotationAngle
@@ -221,15 +223,18 @@ for tab in solset._v_leaves:
     c = solset._f_getChild(tab)
     if c._v_name != 'antenna' and c._v_name != 'source':
         dirs.extend(c.col('dir'))
-dirs = set(dirs)
-dirs.remove('pointing')
+# remove duplicates
+dirs = list(set(dirs))
+# remove any pointing (already in the table)
+if 'pointing' in dirs:
+    dirs.remove('pointing')
 
 if dirs != []:
     logging.info('Collecting informations from the sky table.')
     skydb = lofar.parmdb.parmdb(skydbFile)
     vals = []
     ra = dec = np.nan
-    for source in set(dirs):
+    for source in dirs:
         try:
             ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
             dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]

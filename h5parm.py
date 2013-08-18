@@ -327,6 +327,20 @@ class solWriter(solHandler):
             row.update()
 
 
+    def setValuesGrid(self, vals, nrows, valAxis = 'val'):
+        """
+        Write a specific set of rows (row numbers defined in nrows)
+        """
+
+        import numpy as np
+
+        vals = np.ndarray.flatten(vals)
+        nrows = np.ndarray.flatten(nrows)
+        for i, n in enumerate(nrows):
+            r = self.t[n]
+            r[valAxis] = vals[i]
+
+
 class solFetcher(solHandler):
 
     def __init__(self, table, selection = '', valAxes=['val','flag']):
@@ -398,7 +412,7 @@ class solFetcher(solHandler):
         # create an ndarray and fill it with NaNs
         vals = np.ndarray(shape = [len(axis) for axis in axesVals])
         vals[:] = np.NAN
-        if return_nrows: nrows = np.copy(vals)
+        if return_nrows: nrows = np.array(np.copy(vals), dtype=np.uint8)
 
         # refill the array with the correct values when they are available
         tempVals = []
