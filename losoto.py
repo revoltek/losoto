@@ -9,7 +9,7 @@
 # Bas van der Tol
 _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
 
-import sys, os
+import sys, os, time
 import logging
 import _version
 import _logging
@@ -18,12 +18,14 @@ import lofar.parameterset
 
 # Options
 import optparse
-opt = optparse.OptionParser(usage='%prog [-v] h5parm parset [default: losoto.parset] \n'
+opt = optparse.OptionParser(usage='%prog [--v|--vv] h5parm parset [default: losoto.parset] \n'
         +_author, version='%prog '+_version.__version__)
-opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+opt.add_option('--v', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+opt.add_option('--vv', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
 (options, args) = opt.parse_args()
 
-if options.verbose: _logging.setVerbose()
+if options.v: _logging.setVerbose('info')
+if options.vv: _logging.setVerbose('debug')
 
 # Check options
 try: h5parmFile = args[0]
@@ -53,21 +55,24 @@ operations = { "RESET": operations.reset,
                "EXAMPLE": operations.example,
 #               "CLOCKTEC": operations.clocktec,
 #               "FLAG": operations.flag,
-               "SMOOTH": operations.smooth
+               "SMOOTH": operations.smooth,
 #               "INTERP": operations.interp,
-#               "PLOT": operations.plot,
+               "PLOT": operations.plot
 #               "APPLY": operations.apply
 }
 
 for step in steps:
    operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
-   logging.info("--> Starting \'" + step + "\' step (operation: " + operation \
-           + ").")
+   logging.info("--> Starting \'" + step + "\' step (operation: " + operation + ").")
+   start = time.clock()
    returncode = operations[ operation ].run( step, parset, H )
    if returncode != 0:
       logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
    else:
       logging.info("Step \'" + step + "\' completed successfully.")
+   elapsed = (time.clock() - start)
+   logging.debug("Time for this step: "+str(elapsed)+" s.")
+
 
 del H
 logging.info("Done.")

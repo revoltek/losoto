@@ -8,7 +8,7 @@ import logging
 from operations_lib import *
 from h5parm import solFetcher
 
-logging.info('Loading EXAMPLE module.')
+logging.debug('Loading EXAMPLE module.')
 
 def run( step, parset, H ):
    """

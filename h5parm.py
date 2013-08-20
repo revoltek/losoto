@@ -26,7 +26,7 @@ class h5parm():
             if readonly:
                 self.H = tables.openFile(h5parmFile, 'r')
             else:
-                logging.warning('Appending to an existent file.')
+                logging.debug('Appending to an existent file.')
                 self.H = tables.openFile(h5parmFile, 'a')
         else:
             if readonly:
@@ -35,6 +35,8 @@ class h5parm():
                 # add a compression filter
                 f = tables.Filters(complevel=complevel, complib='zlib')
                 self.H = tables.openFile(h5parmFile, filters=f, mode='w')
+
+        self.fileName = h5parmFile
         
         # if the file is new add the version of the h5parm
         # in losoto._version.__h5parmVersion__
@@ -54,9 +56,8 @@ class h5parm():
         """
 
         if solsetName in self.getSolsets().keys():
-            logging.error('Solution set '+solsetName+' already present.')
+            logging.warning('Solution set '+solsetName+' already present. Switching to default.')
             solsetName = ''
-
 
         if solsetName == '':
             solsetName = self._fisrtAvailSolsetName()
@@ -329,7 +330,7 @@ class solWriter(solHandler):
 
     def setValuesGrid(self, vals, nrows, valAxis = 'val'):
         """
-        Write a specific set of rows (row numbers defined in nrows)
+        Write a specific set of rows' vals (row numbers must be defined in nrows)
         """
 
         import numpy as np
@@ -375,7 +376,7 @@ class solFetcher(solHandler):
         if selection == None: selection = self.selection
 
         if axis not in self.getAxes(valAxes = []):
-            logging.error('Axis \"'+axis+'\" not found.')
+            logging.warning('Axis \"'+axis+'\" not found.')
             return []
 
         return list(np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) ))
@@ -383,17 +384,19 @@ class solFetcher(solHandler):
 
     def getValuesGrid(self, selection=None, valAxis = "val", valAxes = None, return_nrows = False):
         """
-        Try to create a simple matrix of values. NaNs will be returned where the values are not available.
+        Creates a simple matrix of values given a selection.
+        NaNs will be returned where the values are not available.
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
-        notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
-        notAxis -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which index multiple values, then a random value among those possible indexed by that axis is used!
-        return_nrows -- if True return a 3rd parameter that is the row numbers corresponding to every value in the same shape
+        valAxes -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
+        return_nrows -- if True return a 3rd parameter that is the row numbers corresponding to every value, this matrix has the same shape of the values matrix
         Return:
-        ndarray of vals and a list with axis values in the form:
-        [[axisvals1],[axisvals2],...]
-        NOTE: each axis is sorted!
+        1) ndarray of vals
+        2) a dict with axis values in the form:
+        {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
+        3) ndarray of row positions, same shape of vals ndarray (optional)
+        NOTE: each axis is already sorted!
         """
 
         import numpy as np
@@ -402,15 +405,19 @@ class solFetcher(solHandler):
         if selection == None: selection = self.selection
 
         # retreive axes values in a list of numpy arrays
-        axesVals = []
+        axesVals = {}
         axesIdx = []
         for axis in self.getAxes(valAxes = valAxes):
+            # np.unique also sort the values
             axisVals, axisIdx = np.unique(np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ), return_inverse=True)
-            axesVals.append(axisVals)
+            axesVals[axis] = axisVals
             axesIdx.append(axisIdx)
 
+        # retrive the shape of the axes in the correct order (the one of getAxes())
+        shape =  [len(axesVals[axis]) for axis in self.getAxes(valAxes = valAxes)]
+
         # create an ndarray and fill it with NaNs
-        vals = np.ndarray(shape = [len(axis) for axis in axesVals])
+        vals = np.ndarray(shape)
         vals[:] = np.NAN
         if return_nrows: nrows = np.array(np.copy(vals), dtype=np.uint8)
 
@@ -422,8 +429,6 @@ class solFetcher(solHandler):
             tempNrows.append(x.nrow)
         vals[axesIdx] = np.array(tempVals)
         if return_nrows: nrows[axesIdx] = np.array(tempNrows)
-
-        #vals[axesIdx] = np.array( [ x[valAxis] for x in self.getRowsIterator(selection) ] )
 
         if return_nrows:
             return vals, axesVals, nrows
@@ -438,11 +443,12 @@ class solFetcher(solHandler):
         matrix where N are the freq and M the time dimensions. The iterator returns also the 
         value of the iterAxes for an easy write back.
         Keyword arguments:
-        iterAxes -- axes which are used to iterate the data
+        returnAxes -- axes of the returned array, all others will be cycled
         Return:
-        ndarray of dim=dim(returnAxes) and with the axes oriented as given
-        it also returns the indexes of all the other axes (in correct order)
-        corresponding to the returned array
+        1) ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxes()
+        2) a dict with axis values in the form:
+        {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
+        3) ndarray of row positions, same shape of vals ndarray (optional)
         """
         
         import itertools
@@ -456,31 +462,33 @@ class solFetcher(solHandler):
         else:
             vals, axesVals = self.getValuesGrid(selection=None, valAxis = valAxis, valAxes = valAxes)
 
-        axesName = self.getAxes(valAxes = valAxes)
-        returnAxesIdx = [i for i, axis in enumerate(axesName) if axis in returnAxes]
-        iterAxesIdx = [i for i, axis in enumerate(axesName) if axis not in returnAxes]
-
-        # collect iterAxes dimensions
-        iterAxesDim = []
-        for axisIdx in iterAxesIdx:
-            iterAxesDim.append(len(axesVals[axisIdx]))
+        axesNames = self.getAxes(valAxes = valAxes)
 
         # move retrunAxes to the end of the vals array
-        # preseving the respective order of returnAxesIdx and iterAxesIdx
+        # preseving the respective order of returnAxes and iterAxes
+        returnAxesIdx = [i for i, axis in enumerate(axesNames) if axis in returnAxes]
         for i, axisIdx in enumerate(returnAxesIdx):
             vals = np.rollaxis(vals, axisIdx, vals.ndim)
             if return_nrows: nrows = np.rollaxis(nrows, axisIdx, nrows.ndim)
             for j, axisIdxCheck in enumerate(returnAxesIdx):
                 if axisIdxCheck > axisIdx: returnAxesIdx[j] -= 1
 
+        # collect iterAxes dimensions in correct order
+        iterAxesDim = [len(axesVals[axis]) for axis in axesNames if axis not in returnAxes]
+
         # generator to cycle over all the combinations of iterAxes
         # it "simply" get the vals of this particular combination of iterAxes
         # and return it together with the axesVals (for the iterAxes reduced the single value)
         def g():
             for axisIdx in np.ndindex(tuple(iterAxesDim)):
-                thisAxesVals = axesVals[:]
-                for j, i in enumerate(iterAxesIdx):
-                    thisAxesVals[i] = axesVals[i][axisIdx[j]]
+                thisAxesVals = {}
+                i = 0
+                for axisName in axesNames:
+                    if axisName in returnAxes:
+                        thisAxesVals[axisName] = axesVals[axisName]
+                    else:
+                        thisAxesVals[axisName] = axesVals[axisName][axisIdx[i]]
+                        i += 1
                 if return_nrows: yield (vals[axisIdx], thisAxesVals, nrows[axisIdx])
                 else: yield (vals[axisIdx], thisAxesVals)
 

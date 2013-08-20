@@ -31,9 +31,12 @@ logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emi
 # set the logging format and default level (warning)
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.WARNING)
 
-def setVerbose():
+def setVerbose(level):
     """
     Go verbose setting the default logging level to "DEBUG"
     """
-    logging.root.setLevel(logging.DEBUG)
+    if level == 'info':
+        logging.root.setLevel(logging.INFO)
+    elif level == 'debug':
+        logging.root.setLevel(logging.DEBUG)
 

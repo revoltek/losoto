@@ -32,7 +32,7 @@ def getParAnts( step, parset, H ):
     # sanity check
     for ant in ants[:]:
         if ant not in allAnts:
-            logging.error("Antenna \""+ant+"\" not found. Ignoring.")
+            logging.warning("Antenna \""+ant+"\" not found. Ignoring.")
             ants.remove(ant)
 
     return ants
@@ -72,7 +72,7 @@ def getParSoltabs( step, parset, H ):
         # check that soltab exists and that the declared solset is usable
         if solset not in getParSolsets( step, parset, H ) or \
                 soltab not in H.getSoltabs(solset).keys():
-            logging.error("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
+            logging.warning("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
             ssst.remove(s)
         # check if the soltab is compatible with the chosen solTypes
         elif H.getSoltab(solset, soltab)._v_title not in allawedSolTypes and allawedSolTypes != []:
@@ -118,7 +118,7 @@ def getParSolsets( step, parset, H ):
     # sanity check
     for solset in solsets[:]:
         if solset not in allSolsets:
-            logging.error("Solution-set \""+solset+"\" not found. Ignoring")
+            logging.warning("Solution-set \""+solset+"\" not found. Ignoring")
             solsets.remove(solset)
 
     return list(set(solsets))
@@ -176,7 +176,7 @@ def getParPols( step, parset, H ):
     # local val
     pols = parset.getStringVector( stepOptName, [] )
     if pols == []:
-        pols = parset.getStringVector( "LoSoTo.Pols", [] )
+        pols = parset.getStringVector( "LoSoTo.Pol", [] )
         # global val or default
 
     return pols

@@ -8,7 +8,7 @@ from operations_lib import *
 import logging
 from h5parm import solWriter
 
-logging.info('Loading RESET module.')
+logging.debug('Loading RESET module.')
 
 def run( step, parset, H ):
     
@@ -22,7 +22,7 @@ def run( step, parset, H ):
         t.makeSelection(ant=ant, pol=pol, dir=dir)
         solType = t.getType()
 
-        if getType == 'amplitude':
+        if solType == 'amplitude':
             t.setAxis('val', 1.)
         else:
             t.setAxis('val', 0.)
