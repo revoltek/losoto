@@ -50,13 +50,32 @@ class h5parm():
 
     def __str__(self):
         """
-        Returns a string with info about solution sets and tables
+        Returns info about solution sets and tables
         """
         from itertools import izip_longest
         def grouper(n, iterable, fillvalue=' '):
-            "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+            """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
             args = [iter(iterable)] * n
             return izip_longest(fillvalue=fillvalue, *args)
+        def wrap(text, width=80):
+            """Wraps text to given width and returns list of lines."""
+            lines = []
+            for paragraph in text.split('\n'):
+                line = []
+                len_line = 0
+                for word in paragraph.split(' '):
+                    word.strip()
+                    len_word = len(word)
+                    if len_line + len_word <= width:
+                        line.append(word)
+                        len_line += len_word + 1
+                    else:
+                        lines.append(' '.join(line))
+                        line = [21*' '+word]
+                        len_line = len_word + 22
+                lines.append(' '.join(line))
+            return lines
+
 
         info = "\nSummary of %s:\n" % self.fileName
         solsets = self.getSolsets()
@@ -67,13 +86,25 @@ class h5parm():
         # For each solution set, list solution tables, sources, and antennas
         for solset_name in solsets.keys():
             info += "\nSolution set %s:\n" % solset_name
-            info += "=" * len(solset_name) + "=" * 14 + "\n"
+            info += "=" * len(solset_name) + "=" * 14 + "\n\n"
+
+            # Print source names
+            sources = self.getSou(solset_name)
+            info += "Sources: "
+            for src_name in sources.keys():
+                info += "%s\n         " % src_name
+
+            # Print antenna names
+            antennas = self.getAnt(solset_name).keys()
+            antennas.sort()
+            info += "\nAntennas: "
+            for ant1, ant2, ant3, ant4 in grouper(4, antennas):
+                info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
+
             soltabs = self.getSoltabs(solset=solset_name)
             if len(soltabs) == 0:
-                info += "No tables\n"
+                info += "\nNo tables\n"
             else:
-                info += "Tables:\n"
-
                 # For each table, print length of each axis and history of
                 # operations applied to the table.
                 for soltab_name in soltabs.keys():
@@ -87,24 +118,12 @@ class h5parm():
                         else:
                             pls = ""
                         axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                    info += "    %s (%s)\n" % (soltab_name, ", ".join(axis_str_list))
+                    info += "\n%s: %s\n" % (soltab_name, ", ".join(axis_str_list))
                     if hasattr(sf.t.attrs, 'history'):
-                        info += 8*" "
-                        joinstr =  "\n" + 8*" "
-                        info += joinstr.join(sf.t.attrs.history) + "\n"
+                        info += 4*" " + "\n" + 4*" "
+                        joinstr =  "\n" + 4*" "
+                        info += joinstr.join(wrap("\n".join(sf.t.attrs.history))) + "\n"
 
-                # Print source names
-                sources = self.getSou(solset_name)
-                info += "Sources:\n"
-                for src_name in sources.keys():
-                    info += "    %s\n" % src_name
-
-                # Print antenna names
-                antennas = self.getAnt(solset_name).keys()
-                antennas.sort()
-                info += "Antennas:\n"
-                for ant1, ant2, ant3, ant4 in grouper(4, antennas):
-                    info += "    {0:<10s} {1:<10s} {2:<10s} {3:<10s}\n".format(ant1, ant2, ant3, ant4)
 
         return info
 
@@ -376,10 +395,10 @@ class solHandler():
         entry -- string to add to history list
         """
         import datetime
-        current_time = str(datetime.datetime.now())[:-7]
+        current_time = str(datetime.datetime.now()).split('.')[0]
         if not hasattr(self.t.attrs, 'history'):
             self.t.attrs.history = []
-        self.t.attrs.history += [current_time + ": " + entry]
+        self.t.attrs.history += [current_time + ": " + str(entry)]
 
 
 class solWriter(solHandler):

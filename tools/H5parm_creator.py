@@ -194,7 +194,7 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
     for st in soltabs:
         soltypes.append(soltabs[st].title)
         sw = solWriter(soltabs[st])
-        sw.addHistory('CREATED (by H5parm_creator.py from %s)' % globaldbFile)
+        sw.addHistory('CREATE (by H5parm_creator.py from %s)' % globaldbFile)
     for c in ['ant','freq','pol','dir','time']:
         if 'amplitude' in soltypes:
             col = soltabAmp.colinstances[c]
