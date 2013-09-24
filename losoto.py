@@ -22,28 +22,39 @@ opt = optparse.OptionParser(usage='%prog [--v|--vv] h5parm parset [default: loso
         +_author, version='%prog '+_version.__version__)
 opt.add_option('--v', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
 opt.add_option('--vv', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+opt.add_option('-i', help='List information about h5param file (default=False)', action='store_true', default=False)
 (options, args) = opt.parse_args()
 
 if options.v: _logging.setVerbose('info')
 if options.vv: _logging.setVerbose('debug')
 
 # Check options
+if len(args) not in [1, 2]:
+    opt.print_help()
+    sys.exit()
+
 try: h5parmFile = args[0]
 except:
     logging.critical('Missing H5parm file.')
     sys.exit(1)
+
 try: parsetFile = args[1]
 except: parsetFile = 'losoto.parset'
 
 if not os.path.isfile(h5parmFile):
     logging.critical("Missing h5parm file.")
     sys.exit(1)
-if not os.path.isfile(parsetFile):
+if not os.path.isfile(parsetFile) and not list_info:
     logging.critical("Missing parset file, I don't know what to do :'(")
     sys.exit(1)
 
 # Open the H5parm
 H = h5parm(h5parmFile, readonly=False)
+
+# List h5parm information if desired
+if options.i:
+    print H
+    sys.exit()
 
 # from ~vdtol/Expion-2011-05-03/src
 parset = lofar.parameterset.parameterset( parsetFile )

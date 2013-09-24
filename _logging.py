@@ -16,7 +16,7 @@ def add_coloring_to_emit_ansi(fn):
         elif(levelno>=30):
             color = '\x1b[33m' # yellow
         elif(levelno>=20):
-            color = '\x1b[32m' # green 
+            color = '\x1b[32m' # green
         elif(levelno>=10):
             color = '\x1b[35m' # pink
         else:

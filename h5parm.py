@@ -37,7 +37,7 @@ class h5parm():
                 self.H = tables.openFile(h5parmFile, filters=f, mode='w')
 
         self.fileName = h5parmFile
-        
+
         # if the file is new add the version of the h5parm
         # in losoto._version.__h5parmVersion__
 
@@ -48,6 +48,65 @@ class h5parm():
         """
         self.H.close()
 
+    def __str__(self):
+        """
+        Returns a string with info about solution sets and tables
+        """
+        from itertools import izip_longest
+        def grouper(n, iterable, fillvalue=' '):
+            "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+            args = [iter(iterable)] * n
+            return izip_longest(fillvalue=fillvalue, *args)
+
+        info = "\nSummary of %s:\n" % self.fileName
+        solsets = self.getSolsets()
+        if len(solsets) == 0:
+            info += "\nNo solution sets found.\n"
+            return info
+
+        # For each solution set, list solution tables, sources, and antennas
+        for solset_name in solsets.keys():
+            info += "\nSolution set %s:\n" % solset_name
+            info += "=" * len(solset_name) + "=" * 14 + "\n"
+            soltabs = self.getSoltabs(solset=solset_name)
+            if len(soltabs) == 0:
+                info += "No tables\n"
+            else:
+                info += "Tables:\n"
+
+                # For each table, print length of each axis and history of
+                # operations applied to the table.
+                for soltab_name in soltabs.keys():
+                    sf = solFetcher(soltabs[soltab_name])
+                    axisNames = sf.getAxes(valAxes=['val', 'flag'])
+                    axis_str_list = []
+                    for axisName in axisNames:
+                        nslots = len(sf.getValuesAxis(axis=axisName))
+                        if nslots > 1:
+                            pls = "s"
+                        else:
+                            pls = ""
+                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
+                    info += "    %s (%s)\n" % (soltab_name, ", ".join(axis_str_list))
+                    if hasattr(sf.t.attrs, 'history'):
+                        info += 8*" "
+                        joinstr =  "\n" + 8*" "
+                        info += joinstr.join(sf.t.attrs.history) + "\n"
+
+                # Print source names
+                sources = self.getSou(solset_name)
+                info += "Sources:\n"
+                for src_name in sources.keys():
+                    info += "    %s\n" % src_name
+
+                # Print antenna names
+                antennas = self.getAnt(solset_name).keys()
+                antennas.sort()
+                info += "Antennas:\n"
+                for ant1, ant2, ant3, ant4 in grouper(4, antennas):
+                    info += "    {0:<10s} {1:<10s} {2:<10s} {3:<10s}\n".format(ant1, ant2, ant3, ant4)
+
+        return info
 
     def makeSolset(self, solsetName = ''):
         """
@@ -61,7 +120,7 @@ class h5parm():
 
         if solsetName == '':
             solsetName = self._fisrtAvailSolsetName()
-        
+
         logging.info('Creating new solution-set '+solsetName+'.')
         return self.H.create_group("/", solsetName)
 
@@ -100,7 +159,7 @@ class h5parm():
             raise Exception("Solution set not specified while adding a solution-table.")
         if soltype == None:
             raise Exception("Solution type not specified while adding a solution-table.")
-        
+
         if type(solset) is str:
             solset = self.H.root._f_get_child(solset)
 
@@ -116,8 +175,8 @@ class h5parm():
         of all the available solultion-tables into a specified solution-set
         Keyword arguments:
         solset -- a solution-set name (String) or a Group instance
-        Output: 
-        A dict of all available solultion-tables 
+        Output:
+        A dict of all available solultion-tables
         """
         if solset == None:
             raise Exception("Solution set not specified while querying for solution-tables list.")
@@ -202,7 +261,7 @@ class h5parm():
         ants = {}
         for x in solset.antenna:
             ants[x['name']] = x['position']
-            
+
         return ants
 
     def getSou(self, solset):
@@ -220,7 +279,7 @@ class h5parm():
         sources = {}
         for x in solset.source:
             sources[x['name']] = x['dir']
-            
+
         return sources
 
 
@@ -235,14 +294,14 @@ class solHandler():
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxes -- list of axis names which are not used to indexise the values
         """
-        
+
         if not isinstance( table, tables.table.Table):
             logging.error("Object must be initialized with a tables.table.Table object.")
             return
         self.t = table
         self.selection = selection
         self.valAxes = valAxes
- 
+
 
     def setSelection(self, selection = ''):
         """
@@ -295,7 +354,7 @@ class solHandler():
 
         return self.t._v_title
 
-    
+
     def getRowsIterator(self, selection = None):
         """
         Return a row iterator give a certain selection
@@ -310,12 +369,25 @@ class solHandler():
             return self.t.iterrows()
 
 
+    def addHistory(self, entry=""):
+        """
+        Adds entry to the table history.
+        Keyword arguments:
+        entry -- string to add to history list
+        """
+        import datetime
+        current_time = str(datetime.datetime.now())[:-7]
+        if not hasattr(self.t.attrs, 'history'):
+            self.t.attrs.history = []
+        self.t.attrs.history += [current_time + ": " + entry]
+
+
 class solWriter(solHandler):
 
     def __init__(self, table, selection = '', valAxes=['val','flag']):
         solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
 
-    
+
     def setAxis(self, column = None, val = None, selection = None):
         """
         Set the value of a specific column
@@ -440,7 +512,7 @@ class solFetcher(solHandler):
         """
         Return an iterator which yelds the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are "freq" and "time", one gets a interetion over all the possible NxM
-        matrix where N are the freq and M the time dimensions. The iterator returns also the 
+        matrix where N are the freq and M the time dimensions. The iterator returns also the
         value of the iterAxes for an easy write back.
         Keyword arguments:
         returnAxes -- axes of the returned array, all others will be cycled
@@ -450,7 +522,7 @@ class solFetcher(solHandler):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         3) ndarray of row positions, same shape of vals ndarray (optional)
         """
-        
+
         import itertools
         import numpy as np
 

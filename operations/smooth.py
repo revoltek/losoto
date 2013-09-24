@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a smoothing function
-# 
+#
 
 import numpy as np
 import logging
@@ -27,13 +27,13 @@ def run( step, parset, H ):
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
 
-        logging.info("Smoothing soltab: "+soltab.name)
+        logging.info("Smoothing soltab: "+soltab.name, sw)
 
         sf.makeSelection(ant=ants, pol=pols, dir=dirs)
 
         # some checks
         if len(FWHM) != len(axesToSmooth):
-            logging.error('Wrong lenght of FWHM/Axes parameter.')
+            logging.error('Wrong length of FWHM/Axes parameter.')
             return 1
 
         for i, axis in enumerate(axesToSmooth[:]):
@@ -51,6 +51,7 @@ def run( step, parset, H ):
             # writing back the solutions
             sw.setValuesGrid(vals, nrows)
 
+        sw.addHistory('SMOOTH (%s with FWHM = %s)' % (axesToSmooth, str(FWHM)))
         return 0
 
 
