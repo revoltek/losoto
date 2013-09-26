@@ -26,7 +26,7 @@ class h5parm():
             if readonly:
                 self.H = tables.openFile(h5parmFile, 'r')
             else:
-                logging.debug('Appending to an existent file.')
+                logging.debug('Appending to an existing file.')
                 self.H = tables.openFile(h5parmFile, 'a')
         else:
             if readonly:
@@ -50,82 +50,10 @@ class h5parm():
 
     def __str__(self):
         """
-        Returns info about solution sets and tables
+        Returns string with info about H5parm contents
         """
-        from itertools import izip_longest
-        def grouper(n, iterable, fillvalue=' '):
-            """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
-            args = [iter(iterable)] * n
-            return izip_longest(fillvalue=fillvalue, *args)
-        def wrap(text, width=80):
-            """Wraps text to given width and returns list of lines."""
-            lines = []
-            for paragraph in text.split('\n'):
-                line = []
-                len_line = 0
-                for word in paragraph.split(' '):
-                    word.strip()
-                    len_word = len(word)
-                    if len_line + len_word <= width:
-                        line.append(word)
-                        len_line += len_word + 1
-                    else:
-                        lines.append(' '.join(line))
-                        line = [21*' '+word]
-                        len_line = len_word + 22
-                lines.append(' '.join(line))
-            return lines
+        return self.printInfo()
 
-
-        info = "\nSummary of %s:\n" % self.fileName
-        solsets = self.getSolsets()
-        if len(solsets) == 0:
-            info += "\nNo solution sets found.\n"
-            return info
-
-        # For each solution set, list solution tables, sources, and antennas
-        for solset_name in solsets.keys():
-            info += "\nSolution set %s:\n" % solset_name
-            info += "=" * len(solset_name) + "=" * 14 + "\n\n"
-
-            # Print source names
-            sources = self.getSou(solset_name)
-            info += "Sources: "
-            for src_name in sources.keys():
-                info += "%s\n         " % src_name
-
-            # Print antenna names
-            antennas = self.getAnt(solset_name).keys()
-            antennas.sort()
-            info += "\nAntennas: "
-            for ant1, ant2, ant3, ant4 in grouper(4, antennas):
-                info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
-
-            soltabs = self.getSoltabs(solset=solset_name)
-            if len(soltabs) == 0:
-                info += "\nNo tables\n"
-            else:
-                # For each table, print length of each axis and history of
-                # operations applied to the table.
-                for soltab_name in soltabs.keys():
-                    sf = solFetcher(soltabs[soltab_name])
-                    axisNames = sf.getAxes(valAxes=['val', 'flag'])
-                    axis_str_list = []
-                    for axisName in axisNames:
-                        nslots = len(sf.getValuesAxis(axis=axisName))
-                        if nslots > 1:
-                            pls = "s"
-                        else:
-                            pls = ""
-                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                    info += "\n%s: %s\n" % (soltab_name, ", ".join(axis_str_list))
-                    if hasattr(sf.t.attrs, 'history'):
-                        info += 4*" " + "\n" + 4*" "
-                        joinstr =  "\n" + 4*" "
-                        info += joinstr.join(wrap("\n".join(sf.t.attrs.history))) + "\n"
-
-
-        return info
 
     def makeSolset(self, solsetName = ''):
         """
@@ -244,8 +172,8 @@ class h5parm():
         nums = []
         for soltab in self.getSoltabs(solset):
             try:
-                if soltab[-4:] == soltype:
-                    nums.append(int(soltab[-4:]))
+                if soltab[:-3] == soltype:
+                    nums.append(int(soltab[-3:]))
             except:
                 pass
 
@@ -301,6 +229,105 @@ class h5parm():
 
         return sources
 
+    def printInfo(self):
+        """
+        Returns string with info about H5parm contents
+        """
+        from itertools import izip_longest
+
+        def grouper(n, iterable, fillvalue=' '):
+            """
+            Groups iterables into specified groups
+
+            Keyword arguments:
+            n -- number of iterables to group
+            iterable -- iterable to group
+            fillvalue -- value to use when to fill blanks in output groups
+
+            Example:
+            grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+            """
+            args = [iter(iterable)] * n
+            return izip_longest(fillvalue=fillvalue, *args)
+
+        def wrap(text, width=80):
+            """
+            Wraps text to given width and returns list of lines
+            """
+            lines = []
+            for paragraph in text.split('\n'):
+                line = []
+                len_line = 0
+                for word in paragraph.split(' '):
+                    word.strip()
+                    len_word = len(word)
+                    if len_line + len_word <= width:
+                        line.append(word)
+                        len_line += len_word + 1
+                    else:
+                        lines.append(' '.join(line))
+                        line = [21*' '+word]
+                        len_line = len_word + 22
+                lines.append(' '.join(line))
+            return lines
+
+        info = "\nSummary of %s\n" % self.fileName
+        solsets = self.getSolsets()
+        if len(solsets) == 0:
+            info += "\nNo solution sets found.\n"
+            return info
+
+        # For each solution set, list solution tables, sources, and antennas
+        for solset_name in solsets.keys():
+            info += "\nSolution set '%s':\n" % solset_name
+            info += "=" * len(solset_name) + "=" * 16 + "\n\n"
+
+            # Print direction (source) names
+            sources = self.getSou(solset_name)
+            info += "Directions: "
+            for src_name in sources.keys():
+                info += "%s\n            " % src_name
+
+            # Print station names
+            antennas = self.getAnt(solset_name).keys()
+            antennas.sort()
+            info += "\nStations: "
+            for ant1, ant2, ant3, ant4 in grouper(4, antennas):
+                info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
+
+            soltabs = self.getSoltabs(solset=solset_name)
+            if len(soltabs) == 0:
+                info += "\nNo tables\n"
+            else:
+                # For each table, print length of each axis and history of
+                # operations applied to the table. As the getValuesAxis() call
+                # can take some time on large tables, store the lengths in
+                # the table attributes for later retrieval if needed.
+                for soltab_name in soltabs.keys():
+                    sf = solFetcher(soltabs[soltab_name])
+                    axisNames = sf.getAxes(valAxes=['val', 'flag'])
+                    axis_str_list = []
+                    for axisName in axisNames:
+                        axisAttrName = axisName + '_len'
+                        if hasattr(sf.t.attrs, axisAttrName):
+                            nslots = int(sf.t.attrs[axisAttrName])
+                        else:
+                            nslots = len(sf.getValuesAxis(axis=axisName))
+                            sf.t.attrs[axisAttrName] = str(nslots)
+                        if nslots > 1:
+                            pls = "s"
+                        else:
+                            pls = ""
+                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
+                    info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
+                    history = sf.getHistory()
+                    if history != "":
+                        info += "\n" + 4*" " + "History:\n" + 4*" "
+                        joinstr =  "\n" + 4*" "
+                        info += joinstr.join(wrap(history)) + "\n"
+
+        return info
+
 
 class solHandler():
     """
@@ -342,28 +369,33 @@ class solHandler():
             s = ''
         for axis, val in args.items():
 
-            if val == [] or val == '': continue
-
-            # in case of a list of a single item, turn it into string
-            if isinstance(val, list) and len(val) == 1: val = val[0]
-
-            # iterate the list and add an entry for each element
-            if isinstance(val, list):
-
-                s += '( '
-                for v in val:
-                    s = s + "(" + axis + "=='" + v + "') | "
-                # replace the last "|" with a "&"
-                s = ') &'.join(s.rsplit('|', 1))
-
-            elif isinstance(val, str):
-                s = s + "(" + axis + "=='" + val + "') & "
-
+            # Check that axis is valid and skip if not
+            allAxisNames = [axisl for axisl in list(self.t.colpathnames) if axisl not in self.valAxes]
+            if axis not in allAxisNames:
+                logging.warning("Selection '"+axis+"' not valid for this solution table. Ignoring.")
             else:
-                logging.error('Cannot handle type: '+str(type(val))+'when setting selections.')
+                if val == [] or val == '': continue
 
-        # remove the last "& "
-        self.selection = s[:-2]
+                # in case of a list of a single item, turn it into string
+                if isinstance(val, list) and len(val) == 1: val = val[0]
+
+                # iterate the list and add an entry for each element
+                if isinstance(val, list):
+
+                    s += '( '
+                    for v in val:
+                        s = s + "(" + axis + "=='" + v + "') | "
+                    # replace the last "|" with a "&"
+                    s = ') &'.join(s.rsplit('|', 1))
+
+                elif isinstance(val, str):
+                    s = s + "(" + axis + "=='" + val + "') & "
+
+                else:
+                    logging.error('Cannot handle type: '+str(type(val))+' when setting selections.')
+
+        # remove the last " & "
+        self.selection = s[:-3]
 
 
     def getType(self):
@@ -390,15 +422,46 @@ class solHandler():
 
     def addHistory(self, entry=""):
         """
-        Adds entry to the table history.
+        Adds entry to the table history with current date and time
+
+        Since attributes cannot by default be larger than 64 kB, each
+        history entry is stored in a separate attribute.
+
         Keyword arguments:
         entry -- string to add to history list
         """
         import datetime
         current_time = str(datetime.datetime.now()).split('.')[0]
-        if not hasattr(self.t.attrs, 'history'):
-            self.t.attrs.history = []
-        self.t.attrs.history += [current_time + ": " + str(entry)]
+        attrs = self.t.attrs._f_list("user")
+        nums = []
+        for attr in attrs:
+            try:
+                if attr[:-3] == 'history':
+                    nums.append(int(attr[-3:]))
+            except:
+                pass
+        historyAttr = "history%03d" % min(list(set(range(1000)) - set(nums)))
+
+        self.t.attrs[historyAttr] = current_time + ": " + str(entry)
+
+
+    def getHistory(self):
+        """
+        Returns the table history as a string with each entry separated by
+        newlines
+        """
+        attrs = self.t.attrs._f_list("user")
+        attrs.sort()
+        history_list = []
+        for attr in attrs:
+            if attr[:-3] == 'history':
+                history_list.append(self.t.attrs[attr])
+        if len(history_list) == 0:
+            history_str = ""
+        else:
+            history_str = "\n".join(history_list)
+
+        return history_str
 
 
 class solWriter(solHandler):
@@ -454,7 +517,7 @@ class solFetcher(solHandler):
             raise AttributeError("Axis \""+axis+"\" not found.")
 
 
-    def getValuesAxis(self, axis='', selection=None):
+    def getValuesAxis(self, axis='', selection=None, quiet=False):
         """
         Return a sorted list of all the possible values present along a specific axis (no duplicates)
         Keyword arguments:
@@ -467,7 +530,8 @@ class solFetcher(solHandler):
         if selection == None: selection = self.selection
 
         if axis not in self.getAxes(valAxes = []):
-            logging.warning('Axis \"'+axis+'\" not found.')
+            if not quiet:
+                logging.warning('Axis \"'+axis+'\" not found.')
             return []
 
         return list(np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) ))

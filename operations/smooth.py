@@ -50,8 +50,10 @@ def run( step, parset, H ):
             # writing back the solutions
             sw.setValuesGrid(vals, nrows)
 
-        sw.addHistory('SMOOTH (over %s with box size = %s, ants = %s, '
-            'pols = %s, dirs = %s)' % (axesToSmooth, FWHM, ants, pols, dirs))
+#         sw.addHistory('SMOOTH (over %s with box size = %s, ants = %s, '
+#             'pols = %s, dirs = %s)' % (axesToSmooth, FWHM, ants, pols, dirs))
+        selection = sf.selection
+        sw.addHistory('SMOOTH (over %s with box size = %s and selection = [%s])' % (axesToSmooth, FWHM, selection))
     return 0
 
 

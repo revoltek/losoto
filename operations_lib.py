@@ -5,6 +5,7 @@
 
 import sys
 import logging
+from h5parm import solFetcher
 
 # TODO: add pattern matching
 def getParAnts( step, parset, H ):
@@ -24,7 +25,7 @@ def getParAnts( step, parset, H ):
     # local val
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Ant" ] )
     ants = parset.getStringVector( stepOptName, [] )
-    
+
     # global val or default
     if ants == []:
         ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
@@ -136,7 +137,7 @@ def getParSolTypes( step, parset, H ):
     # local val
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
     solTypes = parset.getStringVector( stepOptName, [] )
-    
+
     # global val or default
     if solTypes == []:
         solTypes = parset.getStringVector( "LoSoTo.SolType", [] )
@@ -147,7 +148,7 @@ def getParSolTypes( step, parset, H ):
 def getParDirs( step, parset, H ):
     """
     Return the directions array for this step.
-        - check is all the toltb has this direction.
+        - check if at least one solset has this direction.
     The order is:
     * local step value
     * global value
@@ -159,6 +160,18 @@ def getParDirs( step, parset, H ):
     if dirs == []:
         dirs = parset.getStringVector( "LoSoTo.Dir", [] )
         # global val or default
+
+    # check that directions are valid for at least one solset in step
+    solsets = getParSolsets( step, parset, H )
+    for dir in dirs[:]:
+        found = False
+        for solset in solsets:
+            if dir in H.getSou(solset).keys():
+                found = True
+                break
+        if not found:
+            logging.warning("Direction \""+dir+"\" not found. Ignoring.")
+            dirs.remove(dir)
 
     return dirs
 
@@ -178,6 +191,23 @@ def getParPols( step, parset, H ):
     if pols == []:
         pols = parset.getStringVector( "LoSoTo.Pol", [] )
         # global val or default
+
+    # check that pols are valid for at least one soltab in step
+    solsets = getParSolsets( step, parset, H )
+    for pol in pols[:]:
+        found = False
+        for solset in solsets:
+            soltabs = H.getSoltabs(solset=solset)
+            for soltab_name in soltabs.keys():
+                sf = solFetcher(soltabs[soltab_name])
+                if pol in sf.getValuesAxis(axis='pol', quiet=True):
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            logging.warning("Polarization \""+pol+"\" not found. Ignoring.")
+            pols.remove(pol)
 
     return pols
 
