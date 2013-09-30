@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a smoothing function
-# 
+#
 
 import numpy as np
 import logging
@@ -14,15 +14,15 @@ logging.debug('Loading SMOOTH module.')
 
 def run( step, parset, H ):
 
-   soltabs = getParSoltabs( step, parset, H )
-   ants = getParAnts( step, parset, H )
-   pols = getParPols( step, parset, H )
-   dirs = getParDirs( step, parset, H )
+    soltabs = getParSoltabs( step, parset, H )
+    ants = getParAnts( step, parset, H )
+    pols = getParPols( step, parset, H )
+    dirs = getParDirs( step, parset, H )
 
-   axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
-   FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
+    axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
+    FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
 
-   for soltab in openSoltabs( H, soltabs ):
+    for soltab in openSoltabs( H, soltabs ):
 
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
@@ -33,7 +33,7 @@ def run( step, parset, H ):
 
         # some checks
         if len(FWHM) != len(axesToSmooth):
-            logging.error('Wrong lenght of FWHM/Axes parameter.')
+            logging.error('Wrong length of FWHM/Axes parameter.')
             return 1
 
         for i, axis in enumerate(axesToSmooth[:]):
@@ -46,11 +46,14 @@ def run( step, parset, H ):
             # TODO: implement flag control, using np.NAN?
             # smoothing
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
-            print vals==valsnew
-            print coord
+
             # writing back the solutions
             sw.setValuesGrid(vals, nrows)
 
-        return 0
+#         sw.addHistory('SMOOTH (over %s with box size = %s, ants = %s, '
+#             'pols = %s, dirs = %s)' % (axesToSmooth, FWHM, ants, pols, dirs))
+        selection = sf.selection
+        sw.addHistory('SMOOTH (over %s with box size = %s and selection = [%s])' % (axesToSmooth, FWHM, selection))
+    return 0
 
 

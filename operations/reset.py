@@ -11,12 +11,12 @@ from h5parm import solWriter
 logging.debug('Loading RESET module.')
 
 def run( step, parset, H ):
-    
+
    soltabs = getParSoltabs( step, parset, H )
    ant = getParAnts( step, parset, H )
    pol = getParPols( step, parset, H )
    dir = getParDirs( step, parset, H )
-    
+
    for soltab in openSoltabs( H, soltabs ):
         t = solWriter(soltab)
         t.makeSelection(ant=ant, pol=pol, dir=dir)
@@ -27,4 +27,5 @@ def run( step, parset, H ):
         else:
             t.setAxis('val', 0.)
 
+        t.addHistory('RESET')
    return 0

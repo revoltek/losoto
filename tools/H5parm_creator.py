@@ -19,7 +19,7 @@ import lofar.parmdb
 import pyrap.tables as pt
 import losoto._version
 import losoto._logging
-from losoto.h5parm import h5parm
+from losoto.h5parm import h5parm, solWriter
 
 # Options
 import optparse
@@ -32,7 +32,7 @@ opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type
 opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=9)', type='int', default='9')
 (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose()
+if options.verbose: losoto._logging.setVerbose("info")
 
 h5parmFile = options.h5parm
 logging.info("H5parm filename = "+h5parmFile)
@@ -77,7 +77,7 @@ logging.info('Found solution types: '+', '.join(solTypes))
 if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
     soltabRot = h5parm.makeSoltab(solset, 'rotation', \
             descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('flag', np.bool),('val', np.float64)]))
-    
+
     logging.info('Filling table...')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*RotationAngle:*'))).start()
     ipbar = 0
@@ -85,7 +85,7 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
         pdb = lofar.parmdb.parmdb(instrumentdbFile)
         for solEntry in pdb.getNames('*RotationAngle:*'):
             solType = solEntry.split(':')[0]
-    
+
             # For CommonRotationAngle assuming [CommonRotationAngle:ant]
             if solType == 'CommonRotationAngle':
                 solType, ant = solEntry.split(':')
@@ -107,7 +107,7 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
             freqs = pdb.getValuesGrid(solEntry)[solEntry]['freqs']
             pbar.update(ipbar)
             ipbar += 1
-                
+
             # to speed up iterate only on freq
             for idxFreq, freq in enumerate(freqs):
                 rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [False]*len(times), val[:,idxFreq]))
@@ -129,7 +129,7 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
     if 'Ampl' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabAmp = h5parm.makeSoltab(solset, 'amplitude', \
                 descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
-    
+
     if 'Phase' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabPhase = h5parm.makeSoltab(solset, 'phase', \
                 descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
@@ -172,7 +172,7 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
                 valR = pdb.getValuesGrid(solEntry)[solEntry]['values']
                 val = np.arctan2(val, valR)
                 parm = 'phase'
-        
+
             # cycle on time and freq and add the value to the h5parm table
             times = pdb.getValuesGrid(solEntry)[solEntry]['times']
             freqs = pdb.getValuesGrid(solEntry)[solEntry]['freqs']
@@ -189,14 +189,22 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
 
     # Index columns
     logging.info('Indexing columns...')
+    soltabs = h5parm.getSoltabs(solset=solset)
+    soltypes = []
+    for st in soltabs:
+        soltypes.append(soltabs[st].title)
+        sw = solWriter(soltabs[st])
+        sw.addHistory('CREATE (by H5parm_creator.py from %s)' % globaldbFile)
     for c in ['ant','freq','pol','dir','time']:
-        col = soltabAmp.colinstances[c]
-        col.create_index()
-        col = soltabPhase.colinstances[c]
-        col.create_index()
+        if 'amplitude' in soltypes:
+            col = soltabAmp.colinstances[c]
+            col.create_index()
+        if 'phase' in soltypes:
+            col = soltabPhase.colinstances[c]
+            col.create_index()
 
 
-logging.info('Collecting informations from the ANTENNA table.')
+logging.info('Collecting information from the ANTENNA table.')
 antennaTable = pt.table(antennaFile)
 antennaNames = antennaTable.getcol('NAME')
 antennaPositions = antennaTable.getcol('POSITION')
@@ -206,7 +214,7 @@ descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
 antennaTable = h5parm.H.createTable(solset, 'antenna', descriptor, 'Antenna names and positions')
 antennaTable.append(zip(*(antennaNames,antennaPositions)))
 
-logging.info('Collecting informations from the FIELD table.')
+logging.info('Collecting information from the FIELD table.')
 fieldTable = pt.table(fieldFile)
 phaseDir = fieldTable.getcol('PHASE_DIR')
 pointing = phaseDir[0, 0, :]
@@ -251,5 +259,10 @@ if dirs != []:
     sourceTable.append(zip(*(dirs,vals)))
 
 logging.info("Total file size: "+str(h5parm.H.get_filesize()/1024./1024.)+" M")
+
+# Print summary of tables
+if options.verbose:
+    logging.info(str(h5parm))
+
 del h5parm
 logging.info('Done.')
