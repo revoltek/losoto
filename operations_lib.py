@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Some utilities for operations.py
+# Some utilities for operations
 
 import sys
 import logging
@@ -157,9 +157,10 @@ def getParDirs( step, parset, H ):
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Dir" ] )
     # local val
     dirs = parset.getStringVector( stepOptName, [] )
+
+    # global val or default
     if dirs == []:
         dirs = parset.getStringVector( "LoSoTo.Dir", [] )
-        # global val or default
 
     # check that directions are valid for at least one solset in step
     solsets = getParSolsets( step, parset, H )
@@ -188,9 +189,11 @@ def getParPols( step, parset, H ):
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Pol" ] )
     # local val
     pols = parset.getStringVector( stepOptName, [] )
+
+    # global val or default
     if pols == []:
         pols = parset.getStringVector( "LoSoTo.Pol", [] )
-        # global val or default
+
 
     # check that pols are valid for at least one soltab in step
     solsets = getParSolsets( step, parset, H )

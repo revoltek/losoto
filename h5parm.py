@@ -544,7 +544,7 @@ class solFetcher(solHandler):
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
         valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
-        valAxes -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if igoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
+        valAxes -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if ignoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
         return_nrows -- if True return a 3rd parameter that is the row numbers corresponding to every value, this matrix has the same shape of the values matrix
         Return:
         1) ndarray of vals

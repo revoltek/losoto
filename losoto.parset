@@ -12,6 +12,7 @@ LoSoTo.Ant = []
 LoSoTo.Pol = [XX, YY]
 LoSoTo.Dir = [pointing]
 
+# parameters available in every steps
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
 LoSoTo.Steps.everystep.Ant = []
 LoSoTo.Steps.everystep.Pol = []
