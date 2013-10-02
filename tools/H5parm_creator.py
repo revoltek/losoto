@@ -5,7 +5,7 @@
 # It can be run on a globaldb created with parmdb_collector.py
 # or on a single SB which contains the necessary
 # sky/instrument/ANTENNA/FIELD tables.
-# It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle solution types.
+# It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
 
 # Authors:
 # Francesco de Gasperin

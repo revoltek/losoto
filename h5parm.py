@@ -82,6 +82,16 @@ class h5parm():
         return self.H.root._v_children
 
 
+    def getSolset(self, solset = None):
+        """
+        Return a solultion-set
+        """
+        if solset == None:
+            raise Exception("Solution set not specified.")
+
+        return self.H.root._f_get_child(solset)
+
+
     def _fisrtAvailSolsetName(self):
         """
         Create and return the first available solset name which
