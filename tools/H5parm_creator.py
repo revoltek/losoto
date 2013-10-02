@@ -28,7 +28,7 @@ opt = optparse.OptionParser(usage='%prog [-v] [-p H5parm] [-g globaldb/SBname] \
 opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
 opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
 opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
-opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default='')
+opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
 opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=9)', type='int', default='9')
 (options, args) = opt.parse_args()
 
@@ -54,7 +54,7 @@ if not os.path.isdir(skydbFile):
     logging.critical('Missing skydb table.')
     sys.exit(1)
 
-# Make a list of all available instrument tables
+# Make a list of all available instrument tables (only 1 for a standard MS)
 instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
     glob.glob(os.path.join(globaldbFile,'instrument*')) \
     if os.path.isdir(instrumentdbFile) ]
@@ -64,7 +64,6 @@ h5parm = h5parm(h5parmFile, readonly = False, complevel = complevel)
 
 solsetName = options.solset
 solset = h5parm.makeSolset(solsetName)
-logging.info("Solution-set name = "+solset._v_name)
 
 # Create tables using the first instrumentdb
 # TODO: is there a better solution which check all the instrumentdbs?
@@ -76,9 +75,9 @@ logging.info('Found solution types: '+', '.join(solTypes))
 # Fill the rotation table
 if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
     soltabRot = h5parm.makeSoltab(solset, 'rotation', \
-            descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('flag', np.bool),('val', np.float64)]))
+            descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('weight', np.float),('val', np.float64)]))
 
-    logging.info('Filling table...')
+    logging.info('Filling table: '+soltabRot._v_name)
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*RotationAngle:*'))).start()
     ipbar = 0
     for instrumentdbFile in instrumentdbFiles:
@@ -98,7 +97,6 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
                 solType, ant, dir = solEntry.split(':')
                 val = pdb.getValuesGrid(solEntry)[solEntry]['values']
                 parm = 'rotation'
-
             else:
                 logging.error('Unknown solution type "'+solType+'". Ignored.')
 
@@ -110,7 +108,7 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
 
             # to speed up iterate only on freq
             for idxFreq, freq in enumerate(freqs):
-                rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [False]*len(times), val[:,idxFreq]))
+                rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [1.]*len(times), val[:,idxFreq]))
                 h5parm.addRow(soltabRot, rows)
     pbar.finish()
 
@@ -120,7 +118,35 @@ if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
         col = soltabRot.colinstances[c]
         col.create_index()
 
-# fil amplitude and phase tables
+# fill CommonScalarPhase
+if 'CommonScalarPhase' in solTypes:
+    
+    soltabPhase = h5parm.makeSoltab(solset, 'phase', \
+                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('weight', np.float),('val', np.float64)]))
+
+    logging.info('Filling table: '+soltabPhase._v_name)
+    pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*Gain:*'))).start()
+    ipbar = 0
+    for instrumentdbFile in instrumentdbFiles:
+        pdb = lofar.parmdb.parmdb(instrumentdbFile)
+        for solEntry in pdb.getNames('CommonScalarPhase:*'):
+            solType, parm, ant = solEntry.split(':')
+            dir = 'pointing'
+
+            val = pdb.getValuesGrid(solEntry)[solEntry]['values']
+
+            # cycle on time and freq and add the value to the h5parm table
+            times = pdb.getValuesGrid(solEntry)[solEntry]['times']
+            freqs = pdb.getValuesGrid(solEntry)[solEntry]['freqs']
+            pbar.update(ipbar)
+            ipbar += 1
+            for idxFreq, freq in enumerate(freqs):
+                rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [1.]*len(times), val[:,idxFreq]))
+                h5parm.addRow(soltabPhase, rows)
+    pbar.finish()
+
+
+# fill amplitude and phase tables
 if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
 
     solParms = set(x[3] for x in  (x.split(":") for x in pdb.getNames('*Gain:*')))
@@ -128,13 +154,14 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
 
     if 'Ampl' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabAmp = h5parm.makeSoltab(solset, 'amplitude', \
-                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
+                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('weigth', np.float),('val', np.float64)]))
+        logging.info('Filling table: '+soltabAmp._v_name)
 
     if 'Phase' in solParms or 'Imag' in solParms or 'Real' in solParms :
         soltabPhase = h5parm.makeSoltab(solset, 'phase', \
-                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('flag', np.bool),('val', np.float64)]))
+                descriptor=np.dtype([('time', np.float64),('freq',np.float64),('ant', np.str_, 16),('dir', np.str_, 16),('pol', np.str_, 2),('weight', np.float),('val', np.float64)]))
+        logging.info('Filling table: '+soltabPhase._v_name)
 
-    logging.info('Filling tables...')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames('*Gain:*'))).start()
     ipbar = 0
     for instrumentdbFile in instrumentdbFiles:
@@ -179,7 +206,7 @@ if 'Gain' in solTypes or 'DirectionalGain' in solTypes:
             pbar.update(ipbar)
             ipbar += 1
             for idxFreq, freq in enumerate(freqs):
-                rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [pol]*len(times), [False]*len(times), val[:,idxFreq]))
+                rows = zip(*(times, [freq]*len(times), [ant]*len(times), [dir]*len(times), [pol]*len(times), [1.]*len(times), val[:,idxFreq]))
                 if parm == 'amplitude':
                     h5parm.addRow(soltabAmp, rows)
                 else:
@@ -248,7 +275,7 @@ if dirs != []:
             dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
         except KeyError:
             # Source not found in skymodel parmdb, try to find components
-            logging.error('Cannot find the source '+source+'. Trying components.')
+            logging.warning('Cannot find the source '+source+'. Trying components.')
             ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values()).mean()
             dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values()).mean()
             if ra == np.nan or dec == np.nan:

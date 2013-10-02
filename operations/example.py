@@ -108,6 +108,13 @@ def run( step, parset, H ):
         # probably the fastest way to dump all the data
         a=[row.fetch_all_fields() for row in t.t.where('(ant == \'CS002LBA\')')]
 
-        return 0 # if everything went fine, otherwise 1
+        # finally the getIterValuesGrid allaws to iterate across all possible combinations of a set of axes
+        for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=['time','freq'], return_nrows=True):
+            logging.info('Iteration on ', coord)
+            # writing back the solutions
+            sw.setValuesGrid(vals, nrows)
+
+    
+   return 0 # if everything went fine, otherwise 1
 
 

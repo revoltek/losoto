@@ -58,7 +58,7 @@ opt.add_option('-d', '--gds', help='Gds file used to construct the globaldb', ty
 opt.add_option('-g', '--globaldb', help='Output globaldb name (default=globaldb)', type='string', default='globaldb')
 (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose()
+if options.verbose: losoto._logging.setVerbose('debug')
 
 overwrite = options.overwrite
 gdsFile = options.gds
@@ -110,7 +110,7 @@ for instrumentdbGdsFile in instrumentdbGdsFiles:
     instrumentdbFile = os.path.splitext(instrumentdbGdsFile)[0]
     if not os.path.exists(instrumentdbFile):
         logging.info("Collectiong "+instrumentdbFile)
-        os.system('scp -r %s:%s %s' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
+        os.system('scp -r %s:%s %s > /dev/null' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
     else:
         logging.info("Skipping "+instrumentdbFile)
     instrumentdbFiles.append(instrumentdbFile)
@@ -124,16 +124,16 @@ msname = gdsParset.getString('Part0.FileName')
 skydbFile = os.path.join(globaldbFile, 'sky')
 if not os.path.exists(skydbFile):
     logging.info("Collectiong the skydb")
-    os.system('scp -r %s:%s/sky %s' % (hostname, msname, skydbFile))
+    os.system('scp -r %s:%s/sky %s > /dev/null' % (hostname, msname, skydbFile))
 # Collect the ANTENNA table from the first SB
 antennaFile = os.path.join(globaldbFile, 'ANTENNA')
 if not os.path.exists(antennaFile):
     logging.info("Collectiong the antenna table")
-    os.system('scp -r %s:%s/ANTENNA %s' % (hostname, msname, antennaFile))
+    os.system('scp -r %s:%s/ANTENNA %s > /dev/null' % (hostname, msname, antennaFile))
 # Collect the FILED table from the first SB
 fieldFile = os.path.join(globaldbFile, 'FIELD')
 if not os.path.exists(fieldFile):
     logging.info("Collectiong the field table")
-    os.system('scp -r %s:%s/FIELD %s' % (hostname, msname, fieldFile))
+    os.system('scp -r %s:%s/FIELD %s > /dev/null' % (hostname, msname, fieldFile))
 
 logging.info("Done.")

@@ -2,6 +2,7 @@ LoSoTo: LOFAR solutions tool
 
 Author:
 Francesco de Gasperin (overall project)
+David Rafferty (overall project)
 Cyril Tasse (APPLY)
 Reinout Van Weeren (SMOOTH, CLOCKTEC)
 Maaijke Mevius (CLOCKTEC)
@@ -14,6 +15,7 @@ This library have tools to deal with LOFAR solution tables.
 - flag outliers (step: FLAG)
 - solutions smoothing (step: SMOOTH)
 - solutions interpolation (step: INTERP)
+- solution rescaling (step: RESCALE)
 - make some inspection plots (step: PLOT)
 - apply solutions (step: APPLY)
 
@@ -29,3 +31,4 @@ Included tools:
 Required packages:
 
 - pytables 3.0.0 (numpy >= 1.4.1 & numexpr >= 2.0.0)
+- scipy >0.9

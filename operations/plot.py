@@ -22,7 +22,7 @@ def run( step, parset, H ):
 
    plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
    axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
-   minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0.,1.] )
+   minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
    prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
    for soltab in openSoltabs( H, soltabs ):
@@ -58,8 +58,9 @@ def run( step, parset, H ):
                 plt.title(title)
                 plt.ylabel(axesToPlot[0])
                 plt.xlabel(axesToPlot[1])
-                p = ax.pcolor(coord[axesToPlot[1]], coord[axesToPlot[0]], vals,\
-                   vmin=minZ, vmax=minZ)
+                p = ax.imshow(coord[axesToPlot[1]], coord[axesToPlot[0]], vals)
+                if not (minZ == 0 and maxZ == 0):
+                    plt.zlim(zmin=minZ, zmax=maxZ)
                 plt.savefig(title+'.png')
                 logging.info("Saving "+title+'.png')
 
@@ -68,7 +69,8 @@ def run( step, parset, H ):
                 ax = plt.subplot(111)
                 plt.title(title)
                 plt.ylabel(sf.getType())
-                plt.ylim(ymin=minZ, ymax=maxZ)
+                if not (minZ == 0 and maxZ == 0):
+                    plt.ylim(ymin=minZ, ymax=maxZ)
                 plt.xlabel(axesToPlot[0])
                 p = ax.plot(coord[axesToPlot[0]], vals)
                 plt.savefig(title+'.png')

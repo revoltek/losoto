@@ -43,12 +43,14 @@ def run( step, parset, H ):
                 logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
         for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=axesToSmooth, return_nrows=True):
-            # TODO: implement flag control, using np.NAN?
+            # TODO: implement flag control
             # smoothing
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
 
             # writing back the solutions
-            sw.setValuesGrid(vals, nrows)
+            print "write started"
+            sw.setValuesGrid(valsnew, nrows)
+            print "write ended"
 
 #         sw.addHistory('SMOOTH (over %s with box size = %s, ants = %s, '
 #             'pols = %s, dirs = %s)' % (axesToSmooth, FWHM, ants, pols, dirs))

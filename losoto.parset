@@ -3,7 +3,7 @@
 #
 # step variable override global variable
 
-LoSoTo.Steps = [reset, clocktec, flag, smooth, interpolate, plot, apply]
+LoSoTo.Steps = [reset, clocktec, flag, smooth, interp, rescale, plot, apply]
 # this is only global
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
@@ -31,9 +31,14 @@ LoSoTo.Steps.smooth.Operation = SMOOTH
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]
 
-LoSoTo.Steps.interpolate.Operation = INTERP
-LoSoTo.Steps.interpolate.Time = True
-LoSoTo.Steps.interpolate.Freq = True
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
+LoSoTo.Steps.interp.InterpAxes = [time, freq]
+LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
+
+LoSoTo.Steps.rescale.Operation = RESCALE
+LoSoTo.Steps.rescale.CalSoltab = cal001/amplitude000
+LoSoTo.Steps.rescale.AvgAxes = [time]
 
 LoSoTo.Steps.plot.Operation = PLOT
 

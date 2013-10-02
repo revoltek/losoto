@@ -38,15 +38,13 @@ class h5parm():
 
         self.fileName = h5parmFile
 
-        # if the file is new add the version of the h5parm
-        # in losoto._version.__h5parmVersion__
-
 
     def __del__(self):
         """
         Flush and close the open table
         """
         self.H.close()
+
 
     def __str__(self):
         """
@@ -55,20 +53,25 @@ class h5parm():
         return self.printInfo()
 
 
-    def makeSolset(self, solsetName = ''):
+    def makeSolset(self, solsetName = None):
         """
         Create a new solset, if the provided name is not given or exists
         then it falls back on the first available sol###
         """
 
+        import re
         if solsetName in self.getSolsets().keys():
             logging.warning('Solution set '+solsetName+' already present. Switching to default.')
-            solsetName = ''
+            solsetName = None
 
-        if solsetName == '':
+        if solsetName == None:
             solsetName = self._fisrtAvailSolsetName()
 
-        logging.info('Creating new solution-set '+solsetName+'.')
+        if not re.match(r'^[A-Za-z0-9_-]+$', solsetName):
+            logging.warning('Solution set '+solsetName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
+            solsetName = self._fisrtAvailSolsetName()
+
+        logging.info('Creating new solution-set: '+solsetName+'.')
         return self.H.create_group("/", solsetName)
 
 
@@ -101,6 +104,8 @@ class h5parm():
         Keyword arguments:
         solset -- a solution-set name (String) or a Group instance
         soltype -- solution type (e.g. amplitude, phase)
+        Output:
+        soltab object
         """
         if solset == None:
             raise Exception("Solution set not specified while adding a solution-table.")
@@ -112,8 +117,11 @@ class h5parm():
 
         soltabName = self._fisrtAvailSoltabName(solset, soltype)
         logging.info('Creating new solution-table '+soltabName+'.')
+        soltab = self.H.createTable(solset, soltabName, descriptor, soltype)
+        # add h5parm version
+        soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 
-        return self.H.createTable(solset, soltabName, descriptor, soltype)
+        return soltab
 
 
     def getSoltabs(self, solset=None):
@@ -144,6 +152,8 @@ class h5parm():
         Keyword arguments:
         solset -- a solution-set name (String) or a Group instance
         soltab -- a solution-table name (String)
+        Output:
+        soltab object
         """
         if solset == None:
             raise Exception("Solution-set not specified.")
@@ -163,6 +173,8 @@ class h5parm():
         Keyword arguments:
         solset -- a solution-set name as Group instance
         soltype -- type of solution (amplitude, phase, RM, clock...) as a string
+        Output:
+        string 
         """
         if solset == None:
             raise Exception("Solution-set not specified while querying for solution-tables list.")
@@ -182,10 +194,11 @@ class h5parm():
 
     def addRow(self, soltab=None, val=[]):
         """
-        Add a single row to the given soltab
+        Add one or more rows to the given soltab
         Keyword arguments:
         soltab -- a solution-table instance
         val -- a list of all the field to insert, the order is important!
+        as the first element will go in the first column and so on
         """
         if soltab == None:
             raise Exception("Solution-table not specified while adding a new row.")
@@ -305,7 +318,7 @@ class h5parm():
                 # the table attributes for later retrieval if needed.
                 for soltab_name in soltabs.keys():
                     sf = solFetcher(soltabs[soltab_name])
-                    axisNames = sf.getAxes(valAxes=['val', 'flag'])
+                    axisNames = sf.getAxes(valAxes=['val', 'weight'])
                     axis_str_list = []
                     for axisName in axisNames:
                         axisAttrName = axisName + '_len'
@@ -331,9 +344,9 @@ class h5parm():
 
 class solHandler():
     """
-    Generic class to pricipally handle selections
+    Generic class to principally handle selections
     """
-    def __init__(self, table, selection = '', valAxes=['val','flag']):
+    def __init__(self, table, selection = '', valAxes=['val','weight']):
         """
         Keyword arguments:
         tab -- table object
@@ -466,7 +479,7 @@ class solHandler():
 
 class solWriter(solHandler):
 
-    def __init__(self, table, selection = '', valAxes=['val','flag']):
+    def __init__(self, table, selection = '', valAxes=['val','weight']):
         solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
 
 
@@ -491,14 +504,15 @@ class solWriter(solHandler):
 
         vals = np.ndarray.flatten(vals)
         nrows = np.ndarray.flatten(nrows)
-        for i, n in enumerate(nrows):
-            r = self.t[n]
-            r[valAxis] = vals[i]
+        r = self.t[nrows]
+        r[valAxis] = vals
+        self.t[nrows] = r
+        self.t.flush()
 
 
 class solFetcher(solHandler):
 
-    def __init__(self, table, selection = '', valAxes=['val','flag']):
+    def __init__(self, table, selection = '', valAxes=['val','weight']):
         solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
 
 
@@ -543,7 +557,7 @@ class solFetcher(solHandler):
         NaNs will be returned where the values are not available.
         Keyword arguments:
         selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
-        valAxis -- name of the value axis (use "flag" to obtain the matix of flags)
+        valAxis -- name of the value axis (use "wight" to obtain the matix of flags)
         valAxes -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if ignoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
         return_nrows -- if True return a 3rd parameter that is the row numbers corresponding to every value, this matrix has the same shape of the values matrix
         Return:
@@ -574,7 +588,7 @@ class solFetcher(solHandler):
         # create an ndarray and fill it with NaNs
         vals = np.ndarray(shape)
         vals[:] = np.NAN
-        if return_nrows: nrows = np.array(np.copy(vals), dtype=np.uint8)
+        if return_nrows: nrows = np.array(np.copy(vals), dtype=np.int)
 
         # refill the array with the correct values when they are available
         tempVals = []

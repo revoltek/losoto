@@ -3,6 +3,7 @@
 
 # Authors:
 # Francesco de Gasperin
+# David Raffery
 # Cyril Tasse
 # Reinout van Weeren
 # Maaijke Mevius
@@ -41,15 +42,15 @@ if __name__=='__main__':
     import optparse
     opt = optparse.OptionParser(usage='%prog [--v|--vv] h5parm parset [default: losoto.parset] \n'
             +_author, version='%prog '+_version.__version__)
-    opt.add_option('--v', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
-    opt.add_option('--vv', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+    opt.add_option('-v', help='Go verbose', action='store_true', default=False)
+    opt.add_option('-V', help='Go VERBOSE', action='store_true', default=False)
     opt.add_option('-i', help='List information about h5param file (default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
 
     atexit.register(my_close_open_files, False) # Suppress info about closing open files at exit
     if options.v:
         _logging.setVerbose('info')
-    if options.vv:
+    if options.V:
         _logging.setVerbose('debug')
         atexit.register(my_close_open_files, True) # Print info about closing open files at exit
 
@@ -92,7 +93,8 @@ if __name__=='__main__':
     #               "CLOCKTEC": operations.clocktec,
     #               "FLAG": operations.flag,
                    "SMOOTH": operations.smooth,
-    #               "INTERP": operations.interp,
+                   "INTERP": operations.interp,
+                   "RESCALE": operations.rescale,
                    "PLOT": operations.plot
     #               "APPLY": operations.apply
     }
