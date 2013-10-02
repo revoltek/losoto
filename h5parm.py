@@ -481,6 +481,8 @@ class solWriter(solHandler):
 
     def __init__(self, table, selection = '', valAxes=['val','weight']):
         solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
+        self.vals = {}
+        self.nrows = {}
 
 
     def setAxis(self, column = None, val = None, selection = None):
@@ -497,16 +499,25 @@ class solWriter(solHandler):
 
     def setValuesGrid(self, vals, nrows, valAxis = 'val'):
         """
-        Write a specific set of rows' vals (row numbers must be defined in nrows)
+        Save a specific set of rows' vals (row numbers must be defined in nrows)
+        flush() is the slow part and must be run to write the data
         """
 
         import numpy as np
+        if valAxis in self.vals:
+            self.vals[valAxis] = np.concatenate((self.vals[valAxis], np.ndarray.flatten(vals)))
+            self.nrows[valAxis] = np.concatenate((self.nrows[valAxis], np.ndarray.flatten(nrows)))
+        else:
+            self.vals[valAxis] = np.ndarray.flatten(vals)
+            self.nrows[valAxis] = np.ndarray.flatten(nrows)
 
-        vals = np.ndarray.flatten(vals)
-        nrows = np.ndarray.flatten(nrows)
-        r = self.t[nrows]
-        r[valAxis] = vals
-        self.t[nrows] = r
+    def flush(self):
+        """Write all the data accumulated so far
+        """
+        for valAxis in self.nrows:
+            r = self.t[self.nrows[valAxis]]
+            r[valAxis] = self.vals[valAxis]
+            self.t[self.nrows[valAxis]] = r
         self.t.flush()
 
 

@@ -14,7 +14,7 @@ import logging
 import lofar.parmdb
 import losoto._version
 import losoto._logging
-from losoto.h5parm import h5parm, solFetcher
+from losoto.h5parm import h5parm, solFetcher, solWriter
 
 # Options
 import optparse
@@ -25,11 +25,11 @@ opt.add_option('-g', '--parmdb', help='Parmdb name', type='string', default='')
 opt.add_option('-s', '--solset', help='Solution-set name (default=sol000)', type='string', default='sol000')
 (options, args) = opt.parse_args()
 
-losoto._logging.setVerbose()
+losoto._logging.setVerbose('debug')
 
 solset = options.solset
 h5parmFile = options.h5parm
-H5 = h5parm(h5parmFile)
+H5 = h5parm(h5parmFile, readonly=False)
 H = solFetcher(H5.getSoltab(solset,'amplitude000'))
 H.makeSelection(dir='3C196',ant='CS001LBA',pol='XX')
 H2 = solFetcher(H5.getSoltab(solset,'phase000'))
@@ -70,7 +70,6 @@ Htimes = H.time
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
-print Htimes
 print "Equal?",(Ptimes == Htimes).all()
 
 ######################################################
@@ -123,7 +122,7 @@ Hrot = [x['val'] for x in H.t.where("(time > 4.86887901e+09) & (time < 4.8688840
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
-print "Equal?", (Prot == Hrot).all()
+print "Equal?", (Prot == Hrot)
 
 ######################################################
 # read rotation solutions (== no conversions)
@@ -185,7 +184,7 @@ logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
 Hrot, axes, nrows = H.getValuesGrid(return_nrows = True)
-Hw.setValueGrid(Hrot, nrows)
+Hw.setValuesGrid(Hrot, nrows)
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 

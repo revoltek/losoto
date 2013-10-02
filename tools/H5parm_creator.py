@@ -288,8 +288,8 @@ if dirs != []:
 logging.info("Total file size: "+str(h5parm.H.get_filesize()/1024./1024.)+" M")
 
 # Print summary of tables
-if options.verbose:
-    logging.info(str(h5parm))
+#if options.verbose:
+#    logging.info(str(h5parm))
 
 del h5parm
 logging.info('Done.')

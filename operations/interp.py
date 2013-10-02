@@ -32,21 +32,22 @@ def run( step, parset, H ):
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab.name)
 
-        t = solFetcher(soltab)
-        ct = solFetcher(calSoltab)
+        tr = solFetcher(soltab)
+        tw = solWriter(soltab)
+        cr = solFetcher(calSoltab)
 
-        axesNames = t.getAxes()
+        axesNames = tr.getAxes()
         for interpAxis in interpAxes:
             if interpAxis not in axesNames:
                 logging.error('Axis '+interpAxis+' not found.')
                 return 1
 
-        t.makeSelection(ant=ants, pol=pols, dir=dirs)
+        tr.makeSelection(ant=ants, pol=pols, dir=dirs)
         for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
 
             # constract grid
-            ct.makeSelection(**coord)
-            calValues, calCoord = ct.getValuesGrid()
+            cr.makeSelection(**coord)
+            calValues, calCoord = cr.getValuesGrid()
             print calValues.shape
 
             # create calibrator coordinates array
@@ -66,6 +67,10 @@ def run( step, parset, H ):
                 valsnew[ np.where(valsnew == np.nan) ] = valsnewNearest [ np.where(valsnew == np.nan) ]
 
             # writing back the solutions
-            sw.setValuesGrid(valsnew, nrows)
+            tw.setValuesGrid(valsnew, nrows)
+        tw.flush()
+
+    selection = sw.selection
+    tw.addHistory('INTERP (from table %s with selection %s)' % (calSoltab, selection))
 
     return 0
