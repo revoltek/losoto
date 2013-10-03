@@ -43,7 +43,7 @@ def run( step, parset, H ):
                 return 1
 
         tr.makeSelection(ant=ants, pol=pols, dir=dirs)
-        for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
+        for vals, coord, nrows in tr.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
 
             # constract grid
             cr.makeSelection(**coord)
@@ -70,7 +70,7 @@ def run( step, parset, H ):
             tw.setValuesGrid(valsnew, nrows)
         tw.flush()
 
-    selection = sw.selection
+    selection = tw.selection
     tw.addHistory('INTERP (from table %s with selection %s)' % (calSoltab, selection))
 
     return 0
