@@ -24,7 +24,7 @@ Included tools:
 - H5parm_creator.py:
     * creates an h5parm file from an MS or a globaldb created with parmdb_collector.py
 - H5parm_merge.py:
-    * merge multiple H5parm files into a single one
+    * copy a solset from a H5parm files into another one
 - parmdb_collector.py:
     * fetches parmdb tables from the cluster
 

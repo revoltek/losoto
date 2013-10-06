@@ -72,7 +72,7 @@ def run( step, parset, H ):
             tw.setValuesGrid(valsnew, nrows)
         tw.flush()
 
-    selection = sw.selection
+    selection = tw.selection
     tw.addHistory('INTERP (from table %s with selection %s)' % (calSoltab, selection))
 
     return 0
