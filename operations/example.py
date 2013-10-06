@@ -3,10 +3,8 @@
 
 # This is an example operation for LoSoTo
 
-import numpy as np
 import logging
 from operations_lib import *
-from h5parm import solFetcher
 
 logging.debug('Loading EXAMPLE module.')
 
@@ -14,6 +12,8 @@ def run( step, parset, H ):
    """
    Generic unspecified step for easy expansion.
    """
+   import numpy as np
+   from h5parm import solFetcher
    # all the following are LoSoTo function to extract information from the parset
 
    # get involved solsets using local step values or global values or all

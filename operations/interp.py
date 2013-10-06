@@ -3,11 +3,8 @@
 
 # This is an interpolation script for LoSoTo
 
-import numpy as np
 import logging
-import scipy.interpolate
 from operations_lib import *
-from h5parm import solFetcher
 
 logging.debug('Loading INTERP module.')
 
@@ -15,6 +12,10 @@ def run( step, parset, H ):
     """
     Interpolate the solutions from one table into a destination table
     """
+    import scipy.interpolate
+    import numpy as np
+    from h5parm import solFetcher, solWriter
+    
     solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
     ants = getParAnts( step, parset, H )
@@ -22,7 +23,7 @@ def run( step, parset, H ):
     solTypes = getParSolTypes( step, parset, H )
     dirs = getParDirs( step, parset, H )
 
-    calSoltab = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), [] )
+    calSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), '' )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['time','freq'] )
     interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
     if interpMethod not in ["nearest", "linear", "cubic"]:
@@ -34,7 +35,8 @@ def run( step, parset, H ):
 
         tr = solFetcher(soltab)
         tw = solWriter(soltab)
-        cr = solFetcher(calSoltab)
+        css, cst = calSoltab.split('/')
+        cr = solFetcher(H.getSoltab(css, cst))
 
         axesNames = tr.getAxes()
         for interpAxis in interpAxes:
@@ -43,7 +45,7 @@ def run( step, parset, H ):
                 return 1
 
         tr.makeSelection(ant=ants, pol=pols, dir=dirs)
-        for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
+        for vals, coord, nrows in tr.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
 
             # constract grid
             cr.makeSelection(**coord)

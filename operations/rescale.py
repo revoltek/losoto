@@ -3,11 +3,8 @@
 
 # This is a rescaling script for LoSoTo
 
-import numpy as np
 import logging
-import scipy.interpolate
 from operations_lib import *
-from h5parm import solFetcher
 
 logging.debug('Loading RESCALE module.')
 
@@ -17,6 +14,10 @@ def run( step, parset, H ):
     The median of the MedAxes is used to find the rescaling factor.
     The InterpAxes are instead just interpolated.
     """
+    import numpy as np
+    import scipy.interpolate
+    from h5parm import solFetcher
+
     solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
     ants = getParAnts( step, parset, H )

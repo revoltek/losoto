@@ -57,7 +57,7 @@ if __name__=='__main__':
     # Check options
     if len(args) not in [1, 2]:
         opt.print_help()
-        sys.exit()
+        sys.exit(1)
 
     try: h5parmFile = args[0]
     except:

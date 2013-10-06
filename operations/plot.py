@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This operation for LoSoTo implements basic plotting
-# 
+# This operation for LoSoTo implements basic plotting 
 
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import numpy as np
 import logging
 from operations_lib import *
-from h5parm import solFetcher
 
 logging.debug('Loading PLOT module.')
 
 def run( step, parset, H ):
+
+   import matplotlib.pyplot as plt
+   import matplotlib.cm as cm
+   import numpy as np
+   from h5parm import solFetcher
 
    soltabs = getParSoltabs( step, parset, H )
    ants = getParAnts( step, parset, H )
@@ -50,7 +50,7 @@ def run( step, parset, H ):
             for axis in coord:
                 if axis in axesToPlot: continue
                 title += str(coord[axis])+'_'
-            title = prefix+title[:-1]
+            title = title[:-1]
 
             if plotType == '2D':
                 fig = plt.figure()
@@ -62,7 +62,7 @@ def run( step, parset, H ):
                 if not (minZ == 0 and maxZ == 0):
                     plt.zlim(zmin=minZ, zmax=maxZ)
                 plt.savefig(title+'.png')
-                logging.info("Saving "+title+'.png')
+                logging.info("Saving "+prefix+title+'.png')
 
             if plotType == '1D':
                 fig = plt.figure()
@@ -74,7 +74,7 @@ def run( step, parset, H ):
                 plt.xlabel(axesToPlot[0])
                 p = ax.plot(coord[axesToPlot[0]], vals)
                 plt.savefig(title+'.png')
-                logging.info("Saving "+title+'.png')
+                logging.info("Saving "+prefix+title+'.png')
 
    return 0
 

@@ -108,7 +108,7 @@ class h5parm():
         return "sol%03d" % min(list(set(range(1000)) - set(nums)))
 
 
-    def makeSoltab(self, solset=None, soltype=None, descriptor={}):
+    def makeSoltab(self, solset=None, soltype=None, descriptor={}, exprows = 1e7):
         """
         Create a solution-table into a specified solution-set
         Keyword arguments:
@@ -127,7 +127,8 @@ class h5parm():
 
         soltabName = self._fisrtAvailSoltabName(solset, soltype)
         logging.info('Creating new solution-table '+soltabName+'.')
-        soltab = self.H.createTable(solset, soltabName, descriptor, soltype)
+        soltab = self.H.createTable(solset, soltabName, descriptor, \
+                title = soltype, expectedrows = exprows)
         # add h5parm version
         soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 
@@ -366,7 +367,7 @@ class solHandler():
 
         if not isinstance( table, tables.table.Table):
             logging.error("Object must be initialized with a tables.table.Table object.")
-            return
+            return None
         self.t = table
         self.selection = selection
         self.valAxes = valAxes
@@ -390,6 +391,7 @@ class solHandler():
             s = self.selection + " & "
         else:
             s = ''
+        print "args:", args
         for axis, val in args.items():
 
             # Check that axis is valid and skip if not
@@ -653,6 +655,7 @@ class solFetcher(solHandler):
             vals, axesVals = self.getValuesGrid(selection=None, valAxis = valAxis, valAxes = valAxes)
 
         axesNames = self.getAxes(valAxes = valAxes)
+        print axesNames
 
         # move retrunAxes to the end of the vals array
         # preseving the respective order of returnAxes and iterAxes

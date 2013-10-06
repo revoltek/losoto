@@ -41,6 +41,10 @@ LoSoTo.Steps.rescale.CalSoltab = cal001/amplitude000
 LoSoTo.Steps.rescale.AvgAxes = [time]
 
 LoSoTo.Steps.plot.Operation = PLOT
+LoSoTo.Steps.plot.PlotType = 1D
+LoSoTo.Steps.plot.Axes = [time]
+LoSoTo.Steps.plot.MinMax = [0,0]
+LoSoTo.Steps.plot.Prefix = images/test_
 
 LoSoTo.Steps.apply.Operation = APPLY
 LoSoTo.Steps.apply.MS = target.MS
