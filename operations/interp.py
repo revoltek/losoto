@@ -12,6 +12,7 @@ def run( step, parset, H ):
     """
     Interpolate the solutions from one table into a destination table
     """
+    import itertools
     import scipy.interpolate
     import numpy as np
     from h5parm import solFetcher, solWriter
@@ -48,18 +49,23 @@ def run( step, parset, H ):
         for vals, coord, nrows in tr.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
 
             # constract grid
-            cr.makeSelection(**coord)
+            coordSel = removeKeys(coord, interpAxes)
+            logging.debug("Working on coords:"+str(coordSel))
+            cr.makeSelection(**coordSel)
             calValues, calCoord = cr.getValuesGrid()
-            print calValues.shape
+            # create a list of values whose coords are calPoints
+            calValues = np.ndarray.flatten(calValues)
 
             # create calibrator coordinates array
             calPoints = []
             for interpAxis in interpAxes:
                 calPoints.append(calCoord[interpAxis])
+            calPoints = np.array([x for x in itertools.product(*calPoints)])
             # create target coordinates array
             targetPoints = []
             for interpAxis in interpAxes:
                 targetPoints.append(coord[interpAxis])
+            targetPoints = np.array([x for x in itertools.product(*targetPoints)])
 
             # interpolation
             valsnew = scipy.interpolate.griddata(calPoints, calValues, targetPoints, interpMethod)
@@ -67,6 +73,8 @@ def run( step, parset, H ):
             if interpMethod != 'nearest':
                 valsnewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
                 valsnew[ np.where(valsnew == np.nan) ] = valsnewNearest [ np.where(valsnew == np.nan) ]
+            valsnew = valsnew.reshape(vals.shape)
+            print valsnew.shape
 
             # writing back the solutions
             tw.setValuesGrid(valsnew, nrows)

@@ -50,7 +50,7 @@ def run( step, parset, H ):
             calValues, calCoord = cr.getValuesGrid()
             print calValues.shape
             print "coords:", calCoord, coord
-            med = np.median(calValues[....])
+            #med = np.median(calValues[....])
             print "Med:",med
 
             # create calibrator coordinates array

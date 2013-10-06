@@ -33,7 +33,7 @@ class h5parm():
                 raise Exception('Missing file '+h5parmFile+'.')
             else:
                 # add a compression filter
-                f = tables.Filters(complevel=complevel, complib='zlib')
+                f = tables.Filters(complevel=complevel, complib='lzo')
                 self.H = tables.openFile(h5parmFile, filters=f, mode='w')
 
         self.fileName = h5parmFile
@@ -391,7 +391,6 @@ class solHandler():
             s = self.selection + " & "
         else:
             s = ''
-        print "args:", args
         for axis, val in args.items():
 
             # Check that axis is valid and skip if not
@@ -655,7 +654,6 @@ class solFetcher(solHandler):
             vals, axesVals = self.getValuesGrid(selection=None, valAxis = valAxis, valAxes = valAxes)
 
         axesNames = self.getAxes(valAxes = valAxes)
-        print axesNames
 
         # move retrunAxes to the end of the vals array
         # preseving the respective order of returnAxes and iterAxes

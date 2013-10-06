@@ -225,3 +225,17 @@ def openSoltabs( H, ss_sts ):
         soltabs.append( H.getSoltab(ss, st) )
 
     return soltabs
+
+def removeKeys( dic, keys = [] ):
+    """
+    Remove a list of keys from a dict and return a new one.
+    Keyword arguments:
+    dic -- the input dictionary
+    keys -- a list of arguments to remove
+    Return:
+    A copy of "dic" without the "keys" elements.
+    """
+    dicCopy = dict(dic)
+    for key in keys:
+        del dicCopy[key]
+    return dicCopy

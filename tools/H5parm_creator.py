@@ -285,7 +285,6 @@ for tab in solset._v_leaves:
     c = solset._f_getChild(tab)
     if c._v_name != 'antenna' and c._v_name != 'source':
         dirs.extend(list(set(c.col('dir'))))
-        print "arrivati "+c._v_name
 # remove duplicates
 dirs = list(set(dirs))
 # remove any pointing (already in the table)
@@ -306,7 +305,6 @@ if dirs != []:
             logging.warning('Cannot find the source '+source+'. Trying components.')
             ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
             dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
-            print ra, dec
             if len(ra) == 0 or len(dec) == 0:
                 ra = np.nan
                 dec = np.nan

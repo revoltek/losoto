@@ -22,6 +22,7 @@ def run( step, parset, H ):
     ants = getParAnts( step, parset, H )
     pols = getParPols( step, parset, H )
     dirs = getParDirs( step, parset, H )
+    elapsed = (time.clock() - start)
     logging.debug("Time for getting parms: "+str(elapsed)+" s.")
 
     axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )

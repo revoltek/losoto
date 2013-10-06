@@ -50,7 +50,6 @@ ht = losoto.h5parm.h5parm(h5parmToFile, readonly=False)
 if solsetTo in ht.getSolsets():
     logging.critical('Destination solset already exists, quitting.')
     sys.exit(1)
-logging.info('Creating a new solset: '+solsetTo)
 ssT = ht.makeSolset(solsetName = solsetTo)
 # write the soltabs
 ssF._f_copy_children(ssT)
