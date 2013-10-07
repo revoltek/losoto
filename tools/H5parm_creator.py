@@ -311,7 +311,7 @@ if dirs != []:
                 logging.error('Cannot find the source '+source+'. I leave NaNs.')
             else:
                 ra = ra.mean()
-                dec = ra.mean()
+                dec = dec.mean()
                 logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
         vals.append([ra, dec])
     sourceTable.append(zip(*(dirs,vals)))

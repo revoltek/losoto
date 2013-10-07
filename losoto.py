@@ -40,7 +40,7 @@ def my_close_open_files(verbose):
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog [--v|--vv] h5parm parset [default: losoto.parset] \n'
+    opt = optparse.OptionParser(usage='%prog [-v|-V] h5parm parset [default: losoto.parset] \n'
             +_author, version='%prog '+_version.__version__)
     opt.add_option('-v', help='Go verbose', action='store_true', default=False)
     opt.add_option('-V', help='Go VERBOSE', action='store_true', default=False)
