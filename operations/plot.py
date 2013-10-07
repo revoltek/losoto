@@ -73,7 +73,7 @@ def run( step, parset, H ):
                     plt.ylim(ymin=minZ, ymax=maxZ)
                 plt.xlabel(axesToPlot[0])
                 p = ax.plot(coord[axesToPlot[0]], vals)
-                plt.savefig(title+'.png')
+                plt.savefig(prefix+title+'.png')
                 logging.info("Saving "+prefix+title+'.png')
 
    return 0

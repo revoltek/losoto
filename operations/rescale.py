@@ -14,9 +14,10 @@ def run( step, parset, H ):
     The median of the MedAxes is used to find the rescaling factor.
     The InterpAxes are instead just interpolated.
     """
-    import numpy as np
+    import itertools
     import scipy.interpolate
-    from h5parm import solFetcher
+    import numpy as np
+    from h5parm import solFetcher, solWriter
 
     solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
@@ -28,28 +29,38 @@ def run( step, parset, H ):
     calSoltab = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), [] )
     medAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "MedAxes"]), ['time'] )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['freq'] )
+    interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
+    if interpMethod not in ["nearest", "linear", "cubic"]:
+        logging.error('Interpolation method must be nearest, linear or cubic.')
+        return 1
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab.name)
 
         tr = solFetcher(soltab)
         tw = solWriter(soltab)
-        cr = solFetcher(calSoltab)
+        css, cst = calSoltab.split('/')
+        cr = solFetcher(H.getSoltab(css, cst))
 
-        axesNames = t.getAxes()
+        axesNames = tr.getAxes()
+        for interpAxis in interpAxes:
+            if interpAxis not in axesNames:
+                logging.error('Axis '+interpAxis+' not found.')
+                return 1
         for avgAxis in avgAxes:
             if avgAxis not in axesNames:
                 logging.error('Axis '+interpAxis+' not found.')
                 return 1
 
+
         tr.makeSelection(ant=ants, pol=pols, dir=dirs)
         for vals, coord, nrows in tr.getIterValuesGrid(returnAxes=medAxes+interpAxes, return_nrows=True):
 
             # constract grid
-            cr.makeSelection(**coord)
+            coordSel = removeKeys(coord, interpAxes)
+            logging.debug("Working on coords:"+str(coordSel))
+            cr.makeSelection(**coordSel)
             calValues, calCoord = cr.getValuesGrid()
-            print calValues.shape
-            print "coords:", calCoord, coord
             #med = np.median(calValues[....])
             print "Med:",med
 
@@ -57,13 +68,20 @@ def run( step, parset, H ):
             calPoints = []
             for interpAxis in interpAxes:
                 calPoints.append(calCoord[interpAxis])
+            calPoints = np.array([x for x in itertools.product(*calPoints)])
             # create target coordinates array
             targetPoints = []
             for interpAxis in interpAxes:
                 targetPoints.append(coord[interpAxis])
+            targetPoints = np.array([x for x in itertools.product(*targetPoints)])
 
             # interpolation
             valsnew = scipy.interpolate.griddata(calPoints, calValues, targetPoints, interpMethod)
+            # fill values outside boudaries with "nearest" solutions
+            if interpMethod != 'nearest':
+                valsnewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
+                valsnew[ np.where(valsnew == np.nan) ] = valsnewNearest [ np.where(valsnew == np.nan) ]
+            valsnew = valsnew.reshape(vals.shape)
 
             # writing back the solutions
             tw.setValuesGrid(valsnew, nrows)
@@ -71,7 +89,4 @@ def run( step, parset, H ):
 
     selection = tw.selection
     tw.addHistory('RESCALE (from table %s with selection %s)' % (calSoltab, selection))
-
-
-        # a
     return 0

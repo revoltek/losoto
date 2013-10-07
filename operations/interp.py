@@ -74,7 +74,6 @@ def run( step, parset, H ):
                 valsnewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
                 valsnew[ np.where(valsnew == np.nan) ] = valsnewNearest [ np.where(valsnew == np.nan) ]
             valsnew = valsnew.reshape(vals.shape)
-            print valsnew.shape
 
             # writing back the solutions
             tw.setValuesGrid(valsnew, nrows)
@@ -82,5 +81,4 @@ def run( step, parset, H ):
 
     selection = tw.selection
     tw.addHistory('INTERP (from table %s with selection %s)' % (calSoltab, selection))
-
     return 0
