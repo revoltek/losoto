@@ -14,8 +14,7 @@ This library have tools to deal with LOFAR solution tables.
 - clock/tec separation (step: CLOCKTEC)
 - flag outliers (step: FLAG)
 - solutions smoothing (step: SMOOTH)
-- solutions interpolation (step: INTERP)
-- solution rescaling (step: RESCALE)
+- solutions interpolation/rescaling (step: INTERP)
 - make some inspection plots (step: PLOT)
 - apply solutions (step: APPLY)
 

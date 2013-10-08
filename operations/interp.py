@@ -34,10 +34,9 @@ def run( step, parset, H ):
         logging.error('Interpolation method must be nearest, linear or cubic.')
         return 1
     
-#    for i, medAxis in enumerate(medAxes[:]):
-#        if medAxis in interpAxes:
-#            logging.warning('Axis '+medAxis+' is an interpolation axis, removing it from medAxes list')
-#            del medAxes[i]
+    if rescale and medAxes == []:
+        logging.error('A medAxis is needed for rescaling.')
+        return 1
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab.name)
@@ -65,11 +64,9 @@ def run( step, parset, H ):
             logging.debug("Working on coords:"+str(coordSel))
             cr.makeSelection(**coordSel)
             calValues, calCoord = cr.getValuesGrid()
-            print calValues
             for medAxis in medAxes:
                 axis = cr.getAxes().index(medAxis)
-                print np.repeat(np.expand_dims(np.median( calValues, axis), axis), len(cr.getAxisVal(medAxis), axis))
-            print calValues
+                calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
               
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
@@ -84,15 +81,21 @@ def run( step, parset, H ):
             targetPoints = np.array([x for x in itertools.product(*targetPoints)])
 
             # interpolation
-            valsnew = scipy.interpolate.griddata(calPoints, calValues, targetPoints, interpMethod)
+            valsNew = scipy.interpolate.griddata(calPoints, calValues, targetPoints, interpMethod)
             # fill values outside boudaries with "nearest" solutions
             if interpMethod != 'nearest':
-                valsnewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
-                valsnew[ np.where(valsnew == np.nan) ] = valsnewNearest [ np.where(valsnew == np.nan) ]
-            valsnew = valsnew.reshape(vals.shape)
-
+                valsNewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
+                valsNew[ np.where(valsNew == np.nan) ] = valsNewNearest [ np.where(valsNew == np.nan) ]
+            valsNew = valsNew.reshape(vals.shape)
+            if rescale:
+                # rescale solutions
+                for medAxis in medAxes:
+                    axis = tr.getAxes().index(medAxis)
+                    valsMed = np.repeat( np.expand_dims( np.median( vals, axis ), axis ), vals.shape[axis], axis )
+                    valsNewMed = np.repeat( np.expand_dims( np.median( valsNew, axis ), axis ), valsNew.shape[axis], axis )
+                valsNew = vals*valsNewMed/valsMed
             # writing back the solutions
-            tw.setValuesGrid(valsnew, nrows)
+            tw.setValuesGrid(valsNew, nrows)
         tw.flush()
 
     selection = tw.selection

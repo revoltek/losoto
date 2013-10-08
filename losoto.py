@@ -94,7 +94,6 @@ if __name__=='__main__':
     #               "FLAG": operations.flag,
                    "SMOOTH": operations.smooth,
                    "INTERP": operations.interp,
-                   "RESCALE": operations.rescale,
                    "PLOT": operations.plot
     #               "APPLY": operations.apply
     }
