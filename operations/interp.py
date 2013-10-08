@@ -27,9 +27,17 @@ def run( step, parset, H ):
     calSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), '' )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['time','freq'] )
     interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
+    medAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "MedAxes"]), [''] )
+    rescale = parset.getBool('.'.join(["LoSoTo.Steps", step, "Rescale"]), False )
+
     if interpMethod not in ["nearest", "linear", "cubic"]:
         logging.error('Interpolation method must be nearest, linear or cubic.')
         return 1
+    
+#    for i, medAxis in enumerate(medAxes[:]):
+#        if medAxis in interpAxes:
+#            logging.warning('Axis '+medAxis+' is an interpolation axis, removing it from medAxes list')
+#            del medAxes[i]
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab.name)
@@ -40,10 +48,14 @@ def run( step, parset, H ):
         cr = solFetcher(H.getSoltab(css, cst))
 
         axesNames = tr.getAxes()
-        for interpAxis in interpAxes:
+        for i, interpAxis in enumerate(interpAxes[:]):
             if interpAxis not in axesNames:
-                logging.error('Axis '+interpAxis+' not found.')
-                return 1
+                logging.error('Axis '+interpAxis+' not found. Ignoring.')
+                del interpAxes[i]
+        for i, medAxis in enumerate(medAxes[:]):
+            if medAxis not in axesNames:
+                logging.error('Axis '+medAxis+' not found. Ignoring.')
+                del medAxes[i]
 
         tr.makeSelection(ant=ants, pol=pols, dir=dirs)
         for vals, coord, nrows in tr.getIterValuesGrid(returnAxes=interpAxes, return_nrows=True):
@@ -53,18 +65,22 @@ def run( step, parset, H ):
             logging.debug("Working on coords:"+str(coordSel))
             cr.makeSelection(**coordSel)
             calValues, calCoord = cr.getValuesGrid()
+            print calValues
+            for medAxis in medAxes:
+                axis = cr.getAxes().index(medAxis)
+                print np.repeat(np.expand_dims(np.median( calValues, axis), axis), len(cr.getAxisVal(medAxis), axis))
+            print calValues
+              
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
 
-            # create calibrator coordinates array
+            # create calibrator/target coordinates arrays
             calPoints = []
-            for interpAxis in interpAxes:
-                calPoints.append(calCoord[interpAxis])
-            calPoints = np.array([x for x in itertools.product(*calPoints)])
-            # create target coordinates array
             targetPoints = []
             for interpAxis in interpAxes:
+                calPoints.append(calCoord[interpAxis])
                 targetPoints.append(coord[interpAxis])
+            calPoints = np.array([x for x in itertools.product(*calPoints)])
             targetPoints = np.array([x for x in itertools.product(*targetPoints)])
 
             # interpolation

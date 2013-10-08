@@ -49,7 +49,7 @@ def run( step, parset, H ):
                 return 1
         for avgAxis in avgAxes:
             if avgAxis not in axesNames:
-                logging.error('Axis '+interpAxis+' not found.')
+                logging.error('Axis '+avgAxis+' not found.')
                 return 1
 
 

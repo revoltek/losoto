@@ -27,6 +27,9 @@ def run( step, parset, H ):
 
     axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
+    if len(axesToSmooth) != len(FWHM):
+        logging.error("Axes and FWHM lenghts must be equal.")
+        return 1
 
     for soltab in openSoltabs( H, soltabs ):
 

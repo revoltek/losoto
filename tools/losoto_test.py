@@ -25,7 +25,7 @@ opt.add_option('-g', '--parmdb', help='Parmdb name', type='string', default='')
 opt.add_option('-s', '--solset', help='Solution-set name (default=sol000)', type='string', default='sol000')
 (options, args) = opt.parse_args()
 
-losoto._logging.setVerbose('debug')
+losoto._logging.setLevel('debug')
 
 solset = options.solset
 h5parmFile = options.h5parm
@@ -70,7 +70,7 @@ Htimes = H.time
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
-print "Equal?",(Ptimes == Htimes).all()
+#print "Equal?",(Ptimes == Htimes).all()
 
 ######################################################
 ## read amp solutions
