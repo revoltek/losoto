@@ -32,7 +32,7 @@ opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type
 opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=9)', type='int', default='9')
 (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose("info")
+if options.verbose: losoto._logging.setLevel("debug")
 
 h5parmFile = options.h5parm
 logging.info("H5parm filename = "+h5parmFile)

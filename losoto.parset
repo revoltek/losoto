@@ -35,10 +35,8 @@ LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
 LoSoTo.Steps.interp.InterpAxes = [time, freq]
 LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
-
-LoSoTo.Steps.rescale.Operation = RESCALE
-LoSoTo.Steps.rescale.CalSoltab = cal001/amplitude000
-LoSoTo.Steps.rescale.AvgAxes = [time]
+LoSoTo.Steps.interp.Rescale = False
+LoSoTo.Steps.interp.MedAxes = [time]
 
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.PlotType = 1D
