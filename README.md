@@ -32,3 +32,4 @@ Required packages:
 - pytables 3.0.0 (numpy >= 1.4.1 & numexpr >= 2.0.0, Cython >= 0.13)
 - scipy > 0.9
 - LZO compression lib 2.06
+-
