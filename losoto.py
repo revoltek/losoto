@@ -95,7 +95,6 @@ if __name__=='__main__':
                    "SMOOTH": operations.smooth,
                    "INTERP": operations.interp,
                    "PLOT": operations.plot
-    #               "APPLY": operations.apply
     }
 
     for step in steps:
