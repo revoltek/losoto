@@ -23,9 +23,12 @@ from losoto.h5parm import h5parm, solWriter
 
 
 def parmdbToAxes(solEntry):
-    """ Extract the information written as a string in the parmdb format
     """
-    pol = None; dir = None; ant = None; parm = None
+    Extract the information written as a string in the parmdb format
+    """
+    pol = None; pol1 = None; pol2 = None;
+    dir = None; ant = None; parm = None
+    
     thisSolType = solEntry.split(':')[0]
 
     # For CommonRotationAngle assuming [CommonRotationAngle:ant]
@@ -45,21 +48,19 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'Gain':
         thisSolType, pol1, pol2, parm, ant = solEntry.split(':')
         dir = 'pointing'
-        if pol1 == '0' and pol2 == '0': pol = 'XX'
-        if pol1 == '1' and pol2 == '0': pol = 'YX'
-        if pol1 == '0' and pol2 == '1': pol = 'XY'
-        if pol1 == '1' and pol2 == '1': pol = 'YY'
 
     # For DirectionalGain assuming [DirecitonalGain:pol1:pol2:parm:ant:sou]
     elif thisSolType == 'DirectionalGain':
         thisSolType, pol1, pol2, parm, ant, dir = solEntry.split(':')
+
+    else:
+        logging.error('Unknown solution type "'+thisSolType+'". Ignored.')
+
+    if pol1 != None and pol2 != None:
         if pol1 == '0' and pol2 == '0': pol = 'XX'
         if pol1 == '1' and pol2 == '0': pol = 'YX'
         if pol1 == '0' and pol2 == '1': pol = 'XY'
         if pol1 == '1' and pol2 == '1': pol = 'YY'
-
-    else:
-        logging.error('Unknown solution type "'+thisSolType+'". Ignored.')
 
     return pol, dir, ant, parm
  
@@ -68,7 +69,7 @@ def parmdbToAxes(solEntry):
 import optparse
 opt = optparse.OptionParser(usage='%prog [-v] [-p H5parm] [-g globaldb/SBname] \n'\
                 +_author, version='%prog '+losoto._version.__version__)
-opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
 opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
 opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
 opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
@@ -118,6 +119,7 @@ logging.info('Found solution types: '+', '.join(solTypes))
 # rewrite solTypes in order to put together
 # Gain <-> DirectionalGain
 # CommonRotationAngle <-> RotationAngle
+# CommonScalarPhase <-> ScalarPhase
 # it also separate Real/Imag/Ampl/Phase into different solTypes
 if "Gain" in solTypes:
     solTypes.remove('Gain')
@@ -137,15 +139,21 @@ if "RotationAngle" in solTypes:
 if "CommonRotationAngle" in solTypes:
     solTypes.remove('CommonRotationAngle')
     solTypes.append('*RotationAngle')
+if "ScalarPhase" in solTypes:
+    solTypes.remove('ScalarPhase')
+    solTypes.append('*ScalarPhase')
+if "CommonScalarPhase" in solTypes:
+    solTypes.remove('CommonScalarPhase')
+    solTypes.append('*ScalarPhase')
 solTypes = list(set(solTypes))
 
-# Fill the rotation table
-#if 'RotationAngle' in solTypes or 'CommonRotationAngle' in solTypes:
+# every soltype creates a different solution-table
 for solType in solTypes:
 
     if len(pdb.getNames(solType+':*')) == 0: continue
 
-    pols = set(); dirs = set(); ants = set(); freqs = set(); times = set()
+    pols = set(); dirs = set(); ants = set();
+    freqs = set(); times = set()
 
     logging.info('Reading '+solType+'.')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames(solType+':*'))).start()
@@ -155,7 +163,7 @@ for solType in solTypes:
         
         pdb = lofar.parmdb.parmdb(instrumentdbFile)
 
-        # cheate the axes grid, necessary if not all entries have the same
+        # create the axes grid, necessary if not all entries have the same axes lenght
         data = pdb.getValuesGrid(solType+':*')
         for solEntry in data:
 
@@ -170,6 +178,7 @@ for solType in solTypes:
             ipbar += 1
 
     pbar.finish()
+
     pols = np.sort(list(pols)); dirs = np.sort(list(dirs)); ants = np.sort(list(ants)); freqs = np.sort(list(freqs)); times = np.sort(list(times))
     shape = [i for i in (len(pols), len(dirs), len(ants), len(freqs), len(times)) if i != 0]
     vals = np.empty(shape)
@@ -186,6 +195,8 @@ for solType in solTypes:
 
         # fill the values
         data = pdb.getValuesGrid(solType+':*')
+        if 'Real' in solType: dataIm = pdb.getValuesGrid(solType.replace('Real','Imag')+':*')
+        if 'Imag' in solType: dataRe = pdb.getValuesGrid(solType.replace('Imag','Real')+':*')
         for solEntry in data:
 
             pol, dir, ant, parm = parmdbToAxes(solEntry)
@@ -197,12 +208,12 @@ for solType in solTypes:
 
             # convert Real and Imag in Amp and Phase respectively
             if parm == 'Real':
-                solEntry = solEntry.replace('Real','Imag')
-                valI = pdb.getValuesGrid(solEntry)[solEntry]['values']
+                solEntryIm = solEntry.replace('Real','Imag')
+                valI = dataIm[solEntryIm]['values']
                 val = np.sqrt((val**2)+(valI**2))
             if parm == 'Imag':
-                solEntry = solEntry.replace('Imag','Real')
-                valR = pdb.getValuesGrid(solEntry)[solEntry]['values']
+                solEntryRe = solEntry.replace('Imag','Real')
+                valR = dataRe[solEntryRe]['values']
                 val = np.arctan2(val, valR)
 
             coords = []
