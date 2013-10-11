@@ -1,0 +1,20 @@
+# OS-specific
+.DS_Store
+.directory
+
+# Vim
+.*.s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+# Vagrant temp
+.vagrant
+
+# IDE
+.idea/*
+*.iml
+
+# Python
+*.pyc
