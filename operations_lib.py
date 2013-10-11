@@ -7,7 +7,6 @@ import sys
 import logging
 from h5parm import solFetcher
 
-# TODO: add pattern matching
 def getParAnts( step, parset, H ):
     """
     Return the Ant array for this step.

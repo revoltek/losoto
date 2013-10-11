@@ -3,7 +3,8 @@
 
 # Retrieving and writing data in H5parm format
 
-import os, sys
+import os, sys, re
+import numpy as np
 import tables
 import logging
 import _version
@@ -67,9 +68,6 @@ class h5parm():
         addTables -- if True (default) add antenna/direction/array tables
         """
 
-        import re
-        import numpy as np
-
         if type(solsetName) is str and not re.match(r'^[A-Za-z0-9_-]+$', solsetName):
             logging.warning('Solution-set '+solsetName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
             solsetName = None
@@ -126,7 +124,6 @@ class h5parm():
         Create and return the first available solset name which
         has the form of "sol###"
         """
-        import re
         nums = []
         for solset in self.getSolsets().keys():
             if re.match(r'^sol[0-9][0-9][0-9]$', solset):
@@ -150,9 +147,6 @@ class h5parm():
         weights --
         """
         
-        import re
-        import numpy as np
-
         if soltype == None:
             raise Exception("Solution-type not specified while adding a solution-table.")
 
@@ -180,7 +174,7 @@ class h5parm():
             soltabName = self._fisrtAvailSoltabName(solset, soltype)
 
         logging.info('Creating a new solution-table: '+soltabName+'.')
-        soltab = self.H.create_group("/"+solsetName, soltabName)
+        soltab = self.H.create_group("/"+solsetName, soltabName, title=soltype)
 
         # create axes
         assert len(axesNames) == len(axesVals)
@@ -203,7 +197,6 @@ class h5parm():
         weight = self.H.create_carray('/'+solsetName+'/'+soltabName, 'weight', obj=weights, chunkshape=chunkShape)
         val.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-        val.attrs['SOLTYPE'] = soltype
         weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
@@ -256,51 +249,12 @@ class h5parm():
         if soltype == None:
             raise Exception("Solution type not specified while querying for solution-tables list.")
 
-        import re
         nums = []
         for soltab in self.getSoltabs(solset).keys():
             if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab):
                 nums.append(int(soltab[-3:]))
 
         return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
-
-
-    def getAnt(self, solset):
-        """
-        Return a dict of all available antennas
-        in the form {name1:[position coords],name2:[position coords],...}
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        """
-        if solset == None:
-            raise Exception("Solution-set not specified.")
-        if type(solset) is str:
-            solset = self.getSolset(solset)
-
-        ants = {}
-        for x in solset.antenna:
-            ants[x['name']] = x['position']
-
-        return ants
-
-
-    def getSou(self, solset):
-        """
-        Return a dict of all available sources
-        in the form {name1:[ra,dec],name2:[ra,dec],...}
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        """
-        if solset == None:
-            raise Exception("Solution-set not specified.")
-        if type(solset) is str:
-            solset = self.getSolset(solset)
-
-        sources = {}
-        for x in solset.source:
-            sources[x['name']] = x['dir']
-
-        return sources
 
 
     def printInfo(self):
@@ -408,12 +362,13 @@ class solHandler():
     Generic class to principally handle selections
     Selections are:
     axisName = xxx # to select ONLY that value for an axis
-    axisName = [xxx, yyy] # to selct ONLY those values for an axis
+    axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
     axisName = 'xxx' # regular expression selection
-    saxisName = xxx # to selct values grater or equal than that
-    eaxisName = xxx # to selct values lowert or equal than that
+    axisName = {min: xxx} # to selct values grater or equal than xxx
+    axisName = {max: yyy} # to selct values lower or equal than yyy
+    axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
     """
-    def __init__(self, table, dataName='val', *args):
+    def __init__(self, table, **args):
         """
         Keyword arguments:
         tab -- table object
@@ -426,47 +381,88 @@ class solHandler():
             return None
 
         self.t = table
-        self.dataName = dataName
-        self.selection = self.makeSelection(args)
+        self.selection = self.setSelection(args)
 
 
-    def setSelection(self, *args):
+    def setSelection(self, append=False, **args):
         """
         set a default selection criteria.
         Keyword arguments:
-        *args -- used to create a selection
-        """
-        self.selection = self.makeSelection(args)
-
-
-    def makeSelection(self, append = False, **args):
-        """
-        Return a selection dict based on the given arguments
-        Keyword arguments:
         *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], stime=1234.
         """
+        
+        if not append: self.selection = {}
+
+        for axis, selVal in args.iteritems():
+            if not axis in self.getAxesNames():
+                logging.error("Cannot select on axis "+axis+", it doesn't exist.")
+                return
+            # string -> regular expression
+            if selVal is str: 
+                if self.getAxis(axis).atom.dtype.kind != 'S':
+                    logging.error("Cannot select on axis "+axis+" with a regular expression.")
+                    return
+                self.selection[axis] = [i for i, item in enumerate(getAxisValues(axis)) if re.search(selVal, item)]
+            # dict -> min max
+            elif selVal is dict:
+                if min in selVal and max in selVal:
+                    self.selection[axis] = [i for i, item in enumerate(getAxisValues(axis)) if (item >= min and item <= max)]
+                elif min in selVal:
+                    self.selection[axis] = [i for i, item in enumerate(getAxisValues(axis)) if item >= min]
+                elif max in selVal:
+                    self.selection[axis] = [i for i, item in enumerate(getAxisValues(axis)) if item <= max]
+                else:
+                    logging.error("Selection with a dict must have 'min' and/or 'max' entry.")
+                    return
+            # single val/list -> exact matching
+            else:
+                if not selVal is list: selVal = [selVal]
+                self.selection[axis] = [i for i, item in enumerate(getAxisValues(axis)) if item in selVal]
 
 
     def getType(self):
         """
-        return the type of the solution-tables (it is stored in the title)
+        return the type of the solution-tables (it is stored in an attrs)
         """
 
         return self.t._v_title
 
 
-    def getRowsIterator(self, selection = None):
+    def getAxesNames(self):
         """
-        Return a row iterator give a certain selection
-        Keyword arguments:
-        selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
+        Return a list with all the axis names in the correct order for
+        slicing the getValuesGrid() reurned matrix.
         """
-        if selection == None: selection = self.selection
+        return self.t.val.attrs['AXES']
 
-        if selection != '':
-            return self.t.where(selection)
+
+    def getAxis(self, axisName = None):
+        """
+        Return the axis istance for the corresponding name
+        Keyword arguments:
+        axisName -- the name of the axis to be returned
+        """
+        if not axis in self.getAxesNames():
+            logging.error("Cannot find "+axis+", it doesn't exist.")
+            return None
+        self.t._f_get_child(axisName)
+
+
+    def getAxisValues(self, axis=''):
+        """
+        Return a list of all the possible values present along a specific axis (no duplicates)
+        Keyword arguments:
+        axis -- the axis name
+        """
+
+        if axis not in self.getAxes():
+            logging.warning('Axis \"'+axis+'\" not found.')
+            return None
+
+        if axis in t.selection:
+            return np.copy(t.getAxis(axis)[t.selection[axis]])
         else:
-            return self.t.iterrows()
+            return np.copy(t.getAxis(axis)[:])
 
 
     def addHistory(self, entry=""):
@@ -485,13 +481,13 @@ class solHandler():
         nums = []
         for attr in attrs:
             try:
-                if attr[:-3] == 'history':
+                if attr[:-3] == 'HISTORY':
                     nums.append(int(attr[-3:]))
             except:
                 pass
-        historyAttr = "history%03d" % min(list(set(range(1000)) - set(nums)))
+        historyAttr = "HISTORY%03d" % min(list(set(range(1000)) - set(nums)))
 
-        self.t.attrs[historyAttr] = current_time + ": " + str(entry)
+        self.t.val.attrs[historyAttr] = current_time + ": " + str(entry)
 
 
     def getHistory(self):
@@ -499,11 +495,11 @@ class solHandler():
         Returns the table history as a string with each entry separated by
         newlines
         """
-        attrs = self.t.attrs._f_list("user")
+        attrs = self.t.val.attrs._f_list("user")
         attrs.sort()
         history_list = []
         for attr in attrs:
-            if attr[:-3] == 'history':
+            if attr[:-3] == 'HISTORY':
                 history_list.append(self.t.attrs[attr])
         if len(history_list) == 0:
             history_str = ""
@@ -515,177 +511,113 @@ class solHandler():
 
 class solWriter(solHandler):
 
-    def __init__(self, table, selection = '', valAxes=['val','weight']):
-        solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
-        self.vals = {}
-        self.nrows = {}
+    def __init__(self, table, **args):
+        solHandler.__init__(self, table = table, **args)
 
 
-    def setAxis(self, column = None, val = None, selection = None):
+    def setAxisValues(self, axis = None, vals = None):
         """
-        Set the value of a specific column
-        """
-
-        if selection == None: selection = self.selection
-
-        for row in self.getRowsIterator(selection):
-            row[column] = val
-            row.update()
-
-
-    def setValuesGrid(self, vals, nrows, valAxis = 'val'):
-        """
-        Save a specific set of rows' vals (row numbers must be defined in nrows)
-        flush() is the slow part and must be run to write the data
+        Set the value of a specific axis
+        Keyword arguments:
+        axis -- the axis name
+        vals -- the values
         """
 
-        import numpy as np
-        if valAxis in self.vals:
-            self.vals[valAxis] = np.concatenate((self.vals[valAxis], np.ndarray.flatten(vals)))
-            self.nrows[valAxis] = np.concatenate((self.nrows[valAxis], np.ndarray.flatten(nrows)))
+        if axis not in self.getAxes():
+            logging.warning('Axis \"'+axis+'\" not found.')
+
+        if axis in t.selection:
+            t.getAxis(axis)[self.selection[axis]] = vals
         else:
-            self.vals[valAxis] = np.ndarray.flatten(vals)
-            self.nrows[valAxis] = np.ndarray.flatten(nrows)
+            t.getAxis(axis)[:] = vals
 
-    def flush(self):
-        """Write all the data accumulated so far
+
+    def setValuesGrid(self, vals, weight = False):
         """
-        for valAxis in self.nrows:
-            r = self.t[self.nrows[valAxis]]
-            r[valAxis] = self.vals[valAxis]
-            self.t[self.nrows[valAxis]] = r
-        self.t.flush()
+        Save values in the val grid
+        Keyword arguments:
+        vals -- values to write as an n-dimentional array which match the selection dimention
+        weight -- if true store in the weights instead that in the vals (default: False)
+        """
+        if weight: dataVal = self.t.weight
+        else: dataVal = self.t.val
+
+        listtomesh = []
+        for axis in self.getAxes():
+            if axes in self.selection:
+                 listtomesh.append(self.selection[axis])
+            else:
+                 listtomesh.append(range(len(self.getAxisVals(axis))))
+
+        dataVals[np.meshgrid(*listtomesh)] = vals
 
 
 class solFetcher(solHandler):
 
-    def __init__(self, table, selection = '', valAxes=['val','weight']):
-        solHandler.__init__(self, table = table, selection = selection, valAxes = valAxes)
+    def __init__(self, table, **args):
+        solHandler.__init__(self, table = table, **args)
 
 
     def __getattr__(self, axis):
         """
-        link any attribute with an "axis name" to getValuesAxis("axis name") or to
-        getValuesGrid() if it is a valAxes
-        """
-        if axis in self.getAxes(valAxes = []):
-            if axis in self.valAxes:
-                return self.getValuesGrid(valAxis = axis, \
-                        valAxes = [a for a in self.valAxes if a != axis])[0]
-            else:
-                return self.getValuesAxis(axis=axis)
-        else:
-            raise AttributeError("Axis \""+axis+"\" not found.")
-
-
-    def getValuesAxis(self, axis='', selection=None, quiet=False):
-        """
-        Return a sorted list of all the possible values present along a specific axis (no duplicates)
+        link any attribute with an "axis name" to getValuesAxis("axis name")
         Keyword arguments:
         axis -- the axis name
-        selection --
         """
-
-        import numpy as np
-
-        if selection == None: selection = self.selection
-
-        if axis not in self.getAxes(valAxes = []):
-            if not quiet:
-                logging.warning('Axis \"'+axis+'\" not found.')
-            return []
-
-        return list(np.unique( np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ) ))
+        if not axis in self.getAxes():
+            logging.error('Axis '+axis+' not found.')
+        return self.getValuesAxisValues(axis)
 
 
-    def getValuesGrid(self, selection=None, valAxis = "val", valAxes = None, return_nrows = False):
+    def getValuesGrid(self, retAxisVals = True, weight = False):
         """
-        Creates a simple matrix of values given a selection.
-        NaNs will be returned where the values are not available.
+        Creates a simple matrix of values.
         Keyword arguments:
-        selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
-        valAxis -- name of the value axis (use "wight" to obtain the matix of flags)
-        valAxes -- list of axes names which are to ignore when looking for all the axes (use "val" when obtaining the matrix of flags) - WARNING: if ignoring an axis which indexes multiple values, then a random value among those indexed by that axis is used!
-        return_nrows -- if True return a 3rd parameter that is the row numbers corresponding to every value, this matrix has the same shape of the values matrix
-        Return:
-        1) ndarray of vals
-        2) a dict with axis values in the form:
+        retAxisVals -- if true returns also the axes vals as a dict of:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
-        3) ndarray of row positions, same shape of vals ndarray (optional)
-        NOTE: each axis is already sorted!
+        weight -- if true store in the weights instead that in the vals (default: False)
         """
+        if weight: dataVals = self.t.weight
+        else: dataVals = self.t.val
 
-        import numpy as np
+        listtomesh = []
+        for axis in self.getAxes():
+            if axes in self.selection:
+                 listtomesh.append(self.selection[axis])
+            else:
+                 listtomesh.append(range(len(self.getAxisVals(axis))))
 
-        if valAxes == None: valAxes = self.valAxes
-        if selection == None: selection = self.selection
+        if not retAxisVals: return dataVals[np.meshgrid(*listtomesh)]
 
-        # retreive axes values in a list of numpy arrays
-        axesVals = {}
-        axesIdx = []
-        for axis in self.getAxes(valAxes = valAxes):
-            # np.unique also sort the values
-            axisVals, axisIdx = np.unique(np.array( [ x[axis] for x in self.getRowsIterator(selection) ] ), return_inverse=True)
-            axesVals[axis] = axisVals
-            axesIdx.append(axisIdx)
+        axisVals = {}
+        for axis in self.getAxes():
+            axisVals[axis] = self.getAxesVals(axis)
 
-        # retrive the shape of the axes in the correct order (the one of getAxes())
-        shape =  [len(axesVals[axis]) for axis in self.getAxes(valAxes = valAxes)]
+        return dataVals[np.meshgrid(*listtomesh)], axisVals
 
-        # create an ndarray and fill it with NaNs
-        vals = np.ndarray(shape)
-        vals[:] = np.NAN
-        if return_nrows: nrows = np.array(np.copy(vals), dtype=np.int)
-
-        # refill the array with the correct values when they are available
-        tempVals = []
-        tempNrows = []
-        for x in self.getRowsIterator(selection):
-            tempVals.append(x[valAxis])
-            tempNrows.append(x.nrow)
-        vals[axesIdx] = np.array(tempVals)
-        if return_nrows: nrows[axesIdx] = np.array(tempNrows)
-
-        if return_nrows:
-            return vals, axesVals, nrows
-        else:
-            return vals, axesVals
-
-
-    def getIterValuesGrid(self, selection=None, valAxis = "val", valAxes = None, returnAxes= [], return_nrows = False):
+    def getIterValuesGrid(self, returnAxes= [], weight = False):
         """
         Return an iterator which yelds the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are "freq" and "time", one gets a interetion over all the possible NxM
-        matrix where N are the freq and M the time dimensions. The iterator returns also the
-        value of the iterAxes for an easy write back.
+        matrix where N are the freq and M the time dimensions.
         Keyword arguments:
         returnAxes -- axes of the returned array, all others will be cycled
+        weight -- if true store in the weights instead that in the vals (default: False)
         Return:
         1) ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxes()
         2) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
-        3) ndarray of row positions, same shape of vals ndarray (optional)
         """
 
         import itertools
-        import numpy as np
 
-        if valAxes == None: valAxes = self.valAxes
-
-        if return_nrows:
-            vals, axesVals, nrows = self.getValuesGrid(selection=None, valAxis = valAxis, \
-                    valAxes = valAxes, return_nrows = True)
-        else:
-            vals, axesVals = self.getValuesGrid(selection=None, valAxis = valAxis, valAxes = valAxes)
-
-        axesNames = self.getAxes(valAxes = valAxes)
+        vals, axesVals = self.getValuesGrid(retAxisVals = True, weight = weight)
 
         # move retrunAxes to the end of the vals array
         # preseving the respective order of returnAxes and iterAxes
-        returnAxesIdx = [i for i, axis in enumerate(axesNames) if axis in returnAxes]
+        returnAxesIdx = [i for i, axis in enumerate(self.getAxesNames()) if axis in returnAxes]
         for i, axisIdx in enumerate(returnAxesIdx):
             vals = np.rollaxis(vals, axisIdx, vals.ndim)
-            if return_nrows: nrows = np.rollaxis(nrows, axisIdx, nrows.ndim)
             for j, axisIdxCheck in enumerate(returnAxesIdx):
                 if axisIdxCheck > axisIdx: returnAxesIdx[j] -= 1
 
@@ -711,14 +643,25 @@ class solFetcher(solHandler):
         return g()
 
 
-    def getAxes(self, valAxes = None):
+    def getAntVal(self):
         """
-        Return a list with all the axis names in the correct order for
-        slicing the getValuesGrid() reurned list.
-        Keyword arguments:
-        valAxes -- array of names of axes that are not to list
+        Return a dict of all available antennas
+        in the form {name1:[position coords],name2:[position coords],...}
         """
-        # remove the values columns from the axes
-        if valAxes == None: valAxes = self.valAxes
+        ants = {}
+        for x in t.antenna:
+            ants[x['name']] = x['position']
 
-        return [axis for axis in list(self.t.colpathnames) if axis not in valAxes]
+        return ants
+
+
+    def getSouVal(self):
+        """
+        Return a dict of all available sources
+        in the form {name1:[ra,dec],name2:[ra,dec],...}
+        """
+        sources = {}
+        for x in t.source:
+            sources[x['name']] = x['dir']
+
+        return sources
