@@ -191,6 +191,7 @@ class h5parm():
             axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
 
+        # check if the axes were in the proper order
         assert dim == list(vals.shape)
         assert dim == list(weights.shape)
 
@@ -200,10 +201,11 @@ class h5parm():
         # create the val/weight Carrays
         val = self.H.create_carray('/'+solsetName+'/'+soltabName, 'val', obj=vals, chunkshape=chunkShape)
         weight = self.H.create_carray('/'+solsetName+'/'+soltabName, 'weight', obj=weights, chunkshape=chunkShape)
-        val.attrs['h5parm_version'] = _version.__h5parmVersion__
-        val.attrs['axes'] = ','.join([axisName for axisName in axesNames])
-        weight.attrs['h5parm_version'] = _version.__h5parmVersion__
-        weight.attrs['axes'] = ','.join([axisName for axisName in axesNames])
+        val.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
+        val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
+        val.attrs['SOLTYPE'] = soltype
+        weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
+        weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return soltab
 
@@ -404,70 +406,45 @@ class h5parm():
 class solHandler():
     """
     Generic class to principally handle selections
+    Selections are:
+    axisName = xxx # to select ONLY that value for an axis
+    axisName = [xxx, yyy] # to selct ONLY those values for an axis
+    axisName = 'xxx' # regular expression selection
+    saxisName = xxx # to selct values grater or equal than that
+    eaxisName = xxx # to selct values lowert or equal than that
     """
-    def __init__(self, table, selection = '', valAxes=['val','weight']):
+    def __init__(self, table, dataName='val', *args):
         """
         Keyword arguments:
         tab -- table object
-        selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
-        valAxes -- list of axis names which are not used to indexise the values
+        dataName -- is the name of the Carray 
+        *args -- used to create a selection
         """
 
         if not isinstance( table, tables.table.Table):
-            logging.error("Object must be initialized with a tables.table.Table object.")
+            logging.error("Object must be initialized with a pyTables Table object.")
             return None
+
         self.t = table
-        self.selection = selection
-        self.valAxes = valAxes
+        self.dataName = dataName
+        self.selection = self.makeSelection(args)
 
 
-    def setSelection(self, selection = ''):
+    def setSelection(self, *args):
         """
         set a default selection criteria.
         Keyword arguments:
-        selection -- a selection on the axis of the type "(ant == 'CS001LBA') & (pol == 'XX')"
+        *args -- used to create a selection
         """
-        self.selection = selection
+        self.selection = self.makeSelection(args)
 
 
-    def makeSelection(self, append=False, **args):
+    def makeSelection(self, append = False, **args):
         """
-        Prepare a selection string based on the given arguments
-        args are a list of valid axis of the form: {'pol':'XX','ant':['CS001HBA','CS002HBA']}
+        Return a selection dict based on the given arguments
+        Keyword arguments:
+        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], stime=1234.
         """
-        if append:
-            s = self.selection + " & "
-        else:
-            s = ''
-        for axis, val in args.items():
-
-            # Check that axis is valid and skip if not
-            allAxisNames = [axisl for axisl in list(self.t.colpathnames) if axisl not in self.valAxes]
-            if axis not in allAxisNames:
-                logging.warning("Selection '"+axis+"' not valid for this solution table. Ignoring.")
-            else:
-                if val == [] or val == '': continue
-
-                # in case of a list of a single item, turn it into string
-                if isinstance(val, list) and len(val) == 1: val = val[0]
-
-                # iterate the list and add an entry for each element
-                if isinstance(val, list):
-
-                    s += '( '
-                    for v in val:
-                        s = s + "(" + axis + "=='" + v + "') | "
-                    # replace the last "|" with a "&"
-                    s = ') &'.join(s.rsplit('|', 1))
-
-                elif isinstance(val, str):
-                    s = s + "(" + axis + "=='" + val + "') & "
-
-                else:
-                    logging.error('Cannot handle type: '+str(type(val))+' when setting selections.')
-
-        # remove the last " & "
-        self.selection = s[:-3]
 
 
     def getType(self):
