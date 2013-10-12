@@ -301,7 +301,7 @@ if dirs != []:
         vals.append([ra, dec])
     sourceTable.append(zip(*(dirs,vals)))
 
-logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M")
+logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")
 
 # Print summary of tables
 #if options.verbose:
