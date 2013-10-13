@@ -85,8 +85,8 @@ v,a = Hsf.getValues()
 print v.shape
 print a
 logging.info('Writing back with selction')
-Hsw.setSelection(axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
-Hsw.setValues(v)
+Hsw.setSelection(axis1='e', axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
+Hsw.setValues(v[0])
 logging.info('Set/Get history')
 Hsw.addHistory('history is working.')
 print Hsw.getHistory()

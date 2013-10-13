@@ -6,11 +6,12 @@
 
 from operations_lib import *
 import logging
-from h5parm import solWriter
 
 logging.debug('Loading RESET module.')
 
 def run( step, parset, H ):
+
+   from h5parm import solWriter
 
    soltabs = getParSoltabs( step, parset, H )
    ants = getParAxis( step, parset, H, 'ant' )
@@ -20,6 +21,9 @@ def run( step, parset, H ):
    setWeight = parset.getBool('.'.join(["LoSoTo.Steps", step, "Weight"]), False )
 
    for soltab in openSoltabs( H, soltabs ):
+
+        logging.info("Resetting soltab: "+soltab._v_name)
+
         t = solWriter(soltab)
         t.setSelection(ant=ants, pol=pols, dir=dirs)
         solType = t.getType()

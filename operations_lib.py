@@ -185,13 +185,13 @@ def getParAxis( step, parset, H, axisName ):
     * global value
     * default = None (which keep all in setSelection)
     """
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName ] )
+    stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName.lower() ] )
     # local val
     axisVals = parset.getStringVector( stepOptName, [] )
 
     # global val
     if axisVals == []:
-        axisVals = parset.getStringVector( "LoSoTo."+axisName, [] )
+        axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
 
     # default val
     if axisVals == []: axisVals = None

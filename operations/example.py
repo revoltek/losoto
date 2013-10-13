@@ -13,7 +13,7 @@ def run( step, parset, H ):
    Generic unspecified step for easy expansion.
    """
    import numpy as np
-   from h5parm import solFetcher
+   from h5parm import solFetcher, solWriter
    # all the following are LoSoTo function to extract information from the parset
 
    # get involved solsets using local step values or global values or all
@@ -23,97 +23,82 @@ def run( step, parset, H ):
    soltabs = getParSoltabs( step, parset, H )
    logging.info('Soltab: '+str(soltabs))
    # get list of Antennas using local step values or global values or all
-   ants = getParAnts( step, parset, H )
+   ants = getParAxis( step, parset, H, 'ant' )
    logging.info('Ant: '+str(ants))
    # get list of Polarizations using local step values or global values or all
-   pols = getParPols( step, parset, H )
+   pols = getParAxis( step, parset, H, 'pol' )
    logging.info('Pol: '+str(pols))
    # get list of SolTypes using local step values or global values or all
    solTypes = getParSolTypes( step, parset, H )
    logging.info('SolType: '+str(solTypes))
    # get list of Directions using local step values or global values or all
-   dirs = getParDirs( step, parset, H )
+   dirs = getParAxis( step, parset, H, 'dir' )
    logging.info('Dir: '+str(dirs))
 
 
    # do something on every soltab (use the openSoltab LoSoTo function)
    for soltab in openSoltabs( H, soltabs ):
-        logging.info("--> Working on soltab: "+soltab.name)
+        logging.info("--> Working on soltab: "+soltab._v_name)
         # use the solFetcher from the H5parm lib
         t = solFetcher(soltab)
+        tw = solWriter(soltab)
 
-        axisNames = t.getAxes()
+        axisNames = t.getAxesNames()
         logging.info("Axis names are: "+str(axisNames))
 
         solType = t.getType()
         logging.info("Soltab type is: "+solType)
 
-        # this can be manually done with e.g. setSelection('(ant=='CS001HBA') & (pol=='XX')')
-        t.makeSelection(ant=ants, pol=pols, dir=dirs)
-        logging.info("Selection is: "+t.selection)
+        # this will make a selection for the getValues() and getValuesIter()
+        t.setSelection(ant=ants, pol=pols, dir=dirs)
+        logging.info("Selection is: "+str(t.selection))
 
         # find all axis values
-        logging.info("Antennas are: "+str(t.getValuesAxis('ant')))
+        logging.info("Antennas are: "+str(t.getAxisValues('ant')))
         # but one can also use
         logging.info("Antennas (other method) are: "+str(t.ant))
         logging.info("Frequencies are: "+str(t.freq))
         logging.info("Directions are: "+str(t.dir))
         logging.info("Polarizations are: "+str(t.pol))
         # try to access a non-existent axis
-        t.getValuesAxis('nonexistantaxis')
+        t.getAxisValues('nonexistantaxis')
 
         # now get all values given this selection
         logging.info("Get data using t.val")
         val = t.val
-        logging.info("$ val is "+str(val[100,0,0,0,0]))
-        #print len(val)
-        flag = t.flag
-        #print len(flag)
+        logging.info("$ val is "+str(val[0,0,0,0,100]))
+        flag = t.weight
         time = t.time
         thisTime = t.time[100]
-        #print len(time)
 
-        # get a rowIterator given a different selection
-        logging.info("Get data using getRowsIterator()")
-        ants.append('CS002LBA') # change selection
-        t.makeSelection(ant=ants, pol=pols, dir=dirs)
-        logging.info("Selection is: "+t.selection)
-        for i, row in enumerate(t.getRowsIterator()):
-            if row['ant'] == 'CS001LBA' and row['time'] == thisTime:
-                logging.info("$ val is "+str(row['val']))
-            if row['ant'] == 'CS002LBA' and row['time'] == thisTime:
-                # update a specific cell value
-                row['val'] = '123456'
-                row.update()
-
-        # another way to get the data is using the getValuesGrid()
-        logging.info("Get data using getValuesGrid()")
-        grid, axis = t.getValuesGrid(selection='') # note we reset the selection
+        # another way to get the data is using the getValues()
+        logging.info("Get data using getValues()")
+        grid, axes = t.getValues()
         # axis names
-        logging.info("Axes: "+str(t.getAxes()))
+        logging.info("Axes: "+str(t.getAxesNames()))
         # axis shape
-        print [len(i) for i in axis]
+        print axes
+        print [t.getAxisLen(axis) for axis in axes] # not ordered, is a dict!
         # data array shape (same of axis shape)
         print grid.shape
-        logging.info("$ val is "+str(grid[100,0,0,1,1]))
+        logging.info("$ val is "+str(grid[0,0,0,0,100]))
 
         # reset selection
-        t.setSelection('')
+        t.setSelection()
         logging.info('Reset selection to \'\'')
-        logging.info("Antennas (other method) are: "+str(t.ant))
+        logging.info("Antennas are: "+str(t.ant))
         logging.info("Frequencies are: "+str(t.freq))
         logging.info("Directions are: "+str(t.dir))
         logging.info("Polarizations are: "+str(t.pol))
 
-        # probably the fastest way to dump all the data
-        a=[row.fetch_all_fields() for row in t.t.where('(ant == \'CS002LBA\')')]
-
-        # finally the getIterValuesGrid allaws to iterate across all possible combinations of a set of axes
-        for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=['time','freq'], return_nrows=True):
-            logging.info('Iteration on ', coord)
+        # finally the getValuesIter allaws to iterate across all possible combinations of a set of axes
+        for vals, coord in t.getValuesIter(returnAxes=['time','freq']):
+            logging.info('Iteration on '+str(coord))
             # writing back the solutions
-            sw.setValuesGrid(vals, nrows)
-
+            coord = removeKeys(coord, ['time','freq'])
+            tw.setSelection(**coord)
+            tw.setValues(vals)
+            break
     
    return 0 # if everything went fine, otherwise 1
 

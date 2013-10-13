@@ -25,7 +25,7 @@ opt.add_option('-o', '--orig', help='H5parm origin file (filename:solset)', type
 opt.add_option('-d', '--dest', help='H5parm destination file (filename:solset)', type='string', default=None)
 (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose("info")
+if options.verbose: losoto._logging.setLevel("debug")
 
 h5parmFrom = options.orig
 h5parmTo = options.dest
@@ -50,9 +50,9 @@ ht = losoto.h5parm.h5parm(h5parmToFile, readonly=False)
 if solsetTo in ht.getSolsets():
     logging.critical('Destination solset already exists, quitting.')
     sys.exit(1)
-ssT = ht.makeSolset(solsetName = solsetTo)
+ssT = ht.makeSolset(solsetName = solsetTo, addTables=False)
 # write the soltabs
-ssF._f_copy_children(ssT)
+ssF._f_copy_children(ssT, recursive=True)
 
 del hf
 del ht

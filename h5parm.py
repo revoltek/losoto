@@ -444,7 +444,7 @@ class solHandler():
                 if self.getAxis(axis).atom.dtype.kind != 'S':
                     logging.error("Cannot select on axis "+axis+" with a regular expression.")
                     return
-                self.selection[idx] = tuple([i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)])
+                self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
             # dict -> min max
             elif type(selVal) is dict:
@@ -615,12 +615,12 @@ class solFetcher(solHandler):
         Keyword arguments:
         axis -- the axis name
         """
-        if not axis in self.getAxesNames():
+        if not axis in self.getAxesNames() and (axis != 'val' and axis != 'weight'):
             logging.error('Axis \"'+axis+'\" not found.')
         if axis == 'val':
-            return self.getValues(retAxisVals=False)
+            return self.getValues(retAxesVals=False)
         elif axis == 'weight':
-            return self.getValues(retAxisVals=False, weight=True)
+            return self.getValues(retAxesVals=False, weight=True)
         elif axis in self.getAxesNames():
             return self.getAxisValues(axis)
         else:
