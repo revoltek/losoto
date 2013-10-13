@@ -19,14 +19,15 @@ def run( step, parset, H ):
 
     start = time.clock()
     soltabs = getParSoltabs( step, parset, H )
-    ants = getParAnts( step, parset, H )
-    pols = getParPols( step, parset, H )
-    dirs = getParDirs( step, parset, H )
+    ants = getParAxis( step, parset, H, 'ant' )
+    pols = getParAxis( step, parset, H, 'pol' )
+    dirs = getParAxis( step, parset, H, 'dir' )
     elapsed = (time.clock() - start)
     logging.debug("Time for getting parms: "+str(elapsed)+" s.")
 
     axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
+
     if len(axesToSmooth) != len(FWHM):
         logging.error("Axes and FWHM lenghts must be equal.")
         return 1
@@ -38,42 +39,30 @@ def run( step, parset, H ):
 
         logging.info("Smoothing soltab: "+soltab.name)
 
-        sf.makeSelection(ant=ants, pol=pols, dir=dirs)
-
-        # some checks
-        if len(FWHM) != len(axesToSmooth):
-            logging.error('Wrong length of FWHM/Axes parameter.')
-            return 1
+        sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
         for i, axis in enumerate(axesToSmooth[:]):
-            if axis not in sf.getAxes():
+            if axis not in sf.getAxesNames():
                 del axesToSmooth[i]
                 del FWHM[i]
                 logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
         start = time.clock()
         first = True
-        for vals, coord, nrows in sf.getIterValuesGrid(returnAxes=axesToSmooth, return_nrows=True):
+        for vals, coord in sf.getValuesIter(returnAxes=axesToSmooth):
             if first == True:
                 elapsed = (time.clock() - start)
                 logging.debug("Time for load: "+str(elapsed)+" s.")
                 first = False
 
             # TODO: implement flag control
-            # smoothing
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
         
             # writing back the solutions
-            sw.setValuesGrid(valsnew, nrows)
-        start = time.clock()
-        sw.flush()
-        elapsed = (time.clock() - start)
-        logging.debug("Time for write: "+str(elapsed)+" s.")
+            sw.setSelection(*coord) # TODO: do not select on returnAxes!!! much faster
+            sw.setValuesGrid(valsnew)
 
-#         sw.addHistory('SMOOTH (over %s with box size = %s, ants = %s, '
-#             'pols = %s, dirs = %s)' % (axesToSmooth, FWHM, ants, pols, dirs))
-        selection = sf.selection
-        sw.addHistory('SMOOTH (over %s with box size = %s and selection = [%s])' % (axesToSmooth, FWHM, selection))
+        sw.addHistory('SMOOTH (over %s with box size = %s)' % (axesToSmooth, FWHM))
     return 0
 
 

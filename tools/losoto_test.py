@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This tool comapre the performances of H5parm with parmdb.
-# ./losoto_test.py -p ../examples/global-comp.h5 -g ../examples/L99289-cal_SB081.MS/instrument/ -s sol000
+# This tool tests the functionalities of H5parm libraries
 
 # Authors:
 # Francesco de Gasperin
@@ -11,165 +10,99 @@ _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
 import sys, os, time
 import numpy as np
 import logging
-import lofar.parmdb
 import losoto._version
 import losoto._logging
 from losoto.h5parm import h5parm, solFetcher, solWriter
 
-# Options
-import optparse
-opt = optparse.OptionParser(usage='%prog [-v] -p H5parm [-s solset] -g parmdb \n'\
-                +_author, version='%prog '+losoto._version.__version__)
-opt.add_option('-p', '--h5parm', help='H5parm name', type='string', default='')
-opt.add_option('-g', '--parmdb', help='Parmdb name', type='string', default='')
-opt.add_option('-s', '--solset', help='Solution-set name (default=sol000)', type='string', default='sol000')
-opt.add_option('-n', '--numiter', help='Number of iterations (default=100)', type=int, default=100)
-(options, args) = opt.parse_args()
+if os.path.isfile('test.h5'): os.system('rm test.h5')
 
-losoto._logging.setLevel('debug')
+# general h5parm library
+logging.info("Create a new H5parm")
+H5 = h5parm('test.h5', readonly=False)
+logging.info("Close H5parm")
+del H5
+logging.info("Open in read-only mode")
+H5 = h5parm('test.h5', readonly=True)
+del H5
+print "###########################################"
 
-n = options.numiter
+# solsets
+H5 = h5parm('test.h5', readonly=False)
+logging.info("Create solsets (using same names)")
+H5.makeSolset('ssTest')
+H5.makeSolset('ssTest')
+H5.makeSolset()
+logging.info('Get a solset object')
+ss=H5.getSolset('ssTest')
+logging.info('Get ants')
+ant=H5.getAnt(ss)
+logging.info('Get sources')
+sou=H5.getSou(ss)
+logging.info('Get all solsets:')
+print H5.getSolsets()
+print "###########################################"
 
-solset = options.solset
-h5parmFile = options.h5parm
-H5 = h5parm(h5parmFile, readonly=False)
-H = solFetcher(H5.getSoltab(solset,'rotation000'))
-logging.info("H5parm filename = "+h5parmFile)
+# soltabs
+logging.info("Create soltabs (using same names)")
+axesVals = [['a','b','c','d'], np.arange(100), np.arange(1000)]
+vals = np.arange(4*100*1000).reshape(4,100,1000)
+H5.makeSoltab(ss, 'amplitude', 'stTest', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
+H5.makeSoltab(ss, 'amplitude', 'stTest', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
+H5.makeSoltab(ss, 'amplitude', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
+logging.info('Get a soltab object')
+st=H5.getSoltab(ss,'stTest')
+logging.info('Get all soltabs:')
+print H5.getSoltabs(ss)
 
-parmdbFile = options.parmdb
-P = lofar.parmdb.parmdb(parmdbFile)
-logging.info("parmdb filename = "+parmdbFile)
+print "###########################################"
+logging.info('printInfo()')
+print H5.printInfo()
 
-######################################################
-logging.info("### Read all frequencies for a pol/dir/station")
+print "###########################################"
+logging.info('solFetcher/solWriter')
+Hsf = solFetcher(st)
+Hsw = solWriter(st)
+logging.info('Get Axes Names')
+print Hsf.getAxesNames()
+logging.info('Get Axes1 Len (exp 4)')
+print Hsf.getAxisLen('axis1')
+logging.info('Get solution Type (exp: amplitude)')
+print Hsf.getType()
+logging.info('Get axisValues (exp: a,b,c,d)')
+print Hsf.getAxisValues('axis1')
+logging.info('Set new axes values')
+print Hsw.setAxisValues('axis1',['e','f','g','h'])
+logging.info('Get axisValues (exp: e,f,g,h)')
+print Hsf.getAxisValues('axis1')
+logging.info('Set a selection using single/multiple vals and append (exp: 1x1x2)')
+Hsf.setSelection(axis1='e', axis2=1, axis3=[1,10])
+v,a = Hsf.getValues()
+print v.shape
+print a
+logging.info('Set a selection using min max (exp: 4x10x10)')
+Hsf.setSelection(axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
+v,a = Hsf.getValues()
+print v.shape
+print a
+logging.info('Writing back with selction')
+Hsw.setSelection(axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
+Hsw.setValues(v)
+logging.info('Set/Get history')
+Hsw.addHistory('history is working.')
+print Hsw.getHistory()
+logging.info('Get Vaues Iter (exp: 40 and 10)')
+i=0
+for matrix, coord in Hsf.getValuesIter(returnAxes=['axis3']):
+    i += 1
+print "Iterations:", i
+i=0
+for matrix, coord in Hsf.getValuesIter(returnAxes=['axis2','axis3']):
+    print coord
+    i += 1
+print "Iterations:", i
 
-start = time.clock()
-for i in xrange(n):
-    Pfreqs = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['freqs']
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
 
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='3C196',ant='CS001LBA')
-    Hfreqs = H.freq
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-print "Equal?",(Pfreqs == Hfreqs).all()
-
-######################################################
-logging.info("### Read all times for a pol/dir/station")
-
-start = time.clock()
-for i in xrange(n):
-    Ptimes = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['times']
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
-
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='3C196',ant='CS001LBA')
-    Htimes = H.time
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-print "Equal?",(Ptimes == Htimes).all()
-
-######################################################
-logging.info("### Read all rotations for 1 station (slice in time)")
-
-start = time.clock()
-for i in xrange(n):
-    Prot = P.getValues('CommonRotationAngle:CS001LBA',stime=Htimes[30],etime=Htimes[-30])['CommonRotationAngle:CS001LBA']['values'].transpose()[0]
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
-
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='pointing', ant='CS001LBA', time={'min':Htimes[31],'max':Htimes[-29]})
-    Hrot = H.getValuesGrid(retAxisVals = False)
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-print "Equal?", (Prot == np.squeeze(Hrot)).all()
-
-######################################################
-logging.info("### Read all rotations for all station (slice in time)")
-
-start = time.clock()
-for i in xrange(n):
-    Protd = P.getValues('CommonRotationAngle:*',stime=Htimes[30],etime=Htimes[-30])
-    # construct the matrix
-    Prot = []
-    for ant in sorted(Protd.iterkeys()):
-        Prot.append(Protd[ant]['values'].transpose()[0])
-    Prot = np.array(Prot)
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
-
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='pointing', time={'min':Htimes[31],'max':Htimes[-29]})
-    Hrot = H.getValuesGrid(retAxisVals = False)
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-print "Equal?", (Prot == np.squeeze(Hrot)).all()
-
-######################################################
-logging.info("### Read all rotations for remote stations (slice in ant)")
-
-start = time.clock()
-for i in xrange(n):
-    Protd = P.getValues('CommonRotationAngle:RS*')
-    # construct the matrix
-    Prot = []
-    for ant in sorted(Protd.iterkeys()):
-        Prot.append(Protd[ant]['values'].transpose()[0])
-    Prot = np.array(Prot)
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
-
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='pointing', ant='RS*')
-    Hrot = H.getValuesGrid(retAxisVals = False)
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-print "Equal?", (Prot == np.squeeze(Hrot)).all()
-
-######################################################
-# read+write
-logging.info("### Read all rotations for a dir/station and write them back")
-Hw = solWriter(H5.getSoltab(solset,'amplitude000'))
-
-start = time.clock()
-for i in xrange(n):
-    Prot = P.getValues('CommonRotationAngle:CS001LBA')['CommonRotationAngle:CS001LBA']['values']
-    # parmdb write?
-elapsed = (time.clock() - start)
-logging.info("PARMDB -- "+str(elapsed)+" s.")
-
-start = time.clock()
-for i in xrange(n):
-    H.setSelection(dir='pointing', ant='CS001LBA')
-    Hrot = H.getValuesGrid(retAxisVals = False)
-    Hw.setSelection(dir='pointing', ant='CS001LBA')
-    Hw.setValuesGrid(Hrot)
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-######################################################
-# read whole file
-logging.info("### Read and tabulate the whole file")
-start = time.clock()
-H.setSelection()
-val, axes = H.getValuesGrid()
-print "Shape:", val.shape
-elapsed = (time.clock() - start)
-logging.info("H5parm -- "+str(elapsed)+" s.")
-
-del H
-del P
+# close the H5parm file
+del Hsf
+del Hsw
+del H5

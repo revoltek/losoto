@@ -8,18 +8,21 @@ LoSoTo.Steps = [reset, clocktec, flag, smooth, interp, rescale, plot, apply]
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [pahse]
-LoSoTo.Ant = []
-LoSoTo.Pol = [XX, YY]
-LoSoTo.Dir = [pointing]
+LoSoTo.ant = []
+LoSoTo.pol = [XX, YY]
+LoSoTo.dir = [pointing]
+LoSoTo.axisName = []
 
 # parameters available in every steps
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
-LoSoTo.Steps.everystep.Ant = []
-LoSoTo.Steps.everystep.Pol = []
-LoSoTo.Steps.everystep.Dir = []
+LoSoTo.Steps.everystep.ant = []
+LoSoTo.Steps.everystep.pol = []
+LoSoTo.Steps.everystep.dir = []
+LoSoTo.Steps.everystep.axisName = []
 LoSoTo.Steps.everystep.SolType = []
 
 LoSoTo.Steps.reset.Operation = RESET
+LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
 LoSoTo.Steps.clocktec.Algorithm = 

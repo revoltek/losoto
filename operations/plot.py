@@ -11,14 +11,13 @@ logging.debug('Loading PLOT module.')
 def run( step, parset, H ):
 
    import matplotlib.pyplot as plt
-   import matplotlib.cm as cm
    import numpy as np
    from h5parm import solFetcher
 
    soltabs = getParSoltabs( step, parset, H )
-   ants = getParAnts( step, parset, H )
-   pols = getParPols( step, parset, H )
-   dirs = getParDirs( step, parset, H )
+   ants = getParAxis( step, parset, H, 'ant' )
+   pols = getParAxis( step, parset, H, 'pol' )
+   dirs = getParAxis( step, parset, H, 'dir' )
 
    plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
    axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
@@ -28,13 +27,13 @@ def run( step, parset, H ):
    for soltab in openSoltabs( H, soltabs ):
 
         sf = solFetcher(soltab)
-        logging.info("Plotting soltab: "+soltab.name)
+        logging.info("Plotting soltab: "+soltab._v_name)
 
-        sf.makeSelection(ant=ants, pol=pols, dir=dirs)
+        sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
         # some checks
         for axis in axesToPlot:
-            if axis not in sf.getAxes():
+            if axis not in sf.getAxesNames():
                 logging.error('Axis \"'+axis+'\" not found.')
                 return 1
 
@@ -43,7 +42,7 @@ def run( step, parset, H ):
             logging.error('Wrong number of axes.')
             return 1
 
-        for vals, coord in sf.getIterValuesGrid(returnAxes=axesToPlot):
+        for vals, coord in sf.getValuesIter(returnAxes=axesToPlot):
             # TODO: implement flag control, using different color?
             
             title = ''
@@ -77,5 +76,3 @@ def run( step, parset, H ):
                 logging.info("Saving "+prefix+title+'.png')
 
    return 0
-
-

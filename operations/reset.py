@@ -13,19 +13,23 @@ logging.debug('Loading RESET module.')
 def run( step, parset, H ):
 
    soltabs = getParSoltabs( step, parset, H )
-   ant = getParAnts( step, parset, H )
-   pol = getParPols( step, parset, H )
-   dir = getParDirs( step, parset, H )
+   ants = getParAxis( step, parset, H, 'ant' )
+   pols = getParAxis( step, parset, H, 'pol' )
+   dirs = getParAxis( step, parset, H, 'dir' )
+
+   setWeight = parset.getBool('.'.join(["LoSoTo.Steps", step, "Weight"]), False )
 
    for soltab in openSoltabs( H, soltabs ):
         t = solWriter(soltab)
-        t.makeSelection(ant=ant, pol=pol, dir=dir)
+        t.setSelection(ant=ants, pol=pols, dir=dirs)
         solType = t.getType()
 
-        if solType == 'amplitude':
-            t.setAxis('val', 1.)
+        if setWeight:
+            t.setValues(1., weight=setWeight)
+        elif solType == 'amplitude':
+            t.setValues(1.)
         else:
-            t.setAxis('val', 0.)
+            t.setValues(0.)
 
         t.addHistory('RESET')
    return 0
