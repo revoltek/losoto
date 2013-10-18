@@ -81,7 +81,7 @@ class h5parm():
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
         solset = self.H.create_group("/", solsetName)
-        
+
         if addTables:
             # add antenna table
             logging.info('--Creating new antenna table.')
@@ -132,8 +132,9 @@ class h5parm():
         return "sol%03d" % min(list(set(range(1000)) - set(nums)))
 
 
-    def makeSoltab(self, solset=None, soltype=None, soltab=None, \
-            axesNames = [], axesVals = [], chunkShape=None, vals=None, weights=None):
+    def makeSoltab(self, solset=None, soltype=None, soltab=None,
+            axesNames = [], axesVals = [], chunkShape=None, vals=None,
+            weights=None, parmdbType=None):
         """
         Create a solution-table into a specified solution-set
         Keyword arguments:
@@ -145,8 +146,9 @@ class h5parm():
         chunkShape -- list with the chunk shape
         vals --
         weights --
+        parmdbType -- original parmdb solution type
         """
-        
+
         if soltype == None:
             raise Exception("Solution-type not specified while adding a solution-table.")
 
@@ -158,7 +160,7 @@ class h5parm():
         solsetName = solset._v_name
 
         if not solsetName in self.getSolsets().keys():
-            raise Exception("Solution-set "+solsetName+" doesn't exists.")
+            raise Exception("Solution-set "+solsetName+" doesn't exist.")
 
         # checks on the soltab
         soltabName = soltab
@@ -175,6 +177,7 @@ class h5parm():
 
         logging.info('Creating a new solution-table: '+soltabName+'.')
         soltab = self.H.create_group("/"+solsetName, soltabName, title=soltype)
+        soltab._v_attrs['parmdb_type'] = parmdbType
 
         # create axes
         assert len(axesNames) == len(axesVals)
@@ -199,6 +202,7 @@ class h5parm():
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
         weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
+
 
         return soltab
 
@@ -404,7 +408,7 @@ class solHandler():
         """
         Keyword arguments:
         tab -- table object
-        dataName -- is the name of the Carray 
+        dataName -- is the name of the Carray
         *args -- used to create a selection
         """
 
@@ -434,13 +438,13 @@ class solHandler():
                 return
 
             # if None continue and keep all the values
-            if selVal == None: continue 
-            
+            if selVal == None: continue
+
             # find the index of the working axis
             idx = self.getAxesNames().index(axis)
 
             # string -> regular expression
-            if type(selVal) is str: 
+            if type(selVal) is str:
                 if self.getAxis(axis).atom.dtype.kind != 'S':
                     logging.error("Cannot select on axis "+axis+" with a regular expression.")
                     return
@@ -641,7 +645,7 @@ class solFetcher(solHandler):
         else: dataVals = self.t.val
 
         # Use the slices set by setSelection to slice the data
-        if not retAxesVals: 
+        if not retAxesVals:
             return dataVals[tuple(self.selection)]
 
         axisVals = {}
@@ -690,5 +694,5 @@ class solFetcher(solHandler):
                         i += 1
                 data = np.squeeze(dataVals[tuple(self.selection)][tuple(refSelection)])
                 yield (data, thisAxesVals)
-                        
+
         return g()

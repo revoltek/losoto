@@ -28,7 +28,7 @@ def parmdbToAxes(solEntry):
     """
     pol = None; pol1 = None; pol2 = None;
     dir = None; ant = None; parm = None
-    
+
     thisSolType = solEntry.split(':')[0]
 
     # For CommonRotationAngle assuming [CommonRotationAngle:ant]
@@ -63,7 +63,7 @@ def parmdbToAxes(solEntry):
         if pol1 == '1' and pol2 == '1': pol = 'YY'
 
     return pol, dir, ant, parm
- 
+
 
 # Options
 import optparse
@@ -153,14 +153,14 @@ for solType in solTypes:
     if len(pdb.getNames(solType+':*')) == 0: continue
 
     pols = set(); dirs = set(); ants = set();
-    freqs = set(); times = set()
+    freqs = set(); times = set(); ptype = set()
 
     logging.info('Reading '+solType+'.')
     pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames(solType+':*'))).start()
     ipbar = 0
 
     for instrumentdbFile in instrumentdbFiles:
-        
+
         pdb = lofar.parmdb.parmdb(instrumentdbFile)
 
         # create the axes grid, necessary if not all entries have the same axes lenght
@@ -190,7 +190,7 @@ for solType in solTypes:
     ipbar = 0
 
     for instrumentdbFile in instrumentdbFiles:
-        
+
         pdb = lofar.parmdb.parmdb(instrumentdbFile)
 
         # fill the values
@@ -200,10 +200,11 @@ for solType in solTypes:
         for solEntry in data:
 
             pol, dir, ant, parm = parmdbToAxes(solEntry)
+            ptype |= set([solEntry.split(':')[0]]) # original parmdb solution type
 
             freq = data[solEntry]['freqs']
             time = data[solEntry]['times']
- 
+
             val = data[solEntry]['values']
 
             # convert Real and Imag in Amp and Phase respectively
@@ -217,7 +218,7 @@ for solType in solTypes:
                 val = np.arctan2(val, valR)
 
             coords = []
-            if pol != None: 
+            if pol != None:
                 polCoord = np.searchsorted(pols, pol)
                 coords.append(polCoord)
             if dir != None:
@@ -236,16 +237,16 @@ for solType in solTypes:
     pbar.finish()
     if solType == '*RotationAngle':
         h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
-                axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights)
-    elif solType == 'CommonScalarPhase':
-        h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
-                axesVals=[ants,freqs,times], vals=vals, weights=weights)
+                axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+    elif solType == '*ScalarPhase':
+        h5parm.makeSoltab(solset, 'scalarphase', axesNames=['ant','freq','time'], \
+                axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
     elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
         h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
-                axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights)
+                axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
     elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
         h5parm.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
-                axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights)
+                axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 
 logging.info('Collecting information from the ANTENNA table.')
 antennaTable = pt.table(antennaFile, ack=False)
@@ -304,8 +305,12 @@ if dirs != []:
 logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")
 
 # Print summary of tables
-#if options.verbose:
-#    logging.info(str(h5parm))
+soltabs = h5parm.getSoltabs(solset=solset)
+for st in soltabs:
+    sw = solWriter(soltabs[st])
+    sw.addHistory('CREATE (by H5parm_importer.py from %s)' % globaldbFile)
+if options.verbose:
+    logging.info(str(h5parm))
 
 del h5parm
 logging.info('Done.')
