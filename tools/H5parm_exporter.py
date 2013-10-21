@@ -74,39 +74,39 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
     solType - string defining solution type. E.g., "DirectionalGain"
     solTabs - solution tables returned by h5parm.getSoltabs()
     parm - parm to return if solType is "Gain": 'amp' or 'phase'
+
+    The soltab parmdb_type attribute is used as an additional filter to
+    to distinguish multiple possible matches. If it is not available, all
+    matches are returned.
     """
     solTabList = []
     if parm != None:
         parm = parm.lower()
-    if solType == 'DirectionalGain' and parm != None:
-        for name, st in solTabs.iteritems():
-            if parm == 'ampl':
-                if st._v_title == 'amplitude':
-                    if hasattr(st._v_attrs, 'parmdb_type'):
-                        if solType in st._v_attrs['parmdb_type'].split(', '):
-                            solTabList.append(st)
-            else:
-                if st._v_title == 'phase':
-                    if hasattr(st._v_attrs, 'parmdb_type'):
-                        if solType in st._v_attrs['parmdb_type'].split(', '):
-                            solTabList.append(st)
-    elif solType == 'Gain' and parm != None:
+
+    # Handle gain table separately, as we need to distinguish ampl and phase
+    if (solType == 'DirectionalGain' or solType == 'Gain') and parm != None:
         for name, st in solTabs.iteritems():
             if parm == 'ampl' or parm == 'real':
                 if st._v_title == 'amplitude':
                     if hasattr(st._v_attrs, 'parmdb_type'):
                         if solType in st._v_attrs['parmdb_type'].split(', '):
                             solTabList.append(st)
+                    else:
+                        solTabList.append(st)
             else:
                 if st._v_title == 'phase':
                     if hasattr(st._v_attrs, 'parmdb_type'):
                         if solType in st._v_attrs['parmdb_type'].split(', '):
                             solTabList.append(st)
+                    else:
+                        solTabList.append(st)
     else:
         for name, st in solTabs.iteritems():
             if hasattr(st._v_attrs, 'parmdb_type'):
                 if solType in st._v_attrs['parmdb_type'].split(', '):
                     solTabList.append(st)
+            else:
+                solTabList.append(st)
 
     if len(solTabList) == 0:
         return None
@@ -219,24 +219,22 @@ if __name__=='__main__':
             if len_sol[solType] == 0: continue
 
             solEntries = pdb_in.getNames(solType+':*')
-            pol, dir, ant, parm = parmdbToAxes(solEntries[0])
-            solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
-            if solTabList is None:
-                logging.critical('Mismatch between parmdb table and H5parm '
-                    'solution table: No solution tables found that match '
-                    'the parmdb entry "'+solType+'"')
-                sys.exit(1)
-            if len(solTabList) > 1:
-                logging.warning('More than one solution table found in H5parm '
-                    'matching parmdb entry "'+solType+'". Taking the first match.')
-            solTab = solTabList[0]
-            sf = solFetcher(solTab)
-
             data = pdb_in.getValuesGrid(solType+':*')
             data_out = data.copy()
             for solEntry in solEntries:
 
                 pol, dir, ant, parm = parmdbToAxes(solEntry)
+                solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
+                if solTabList is None:
+                    logging.critical('Mismatch between parmdb table and H5parm '
+                        'solution table: No solution tables found that match '
+                        'the parmdb entry "'+solType+'"')
+                    sys.exit(1)
+                if len(solTabList) > 1:
+                    logging.warning('More than one solution table found in H5parm '
+                        'matching parmdb entry "'+solType+'". Taking the first match.')
+                solTab = solTabList[0]
+                sf = solFetcher(solTab)
 
                 if pol == None and dir == None:
                     sf.setSelection(ant=ant)
@@ -253,13 +251,13 @@ if __name__=='__main__':
                     soltab_phase = SolTabList[0]
                     sf_phase = solFetcher(soltab_phase, ant=ant, pol=pol, dir=dir)
                     val_amp = sf.getValues()[0]
-                    val_phase = sf_phase.getValues()[0]*np.pi/180.0
+                    val_phase = sf_phase.getValues()[0]
                     val = val_amp * np.cos(val_phase)
                 elif parm == 'Imag':
                     SolTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
                     soltab_amp = SolTabList[0]
                     sf_amp = solFetcher(soltab_amp, ant=ant, pol=pol, dir=dir)
-                    val_phase = sf.getValues()[0]*np.pi/180.0
+                    val_phase = sf.getValues()[0]
                     val_amp = sf_amp.getValues()[0]
                     val = val_amp * np.sin(val_phase)
                 else:
