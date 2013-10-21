@@ -48,92 +48,97 @@ def splitgds(gdsFile, wd='', id='part'):
     return gdsList
 
 
-# Options
-import optparse
-opt = optparse.OptionParser(usage='%prog [-v] [-d gds] [-c clusterdesc] [-o output globaldb] \n'\
-        +_author, version='%prog '+losoto._version.__version__)
-opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
-opt.add_option('-o', '--overwrite', help='Overwrite an existing globaldb (default=False)', action='store_true', default=False)
-opt.add_option('-d', '--gds', help='Gds file used to construct the globaldb', type='string', default='')
-opt.add_option('-g', '--globaldb', help='Output globaldb name (default=globaldb)', type='string', default='globaldb')
-(options, args) = opt.parse_args()
+if __name__=='__main__':
+    # Options
+    import optparse
+    opt = optparse.OptionParser(usage='%prog [-v] [-d gds] [-c clusterdesc] [-g output globaldb] \n'\
+            +_author, version='%prog '+losoto._version.__version__)
+    opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
+    opt.add_option('-o', '--overwrite', help='Overwrite an existing globaldb (default=False)', action='store_true', default=False)
+    opt.add_option('-d', '--gds', help='Gds file used to construct the globaldb', type='string', default='')
+    opt.add_option('-g', '--globaldb', help='Output globaldb name (default=globaldb)', type='string', default='globaldb')
+    (options, args) = opt.parse_args()
 
-if options.verbose: losoto._logging.setVerbose('debug')
+    # Check options
+    if len(args) != 0:
+        opt.print_help()
+        sys.exit()
+    if options.verbose: losoto._logging.setVerbose('debug')
 
-overwrite = options.overwrite
-gdsFile = options.gds
-logging.info("GDS filename = "+gdsFile)
-globaldbFile = options.globaldb
-logging.info("globaldb filename = "+globaldbFile)
+    overwrite = options.overwrite
+    gdsFile = options.gds
+    logging.info("GDS filename = "+gdsFile)
+    globaldbFile = options.globaldb
+    logging.info("globaldb filename = "+globaldbFile)
 
-# hardcoded, maybe can be turned in an option...
-instrumentName='instrument'
+    # hardcoded, maybe can be turned in an option...
+    instrumentName='instrument'
 
-if not os.path.isfile(gdsFile):
-    logging.critical('gdsFile '+gdsFile+' not found.')
-    sys.exit()
+    if not os.path.isfile(gdsFile):
+        logging.critical('gdsFile '+gdsFile+' not found.')
+        sys.exit()
 
-if os.path.exists(globaldbFile):
-    if overwrite:
-        os.system('rm -rf '+globaldbFile)
+    if os.path.exists(globaldbFile):
+        if overwrite:
+            os.system('rm -rf '+globaldbFile)
+            os.makedirs(globaldbFile)
+        else:
+            logging.warning(globaldbFile+' already exists. I will not overwrite existing files.')
+    else:
         os.makedirs(globaldbFile)
-    else:
-        logging.warning(globaldbFile+' already exists. I will not overwrite existing files.')
-else:
-    os.makedirs(globaldbFile)
 
-# Create an instrumentdb named as gdsFile.instrumentName
-# which is like the gds file but points to the "instrument" parmdb table
-# inside each MS.
+    # Create an instrumentdb named as gdsFile.instrumentName
+    # which is like the gds file but points to the "instrument" parmdb table
+    # inside each MS.
 
-instrumentdbFile = os.path.join(globaldbFile, \
-            os.path.splitext(os.path.basename(gdsFile))[0] \
-            + os.path.extsep + instrumentName) 
-p = re.compile('(^Part\\d*.FileName\\s*=\\s*\\S*)')
-gdsFileR = open(gdsFile)
-instrumentdbFileW = open(instrumentdbFile, 'w')
-instrumentdbFileW.writelines([p.sub('\\1%s%s' % (os.path.sep,\
-        instrumentName), l) for l in gdsFileR.readlines()])
-gdsFileR.close()
-instrumentdbFileW.close()
+    instrumentdbFile = os.path.join(globaldbFile, \
+                os.path.splitext(os.path.basename(gdsFile))[0] \
+                + os.path.extsep + instrumentName)
+    p = re.compile('(^Part\\d*.FileName\\s*=\\s*\\S*)')
+    gdsFileR = open(gdsFile)
+    instrumentdbFileW = open(instrumentdbFile, 'w')
+    instrumentdbFileW.writelines([p.sub('\\1%s%s' % (os.path.sep,\
+            instrumentName), l) for l in gdsFileR.readlines()])
+    gdsFileR.close()
+    instrumentdbFileW.close()
 
-# split the gdsFile and the instrumentdbFile for each SB
-gdsFiles = splitgds(gdsFile, wd=globaldbFile, id='part')
-instrumentdbGdsFiles = splitgds(instrumentdbFile, wd=globaldbFile, id='instrument')
+    # split the gdsFile and the instrumentdbFile for each SB
+    gdsFiles = splitgds(gdsFile, wd=globaldbFile, id='part')
+    instrumentdbGdsFiles = splitgds(instrumentdbFile, wd=globaldbFile, id='instrument')
 
-# Collect all the instrument tables
-instrumentdbFiles = []
-for instrumentdbGdsFile in instrumentdbGdsFiles:
-    instrumentdbParset = lofar.parameterset.parameterset(instrumentdbGdsFile)
-    instrumentdbRemoteFile = instrumentdbParset.getString('Part0.FileName')
-    instrumentdbHostname = instrumentdbParset.getString('Part0.FileSys').split(':')[0]
-    instrumentdbFile = os.path.splitext(instrumentdbGdsFile)[0]
-    if not os.path.exists(instrumentdbFile):
-        logging.info("Collectiong "+instrumentdbFile)
-        os.system('scp -r %s:%s %s > /dev/null' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
-    else:
-        logging.info("Skipping "+instrumentdbFile)
-    instrumentdbFiles.append(instrumentdbFile)
+    # Collect all the instrument tables
+    instrumentdbFiles = []
+    for instrumentdbGdsFile in instrumentdbGdsFiles:
+        instrumentdbParset = lofar.parameterset.parameterset(instrumentdbGdsFile)
+        instrumentdbRemoteFile = instrumentdbParset.getString('Part0.FileName')
+        instrumentdbHostname = instrumentdbParset.getString('Part0.FileSys').split(':')[0]
+        instrumentdbFile = os.path.splitext(instrumentdbGdsFile)[0]
+        if not os.path.exists(instrumentdbFile):
+            logging.info("Collectiong "+instrumentdbFile)
+            os.system('scp -r %s:%s %s > /dev/null' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
+        else:
+            logging.info("Skipping "+instrumentdbFile)
+        instrumentdbFiles.append(instrumentdbFile)
 
-gdsParset = lofar.parameterset.parameterset(gdsFiles[0])
-# instrumentdbParset = 
+    gdsParset = lofar.parameterset.parameterset(gdsFiles[0])
+    # instrumentdbParset =
 
-hostname = gdsParset.getString('Part0.FileSys').split(':')[0]
-msname = gdsParset.getString('Part0.FileName')
-# Collect the skydb from the first SB
-skydbFile = os.path.join(globaldbFile, 'sky')
-if not os.path.exists(skydbFile):
-    logging.info("Collectiong the skydb")
-    os.system('scp -r %s:%s/sky %s > /dev/null' % (hostname, msname, skydbFile))
-# Collect the ANTENNA table from the first SB
-antennaFile = os.path.join(globaldbFile, 'ANTENNA')
-if not os.path.exists(antennaFile):
-    logging.info("Collectiong the antenna table")
-    os.system('scp -r %s:%s/ANTENNA %s > /dev/null' % (hostname, msname, antennaFile))
-# Collect the FILED table from the first SB
-fieldFile = os.path.join(globaldbFile, 'FIELD')
-if not os.path.exists(fieldFile):
-    logging.info("Collectiong the field table")
-    os.system('scp -r %s:%s/FIELD %s > /dev/null' % (hostname, msname, fieldFile))
+    hostname = gdsParset.getString('Part0.FileSys').split(':')[0]
+    msname = gdsParset.getString('Part0.FileName')
+    # Collect the skydb from the first SB
+    skydbFile = os.path.join(globaldbFile, 'sky')
+    if not os.path.exists(skydbFile):
+        logging.info("Collectiong the skydb")
+        os.system('scp -r %s:%s/sky %s > /dev/null' % (hostname, msname, skydbFile))
+    # Collect the ANTENNA table from the first SB
+    antennaFile = os.path.join(globaldbFile, 'ANTENNA')
+    if not os.path.exists(antennaFile):
+        logging.info("Collectiong the antenna table")
+        os.system('scp -r %s:%s/ANTENNA %s > /dev/null' % (hostname, msname, antennaFile))
+    # Collect the FILED table from the first SB
+    fieldFile = os.path.join(globaldbFile, 'FIELD')
+    if not os.path.exists(fieldFile):
+        logging.info("Collectiong the field table")
+        os.system('scp -r %s:%s/FIELD %s > /dev/null' % (hostname, msname, fieldFile))
 
-logging.info("Done.")
+    logging.info("Done.")

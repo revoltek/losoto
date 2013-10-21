@@ -17,6 +17,7 @@ def changelog():
     -----------------------------------------------
     2013/05/17 - Initial alpha version
     2013/08/16 - H5parm library completed
-    2013/09/30 - Added hystory
+    2013/09/30 - History of operations now added to tables
+    2013/10/21 - H5parm_exporter added
     """
     pass

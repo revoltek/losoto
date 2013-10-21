@@ -263,7 +263,7 @@ if __name__=='__main__':
                 else:
                     val = sf.getValues()[0]
 
-                # Match the frequency or frequencies of intstrumentdb under
+                # Match the frequency or frequencies of instrumentdb under
                 # consideration
                 sffreqs = sf.getValues()[1]['freq']
                 freqs = data[solEntry]['freqs']
