@@ -73,7 +73,8 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
 
     solType - string defining solution type. E.g., "DirectionalGain"
     solTabs - solution tables returned by h5parm.getSoltabs()
-    parm - parm to return if solType is "Gain": 'amp' or 'phase'
+    parm - parm to return if solType is "Gain": 'ampl'/'real' or
+           'phase'/'imag'
 
     The soltab parmdb_type attribute is used as an additional filter to
     to distinguish multiple possible matches. If it is not available, all
@@ -83,30 +84,30 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
     if parm != None:
         parm = parm.lower()
 
-    # Handle gain table separately, as we need to distinguish ampl and phase
-    if (solType == 'DirectionalGain' or solType == 'Gain') and parm != None:
-        for name, st in solTabs.iteritems():
-            if parm == 'ampl' or parm == 'real':
-                if st._v_title == 'amplitude':
-                    if hasattr(st._v_attrs, 'parmdb_type'):
-                        if solType in st._v_attrs['parmdb_type'].split(', '):
-                            solTabList.append(st)
-                    else:
+    for name, st in solTabs.iteritems():
+        # Handle gain table separately, as we need to distinguish ampl and phase
+        if solType == 'DirectionalGain' or solType == 'Gain':
+            if (parm == 'ampl' or parm == 'real') and st._v_title == 'amplitude':
+                if hasattr(st._v_attrs, 'parmdb_type'):
+                    if solType in st._v_attrs['parmdb_type'].split(', '):
                         solTabList.append(st)
-            else:
-                if st._v_title == 'phase':
-                    if hasattr(st._v_attrs, 'parmdb_type'):
-                        if solType in st._v_attrs['parmdb_type'].split(', '):
-                            solTabList.append(st)
-                    else:
+                else:
+                    solTabList.append(st)
+            elif (parm == 'phase' or parm == 'imag') and st._v_title == 'phase':
+                if hasattr(st._v_attrs, 'parmdb_type'):
+                    if solType in st._v_attrs['parmdb_type'].split(', '):
                         solTabList.append(st)
-    else:
-        for name, st in solTabs.iteritems():
+                else:
+                    solTabList.append(st)
+        else:
             if hasattr(st._v_attrs, 'parmdb_type'):
                 if solType in st._v_attrs['parmdb_type'].split(', '):
                     solTabList.append(st)
             else:
-                solTabList.append(st)
+                if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
+                    solTabList.append(st)
+                elif solType == 'CommonScalarPhase' and st._v_title == 'scalarphase':
+                    solTabList.append(st)
 
     if len(solTabList) == 0:
         return None
@@ -183,6 +184,7 @@ if __name__=='__main__':
     if len(instrumentdbFiles) == 0:
         logging.critical('No parmdb table(s) found in input globaldb/SB file.')
         sys.exit(1)
+    instrumentdbFiles.sort()
 
     # Find solution table types using the first instrumentdb
     # TODO: is there a better solution which check all the instrumentdbs?
