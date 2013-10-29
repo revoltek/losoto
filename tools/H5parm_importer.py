@@ -69,25 +69,30 @@ def parmdbToAxes(solEntry):
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog [-v] [-p H5parm] [-g globaldb/SBname] \n'\
+    opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <globaldb/SBname> \n'\
                     +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
-    opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
-    opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
+#    opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
+#    opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')
     (options, args) = opt.parse_args()
 
     # Check options
-    if len(args) != 0:
+    if len(args) != 2:
         opt.print_help()
         sys.exit()
     if options.verbose: losoto._logging.setLevel("debug")
 
-    h5parmFile = options.h5parm
+    h5parmFile = args[0]
     logging.info("H5parm filename = "+h5parmFile)
-    globaldbFile = options.globaldb
+
+    globaldbFile = args[1]
+    if not os.path.exists(globaldbFile):
+        logging.critical('Input globaldb/SB file not found.')
+        sys.exit(1)
     logging.info("globaldb filename = "+globaldbFile)
+
     complevel = options.complevel
 
     # Check is all the necessary files are available
