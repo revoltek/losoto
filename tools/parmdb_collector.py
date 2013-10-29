@@ -63,7 +63,7 @@ if __name__=='__main__':
     if len(args) != 0:
         opt.print_help()
         sys.exit()
-    if options.verbose: losoto._logging.setVerbose('debug')
+    if options.verbose: losoto._logging.setLevel('debug')
 
     overwrite = options.overwrite
     gdsFile = options.gds

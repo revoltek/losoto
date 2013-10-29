@@ -37,6 +37,7 @@ logging.info("H5parm filename = "+h5parmFile)
 
 parmdbFile = options.parmdb
 P = lofar.parmdb.parmdb(parmdbFile)
+P2 = lofar.parmdb.parmdb('tmp.parmdb', create=True)
 logging.info("parmdb filename = "+parmdbFile)
 
 ######################################################
@@ -146,8 +147,9 @@ Hw = solWriter(H5.getSoltab(solset,'amplitude000'))
 
 start = time.clock()
 for i in xrange(n):
-    Prot = P.getValues('CommonRotationAngle:CS001LBA')['CommonRotationAngle:CS001LBA']['values']
-    #P.addValues('CommonRotationAngle:CS001LBA', Prot)
+    Prot = P.getValues('CommonRotationAngle:CS001LBA')
+    Prot = {'test'+str(i):Prot['CommonRotationAngle:CS001LBA']}
+    P2.addValues(Prot)
     # parmdb write?
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
@@ -164,12 +166,23 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 ######################################################
 # read whole file
 logging.info("### Read and tabulate the whole file")
+
+start = time.clock()
+val = P.getValues('')
+elapsed = (time.clock() - start)
+logging.info("parmdb -- "+str(elapsed)+" s.")
+
 start = time.clock()
 H.setSelection()
 val, axes = H.getValues()
-print "Shape:", val.shape
+#print "Shape:", val.shape
 elapsed = (time.clock() - start)
 logging.info("H5parm -- "+str(elapsed)+" s.")
 
+
+
+
 del H
 del P
+del P2
+os.system('rm -r tmp.parmdb')
