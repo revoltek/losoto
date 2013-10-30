@@ -72,8 +72,6 @@ if __name__=='__main__':
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <globaldb/SBname> \n'\
                     +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
-#    opt.add_option('-p', '--h5parm', help='H5parm output file (default=global.h5)', type='string', default='global.h5')
-#    opt.add_option('-g', '--globaldb', help='Globaldb/MS name (default=globaldb)', type='string', default='globaldb')
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')
     (options, args) = opt.parse_args()
