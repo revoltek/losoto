@@ -267,7 +267,7 @@ if __name__=='__main__':
 
                 # Match the frequency or frequencies of instrumentdb under
                 # consideration
-                sffreqs = sf.getValues()[1]['freq']
+                sffreqs = sf.freq
                 freqs = data[solEntry]['freqs']
                 freq_list = [freq for freq in freqs if freq in sffreqs]
                 shape = data_out[solEntry]['values'].shape
@@ -276,15 +276,13 @@ if __name__=='__main__':
                         freq_ind_list.append(slice(None))
                     freq_ind = tuple(freq_ind_list)
                 else:
-                    for freq in freq_list:
-                        freq_ind = np.where(sffreqs == freq)
-                        freq_ind_list = []
-                        for i in range(len(val.shape)):
-                            freq_ind_list.append(slice(None))
-                        freq_ind_list[-2] = freq_ind
-                        freq_ind = tuple(freq_ind_list)
+                    freqAxisIdx = sf.getAxesNames().index('freq')
+                    freq_ind = []
+                    for i in range(len(val.shape)):
+                        freq_ind.append(slice(None))
+                    freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
+                    freq_ind = tuple(freq_ind)
 
-                shape = data_out[solEntry]['values'].shape
                 try:
                     data_out[solEntry]['values'] = val[freq_ind].reshape(shape)
                 except ValueError, err:
