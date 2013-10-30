@@ -283,11 +283,8 @@ if __name__=='__main__':
                     freq_ind = tuple(freq_ind)
 
                 shape = data_out[solEntry]['values'].shape
-                print solEntry
-                print shape
-                print val[freq_ind].T.shape
                 try:
-                    data_out[solEntry]['values'] = val[freq_ind].reshape(shape).T
+                    data_out[solEntry]['values'] = val[freq_ind].T.reshape(shape)
                 except ValueError, err:
                     logging.critical('Mismatch between parmdb table and H5parm '
                     'solution table: Differing number of frequencies and/or times')
