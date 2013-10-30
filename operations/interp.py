@@ -73,23 +73,18 @@ def run( step, parset, H ):
                 calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
               
             # create a list of values whose coords are calPoints
-            logging.debug("Flatten arrays.")
             calValues = np.ndarray.flatten(calValues)
 
             # create calibrator/target coordinates arrays
-            logging.debug("Get axes.")
             calPoints = []
             targetPoints = []
             for interpAxis in interpAxes:
                 calPoints.append(calCoord[interpAxis])
                 targetPoints.append(coord[interpAxis])
-            logging.debug("cal product.")
             calPoints = np.array([x for x in itertools.product(*calPoints)])
-            logging.debug("tgt product.")
             targetPoints = np.array([x for x in itertools.product(*targetPoints)])
 
             # interpolation
-            logging.debug("Interpolate.")
             valsNew = scipy.interpolate.griddata(calPoints, calValues, targetPoints, interpMethod)
 
             # fill values outside boudaries with "nearest" solutions

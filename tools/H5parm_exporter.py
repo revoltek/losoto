@@ -270,7 +270,6 @@ if __name__=='__main__':
                 sffreqs = sf.freq
                 freqs = data[solEntry]['freqs']
                 freq_list = [freq for freq in freqs if freq in sffreqs]
-                shape = data_out[solEntry]['values'].shape
                 if len(freq_list) == 0:
                     for i in range(len(val.shape)):
                         freq_ind_list.append(slice(None))
@@ -283,8 +282,12 @@ if __name__=='__main__':
                     freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
                     freq_ind = tuple(freq_ind)
 
+                shape = data_out[solEntry]['values'].shape
+                print solEntry
+                print shape
+                print val[freq_ind].T.shape
                 try:
-                    data_out[solEntry]['values'] = val[freq_ind].reshape(shape)
+                    data_out[solEntry]['values'] = val[freq_ind].reshape(shape).T
                 except ValueError, err:
                     logging.critical('Mismatch between parmdb table and H5parm '
                     'solution table: Differing number of frequencies and/or times')
