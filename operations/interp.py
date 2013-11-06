@@ -25,6 +25,7 @@ def run( step, parset, H ):
     dirs = getParAxis( step, parset, H, 'dir' )
 
     calSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), '' )
+    calDir = parset.getString('.'.join(["LoSoTo.Steps", step, "CalDir"]), '' )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['time','freq'] )
     interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
     medAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "MedAxes"]), [''] )
@@ -65,6 +66,9 @@ def run( step, parset, H ):
             # construct grid
             coordSel = removeKeys(coord, interpAxes)
             logging.debug("Working on coords:"+str(coordSel))
+            # change dir if sepcified
+            if calDir != '':
+                coordSel['dir'] = calDir
             cr.setSelection(**coordSel)
             calValues, calCoord = cr.getValues()
             # fill all medAxes with the median value
@@ -100,6 +104,7 @@ def run( step, parset, H ):
                     valsMed = np.repeat( np.expand_dims( np.median( vals, axis ), axis ), vals.shape[axis], axis )
                     valsNewMed = np.repeat( np.expand_dims( np.median( valsNew, axis ), axis ), valsNew.shape[axis], axis )
                 valsNew = vals*valsNewMed/valsMed
+                #print "Rescaling by: ", valsNewMed[:,0]/valsMed[:,0]
 
             # writing back the solutions
             coord = removeKeys(coord, interpAxes)

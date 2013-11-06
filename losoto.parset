@@ -36,10 +36,11 @@ LoSoTo.Steps.smooth.Axes = [freq, time]
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
+LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
 LoSoTo.Steps.interp.InterpAxes = [time, freq]
 LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
 LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxes = [time]
+LoSoTo.Steps.interp.MedAxes = [time] # rescale the median of this axis
 
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.PlotType = 1D
