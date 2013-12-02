@@ -19,24 +19,19 @@ import losoto.h5parm
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog [-v] [-o H5parm:solset] [-d H5parm:solset] \n'\
+    opt = optparse.OptionParser(usage='%prog [-v] <H5parm:solset> <H5parm:solset> \n'\
                             +_author, version='%prog '+losoto._version.__version__)
-    opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
-    opt.add_option('-o', '--orig', help='H5parm origin file (filename:solset)', type='string', default=None)
-    opt.add_option('-d', '--dest', help='H5parm destination file (filename:solset)', type='string', default=None)
+    opt.add_option('-v', '--verbose', help='Go VERBOSE! (default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
 
     # Check options
-    if len(args) != 0:
+    if len(args) != 2:
         opt.print_help()
         sys.exit()
     if options.verbose: losoto._logging.setLevel("debug")
 
-    h5parmFrom = options.orig
-    h5parmTo = options.dest
-    if h5parmFrom == None or h5parmTo == None:
-        logging.critical("Missing H5parm file.")
-        sys.exit(1)
+    h5parmFrom = args[0]
+    h5parmTo = args[1]
 
     logging.info("H5parm origin = "+h5parmFrom)
     logging.info("H5parm destination = "+h5parmTo)
@@ -44,6 +39,10 @@ if __name__=='__main__':
     # scompose input values
     h5parmFromFile, solsetFrom = h5parmFrom.split(':')
     h5parmToFile, solsetTo = h5parmTo.split(':')
+
+    if not (os.path.isfile(h5parmFromFile) and os.path.isfile(h5parmToFile)):
+        logging.critical("Missing H5parm file.")
+        sys.exit(1)
 
     # retrieve table
     hf = losoto.h5parm.h5parm(h5parmFromFile)
