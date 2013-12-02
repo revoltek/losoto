@@ -1,0 +1,36 @@
+LoSoTo.Steps = [plot,smooth,plot2]
+LoSoTo.Solset = [sol000]
+LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
+LoSoTo.SolType = [amplitude]
+LoSoTo.ant = [CS001LBA]
+LoSoTo.pol = [XX]
+LoSoTo.dir = [pointing]
+
+LoSoTo.Steps.plot.Operation = PLOT
+LoSoTo.Steps.plot.ant = [CS001LBA]
+LoSoTo.Steps.plot.PlotType = 1D
+LoSoTo.Steps.plot.Axes = [time]
+LoSoTo.Steps.plot.MinMax = [0,0]
+LoSoTo.Steps.plot.Prefix = pre
+
+LoSoTo.Steps.plot2.Operation = PLOT
+LoSoTo.Steps.plot2.ant = [CS001LBA]
+LoSoTo.Steps.plot2.PlotType = 1D
+LoSoTo.Steps.plot2.Axes = [time]
+LoSoTo.Steps.plot2.MinMax = [0,0]
+LoSoTo.Steps.plot2.Prefix = post
+
+LoSoTo.Steps.smooth.Operation = SMOOTH
+LoSoTo.Steps.smooth.Axes = [time, freq]
+LoSoTo.Steps.smooth.FWHM = [10, 5]
+
+LoSoTo.Steps.reset.Operation = RESET
+LoSoTo.Steps.example.Operation = EXAMPLE
+
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
+LoSoTo.Steps.interp.InterpAxes = [freq, time]
+LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
+LoSoTo.Steps.interp.MedAxes = []
+LoSoTo.Steps.interp.Rescale = F
+
