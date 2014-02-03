@@ -425,7 +425,7 @@ class solHandler():
         """
         set a default selection criteria.
         Keyword arguments:
-        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], stime=1234.
+        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345'}.
         """
         # create an initial selection which selects all values
         # any selection will modify only the slice relative to that axis
@@ -467,6 +467,8 @@ class solHandler():
             else:
                 if not type(selVal) is list: selVal = [selVal]
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
+                # remove list if only one element, necessary when slicying
+                if len(self.selection[idx]) == 1: self.selection[idx] = self.selection[idx][0]
 
 
     def getType(self):
