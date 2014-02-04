@@ -670,8 +670,8 @@ class solFetcher(solHandler):
         2) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         """
-        if weight: dataVals = self.t.weight
-        else: dataVals = self.t.val
+        if weight: dataVals = self.t.weight[tuple(self.selection)]
+        else: dataVals = self.t.val[tuple(self.selection)]
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]
@@ -694,7 +694,8 @@ class solFetcher(solHandler):
                         # add this index to the refined selection, this will return a single value for this axis
                         refSelection.append(tuple([axisIdx[i]]))
                         i += 1
-                data = np.squeeze(dataVals[tuple(self.selection)][tuple(refSelection)])
+                # costly command
+                data = np.squeeze(dataVals[tuple(refSelection)])
                 yield (data, thisAxesVals)
 
         return g()
