@@ -37,6 +37,15 @@ def parmdbToAxes(solEntry):
         thisSolType, ant = solEntry.split(':')
         dir = 'pointing'
 
+    # For TEC assuming [TEC:ant]
+    elif thisSolType == 'TEC':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For Clock assuming [Clock:ant]
+    elif thisSolType == 'Clock':
+        thisSolType, ant = solEntry.split(':')
+
     # For RotationAngle assuming [RotationAngle:ant:sou]
     elif thisSolType == 'RotationAngle':
         thisSolType, ant, dir = solEntry.split(':')
@@ -250,6 +259,12 @@ if __name__=='__main__':
         elif solType == '*ScalarPhase':
             h5parm.makeSoltab(solset, 'scalarphase', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'Clock':
+            h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
+                    axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'TEC':
+            h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
