@@ -82,6 +82,7 @@ if __name__=='__main__':
                     +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
+    opt.add_option('-i', '--instrument', help='Name of the instrument table (default=instrument*)', type='string', default='instrument*')
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')
     (options, args) = opt.parse_args()
 
@@ -118,7 +119,7 @@ if __name__=='__main__':
 
     # Make a list of all available instrument tables (only 1 for a standard MS)
     instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
-        glob.glob(os.path.join(globaldbFile,'instrument*')) \
+        glob.glob(os.path.join(globaldbFile,options.instrument)) \
         if os.path.isdir(instrumentdbFile) ]
 
     # open/create the h5parm file and the solution-set

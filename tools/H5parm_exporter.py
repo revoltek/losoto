@@ -118,7 +118,7 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog <H5parm filename> <input globaldb/SB filename>\n'+
+    opt = optparse.OptionParser(usage='%prog <H5parm filename> <output globaldb/SB filename>\n'+
         _author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE!',
         action='store_true', default=False)
