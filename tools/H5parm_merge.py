@@ -59,6 +59,12 @@ if __name__=='__main__':
     ssF._f_copy_children(ssT, recursive=True)
 
     del hf
+
+    # Add MERGE entry to history
+    soltabs = ht.getSoltabs(solset=solsetTo)
+    for st in soltabs:
+        sw = losoto.h5parm.solWriter(soltabs[st])
+        sw.addHistory('MERGE (from {0}:{1})'.format(h5parmFromFile, solsetFrom))
     del ht
 
     logging.info("Done.")
