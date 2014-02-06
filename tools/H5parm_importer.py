@@ -41,9 +41,23 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'RotationAngle':
         thisSolType, ant, dir = solEntry.split(':')
 
+    # For TEC assuming [TEC:ant]
+    elif thisSolType == 'TEC':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For Clock assuming [Clock:ant]
+    elif thisSolType == 'Clock':
+        thisSolType, ant = solEntry.split(':')
+
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
         thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For ScalarPhase assuming [ScalarPhase:ant:sou]
+    elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
@@ -73,6 +87,7 @@ if __name__=='__main__':
                     +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
+    opt.add_option('-i', '--instrument', help='Name of the instrument table (default=instrument*)', type='string', default='instrument*')
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')
     (options, args) = opt.parse_args()
 
@@ -109,7 +124,7 @@ if __name__=='__main__':
 
     # Make a list of all available instrument tables (only 1 for a standard MS)
     instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
-        glob.glob(os.path.join(globaldbFile,'instrument*')) \
+        glob.glob(os.path.join(globaldbFile,options.instrument)) \
         if os.path.isdir(instrumentdbFile) ]
 
     # open/create the h5parm file and the solution-set
@@ -248,8 +263,14 @@ if __name__=='__main__':
             h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
-            h5parm.makeSoltab(solset, 'scalarphase', axesNames=['ant','freq','time'], \
+            h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'Clock':
+            h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'TEC':
+            h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))

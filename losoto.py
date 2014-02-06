@@ -94,7 +94,9 @@ if __name__=='__main__':
     #               "FLAG": operations.flag,
                    "SMOOTH": operations.smooth,
                    "INTERP": operations.interp,
-                   "PLOT": operations.plot
+                   "PLOT": operations.plot,
+                   "COPY": operations.copy,
+                   "NORM": operations.norm
     }
 
     for step in steps:

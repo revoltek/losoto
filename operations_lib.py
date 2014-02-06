@@ -234,9 +234,10 @@ def removeKeys( dic, keys = [] ):
     Remove a list of keys from a dict and return a new one.
     Keyword arguments:
     dic -- the input dictionary
-    keys -- a list of arguments to remove
+    keys -- a list of arguments to remove or a string for single argument
     """
     dicCopy = dict(dic)
+    if type(keys) is str: keys = [keys]
     for key in keys:
         del dicCopy[key]
     return dicCopy
