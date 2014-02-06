@@ -276,10 +276,10 @@ if __name__=='__main__':
     sourceTable.append([('pointing',pointing)])
 
     dirs = []
-    for tab in solset._v_leaves:
+    for tab in solset._v_children:
         c = solset._f_getChild(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
-            dirs.extend(list(set(c.col('dir'))))
+            dirs.extend(list(set(c.dir)))
     # remove duplicates
     dirs = list(set(dirs))
     # remove any pointing (already in the table)
