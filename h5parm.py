@@ -372,22 +372,25 @@ class h5parm():
                 # For each table, print length of each axis and history of
                 # operations applied to the table. As the getValuesAxis() call
                 for soltab_name in soltabs.keys():
-                    sf = solFetcher(soltabs[soltab_name])
-                    axisNames = sf.getAxesNames()
-                    axis_str_list = []
-                    for axisName in axisNames:
-                        nslots = len(sf.getAxisValues(axisName))
-                        if nslots > 1:
-                            pls = "s"
-                        else:
-                            pls = ""
-                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                    info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
-                    history = sf.getHistory()
-                    if history != "":
-                        info += "\n" + 4*" " + "History:\n" + 4*" "
-                        joinstr =  "\n" + 4*" "
-                        info += joinstr.join(wrap(history)) + "\n"
+                    try:
+                        sf = solFetcher(soltabs[soltab_name])
+                        axisNames = sf.getAxesNames()
+                        axis_str_list = []
+                        for axisName in axisNames:
+                            nslots = len(sf.getAxisValues(axisName))
+                            if nslots > 1:
+                                pls = "s"
+                            else:
+                                pls = ""
+                            axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
+                        info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
+                        history = sf.getHistory()
+                        if history != "":
+                            info += "\n" + 4*" " + "History:\n" + 4*" "
+                            joinstr =  "\n" + 4*" "
+                            info += joinstr.join(wrap(history)) + "\n"
+                    except tables.exceptions.NoSuchNodeError:
+                        info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
 
         return info
 
