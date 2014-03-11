@@ -98,7 +98,7 @@ if __name__=='__main__':
                    "SMOOTH": operations.smooth,
                    "INTERP": operations.interp,
                    "PLOT": operations.plot,
-                   "COPY": operations.copy,
+    #               "COPY": operations.copy,
                    "NORM": operations.norm
     }
 
