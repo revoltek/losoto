@@ -44,7 +44,8 @@ if __name__=='__main__':
             +_author, version='%prog '+_version.__version__)
     opt.add_option('-q', help='Quiet', action='store_true', default=False)
     opt.add_option('-v', help='Verbose', action='store_true', default=False)
-    opt.add_option('-i', help='List information about h5param file (default=False)', action='store_true', default=False)
+    opt.add_option('-f', '--filter', help='Filter to use with "-i" option to filter on solution set names (default=None)', type='string', default=None)
+    opt.add_option('-i', help='List information about h5parm file (default=False). A filter on the solution set names can be specified with the "-f" option.', action='store_true', default=False)
     (options, args) = opt.parse_args()
 
     atexit.register(my_close_open_files, False) # Suppress info about closing open files at exit
@@ -79,7 +80,7 @@ if __name__=='__main__':
 
     # List h5parm information if desired
     if options.i:
-        print H
+        print(H.printInfo(options.filter))
         sys.exit()
 
     # from ~vdtol/Expion-2011-05-03/src
