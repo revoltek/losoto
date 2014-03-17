@@ -41,9 +41,23 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'RotationAngle':
         thisSolType, ant, dir = solEntry.split(':')
 
+    # For TEC assuming [TEC:ant]
+    elif thisSolType == 'TEC':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For Clock assuming [Clock:ant]
+    elif thisSolType == 'Clock':
+        thisSolType, ant = solEntry.split(':')
+
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
         thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For ScalarPhase assuming [ScalarPhase:ant:sou]
+    elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
@@ -73,6 +87,7 @@ if __name__=='__main__':
                     +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
+    opt.add_option('-i', '--instrument', help='Name of the instrument table (default=instrument*)', type='string', default='instrument*')
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')
     (options, args) = opt.parse_args()
 
@@ -109,7 +124,7 @@ if __name__=='__main__':
 
     # Make a list of all available instrument tables (only 1 for a standard MS)
     instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
-        glob.glob(os.path.join(globaldbFile,'instrument*')) \
+        glob.glob(os.path.join(globaldbFile,options.instrument)) \
         if os.path.isdir(instrumentdbFile) ]
 
     # open/create the h5parm file and the solution-set
@@ -248,8 +263,14 @@ if __name__=='__main__':
             h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
-            h5parm.makeSoltab(solset, 'scalarphase', axesNames=['ant','freq','time'], \
+            h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'Clock':
+            h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == 'TEC':
+            h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
@@ -276,10 +297,10 @@ if __name__=='__main__':
     sourceTable.append([('pointing',pointing)])
 
     dirs = []
-    for tab in solset._v_leaves:
+    for tab in solset._v_children:
         c = solset._f_getChild(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
-            dirs.extend(list(set(c.col('dir'))))
+            dirs.extend(list(set(c.dir)))
     # remove duplicates
     dirs = list(set(dirs))
     # remove any pointing (already in the table)
@@ -287,28 +308,59 @@ if __name__=='__main__':
         dirs.remove('pointing')
 
     if dirs != []:
-        logging.info('Collecting informations from the sky table.')
-        skydb = lofar.parmdb.parmdb(skydbFile)
+        logging.info('Collecting information from the sky table.')
+        sourceFile = skydbFile + '/SOURCES'
+        src_table = pt.table(sourceFile, ack=False)
+        sub_tables = src_table.getsubtables()
         vals = []
         ra = dec = np.nan
-        for source in dirs:
-            try:
-                ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
-                dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
-            except KeyError:
-                # Source not found in skymodel parmdb, try to find components
-                logging.warning('Cannot find the source '+source+'. Trying components.')
-                ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
-                dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
-                if len(ra) == 0 or len(dec) == 0:
+        has_patches_subtable = False
+        for sub_table in sub_tables:
+            if 'PATCHES' in sub_table:
+                has_patches_subtable = True
+        if has_patches_subtable:
+            # Read values from PATCHES subtable
+            src_table.close()
+            sourceFile = skydbFile + '/SOURCES/PATCHES'
+            src_table = pt.table(sourceFile, ack=False)
+            patch_names = src_table.getcol('PATCHNAME')
+            patch_ras = src_table.getcol('RA')
+            patch_decs = src_table.getcol('DEC')
+            for source in dirs:
+                try:
+                    patch_indx = patch_names.index(source)
+                    ra = patch_ras[patch_indx]
+                    dec = patch_decs[patch_indx]
+                except ValueError:
                     ra = np.nan
                     dec = np.nan
                     logging.error('Cannot find the source '+source+'. I leave NaNs.')
-                else:
-                    ra = ra.mean()
-                    dec = dec.mean()
-                    logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
-            vals.append([ra, dec])
+                vals.append([ra, dec])
+            src_table.close()
+        else:
+            # Try to read default values from parmdb instead
+            skydb = lofar.parmdb.parmdb(skydbFile)
+            vals = []
+            ra = dec = np.nan
+
+            for source in dirs:
+                try:
+                    ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
+                    dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
+                except KeyError:
+                    # Source not found in skymodel parmdb, try to find components
+                    logging.warning('Cannot find the source '+source+'. Trying components.')
+                    ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
+                    dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
+                    if len(ra) == 0 or len(dec) == 0:
+                        ra = np.nan
+                        dec = np.nan
+                        logging.error('Cannot find the source '+source+'. I leave NaNs.')
+                    else:
+                        ra = ra.mean()
+                        dec = dec.mean()
+                        logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
+                vals.append([ra, dec])
         sourceTable.append(zip(*(dirs,vals)))
 
     logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")

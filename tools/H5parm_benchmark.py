@@ -45,7 +45,7 @@ logging.info("### Read all frequencies for a pol/dir/station")
 
 start = time.clock()
 for i in xrange(n):
-    Pfreqs = P.getValues('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['freqs']
+    Pfreqs = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['freqs']
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
@@ -63,7 +63,7 @@ logging.info("### Read all times for a pol/dir/station")
 
 start = time.clock()
 for i in xrange(n):
-    Ptimes = P.getValues('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['times']
+    Ptimes = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['times']
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
@@ -81,7 +81,7 @@ logging.info("### Read all rotations for 1 station (slice in time)")
 
 start = time.clock()
 for i in xrange(n):
-    Prot = P.getValues('CommonRotationAngle:CS001LBA',stime=Ptimes[30],etime=Ptimes[-30])['CommonRotationAngle:CS001LBA']['values'].transpose()[0]
+    Prot = P.getValuesGrid('CommonRotationAngle:CS001LBA',stime=Ptimes[30],etime=Ptimes[-30])['CommonRotationAngle:CS001LBA']['values'].transpose()[0]
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
@@ -99,7 +99,7 @@ logging.info("### Read all rotations for all station (slice in time)")
 
 start = time.clock()
 for i in xrange(n):
-    Protd = P.getValues('CommonRotationAngle:*',stime=Ptimes[30],etime=Ptimes[-30])
+    Protd = P.getValuesGrid('CommonRotationAngle:*',stime=Ptimes[30],etime=Ptimes[-30])
     # construct the matrix
     Prot = []
     for ant in sorted(Protd.iterkeys()):
@@ -122,7 +122,7 @@ logging.info("### Read all rotations for remote stations (slice in ant)")
 
 start = time.clock()
 for i in xrange(n):
-    Protd = P.getValues('CommonRotationAngle:RS*')
+    Protd = P.getValuesGrid('CommonRotationAngle:RS*')
     # construct the matrix
     Prot = []
     for ant in sorted(Protd.iterkeys()):
@@ -147,7 +147,7 @@ Hw = solWriter(H5.getSoltab(solset,'amplitude000'))
 
 start = time.clock()
 for i in xrange(n):
-    Prot = P.getValues('CommonRotationAngle:CS001LBA')
+    Prot = P.getValuesGrid('CommonRotationAngle:CS001LBA')
     Prot = {'test'+str(i):Prot['CommonRotationAngle:CS001LBA']}
     P2.addValues(Prot)
     # parmdb write?
@@ -168,7 +168,7 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 logging.info("### Read and tabulate the whole file")
 
 start = time.clock()
-val = P.getValues('')
+val = P.getValuesGrid('')
 elapsed = (time.clock() - start)
 logging.info("parmdb -- "+str(elapsed)+" s.")
 
