@@ -8,7 +8,7 @@
 # Reinout van Weeren
 # Maaijke Mevius
 # Bas van der Tol
-_author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
+_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de)"
 
 import sys
 import os

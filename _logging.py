@@ -22,13 +22,12 @@ def add_coloring_to_emit_ansi(fn):
         else:
             color = '\x1b[0m' # normal
         args[1].msg = color + args[1].msg +  '\x1b[0m'  # normal
-        #print "after"
         return fn(*args)
     return new
 
 # set the logging colors
 logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
-# set the logging format and default level (warning)
+# set the logging format and default level (info)
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
 def setLevel(level):
