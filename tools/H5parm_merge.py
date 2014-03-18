@@ -10,8 +10,8 @@ _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
 import sys, os, glob
 import numpy as np
 import logging
-import lofar.parmdb
 import pyrap.tables as pt
+import lofar.parmdb
 import losoto._version
 import losoto._logging
 import losoto.h5parm

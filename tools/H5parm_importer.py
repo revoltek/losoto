@@ -16,8 +16,8 @@ import socket
 import numpy as np
 import progressbar
 import logging
-import lofar.parmdb
 import pyrap.tables as pt
+import lofar.parmdb
 import losoto._version
 import losoto._logging
 from losoto.h5parm import h5parm, solWriter
