@@ -299,7 +299,7 @@ class h5parm():
         return sources
 
 
-    def printInfo(self):
+    def printInfo(self, filter=None):
         """
         Returns string with info about H5parm contents
         """
@@ -343,12 +343,25 @@ class h5parm():
 
         info = "\nSummary of %s\n" % self.fileName
         solsets = self.getSolsets()
+
+        # Filter on solset name
+        if filter is not None:
+            keys_to_remove = []
+            info += "\nFiltering on solution set name with filter = '{0}'\n".format(filter)
+            for solset_name in solsets.keys():
+                if not re.search(filter, solset_name):
+                    keys_to_remove.append(solset_name)
+            for key in keys_to_remove:
+                solsets.pop(key)
+
         if len(solsets) == 0:
             info += "\nNo solution sets found.\n"
             return info
+        solset_names = solsets.keys()
+        solset_names.sort()
 
         # For each solution set, list solution tables, sources, and antennas
-        for solset_name in solsets.keys():
+        for solset_name in solset_names:
             info += "\nSolution set '%s':\n" % solset_name
             info += "=" * len(solset_name) + "=" * 16 + "\n\n"
 
@@ -372,22 +385,25 @@ class h5parm():
                 # For each table, print length of each axis and history of
                 # operations applied to the table. As the getValuesAxis() call
                 for soltab_name in soltabs.keys():
-                    sf = solFetcher(soltabs[soltab_name])
-                    axisNames = sf.getAxesNames()
-                    axis_str_list = []
-                    for axisName in axisNames:
-                        nslots = len(sf.getAxisValues(axisName))
-                        if nslots > 1:
-                            pls = "s"
-                        else:
-                            pls = ""
-                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                    info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
-                    history = sf.getHistory()
-                    if history != "":
-                        info += "\n" + 4*" " + "History:\n" + 4*" "
-                        joinstr =  "\n" + 4*" "
-                        info += joinstr.join(wrap(history)) + "\n"
+                    try:
+                        sf = solFetcher(soltabs[soltab_name])
+                        axisNames = sf.getAxesNames()
+                        axis_str_list = []
+                        for axisName in axisNames:
+                            nslots = len(sf.getAxisValues(axisName))
+                            if nslots > 1:
+                                pls = "s"
+                            else:
+                                pls = ""
+                            axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
+                        info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
+                        history = sf.getHistory()
+                        if history != "":
+                            info += "\n" + 4*" " + "History:\n" + 4*" "
+                            joinstr =  "\n" + 4*" "
+                            info += joinstr.join(wrap(history)) + "\n"
+                    except tables.exceptions.NoSuchNodeError:
+                        info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
 
         return info
 

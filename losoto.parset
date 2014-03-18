@@ -1,19 +1,20 @@
 # Example of LoSoTo parset
-# Includes with all possible options
+# Includes all possible options
 #
 # step variable override global variable
 
-LoSoTo.Steps = [reset, clocktec, flag, smooth, interp, rescale, plot, apply]
+LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, apply]
 # this is only global
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
-LoSoTo.SolType = [pahse]
-LoSoTo.ant = []
+LoSoTo.SolType = [phase]
+LoSoTo.ant = [] # to exclude stations, use ^((?!string1|string2|string3).)*$ to exclude stations
+                # with names containing string1, string2, or string3
 LoSoTo.pol = [XX, YY]
 LoSoTo.dir = [pointing]
 LoSoTo.axisName = []
 
-# parameters available in every steps
+# parameters available in every step
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
 LoSoTo.Steps.everystep.ant = []
 LoSoTo.Steps.everystep.pol = []
@@ -25,7 +26,19 @@ LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.Algorithm = 
+LoSoTo.Steps.clocktec.Algorithm =
+
+LoSoTo.Steps.tecfit.Operation = TECFIT
+LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
+LoSoTo.Steps.tecfit.MinBands = 4
+LoSoTo.Steps.tecfit.MaxStations = 26 # Limit to MaxStations number of stations closest to core
+LoSoTo.Steps.tecfit.OutSoltab = ion000/tec000
+
+LoSoTo.Steps.tecscreen.Operation = TECSCREEN
+LoSoTo.Steps.tecscreen.Height = 200e3
+LoSoTo.Steps.tecscreen.Order = 15
+LoSoTo.Steps.tecscreen.OutSoltabTEC = [ion000/tecfitwhite000]
+LoSoTo.Steps.tecscreen.OutSoltabPP = [ion000/piercepoint000]
 
 LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Sigma = 5
@@ -43,7 +56,7 @@ LoSoTo.Steps.interp.Rescale = False
 LoSoTo.Steps.interp.MedAxes = [time] # rescale the median of this axis
 
 LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.PlotType = 1D
+LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
 LoSoTo.Steps.plot.Axes = [time]
 LoSoTo.Steps.plot.MinMax = [0,0]
 LoSoTo.Steps.plot.Prefix = images/test_

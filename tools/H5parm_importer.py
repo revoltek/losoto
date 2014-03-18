@@ -16,8 +16,8 @@ import socket
 import numpy as np
 import progressbar
 import logging
-import lofar.parmdb
 import pyrap.tables as pt
+import lofar.parmdb
 import losoto._version
 import losoto._logging
 from losoto.h5parm import h5parm, solWriter
@@ -308,28 +308,59 @@ if __name__=='__main__':
         dirs.remove('pointing')
 
     if dirs != []:
-        logging.info('Collecting informations from the sky table.')
-        skydb = lofar.parmdb.parmdb(skydbFile)
+        logging.info('Collecting information from the sky table.')
+        sourceFile = skydbFile + '/SOURCES'
+        src_table = pt.table(sourceFile, ack=False)
+        sub_tables = src_table.getsubtables()
         vals = []
         ra = dec = np.nan
-        for source in dirs:
-            try:
-                ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
-                dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
-            except KeyError:
-                # Source not found in skymodel parmdb, try to find components
-                logging.warning('Cannot find the source '+source+'. Trying components.')
-                ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
-                dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
-                if len(ra) == 0 or len(dec) == 0:
+        has_patches_subtable = False
+        for sub_table in sub_tables:
+            if 'PATCHES' in sub_table:
+                has_patches_subtable = True
+        if has_patches_subtable:
+            # Read values from PATCHES subtable
+            src_table.close()
+            sourceFile = skydbFile + '/SOURCES/PATCHES'
+            src_table = pt.table(sourceFile, ack=False)
+            patch_names = src_table.getcol('PATCHNAME')
+            patch_ras = src_table.getcol('RA')
+            patch_decs = src_table.getcol('DEC')
+            for source in dirs:
+                try:
+                    patch_indx = patch_names.index(source)
+                    ra = patch_ras[patch_indx]
+                    dec = patch_decs[patch_indx]
+                except ValueError:
                     ra = np.nan
                     dec = np.nan
                     logging.error('Cannot find the source '+source+'. I leave NaNs.')
-                else:
-                    ra = ra.mean()
-                    dec = dec.mean()
-                    logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
-            vals.append([ra, dec])
+                vals.append([ra, dec])
+            src_table.close()
+        else:
+            # Try to read default values from parmdb instead
+            skydb = lofar.parmdb.parmdb(skydbFile)
+            vals = []
+            ra = dec = np.nan
+
+            for source in dirs:
+                try:
+                    ra = skydb.getDefValues('Ra:' + source)['Ra:' + source][0][0]
+                    dec = skydb.getDefValues('Dec:' + source)['Dec:' + source][0][0]
+                except KeyError:
+                    # Source not found in skymodel parmdb, try to find components
+                    logging.warning('Cannot find the source '+source+'. Trying components.')
+                    ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
+                    dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
+                    if len(ra) == 0 or len(dec) == 0:
+                        ra = np.nan
+                        dec = np.nan
+                        logging.error('Cannot find the source '+source+'. I leave NaNs.')
+                    else:
+                        ra = ra.mean()
+                        dec = dec.mean()
+                        logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
+                vals.append([ra, dec])
         sourceTable.append(zip(*(dirs,vals)))
 
     logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")

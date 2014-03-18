@@ -12,8 +12,8 @@ import numpy as np
 import shutil
 import progressbar
 import logging
-import lofar.parmdb
 import pyrap.tables as pt
+import lofar.parmdb
 import losoto._version
 import losoto._logging
 from losoto.h5parm import h5parm, solWriter, solFetcher
@@ -40,6 +40,10 @@ def parmdbToAxes(solEntry):
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
         thisSolType, ant = solEntry.split(':')
+
+    # For ScalarPhase assuming [ScalarPhase:ant:sou]
+    elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
@@ -89,24 +93,36 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
         if solType == 'DirectionalGain' or solType == 'Gain':
             if (parm == 'ampl' or parm == 'real') and st._v_title == 'amplitude':
                 if hasattr(st._v_attrs, 'parmdb_type'):
-                    if solType in st._v_attrs['parmdb_type'].split(', '):
+                    if st._v_attrs['parmdb_type'] is not None:
+                        if solType in st._v_attrs['parmdb_type'].split(', '):
+                            solTabList.append(st)
+                    else:
                         solTabList.append(st)
                 else:
                     solTabList.append(st)
             elif (parm == 'phase' or parm == 'imag') and st._v_title == 'phase':
                 if hasattr(st._v_attrs, 'parmdb_type'):
-                    if solType in st._v_attrs['parmdb_type'].split(', '):
+                    if st._v_attrs['parmdb_type'] is not None:
+                        if solType in st._v_attrs['parmdb_type'].split(', '):
+                            solTabList.append(st)
+                    else:
                         solTabList.append(st)
                 else:
                     solTabList.append(st)
         else:
             if hasattr(st._v_attrs, 'parmdb_type'):
-                if solType in st._v_attrs['parmdb_type'].split(', '):
-                    solTabList.append(st)
+                if st._v_attrs['parmdb_type'] is not None:
+                    if solType in st._v_attrs['parmdb_type'].split(', '):
+                        solTabList.append(st)
+                else:
+                    if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
+                        solTabList.append(st)
+                    elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
+                        solTabList.append(st)
             else:
                 if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
                     solTabList.append(st)
-                elif solType == 'CommonScalarPhase' and st._v_title == 'scalarphase':
+                elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
                     solTabList.append(st)
 
     if len(solTabList) == 0:
@@ -115,10 +131,127 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
         return solTabList
 
 
+def  makeTECparmdb(H, solset, TECsolTab, PPsolTab, timewidths, freq, freqwidth):
+    """Returns TEC screen parmdb parameters
+
+    H - H5parm object
+    solset - solution set with TEC screen parameters
+    TECsolTab = solution table with tecfitwhite values
+    PPsolTab = solution table with piercepoint values
+    timewidths - time widths of output parmdb
+    freq - frequency of output parmdb
+    freqwidth - frequency width of output parmdb
+    """
+    station_dict = H.getAnt(solset)
+    station_names = station_dict.keys()
+    station_positions = station_dict.values()
+    source_dict = H.getSou(solset)
+    source_names = source_dict.keys()
+    source_positions = source_dict.values()
+
+    tec_sf = solFetcher(TECsolTab)
+    tec_fit_white, axis_vals = tec_sf.getValues()
+    times = axis_vals['time']
+    beta = TECsolTab._v_attrs['beta']
+    r_0 = TECsolTab._v_attrs['r_0']
+    height = TECsolTab._v_attrs['height']
+    order = TECsolTab._v_attrs['order']
+    pp_sf = solFetcher(PPsolTab)
+    pp, axis_vals = pp_sf.getValues()
+
+    N_sources = len(source_names)
+    N_times = len(times)
+    N_freqs = 1
+    N_stations = len(station_names)
+    N_piercepoints = N_sources * N_stations
+
+    freqs = freq
+    freqwidths = freqwidth
+    parms = {}
+    v = {}
+    v['times'] = times
+    v['timewidths'] = timewidths
+    v['freqs'] = freqs
+    v['freqwidths'] = freqwidths
+
+    for station_name in station_names:
+        for source_name in source_names:
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'Piercepoint:X:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'Piercepoint:Y:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'Piercepoint:Z:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'TECfit_white:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'TECfit_white:0:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+            v['values'] = np.zeros((N_times, N_freqs), dtype=np.double)
+            parmname = 'TECfit_white:1:%s:%s' % (station_name, source_name)
+            parms[parmname] = v.copy()
+
+    for k in range(N_times):
+        pp_idx = 0
+        for src, source_name in enumerate(source_names):
+            for sta, station_name in enumerate(station_names):
+
+                parmname = 'Piercepoint:X:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = pp[k, pp_idx, 0]
+
+                parmname = 'Piercepoint:Y:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = pp[k, pp_idx, 1]
+
+                parmname = 'Piercepoint:Z:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = pp[k, pp_idx, 2]
+
+                parmname = 'TECfit_white:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+
+                parmname = 'TECfit_white:0:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+
+                parmname = 'TECfit_white:1:%s:%s' % (station_name, source_name)
+                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+
+                pp_idx += 1
+
+
+    time_start = times[0] - timewidths[0]/2
+    time_end = times[-1] + timewidths[-1]/2
+
+    v['times'] = np.array([(time_start + time_end) / 2])
+    v['timewidths'] = np.array([time_end - time_start])
+
+    v_r0 = v.copy()
+    v_r0['values'] = np.array(r_0, dtype=np.double, ndmin=2)
+    parms['r_0'] = v_r0
+
+    v_beta = v.copy()
+    v_beta['values'] = np.array(beta, dtype=np.double, ndmin=2)
+    parms['beta'] = v_beta
+
+    v_height = v.copy()
+    v_height['values'] = np.array(height, dtype=np.double, ndmin=2)
+    parms['height'] = v_height
+
+    return parms
+
+
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog <H5parm filename> <output globaldb/SB filename>\n'+
+    opt = optparse.OptionParser(usage='%prog <H5parm filename> <input globaldb/SB filename>\n'+
         _author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE!',
         action='store_true', default=False)
@@ -126,8 +259,11 @@ if __name__=='__main__':
         '(default=sol000)', type='string', default='sol000')
     opt.add_option('-o', '--outfile', help='Filename of global/SB to export parmdb to '
         '(default=input globaldb/SB filename)', type='string', default=None)
-    opt.add_option('-r', '--root', help='Root string to prepend to input parmdb instrument directories '
+    opt.add_option('-r', '--root', help='Root string to prepend to input parmdb '
+        'instrument directories to make the output parmdb directories '
         '(default=solution-set name)', type='string', default=None)
+    opt.add_option('-t', '--soltab', help='Solution tables to export; e.g., "amplitude000, phase000" '
+        '(default=all)', type='string', default='all')
     opt.add_option('-c', '--clobber', help='Clobber exising files '
         '(default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
@@ -190,15 +326,44 @@ if __name__=='__main__':
     # TODO: is there a better solution which check all the instrumentdbs?
     pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
     solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))
-    logging.info('Found solution types: '+', '.join(solTypes))
-    solTypes = list(set(solTypes))
     solTabs = h5parm_in.getSoltabs(solset)
+    if options.soltab != 'all':
+        soltabs_to_use = [s.strip() for s in options.soltab.split(',')]
+        logging.info('Using solution tables: {0}'.format(soltabs_to_use))
+        solTabs_filt = {}
+        for s, v in solTabs.iteritems():
+            if s in soltabs_to_use:
+                solTabs_filt[s] = v
+        for s in soltabs_to_use:
+            if s not in solTabs_filt.keys():
+                logging.warning('Solution table {0} not found in input H5parm file.'.format(s))
+        solTabs = solTabs_filt
+    if len(solTabs) == 0:
+        logging.critical('No solution tables found in input H5parm file')
+        sys.exit(1)
+
+    # Look for tecfitwhite and piercepoint solution types in the solset. If
+    # found, add them to solTypes
+    st_tec = None
+    st_pp = None
+    for name, st in solTabs.iteritems():
+        if st._v_title == 'tecfitwhite':
+            st_tec = st
+        if st._v_title == 'piercepoint':
+            st_pp = st
+    if st_tec is not None and st_pp is not None:
+        solTypes.append('TECScreen')
+    solTypes = list(set(solTypes))
+    logging.info('Found solution types in input parmdb and H5parm: '+', '.join(solTypes))
 
     # For each solType, select appropriate solutions and construct
     # the dictionary to pass to pdb.addValues()
     len_sol = {}
     for solType in solTypes:
-        len_sol[solType] = len(pdb.getNames(solType+':*'))
+        if solType != 'TECScreen':
+            len_sol[solType] = len(pdb.getNames(solType+':*'))
+        else:
+            len_sol[solType] = 1
 
     for instrumentdbFile in instrumentdbFiles:
         out_instrumentdbFile = out_globaldbFile + '/' + outroot + '_' + instrumentdbFile.split('/')[-1]
@@ -213,84 +378,113 @@ if __name__=='__main__':
                     'clobber = False.')
                 sys.exit(1)
         pdb_out = lofar.parmdb.parmdb(out_instrumentdbFile+'/', create=True)
+
         pbar = progressbar.ProgressBar(maxval=sum(len_sol.values())).start()
         ipbar = 0
 
         pdb_in = lofar.parmdb.parmdb(instrumentdbFile)
+
+        # Add default values and steps
+        DefValues = pdb_in.getDefValues()
+        for k, v in DefValues.iteritems():
+            pdb_out.addDefValues({k: pdb.makeDefValue(v.item(0))})
+        pdb_out.setDefaultSteps(pdb_in.getDefaultSteps())
+
         for solType in solTypes:
             if len_sol[solType] == 0: continue
 
-            solEntries = pdb_in.getNames(solType+':*')
-            data = pdb_in.getValuesGrid(solType+':*')
-            data_out = data.copy()
-            for solEntry in solEntries:
+            if solType != 'TECScreen':
+                solEntries = pdb_in.getNames(solType+':*')
+                data = pdb_in.getValuesGrid(solType+':*')
+                data_out = data.copy()
+                warned_of_skip = False
+                for solEntry in solEntries:
 
-                pol, dir, ant, parm = parmdbToAxes(solEntry)
-                solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
-                if solTabList is None:
-                    logging.critical('Mismatch between parmdb table and H5parm '
-                        'solution table: No solution tables found that match '
-                        'the parmdb entry "'+solType+'"')
-                    sys.exit(1)
-                if len(solTabList) > 1:
-                    logging.warning('More than one solution table found in H5parm '
-                        'matching parmdb entry "'+solType+'". Taking the first match.')
-                solTab = solTabList[0]
-                sf = solFetcher(solTab)
+                    pol, dir, ant, parm = parmdbToAxes(solEntry)
+                    solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
+                    if solTabList is None:
+                        if not warned_of_skip:
+                            logging.warning("Solution type {0} not found in solution set {1}. Skipping.".format(solType, solsetName))
+                        warned_of_skip = True
+                        continue
+                    if len(solTabList) > 1:
+                        logging.warning('More than one solution table found in H5parm '
+                            'matching parmdb entry "'+solType+'". Taking the first match.')
+                    solTab = solTabList[0]
+                    sf = solFetcher(solTab)
 
-                if pol == None and dir == None:
-                    sf.setSelection(ant=ant)
-                elif pol == None and dir != None:
-                    sf.setSelection(ant=ant, dir=dir)
-                elif pol != None and dir == None:
-                    sf.setSelection(ant=ant, pol=pol)
-                else:
-                    sf.setSelection(ant=ant, pol=pol, dir=dir)
+                    if pol == None and dir == None:
+                        sf.setSelection(ant=ant)
+                    elif pol == None and dir != None:
+                        sf.setSelection(ant=ant, dir=dir)
+                    elif pol != None and dir == None:
+                        sf.setSelection(ant=ant, pol=pol)
+                    else:
+                        sf.setSelection(ant=ant, pol=pol, dir=dir)
 
-                # If needed, convert Amp and Phase to Real and Imag respectively
-                if parm == 'Real':
-                    SolTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
-                    soltab_phase = SolTabList[0]
-                    sf_phase = solFetcher(soltab_phase, ant=ant, pol=pol, dir=dir)
-                    val_amp = sf.getValues()[0]
-                    val_phase = sf_phase.getValues()[0]
-                    val = val_amp * np.cos(val_phase)
-                elif parm == 'Imag':
-                    SolTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
-                    soltab_amp = SolTabList[0]
-                    sf_amp = solFetcher(soltab_amp, ant=ant, pol=pol, dir=dir)
-                    val_phase = sf.getValues()[0]
-                    val_amp = sf_amp.getValues()[0]
-                    val = val_amp * np.sin(val_phase)
-                else:
-                    val = sf.getValues()[0]
+                    # If needed, convert Amp and Phase to Real and Imag respectively
+                    if parm == 'Real':
+                        SolTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
+                        soltab_phase = SolTabList[0]
+                        sf_phase = solFetcher(soltab_phase, ant=ant, pol=pol, dir=dir)
+                        val_amp = sf.getValues()[0]
+                        val_phase = sf_phase.getValues()[0]
+                        val = val_amp * np.cos(val_phase)
+                    elif parm == 'Imag':
+                        SolTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
+                        soltab_amp = SolTabList[0]
+                        sf_amp = solFetcher(soltab_amp, ant=ant, pol=pol, dir=dir)
+                        val_phase = sf.getValues()[0]
+                        val_amp = sf_amp.getValues()[0]
+                        val = val_amp * np.sin(val_phase)
+                    else:
+                        val = sf.getValues()[0]
 
-                # Match the frequency or frequencies of instrumentdb under
-                # consideration
-                sffreqs = sf.freq
-                freqs = data[solEntry]['freqs']
-                freq_list = [freq for freq in freqs if freq in sffreqs]
-                if len(freq_list) == 0:
-                    for i in range(len(val.shape)):
-                        freq_ind_list.append(slice(None))
-                    freq_ind = tuple(freq_ind_list)
-                else:
-                    freqAxisIdx = sf.getAxesNames().index('freq')
-                    freq_ind = []
-                    for i in range(len(val.shape)):
-                        freq_ind.append(slice(None))
-                    freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
-                    freq_ind = tuple(freq_ind)
+                    # Match the frequency or frequencies of instrumentdb under
+                    # consideration
+                    sffreqs = sf.freq
+                    freqs = data[solEntry]['freqs']
+                    freq_list = [freq for freq in freqs if freq in sffreqs]
+                    if len(freq_list) == 0:
+                        for i in range(len(val.shape)):
+                            freq_ind_list.append(slice(None))
+                        freq_ind = tuple(freq_ind_list)
+                    else:
+                        freqAxisIdx = sf.getAxesNames().index('freq')
+                        freq_ind = []
+                        for i in range(len(val.shape)):
+                            freq_ind.append(slice(None))
+                        freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
+                        freq_ind = tuple(freq_ind)
 
-                shape = data_out[solEntry]['values'].shape
-                try:
-                    data_out[solEntry]['values'] = val[freq_ind].T.reshape(shape)
-                except ValueError, err:
-                    logging.critical('Mismatch between parmdb table and H5parm '
-                    'solution table: Differing number of frequencies and/or times')
-                    sys.exit(1)
+                    shape = data_out[solEntry]['values'].shape
+                    try:
+                        data_out[solEntry]['values'] = val[freq_ind].T.reshape(shape)
+                    except ValueError, err:
+                        logging.critical('Mismatch between parmdb table and H5parm '
+                        'solution table: Differing number of frequencies and/or times')
+                        sys.exit(1)
                 pbar.update(ipbar)
                 ipbar += 1
+            else:
+                # Handle TECScreen parmdb
+                #
+                # Get timewidths, freqwidth and freq from first (non-TEC, phase)
+                # solentry
+                logging.info('Filling TECScreen values:')
+                for nonTECsolType in solTypes:
+                    if nonTECsolType != 'TECScreen' and 'Phase' in nonTECsolType:
+                        break
+                parmname = pdb_in.getNames(nonTECsolType+':*')[0]
+                timewidths = pdb_in.getValuesGrid(parmname)[parmname]['timewidths']
+                freqwidth = pdb.getValuesGrid(parmname)[parmname]['freqwidths'][0]
+                freq = pdb.getValuesGrid(parmname)[parmname]['freqs'][0]
+                parms = makeTECparmdb(h5parm_in, solset, st_tec, st_pp, timewidths, freq, freqwidth)
+
+                data_out = parms
+                pbar.update(ipbar)
+                ipbar += 1
+
             pdb_out.addValues(data_out)
 
         pbar.finish()
