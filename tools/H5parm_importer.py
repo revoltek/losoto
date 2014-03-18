@@ -9,7 +9,7 @@
 
 # Authors:
 # Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
+_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de)"
 
 import sys, os, glob
 import socket
