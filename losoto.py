@@ -100,6 +100,7 @@ if __name__=='__main__':
                    "EXAMPLE": operations.example,
     #               "CLOCKTEC": operations.clocktec,
     #               "FLAG": operations.flag,
+                   "CLIP": operations.clip,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
                    "SMOOTH": operations.smooth,

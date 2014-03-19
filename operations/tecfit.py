@@ -6,8 +6,8 @@
 import logging
 from operations_lib import *
 from pylab import *
-from lofar.expion import baselinefitting
 import pyrap.measures
+from lofar.expion import baselinefitting
 import scipy.interpolate
 import re
 
