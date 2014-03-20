@@ -1,0 +1,408 @@
+\documentclass[structabstract]{article}
+\usepackage[varg]{txfonts}
+% include packages
+%\usepackage[dvips]{graphicx}
+\usepackage{url}
+\usepackage[breaklinks=true]{hyperref}
+\usepackage{twoopt}
+\usepackage{natbib}
+\bibpunct{(}{)}{;}{a}{}{,} %% natbib format for A&A and ApJ
+\usepackage{ctable}
+\usepackage{multirow}
+\usepackage[farskip=0pt]{subfig}
+
+\setlength{\textwidth}{6.5in} 
+\setlength{\textheight}{9in}
+\setlength{\topmargin}{-0.0625in} 
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in} 
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in} 
+\setlength{\hoffset}{0in}
+\setlength{\voffset}{0in}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%CUTCUTCUT
+
+%\svnInfo $Id: bbs.tex 12951 2014-03-08 18:40:31Z dijkema $
+\def \losoto {LoSoTo}
+
+\section[LoSoTo: LOFAR Solution Tool]{\losoto: LOFAR Solution Tool\footnote{This section is maintained by Francesco de Gasperin ({\tt fdg@hs.uni-hamburg.de}).}}
+\label{BBS}
+
+The LOFAR Solution Tool (\losoto{}) is a python code which handles LOFAR solutions in a variety of ways. The data files used by \losoto{} are not in the standard parmdb format used by BBS. \losoto{} uses instead an innovative data file, called H5parm, which is based of the HDF5 standard\footnote{\url{http://www.hdfgroup.org/HDF5/}}.
+
+%-----------------------------------------------------------
+\subsection{H5parm}
+\label{losoto:h5parm}
+
+H5parm is simply a list of rules which specify how data are stored inside the tables of an HDF5 compliant file. We can say that H5parm relates to HDF5 in the same way that parmdb relates to MeasurementSet. The major advantage of using HDF5 is that it is an opensource project developed by a large community of people. It has therefore a very easy-to-use python interface (the \texttt{tables} module) and it has better performances than competitors.
+
+\subsubsection{HDF5 format}
+\label{losoto:HDF5}
+
+There are three different types of nodes used in H5parm:
+\begin{description}
+ \item[Array:] all elements are of the same type.
+ \item[CArray:] like Arrays, but here the data are stored in chunks, which allows easy access to
+slices of huge arrays, without loading all data in memory. These arrays can be much
+larger than the physically available memory, as long as there is enough disk space.
+ \item[Tables:] each row has the same fields/columns, but the type of the columns can be different within each other. It is a database-like structure.
+\end{description}
+ 
+The use of tables to create a database-like structure was investigated and found to be not satisfactory in terms of performances. Therefore \losoto{} is now based on CArrays organized in a hierarchical fashion which provides enough flexibility but preserving the performances.
+
+\subsubsection{Characteristics of the H5parm}
+\label{losoto:characteristics_h5parm}
+
+H5parm is organized in a hierarchical way, where solutions of multiple datasets can be stored in the same H5parm (e.g. the calibrator and the target field solutions of the same observation) into different \textit{solution-sets} (solset). Each solset can be thought as a container for a logically related group of solutions. Although its definition is arbitrary, usually there is one solset for each beam and for each scan. Each solset can have a custom name or by default it is called sol\#\#\# (where \#\#\# is an increasing integer starting from 000).
+
+Each solset contains an arbitrary number of \textit{solution-tables} (soltab) plus a couple of Tables with some information on antenna locations and pointing directions. Soltabs also can have an arbitrary name. If no name is provided, then it is by default set to the solution-type name (amplitudes, phases, clock, tec...) plus again an increasing integer (e.g. amplitudes000, phase000...). Since soltab names are arbitrary the proper solution-type is stated in the \textit{parmdb\_type} attribute of the soltab node. Supported values are: amplitude, phase, scalarphase, rotation, clock, tec. Soltabs are also just containers, inside each soltab there are several CArrays which are the real data holders. Typically there are a number of 1-dimentional CArrays storing the \textit{axes} values (see Table~\ref{losoto:tab:axes}) and two $n$-dimentional (where $n$ is the number of axes) CArrays, ``values'' and ``weights'', which contain the solution values and the relative weights. Soltabs can have an arbitrary number of axes of whatever type. Here we list some examples:
+\begin{description}
+ \item[aplitudes]: time, freq, pol, dir, ant
+ \item[phases]: time, freq, pol, dir, ant
+ \item[clock]: time, ant
+ \item[tec]: time, ant, dir
+ \item[foobar]: foo, bar...
+\end{description}
+Theoretically the values/weights arrays can be partially populated, leaving NaNs (with 0 weight) in the gaps. This allows to have e.g. different time resolution in the core stations and in the remote stations (obviously this ends up in an increment of the data size). Moreover, solution intervals of time/freq can be non-constant along the axis (e.g. when one has solutions on frequencies non uniformly distributed across the band). The attribute \textit{axes} of the ``values'' CArrays states the axes names and, more importantly, their order.
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{l l l}
+\hline 
+\hline
+Axis name & Format & Example\\
+\hline
+time (s) & float64 & [4.867e+09, 4.868e+09, 4.869e+09] \\
+freq (Hz) & float64 & [120e6,122e6,130e6...]\\
+ant & string (16 char) & [CS001LBA]\\
+pol & string (2 char) & [‘XX’, ‘XY’, ‘RR’, ‘RL’]\\
+dir & string (16 char)& [‘3C196’,’pointing’]\\
+val & float64 & [34.543,5345.423,123.3213]\\
+weight (0 = flagged) & float32 [from 0 to 1] & [0,1,0.9,0.7,1,0]\\
+\hline
+\end{tabular}
+\caption{Default names and formats for axes values. \label{losoto:tab:axes}}
+\end{table}
+
+\subsubsection{Example of H5parm content}
+
+Here is an example of the content of an H5parm file having a single solset (sol000) containing a single soltab (amplitude000).
+
+\begin{verbatim}
+/sol000 (Group) ''
+
+/sol000/antenna (Table(36,), shuffle, lzo(5)) 'Antenna names and positions'
+  description := {
+  "name": StringCol(itemsize=16, shape=(), dflt='', pos=0),
+  "position": Float32Col(shape=(3,), dflt=0.0, pos=1)}
+  byteorder := 'little'
+  chunkshape := (2340,)
+
+/sol000/source (Table(1,), shuffle, lzo(5)) 'Source names and directions'
+  description := {
+  "name": StringCol(itemsize=16, shape=(), dflt='', pos=0),
+  "dir": Float32Col(shape=(2,), dflt=0.0, pos=1)}
+  byteorder := 'little'
+  chunkshape := (2730,)
+
+/sol000/amplitude000 (Group) 'amplitude'
+
+/sol000/amplitude000/ant (CArray(36,), shuffle, lzo(5)) ''
+  atom := StringAtom(itemsize=8, shape=(), dflt='')
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'irrelevant'
+  chunkshape := (36,)
+
+/sol000/amplitude000/dir (CArray(2,), shuffle, lzo(5)) ''
+  atom := StringAtom(itemsize=8, shape=(), dflt='')
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'irrelevant'
+  chunkshape := (2,)
+
+/sol000/amplitude000/freq (CArray(5,), shuffle, lzo(5)) ''
+  atom := Float64Atom(shape=(), dflt=0.0)
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'little'
+  chunkshape := (5,)
+
+/sol000/amplitude000/pol (CArray(2,), shuffle, lzo(5)) ''
+  atom := StringAtom(itemsize=2, shape=(), dflt='')
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'irrelevant'
+  chunkshape := (2,)
+
+/sol000/amplitude000/time (CArray(4314,), shuffle, lzo(5)) ''
+  atom := Float64Atom(shape=(), dflt=0.0)
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'little'
+  chunkshape := (4314,)
+
+/sol000/amplitude000/val (CArray(2, 2, 36, 5, 4314), shuffle, lzo(5)) ''
+  atom := Float64Atom(shape=(), dflt=0.0)
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'little'
+  chunkshape := (1, 1, 10, 2, 1079)
+
+/sol000/amplitude000/weight (CArray(2, 2, 36, 5, 4314), shuffle, lzo(5)) ''
+  atom := Float64Atom(shape=(), dflt=0.0)
+  maindim := 0
+  flavor := 'numpy'
+  byteorder := 'little'
+  chunkshape := (1, 1, 10, 2, 1079)
+\end{verbatim}
+
+\subsubsection{H5parm benchmarks}
+
+For a parmdb of 37 Mb the relative H5parm with no compression is about 89 Mb. Using a maximum compression, the H5parm ends up being 18 Mb large. Reading times between compressed and non-compressed H5parms are comparable within a factor of 2 (compressed is slower). Compared to parmdb the reading time of the python implementation of H5parm (mid-compression) is a factor of a few (2 to 10) faster.
+
+This is a benchmark example:
+
+\begin{verbatim}
+INFO: ### Read all frequencies for a pol/dir/station
+INFO: PARMDB -- 1.0 s.
+INFO: H5parm -- 0.35 s.
+INFO: ### Read all times for a pol/dir/station
+INFO: PARMDB -- 0.98 s.
+INFO: H5parm -- 0.34 s.
+INFO: ### Read all rotations for 1 station (slice in time)
+INFO: PARMDB -- 0.99 s.
+INFO: H5parm -- 0.53 s.
+INFO: ### Read all rotations for all station (slice in time)
+INFO: PARMDB -- 12.2 s.
+INFO: H5parm -- 4.66 s.
+INFO: ### Read all rotations for remote stations (slice in ant)
+INFO: PARMDB -- 4.87 s.
+INFO: H5parm -- 1.91 s.
+INFO: ### Read all rotations for a dir/station and write them back
+INFO: PARMDB -- 1.33 s.
+INFO: H5parm -- 1.08 s.
+INFO: ### Read and tabulate the whole file
+INFO: parmdb -- 0.94 s.
+INFO: H5parm -- 0.02 s.
+\end{verbatim}
+
+%-----------------------------------------------------------
+\subsection{LoSoTo overview}
+\label{losoto:overview}
+
+\losoto{} is made by several components. It has some tools used mostly to transform parmdb to H5parm and back (see Sec.~\ref{losoto:tools}). A separate program (\texttt{losoto.py}) is instead used to perform operations on the specified H5parm. \texttt{losoto.py} receive its commands by reading a parset file that has the same syntax of BBS/NDPPP parsets.
+
+%-----------------------------------------------------------
+\subsection{Tools}
+\label{losoto:tools}
+
+There are currently four tools shipped with \losoto{}:
+\begin{description}
+ \item[parmdb\_collector.py] fetches parmdb tables from the cluster
+ \item[H5parm\_importer.py] creates an h5parm file from an MS or a globaldb created with parmdb\_collector.py
+ \item[H5parm\_merge.py] copy a solset from a H5parm files into another one
+ \item[H5parm\_exporte.py] export H5parm to a pre-existing parmdb
+\end{description}
+
+The usage of these tools is described in Sec.~\ref{losoto:usage}.
+
+%-----------------------------------------------------------
+\subsection{Operations}
+\label{losoto:operations}
+
+These are the operations that \losoto{} can perform:
+\begin{description}
+ \item[RESET]: reset the solution values to 1 for all kind of solutions but for phases which are set to 0.
+ \item[PLOT]: plot solutions in 1D/2D plots or plot TEC screens.
+ \item[SMOOTH]: smooth solutions using a multidimensional running median. The n-dimensional surface generated by multiple axis (e.g. time and freq) can be smoothed at once using a different FWHM for each axis.
+ \item[CLIP]: clip all solutions above/below a certain number of median values
+ \item[FLAG]: iteratively remove a general trend from the solutions and then perform an outlier rejection. This operation is still to be implemented.
+ \item[NORM]: normalize solutions of an axis to have an average value of 1.
+ \item[INTERP]: interpolate solutions along whatever (even multiple) axis. Typically one can interpolate in time and/or frequency. This operation can also simply rescale the solutions to match the median of the calibrator solution on a specific axis.
+ \item[CLOCKTEC]: perform clock/tec separation
+ \item[TECFIT]: 
+ \item[TECSCREEN]: 
+ \item[EXAMPLE]: this is just an example operation aimed to help developing of new operations 
+\end{description}
+
+Beside these operations which require to be activated through the \losoto{} parset (see Sec.~\ref{losoto:parset}), one can call the program with the ``-i'' option and passing an H5parm as argument to obtain some information on it. Information on a single specific solset can be obtained with ``-i -f solset\_name(s)''.
+
+\begin{verbatim}
+$ losoto.py -i single.h5
+
+Summary of single.h5
+
+Solution set 'sol000':
+======================
+
+Directions: pointing
+            
+Stations: CS001LBA   CS002LBA   CS003LBA   CS004LBA  
+          CS005LBA   CS006LBA   CS007LBA   CS011LBA  
+          CS017LBA   CS021LBA   CS024LBA   CS026LBA  
+          CS028LBA   CS030LBA   CS031LBA   CS032LBA  
+          CS101LBA   CS103LBA   CS201LBA   CS301LBA  
+          CS302LBA   CS401LBA   CS501LBA   RS106LBA  
+          RS205LBA   RS208LBA   RS305LBA   RS306LBA  
+          RS307LBA   RS310LBA   RS406LBA   RS407LBA  
+          RS409LBA   RS503LBA   RS508LBA   RS509LBA  
+          
+Solution table 'amplitude000': 2 pols, 2 dirs, 36 ants, 1 freq, 4314 times
+
+Solution table 'rotation000': 2 dirs, 36 ants, 1 freq, 4314 times
+
+Solution table 'phase000': 2 pols, 2 dirs, 36 ants, 1 freq, 4314 times
+\end{verbatim}
+
+\subsection{LoSoTo parset}
+\label{losoto:parset}
+
+This is an example parset for the intrpolation in amplitude:
+\begin{verbatim}
+LoSoTo.Steps = [interp]
+LoSoTo.Solset = [sol000]
+LoSoTo.Soltab = [sol000/amplitude000]
+LoSoTo.SolType = [amplitude]
+LoSoTo.ant = []
+LoSoTo.pol = [XX,YY]
+LoSoTo.dir = []
+
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.InterpAxes = [freq, time]
+LoSoTo.Steps.interp.InterpMethod = nearest
+LoSoTo.Steps.interp.MedAxes = []
+LoSoTo.Steps.interp.Rescale = F
+LoSoTo.Steps.interp.CalSoltab = cal000/amplitude000
+LoSoTo.Steps.interp.CalDir = 3C295
+\end{verbatim}
+
+In the first part of the parset ``global'' values are defined. These are values named LoSoTo.val\_name. In Table~\ref{losoto:tab:global_val} the reader can find all the possible global values.
+
+\begin{table}[!h]
+\centering
+\begin{tabular}{l l l l}
+\hline 
+\hline
+Var Name & Format & Example & Comment\\
+\hline
+LoSoTo.Steps    & list of steps & [flag,plot,smoothPhases,plot\_again] & sequence of steps names\\
+LoSoTo.Solset   & list of solset names & [sol000, sol001] & restrict to these the solset names\\
+LoSoTo.Soltab   & list of soltabs: ``solset/soltab'' & [sol000/amplitude000] & restrict to these soltabs\\
+LoSoTo.SolType  & list of solution types & [phase] & restrict to soltab of this solution type\\
+LoSoTo.ant      & list of antenna names & [CS001\_HBA] & restrict to these antennas\\ 
+LoSoTo.pol      & list of polarizations & [XX, YY] & restrict to these polarizations\\
+LoSoTo.dir$^a$  & list of directions & [pointing, 3C196] & restrict to these pointing directions\\
+LoSoTo.axisName & ??? & ??? & ???\\
+\hline
+\end{tabular}
+$^a$ it is important to notice that the default direction (e.g. those related to BBS solve for anything that is not ``directional'': Gain, CommonRotationAngle, CommonScalarPhase...) have the direction: ``pointing''.
+\caption{Definition of global variables in LoSoTo parset. \label{losoto:tab:global_val}}
+\end{table}
+
+For every stepname mentioned in the global ``steps'' variable the user can specify step-specific parameters using the syntax: LoSoTo.Steps.stepname.val\_name. At least one option must always be present, which is the ``Operation'' option that specify which kind of operation is performed by that step among those listed in Sec.~\ref{losoto:operations}. All the global variables (except from the ``steps'' one) are also usable inside a step to change the selection criteria for that specific step.
+
+A list of step-specific parameters is given in Table~\ref{losoto:tab:local_val}.
+
+\begin{table}[!ht]
+\centering
+\begin{tabular}{l l l l}
+\hline 
+\hline
+Var Name & Format & Example & Comment\\
+\hline
+Operations & string & RESET & An operation among those defined in Sec.~\ref{losoto:operations}\\
+\hline
+\multicolumn{4}{l}{\textbf{RESET}}\\
+Weight   & bool & 0 \textbar\ 1 & True: reset also the weights$^a$\\
+\hline
+\multicolumn{4}{l}{\textbf{PLOT}}\\
+PlotType & 1D \textbar\ 2D \textbar\ TECScreen & 1D & Type of plot\\ 
+Axes     & list of axes names & [time] & For 1D plots is one axis name, two axes for 2D plots\\
+MinMax   & [float, float] & [0,100] & Force a min/max value for the dependent variable\\
+Prefix   & string & images/test\_ & Give a prefix to all the plots\\
+\hline
+\multicolumn{4}{l}{\textbf{SMOOTH}}\\
+Axes & list of axes names & [freq, time] & Axis name on which to smooth, may be multiple\\
+FWHM & list of float & [10, 5] & FWHM, one for each axis\\
+\hline
+\multicolumn{4}{l}{\textbf{CLIP}}\\
+Axes & list of axes names & [freq, time] & Axis name on which to smooth, may be multiple\\
+ClipLevel & float & 5 & factor above/below median at which to clip\\
+\hline
+\multicolumn{4}{l}{\textbf{FLAG-TBI}}\\
+\hline
+\multicolumn{4}{l}{\textbf{NORM}}\\
+NormVal & float & 1. & the value to normalize the mean\\
+NormAxis & axis name & time & the axis to normalize\\
+\hline
+\multicolumn{4}{l}{\textbf{INTERP}}\\
+CalSoltab & soltab name &  cal001/amplitude000 & The calibrator solution table\\
+CalDir & dir name & 3C196 & Use a specific dir from CalSoltab instead that the same of the target\\
+InterpAxes & list of axes names & [time, freq] & The axes along which to interpolate, can be multiple\\
+InterpMethod & nearest \textbar\  linear \textbar\  cubic & linear & Type of interpolation method\\
+Rescale & bool &  0 \textbar\ 1 & Just rescale to the median value of CalSoltab, do not interpolate\\
+MedAxis & axis name & time & rescale to the median of this axis\\
+\hline
+\multicolumn{4}{l}{\textbf{CLOCKTEC}}\\
+\hline
+\multicolumn{4}{l}{\textbf{TECFIT}}\\
+\hline
+\multicolumn{4}{l}{\textbf{TECSCREEN}}\\
+
+\hline
+
+\end{tabular}
+$^a$ note that weights are currently not propagated back to parmdb
+\caption{Definition of step-specific variables in LoSoTo parset. \label{losoto:tab:local_val}}
+\end{table}
+
+%-----------------------------------------------------------
+\subsection{Usage}
+\label{losoto:usage}
+
+This is a possible sequence of commands to run \losoto{} on a typical observation:
+
+1. Collect the parmdb of calibrator and target:
+\begin{verbatim}
+ ~fdg/scripts/losoto/tools/parmdb_collector.py -v -d "target.gds" -c "clusterdesc" -g globaldb_tgt
+ ~fdg/scripts/losoto/tools/parmdb_collector.py -v -d "calibrator.gds" -c "clusterdesc" -g globaldb_cal
+\end{verbatim}
+where ``[target|calibrator].gds'' is the gds file (made with combinevds) of all the SB you want to use. You need to run the collector once for the calibrator and once for the target. ``Clusterdesc'' is a cluster description file as the one used for BBS (not stand-alone).
+
+2. Convert the set of parmdbs into an h5parm:
+\begin{verbatim}
+~fdg/scripts/losoto/tools/H5parm_importer.py -v tgt.h5 globaldb_tgt
+~fdg/scripts/losoto/tools/H5parm_importer.py -v cal.h5 globaldb_cal
+\end{verbatim}
+
+3. Merge the two h5parms in a single file (this is needed if you want to interpolate/rescale/copy solutions in time/freq from the cal to the tgt):
+\begin{verbatim}
+~fdg/scripts/losoto/tools/H5parm_merge.py -v cal.h5:sol000 tgt:cal000
+\end{verbatim}
+
+4. Run LoSoTo:
+\begin{verbatim}
+~fdg/scripts/losoto/losoto.py -v tgt.h5 losoto-interp.parset
+\end{verbatim}
+
+5. Convert back the h5parm into parmdb:
+\begin{verbatim}
+~fdg/scripts/losoto/tools/H5parm_exporter.py -v -c tgt.h5 globaldb_tgt
+\end{verbatim}
+
+6. Redistribute back the parmdb tables into globaldb\_tgt that are now updated (inspect with parmdbplot), there's no automatic tool for that yet... if anyone is willing to add this capability to parmdb\_collector.py, that would be helpful.
+
+%-----------------------------------------------------------
+\subsection{Developing in LoSoTo}
+\label{losoto:developing}
+\losoto{} is much more than a stand alone program, the user can use \losoto{} to play easily with solutions and to experiment. The code is freely available and is already the result of the collaborative effort of several people. If interested in developing your own operation, please have a look at: \url{https://github.com/revoltek/losoto/}.
+
+In the ``tools'' directory the user can find all the tools described in Sec.~\ref{losoto:tools} plus some other program. All these programs are stand-alone. losoto.py is the main program which calls all the operations (one per file) present in the ``operation'' directory. It relays on the h5parm.py library which deals with reading and writing from an h5parm file and the operations\_lib.py library which has some functions common to several operations.
+
+An example operation one can use to start coding its own is present in the operation directory under the name ``example.py''. That is the first point to start when interested in writing a new operation. The most important thing shown in the example operation is the use of the h5parm library to quickly fetch an write back solutions in the h5parm file.
+
+\end{document}

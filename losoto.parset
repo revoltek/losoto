@@ -51,7 +51,7 @@ LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of
 LoSoTo.Steps.interp.InterpAxes = [time, freq]
 LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
 LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxes = [time] # rescale the median of this axis
+LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
 LoSoTo.Steps.clocktec.Algorithm =
