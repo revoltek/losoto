@@ -179,7 +179,7 @@ def getParSolTypes( step, parset, H ):
 def getParAxis( step, parset, H, axisName ):
     """
     Return the axis val array for this step.
-        - check if all the toltabs have this axis.
+        - check if all the soltabs have this axis.
     The order is:
     * local step value
     * global value

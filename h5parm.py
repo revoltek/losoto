@@ -675,7 +675,7 @@ class solFetcher(solHandler):
 
     def getValuesIter(self, returnAxes= [], weight = False):
         """
-        Return an iterator which yelds the values matrix (with axes = returnAxes) iterating along the other axes.
+        Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
         matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
         Keyword arguments:
