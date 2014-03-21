@@ -11,13 +11,13 @@
 \usepackage{multirow}
 \usepackage[farskip=0pt]{subfig}
 
-\setlength{\textwidth}{6.5in} 
+\setlength{\textwidth}{6.5in}
 \setlength{\textheight}{9in}
-\setlength{\topmargin}{-0.0625in} 
+\setlength{\topmargin}{-0.0625in}
 \setlength{\oddsidemargin}{0in}
-\setlength{\evensidemargin}{0in} 
+\setlength{\evensidemargin}{0in}
 \setlength{\headheight}{0in}
-\setlength{\headsep}{0in} 
+\setlength{\headsep}{0in}
 \setlength{\hoffset}{0in}
 \setlength{\voffset}{0in}
 
@@ -31,13 +31,13 @@
 \section[LoSoTo: LOFAR Solution Tool]{\losoto: LOFAR Solution Tool\footnote{This section is maintained by Francesco de Gasperin ({\tt fdg@hs.uni-hamburg.de}).}}
 \label{BBS}
 
-The LOFAR Solution Tool (\losoto{}) is a python code which handles LOFAR solutions in a variety of ways. The data files used by \losoto{} are not in the standard parmdb format used by BBS. \losoto{} uses instead an innovative data file, called H5parm, which is based of the HDF5 standard\footnote{\url{http://www.hdfgroup.org/HDF5/}}.
+The LOFAR Solution Tool (\losoto{}) is a Python package which handles LOFAR solutions in a variety of ways. The data files used by \losoto{} are not in the standard parmdb format used by BBS. \losoto{} uses instead an innovative data file, called H5parm, which is based of the HDF5 standard\footnote{\url{http://www.hdfgroup.org/HDF5/}}.
 
 %-----------------------------------------------------------
 \subsection{H5parm}
 \label{losoto:h5parm}
 
-H5parm is simply a list of rules which specify how data are stored inside the tables of an HDF5 compliant file. We can say that H5parm relates to HDF5 in the same way that parmdb relates to MeasurementSet. The major advantage of using HDF5 is that it is an opensource project developed by a large community of people. It has therefore a very easy-to-use python interface (the \texttt{tables} module) and it has better performances than competitors.
+H5parm is simply a list of rules which specify how data are stored inside the tables of an HDF5 compliant file. We can say that H5parm relates to HDF5 in the same way that parmdb relates to MeasurementSet. The major advantage of using HDF5 is that it is an opensource project developed by a large community of people. It has therefore a very easy-to-use Python interface (the \texttt{tables} module) and it has better performances than competitors.
 
 \subsubsection{HDF5 format}
 \label{losoto:HDF5}
@@ -50,15 +50,15 @@ slices of huge arrays, without loading all data in memory. These arrays can be m
 larger than the physically available memory, as long as there is enough disk space.
  \item[Tables:] each row has the same fields/columns, but the type of the columns can be different within each other. It is a database-like structure.
 \end{description}
- 
-The use of tables to create a database-like structure was investigated and found to be not satisfactory in terms of performances. Therefore \losoto{} is now based on CArrays organized in a hierarchical fashion which provides enough flexibility but preserving the performances.
+
+The use of tables to create a database-like structure was investigated and found to be not satisfactory in terms of performance. Therefore \losoto{} is now based on CArrays organized in a hierarchical fashion which provides enough flexibility but preserves performance.
 
 \subsubsection{Characteristics of the H5parm}
 \label{losoto:characteristics_h5parm}
 
 H5parm is organized in a hierarchical way, where solutions of multiple datasets can be stored in the same H5parm (e.g. the calibrator and the target field solutions of the same observation) into different \textit{solution-sets} (solset). Each solset can be thought as a container for a logically related group of solutions. Although its definition is arbitrary, usually there is one solset for each beam and for each scan. Each solset can have a custom name or by default it is called sol\#\#\# (where \#\#\# is an increasing integer starting from 000).
 
-Each solset contains an arbitrary number of \textit{solution-tables} (soltab) plus a couple of Tables with some information on antenna locations and pointing directions. Soltabs also can have an arbitrary name. If no name is provided, then it is by default set to the solution-type name (amplitudes, phases, clock, tec...) plus again an increasing integer (e.g. amplitudes000, phase000...). Since soltab names are arbitrary the proper solution-type is stated in the \textit{parmdb\_type} attribute of the soltab node. Supported values are: amplitude, phase, scalarphase, rotation, clock, tec.
+Each solset contains an arbitrary number of \textit{solution-tables} (soltab) plus a couple of Tables with some information on antenna locations and pointing directions. Soltabs also can have an arbitrary name. If no name is provided, then it is by default set to the solution-type name (amplitudes, phases, clock, tec...) plus again an increasing integer (e.g. amplitudes000, phase000...). Since soltab names are arbitrary the proper solution-type is stated in the \textit{parmdb\_type} attribute of the soltab node. Supported values are: amplitude, phase, scalarphase, rotation, clock, tec, and tecscreen.
 
 Soltabs are also just containers, inside each soltab there are several CArrays which are the real data holders. Typically there are a number of 1-dimentional CArrays storing the \textit{axes} values (see Table~\ref{losoto:tab:axes}) and two $n$-dimentional (where $n$ is the number of axes) CArrays, ``values'' and ``weights'', which contain the solution values and the relative weights.
 
@@ -76,7 +76,7 @@ Theoretically the values/weights arrays can be only partially populated, leaving
 \begin{table}[!h]
 \centering
 \begin{tabular}{l l l}
-\hline 
+\hline
 \hline
 Axis name & Format & Example\\
 \hline
@@ -210,7 +210,7 @@ INFO: H5parm -- 0.02 s.
 \subsection{LoSoTo}
 \label{losoto:overview}
 
-\losoto{} is made by several components. It has some tools used mostly to transform parmdb to H5parm and back (see Sec.~\ref{losoto:tools}). A separate program (\texttt{losoto.py}) is instead used to perform operations on the specified H5parm. \texttt{losoto.py} receive its commands by reading a parset file that has the same syntax of BBS/NDPPP parsets (see Sec.\ref{losoto:parset}).
+\losoto{} is made by several components. It has some tools used mostly to transform parmdb to H5parm and back (see Sec.~\ref{losoto:tools}). A separate program (\texttt{losoto.py}) is instead used to perform operations on the specified H5parm. \texttt{losoto.py} receives its commands by reading a parset file that has the same syntax of BBS/NDPPP parsets (see Sec.\ref{losoto:parset}).
 
 %-----------------------------------------------------------
 \subsubsection{Tools}
@@ -221,7 +221,7 @@ There are currently four tools shipped with \losoto{}:
  \item[\texttt{parmdb\_collector.py}] fetches parmdb tables from the cluster
  \item[\texttt{H5parm\_importer.py}] creates an h5parm file from an instrument table (parmdb) or a globaldb created with \texttt{parmdb\_collector.py}
  \item[\texttt{H5parm\_merge.py}] copy a solset from an H5parm files into another one
- \item[\texttt{H5parm\_exporte.py}] export an H5parm to a pre-existing parmdb
+ \item[\texttt{H5parm\_exporter.py}] export an H5parm to a pre-existing parmdb
 \end{description}
 
 The usage of these tools is described in Sec.~\ref{losoto:usage}.
@@ -240,12 +240,12 @@ These are the operations that \losoto{} can perform:
  \item[NORM]: normalize solutions of an axis to have a chosen average value.
  \item[INTERP]: interpolate solutions along whatever (even multiple) axis. Typically one can interpolate in time and/or frequency. This operation can also simply rescale the solutions to match the median of the calibrator solution on a specific axis.
  \item[CLOCKTEC]: perform clock/tec separation.
- \item[TECFIT]: 
- \item[TECSCREEN]: 
+ \item[TECFIT]: fit TEC values per direction and station to phase solutions
+ \item[TECSCREEN]: fit TEC screens to TEC values
  \item[EXAMPLE]: this is just an example operation aimed to help developing of new operations.
 \end{description}
 
-Beside these operations which require to be activated through the \losoto{} parset (see Sec.~\ref{losoto:parset}), one can call \texttt{losoto.py} with the ``-i'' option and passing an H5parm as argument to obtain some information on it. Information on a specific subset of solsets can be obtained with ``-i -f solset\_name(s)''.
+Beside these operations which require activation through the \losoto{} parset (see Sec.~\ref{losoto:parset}), one can call \texttt{losoto.py} with the ``-i'' option and passing an H5parm as argument to obtain some information on it. Information on a specific subset of solsets can be obtained with ``-i -f solset\_name(s)''.
 
 \begin{verbatim}
 $ losoto.py -i single.h5
@@ -256,17 +256,17 @@ Solution set 'sol000':
 ======================
 
 Directions: pointing
-            
-Stations: CS001LBA   CS002LBA   CS003LBA   CS004LBA  
-          CS005LBA   CS006LBA   CS007LBA   CS011LBA  
-          CS017LBA   CS021LBA   CS024LBA   CS026LBA  
-          CS028LBA   CS030LBA   CS031LBA   CS032LBA  
-          CS101LBA   CS103LBA   CS201LBA   CS301LBA  
-          CS302LBA   CS401LBA   CS501LBA   RS106LBA  
-          RS205LBA   RS208LBA   RS305LBA   RS306LBA  
-          RS307LBA   RS310LBA   RS406LBA   RS407LBA  
-          RS409LBA   RS503LBA   RS508LBA   RS509LBA  
-          
+
+Stations: CS001LBA   CS002LBA   CS003LBA   CS004LBA
+          CS005LBA   CS006LBA   CS007LBA   CS011LBA
+          CS017LBA   CS021LBA   CS024LBA   CS026LBA
+          CS028LBA   CS030LBA   CS031LBA   CS032LBA
+          CS101LBA   CS103LBA   CS201LBA   CS301LBA
+          CS302LBA   CS401LBA   CS501LBA   RS106LBA
+          RS205LBA   RS208LBA   RS305LBA   RS306LBA
+          RS307LBA   RS310LBA   RS406LBA   RS407LBA
+          RS409LBA   RS503LBA   RS508LBA   RS509LBA
+
 Solution table 'amplitude000': 2 pols, 2 dirs, 36 ants, 1 freq, 4314 times
 
 Solution table 'rotation000': 2 dirs, 36 ants, 1 freq, 4314 times
@@ -301,7 +301,7 @@ In the first part of the parset ``global'' values are defined. These are values 
 \begin{table}[!h]
 \centering
 \begin{tabular}{l l l l}
-\hline 
+\hline
 \hline
 Var Name & Format & Example & Comment\\
 \hline
@@ -309,7 +309,7 @@ LoSoTo.Steps    & list of steps & [flag,plot,smoothPhases,plot\_again] & sequenc
 LoSoTo.Solset   & list of solset names & [sol000, sol001] & restrict to these solsets\\
 LoSoTo.Soltab   & list of soltabs: ``solset/soltab'' & [sol000/amplitude000] & restrict to these soltabs\\
 LoSoTo.SolType  & list of solution types & [phase] & restrict to soltab of this solution type\\
-LoSoTo.ant      & list of antenna names & [CS001\_HBA] & restrict to these antennas\\ 
+LoSoTo.ant      & list of antenna names & [CS001\_HBA] & restrict to these antennas\\
 LoSoTo.pol      & list of polarizations & [XX, YY] & restrict to these polarizations\\
 LoSoTo.dir$^a$  & list of directions & [pointing, 3C196] & restrict to these pointing directions\\
 LoSoTo.axisName & ??? & ??? & ???\\
@@ -324,7 +324,7 @@ For every stepname mentioned in the global ``steps'' variable the user can speci
 \begin{table}[!ht]
 \centering
 \begin{tabular}{l l l l}
-\hline 
+\hline
 \hline
 Var Name & Format & Example & Comment\\
 \hline
@@ -334,7 +334,7 @@ Operations & string & RESET & An operation among those defined in Sec.~\ref{loso
 Weight   & bool & 0 \textbar\ 1 & True: reset also the weights$^a$\\
 \hline
 \multicolumn{4}{l}{\textbf{PLOT}}\\
-PlotType & 1D \textbar\ 2D \textbar\ TECScreen & 1D & Type of plot\\ 
+PlotType & 1D \textbar\ 2D \textbar\ TECScreen & 1D & Type of plot\\
 Axes     & list of axes names & [time] & For 1D plots is one axis name, two axes for 2D plots\\
 MinMax   & [float, float] & [0,100] & Force a min/max value for the dependent variable\\
 Prefix   & string & images/test\_ & Give a prefix to all the plots\\
@@ -364,9 +364,15 @@ MedAxis & axis name & time & rescale to the median of this axis\\
 \multicolumn{4}{l}{\textbf{CLOCKTEC}}\\
 \hline
 \multicolumn{4}{l}{\textbf{TECFIT}}\\
+Algorithm & algorithm name & sourcediff & The algorithm to use in TEC fitting\\
+MinBands & int & 4 & Minimum number of bands a source must have to be used\\
+MaxStations & int & 26 & Maximum number of stations to use\\
+OutSoltab & soltab name & ion000/tec000 & the output solution table\\
 \hline
 \multicolumn{4}{l}{\textbf{TECSCREEN}}\\
-
+Height & float & 200e3 & The height in meters of the screen
+Order & int & 15 & The maximum order of the KL decomposition
+OutSoltab & soltab name & ion000/tecscreen000 & the output solution table\\
 \hline
 
 \end{tabular}
