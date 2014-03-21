@@ -28,14 +28,14 @@ def run( step, parset, H ):
     calDir = parset.getString('.'.join(["LoSoTo.Steps", step, "CalDir"]), '' )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['time','freq'] )
     interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
-    medAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "MedAxes"]), [''] )
+    medAxis = parset.getStringString('.'.join(["LoSoTo.Steps", step, "MedAxis"]), '' )
     rescale = parset.getBool('.'.join(["LoSoTo.Steps", step, "Rescale"]), False )
 
     if interpMethod not in ["nearest", "linear", "cubic"]:
         logging.error('Interpolation method must be nearest, linear or cubic.')
         return 1
     
-    if rescale and medAxes == []:
+    if rescale and medAxis == '':
         logging.error('A medAxis is needed for rescaling.')
         return 1
 
@@ -55,10 +55,9 @@ def run( step, parset, H ):
             if interpAxis not in axesNames or interpAxis not in cAxesNames:
                 logging.error('Axis '+interpAxis+' not found. Ignoring.')
                 del interpAxes[i]
-        for i, medAxis in enumerate(medAxes[:]):
-            if medAxis not in axesNames or medAxis not in cAxesNames:
-                logging.error('Axis '+medAxis+' not found. Ignoring.')
-                del medAxes[i]
+        if medAxis not in axesNames or medAxis not in cAxesNames:
+            logging.error('Axis '+medAxis+' not found. Cannot proceed.')
+            return 1
 
         tr.setSelection(ant=ants, pol=pols, dir=dirs)
         for vals, coord in tr.getValuesIter(returnAxes=interpAxes):
@@ -71,10 +70,9 @@ def run( step, parset, H ):
                 coordSel['dir'] = calDir
             cr.setSelection(**coordSel)
             calValues, calCoord = cr.getValues()
-            # fill all medAxes with the median value
-            for medAxis in medAxes:
-                axis = cAxesNames.index(medAxis)
-                calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
+            # fill medAxis with the median value
+            axis = cAxesNames.index(medAxis)
+            calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
               
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
@@ -99,10 +97,9 @@ def run( step, parset, H ):
 
             if rescale:
                 # rescale solutions
-                for medAxis in medAxes:
-                    axis = interpAxes.index(medAxis)
-                    valsMed = np.repeat( np.expand_dims( np.median( vals, axis ), axis ), vals.shape[axis], axis )
-                    valsNewMed = np.repeat( np.expand_dims( np.median( valsNew, axis ), axis ), valsNew.shape[axis], axis )
+                axis = interpAxes.index(medAxis)
+                valsMed = np.repeat( np.expand_dims( np.median( vals, axis ), axis ), vals.shape[axis], axis )
+                valsNewMed = np.repeat( np.expand_dims( np.median( valsNew, axis ), axis ), valsNew.shape[axis], axis )
                 valsNew = vals*valsNewMed/valsMed
                 #print "Rescaling by: ", valsNewMed[:,0]/valsMed[:,0]
 
