@@ -13,7 +13,8 @@ def make_tec_screen_plots(pp, rr, tec_fit_white, tec_fit, station_positions,
     source_names, times, height, order, beta_val, r_0, prefix = 'frame_',
     remove_gradient=True):
     """Makes plots of TEC screens"""
-    import pylab
+    from pylab import kron, concatenate, pinv, norm, newaxis, normalize
+    import matplotlib.pyplot as plt
     import numpy as np
     import os
     from operations.tecscreen import calc_piercepoint
@@ -32,24 +33,24 @@ def make_tec_screen_plots(pp, rr, tec_fit_white, tec_fit, station_positions,
     N_sources = len(source_names)
     N_times = len(times)
 
-    A = pylab.concatenate([pylab.kron(np.eye(N_sources),
-        np.ones((N_stations,1))), pylab.kron(np.ones((N_sources,1)),
+    A = concatenate([kron(np.eye(N_sources),
+        np.ones((N_stations,1))), kron(np.ones((N_sources,1)),
         np.eye(N_stations))], axis=1)
 
     N_piercepoints = N_sources * N_stations
-    P = np.eye(N_piercepoints) - np.dot(np.dot(A, pylab.pinv(np.dot(A.T, A))), A.T)
+    P = np.eye(N_piercepoints) - np.dot(np.dot(A, pinv(np.dot(A.T, A))), A.T)
 
     x,y,z = station_positions[0, :]
     east = np.array([-y, x, 0])
-    east = east / pylab.norm(east)
+    east = east / norm(east)
 
     north = np.array([ -x, -y, (x*x + y*y)/z])
-    north = north / pylab.norm(north)
+    north = north / norm(north)
 
     up = np.array([x,y,z])
-    up = up / pylab.norm(up)
+    up = up / norm(up)
 
-    T = pylab.concatenate([east[:, pylab.newaxis], north[:, pylab.newaxis]], axis=1)
+    T = concatenate([east[:, newaxis], north[:, newaxis]], axis=1)
 
     pp1 = np.dot(pp[0, :, :], T)
     lower = np.amin(pp1, axis=0)
@@ -103,22 +104,22 @@ def make_tec_screen_plots(pp, rr, tec_fit_white, tec_fit, station_positions,
     vmax = np.max([np.amax(screen), np.amax(fitted_tec1)])
 
     logging.info('Plotting TEC screens...')
-    fig1 = pylab.figure(figsize = (7, 7))
+    fig1 = plt.figure(figsize = (7, 7))
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     for k in range(N_times):
-        pylab.clf()
-        im = pylab.imshow(screen[:, :, k],
-            cmap = pylab.cm.jet,
+        plt.clf()
+        im = plt.imshow(screen[:, :, k],
+            cmap = plt.cm.jet,
             origin = 'lower',
             interpolation = 'nearest',
-            extent = (xr[0], xr[-1], yr[0], yr[-1]), vmin = vmin, vmax = vmax)
+            extent = (xr[0], xr[-1], yr[0], yr[-1]), vmin=vmin, vmax=vmax)
 
-        sm = pylab.cm.ScalarMappable(cmap = pylab.cm.jet,
-            norm = pylab.normalize(vmin = vmin, vmax=vmax))
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.jet,
+            norm=normalize(vmin=vmin, vmax=vmax))
         sm._A = []
-        pylab.title(str(i))
-        cbar = pylab.colorbar()
+        plt.title(str(i))
+        cbar = plt.colorbar()
         cbar.set_label('TECU', rotation=270)
 
         x = []
@@ -133,26 +134,26 @@ def make_tec_screen_plots(pp, rr, tec_fit_white, tec_fit, station_positions,
             s.append(max(2400*abs(fitted_tec1[j, k] - screen[ys, xs, k]), 10))
             c.append(sm.to_rgba(fitted_tec1[j, k]))
 
-        pylab.scatter(x, y, s=s, c=c)
+        plt.scatter(x, y, s=s, c=c)
         labels = source_names
         for label, xl, yl in zip(labels, x[0::N_stations], y[0::N_stations]):
-            pylab.annotate(
+            plt.annotate(
                 label,
                 xy = (xl, yl), xytext = (-20, 20),
                 textcoords = 'offset points', ha = 'right', va = 'bottom',
                 bbox = dict(boxstyle = 'round,pad=0.5', fc = 'gray', alpha = 0.5),
                 arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
 
-        pylab.title('Time {0}'.format(k))
-        pylab.xlim(xr[-1], xr[0])
-        pylab.ylim(yr[0], yr[-1])
-        pylab.xlabel('Projected Distance (m)')
-        pylab.ylabel('Projected Distance (m)')
-        pylab.savefig(root_dir+'/'+prestr+'frame%0.3i.png' % k)
+        plt.title('Time {0}'.format(k))
+        plt.xlim(xr[-1], xr[0])
+        plt.ylim(yr[0], yr[-1])
+        plt.xlabel('Projected Distance (m)')
+        plt.ylabel('Projected Distance (m)')
+        plt.savefig(root_dir+'/'+prestr+'frame%0.3i.png' % k)
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
-    pylab.close(fig1)
+    plt.close(fig1)
 
 
 def fitPLaneLTSQ(XYZ):
