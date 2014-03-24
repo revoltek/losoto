@@ -313,7 +313,6 @@ LoSoTo.SolType  & list of solution types & [phase] & restrict to soltab of this 
 LoSoTo.ant      & list of antenna names & [CS001\_HBA] & restrict to these antennas\\
 LoSoTo.pol      & list of polarizations & [XX, YY] & restrict to these polarizations\\
 LoSoTo.dir$^a$  & list of directions & [pointing, 3C196] & restrict to these pointing directions\\
-LoSoTo.axisName & ??? & ??? & ???\\
 \hline
 \end{tabular}
 $^a$ it is important to notice that the default direction (e.g. those related to BBS solving for anything that is not ``directional'': Gain, CommonRotationAngle, CommonScalarPhase...) have the direction: ``pointing''.
@@ -350,7 +349,7 @@ FWHM & list of float & [10, 5] & FWHM, one for each axis\\
 Axes & list of axes names & [freq, time] & Axis name to take medians over, may be multiple\\
 ClipLevel & float & 5 & factor above/below median at which to clip\\
 \hline
-\multicolumn{4}{l}{\textbf{FLAG-TBI}}\\
+\multicolumn{4}{l}{\textbf{FLAG (TBI)}}\\
 \hline
 \multicolumn{4}{l}{\textbf{NORM}}\\
 NormVal & float & 1. & the value to normalize the mean\\
@@ -364,7 +363,7 @@ InterpMethod & nearest \textbar\  linear \textbar\  cubic & linear & Type of int
 Rescale & bool &  0 \textbar\ 1 & Just rescale to the median value of CalSoltab, do not interpolate\\
 MedAxis & axis name & time & rescale to the median of this axis\\
 \hline
-\multicolumn{4}{l}{\textbf{CLOCKTEC}}\\
+\multicolumn{4}{l}{\textbf{CLOCKTEC (TBI)}}\\
 \hline
 \multicolumn{4}{l}{\textbf{TECFIT}}\\
 Algorithm & algorithm name & sourcediff & The algorithm to use in TEC fitting\\
