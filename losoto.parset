@@ -19,7 +19,6 @@ LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
 LoSoTo.Steps.everystep.ant = []
 LoSoTo.Steps.everystep.pol = []
 LoSoTo.Steps.everystep.dir = []
-LoSoTo.Steps.everystep.axisName = []
 LoSoTo.Steps.everystep.SolType = []
 
 LoSoTo.Steps.reset.Operation = RESET
