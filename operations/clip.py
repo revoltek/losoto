@@ -25,7 +25,7 @@ def run( step, parset, H ):
     clipLevel = parset.getFloat('.'.join(["LoSoTo.Steps", step, "ClipLevel"]), 0. )
     
     if len(axesToClip) < 1:
-        logging.error("Please specify axes.")
+        logging.error("Please specify axes to clip.")
         return 1
     if clipLevel == 0.:
         logging.error("Please specify factor above/below median at which to clip.")

@@ -4,7 +4,7 @@
 # step variable override global variable
 
 # this are the global values
-LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, clip, abs]
+LoSoTo.Steps = [abs,clip,interp,norm,plot,reset,smooth,tecfit,tecscreen] # copy and example are excluded
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [phase]
@@ -21,8 +21,27 @@ LoSoTo.Steps.everystep.pol = []
 LoSoTo.Steps.everystep.dir = []
 LoSoTo.Steps.everystep.SolType = []
 
-LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
+LoSoTo.Steps.abs.Operation = ABS
+
+LoSoTo.Steps.clip.Operation = CLIP
+LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
+LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
+
+# TBI
+LoSoTo.Steps.flag.Operation = FLAG
+LoSoTo.Steps.flag.Sigma = 5
+
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
+LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
+LoSoTo.Steps.interp.InterpAxes = [time, freq]
+LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
+LoSoTo.Steps.interp.Rescale = False
+LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
+
+LoSoTo.Steps.norm.Operation = NORM
+LoSoTo.Steps.norm.NormVal = 1.
+LoSoTo.Steps.norm.NormAxis = time
 
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
@@ -30,30 +49,12 @@ LoSoTo.Steps.plot.Axes = [time]
 LoSoTo.Steps.plot.MinMax = [0,0]
 LoSoTo.Steps.plot.Prefix = images/test_
 
+LoSoTo.Steps.reset.Operation = RESET
+LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
+
 LoSoTo.Steps.smooth.Operation = SMOOTH
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]
-
-LoSoTo.Steps.clocktec.Operation = CLIP
-LoSoTo.Steps.clocktec.ClipLevel = 5 # factor above/below median at which to clip
-
-LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Sigma = 5
-
-LoSoTo.Steps.norm.Operation = NORM
-LoSoTo.Steps.norm.NormVal = 1.
-LoSoTo.Steps.norm.NormAxis = time
-
-LoSoTo.Steps.interp.Operation = INTERP
-LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
-LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
-LoSoTo.Steps.interp.InterpAxes = [time, freq]
-LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
-LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
-
-LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.Algorithm =
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now

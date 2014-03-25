@@ -28,7 +28,7 @@ def run( step, parset, H ):
     calDir = parset.getString('.'.join(["LoSoTo.Steps", step, "CalDir"]), '' )
     interpAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "InterpAxes"]), ['time','freq'] )
     interpMethod = parset.getString('.'.join(["LoSoTo.Steps", step, "InterpMethod"]), 'linear' )
-    medAxis = parset.getStringString('.'.join(["LoSoTo.Steps", step, "MedAxis"]), '' )
+    medAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "MedAxis"]), '' )
     rescale = parset.getBool('.'.join(["LoSoTo.Steps", step, "Rescale"]), False )
 
     if interpMethod not in ["nearest", "linear", "cubic"]:

@@ -20,9 +20,8 @@ def run( step, parset, H ):
     pols = getParAxis( step, parset, H, 'pol' )
     dirs = getParAxis( step, parset, H, 'dir' )
 
-# No need to specify an axis, just use time
-    
-    axesToAbs=['time']
+    # No need to specify an axis, just use time
+    axesToAbs = ['time']
 
     for soltab in openSoltabs( H, soltabs ):
 

@@ -26,6 +26,7 @@ class h5parm():
         """
         if os.path.isfile(h5parmFile):
             if tables.is_pytables_file(h5parmFile) == None:
+                logging.critical('Wrong HDF5 format for '+h5parmFile+'.')
                 raise Exception('Wrong HDF5 format for '+h5parmFile+'.')
             if readonly:
                 logging.debug('Reading from '+h5parmFile+'.')
@@ -115,6 +116,10 @@ class h5parm():
         """
         if solset == None:
             raise Exception("Solution set not specified.")
+
+        if not solset in self.getSolsets():
+            logging.critical("Cannot find solset: "+solset+".")
+            raise Exception("Cannot find solset: "+solset+".")
 
         return self.H.get_node('/',solset)
 
@@ -232,6 +237,10 @@ class h5parm():
             raise Exception("Solution-set not specified while querying for solution-table.")
         if soltab == None:
             raise Exception("Solution-table not specified while querying for solution-table.")
+
+        if not soltab in self.getSoltabs():
+            logging.critical("Solution-table "+soltab+" not found in solset "+solset+".")
+            raise Exception("Solution-table "+soltab+" not found in solset "+solset+".")
 
         if type(solset) is str:
             solset = self.getSolset(solset)
