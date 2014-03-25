@@ -8,7 +8,7 @@
 # Reinout van Weeren
 # Maaijke Mevius
 # Bas van der Tol
-_author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
+_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de)"
 
 import sys
 import os
@@ -27,10 +27,17 @@ def my_close_open_files(verbose):
     are_open_files = len(open_files) > 0
     if verbose and are_open_files:
         print >> sys.stderr, "Closing remaining open files:",
-    for fileh in open_files.keys():
-        if verbose:
-            print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
-        open_files[fileh].close()
+    # Compatibility fix
+    if tables.__version__>='3.1.0':
+        for fileh in list(open_files.handlers):
+            if verbose:
+                print >> sys.stderr, "%s..." % (fileh.filename,),
+            fileh.close()
+    else:
+        for fileh in open_files.keys():
+            if verbose:
+                print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
+            open_files[fileh].close()
         if verbose:
             print >> sys.stderr, "done",
     if verbose and are_open_files:
@@ -93,6 +100,8 @@ if __name__=='__main__':
                    "EXAMPLE": operations.example,
     #               "CLOCKTEC": operations.clocktec,
     #               "FLAG": operations.flag,
+                   "ABS": operations.abs,
+                   "CLIP": operations.clip,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
                    "SMOOTH": operations.smooth,
