@@ -26,7 +26,7 @@ class h5parm():
         """
         if os.path.isfile(h5parmFile):
             if tables.is_pytables_file(h5parmFile) == None:
-                raise Exception('Wrong format for '+h5parmFile+'.')
+                raise Exception('Wrong HDF5 format for '+h5parmFile+'.')
             if readonly:
                 logging.debug('Reading from '+h5parmFile+'.')
                 self.H = tables.openFile(h5parmFile, 'r')
@@ -202,7 +202,6 @@ class h5parm():
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
         weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-
 
         return soltab
 
@@ -423,12 +422,11 @@ class solHandler():
     def __init__(self, table, **args):
         """
         Keyword arguments:
-        tab -- table object
-        dataName -- is the name of the Carray
-        *args -- used to create a selection
+        table -- table object
+        **args -- used to create a selection
         """
 
-        if not isinstance( table, tables.Group):
+        if not isinstance( table, tables.Group ):
             logging.error("Object must be initialized with a pyTables Table object.")
             return None
 
@@ -486,6 +484,11 @@ class solHandler():
                 # remove list if only one element, necessary when slicying
                 if len(self.selection[idx]) == 1: self.selection[idx] = self.selection[idx][0]
 
+            # if a selection return an empty list (maybe because of a wrong name), then use all values
+            if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:
+                logging.error("Empty/wrong selection on axis \""+axis+"\". Use all available values.")
+                self.selection[idx] = slice(0,self.getAxisLen(axisName, ignoreSelection=True))
+
 
     def getType(self):
         """
@@ -531,11 +534,12 @@ class solHandler():
             return len(self.getAxisValues(axis))
 
 
-    def getAxisValues(self, axis=''):
+    def getAxisValues(self, axis='', ignoreSelection = False):
         """
         Return a list of all the possible values present along a specific axis (no duplicates)
         Keyword arguments:
         axis -- the axis name
+        ignoreSelection -- if True returns the axis values without any selection active
         """
 
         if axis not in self.getAxesNames():
@@ -543,7 +547,10 @@ class solHandler():
             return None
 
         axisIdx = self.getAxesNames().index(axis)
-        return np.copy(self.getAxis(axis)[self.selection[axisIdx]])
+        if ignoreSelection:
+            return np.copy(self.getAxis(axis)[:])
+        else:
+            return np.copy(self.getAxis(axis)[self.selection[axisIdx]])
 
 
     def addHistory(self, entry=""):

@@ -53,9 +53,10 @@ def run( step, parset, H ):
         t.setSelection(ant=ants, pol=pols, dir=dirs)
         logging.info("Selection is: "+str(t.selection))
 
-        # find all axis values
-        logging.info("Antennas are: "+str(t.getAxisValues('ant')))
-        # but one can also use
+        # find axis values
+        logging.info("Antennas (no selection) are: "+str(t.getAxisValues('ant', ignoreSelection=True)))
+        logging.info("Antennas (with selection) are: "+str(t.getAxisValues('ant')))
+        # but one can also use (selection is active here!)
         logging.info("Antennas (other method) are: "+str(t.ant))
         logging.info("Frequencies are: "+str(t.freq))
         logging.info("Directions are: "+str(t.dir))
@@ -66,7 +67,8 @@ def run( step, parset, H ):
         # now get all values given this selection
         logging.info("Get data using t.val")
         val = t.val
-        logging.info("$ val is "+str(val[0,0,0,0,100]))
+        logging.debug('shape of val: '+str(t.val.shape))
+        logging.info("$ val is "+str(val[0,100]))
         flag = t.weight
         time = t.time
         thisTime = t.time[100]
@@ -80,8 +82,8 @@ def run( step, parset, H ):
         print axes
         print [t.getAxisLen(axis) for axis in axes] # not ordered, is a dict!
         # data array shape (same of axis shape)
-        print grid.shape
-        logging.info("$ val is "+str(grid[0,0,0,0,100]))
+        logging.info("Shape of values: "+str(grid.shape))
+        #logging.info("$ val is "+str(grid[0,0,0,0,100]))
 
         # reset selection
         t.setSelection()

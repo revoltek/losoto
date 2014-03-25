@@ -51,7 +51,7 @@ def splitgds(gdsFile, wd='', id='part'):
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog [-v] [-d gds] [-c clusterdesc] [-g output globaldb] \n'\
+    opt = optparse.OptionParser(usage='%prog [-v] [-o] [-d gds] [-g output globaldb] \n'\
             +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
     opt.add_option('-o', '--overwrite', help='Overwrite an existing globaldb (default=False)', action='store_true', default=False)

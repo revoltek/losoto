@@ -21,7 +21,6 @@ import _logging
 from h5parm import h5parm
 import lofar.parameterset
 
-
 def my_close_open_files(verbose):
     open_files = tables.file._open_files
     are_open_files = len(open_files) > 0
@@ -35,7 +34,6 @@ def my_close_open_files(verbose):
             print >> sys.stderr, "done",
     if verbose and are_open_files:
         print >> sys.stderr
-
 
 if __name__=='__main__':
     # Options
