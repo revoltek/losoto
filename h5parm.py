@@ -366,9 +366,10 @@ class h5parm():
             info += "=" * len(solset_name) + "=" * 16 + "\n\n"
 
             # Print direction (source) names
-            sources = self.getSou(solset_name)
+            sources = self.getSou(solset_name).keys()
+            sources.sort()
             info += "Directions: "
-            for src_name in sources.keys():
+            for src_name in sources:
                 info += "%s\n            " % src_name
 
             # Print station names
