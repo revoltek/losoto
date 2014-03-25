@@ -1,34 +1,23 @@
 LoSoTo: LOFAR solutions tool
 
-Author:
-Francesco de Gasperin (overall project)
-David Rafferty (overall project)
-Reinout Van Weeren (SMOOTH, CLOCKTEC)
-Maaijke Mevius (CLOCKTEC)
-Bas van der Tol (CLOCKTEC, TOOLS)
+Authors:
+Francesco de Gasperin
+David Rafferty
+Marting Hardcastle
+Maaijke Mevius
+Bas van der Tol
 
-This library have tools to deal with LOFAR solution tables.
-
-- set to zero solutions (step: RESET)
-- clock/tec separation (step: CLOCKTEC) - TBI
-- flag outliers (step: FLAG) - TBI
-- solutions smoothing (step: SMOOTH)
-- solutions interpolation/rescaling (step: INTERP)
-- make some inspection plots (step: PLOT)
-
-Included tools:
-
-- H5parm_creator.py:
-    * creates an h5parm file from an MS or a globaldb created with parmdb_collector.py
-- H5parm_merge.py:
-    * copy a solset from a H5parm files into another one
-- parmdb_collector.py:
-    * fetches parmdb tables from the cluster
+Contant:
+doc/: documentation
+examples/: some examples h5parm to use with validation/test parsets
+operations/: containts all the modules for operations
+parsets/: some examples parsets
+tools/: contains some tools, mostly to convert back and forward from parmdb to h5parm
 
 To run it on CEP1:
 * A copy of the code is in ~fdg/scripts/losoto/
 * Source the tool/lofarinit.csh file which is shipped with the code.
-* Prepare a paser starting from the losoto.parset (see also the test.parset)
+* Prepare a paset starting from the parset/losoto.parset
 * check the helps of the scripts in tools/ and of losoto.py
 * in case of problems write to fdg@hs.uni-hamburg.de
 
