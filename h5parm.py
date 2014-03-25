@@ -365,9 +365,10 @@ class h5parm():
             info += "=" * len(solset_name) + "=" * 16 + "\n\n"
 
             # Print direction (source) names
-            sources = self.getSou(solset_name)
+            sources = self.getSou(solset_name).keys()
+            sources.sort()
             info += "Directions: "
-            for src_name in sources.keys():
+            for src_name in sources:
                 info += "%s\n            " % src_name
 
             # Print station names
@@ -382,7 +383,7 @@ class h5parm():
                 info += "\nNo tables\n"
             else:
                 # For each table, print length of each axis and history of
-                # operations applied to the table. As the getValuesAxis() call
+                # operations applied to the table.
                 for soltab_name in soltabs.keys():
                     try:
                         sf = solFetcher(soltabs[soltab_name])
@@ -682,7 +683,7 @@ class solFetcher(solHandler):
 
     def getValuesIter(self, returnAxes= [], weight = False):
         """
-        Return an iterator which yelds the values matrix (with axes = returnAxes) iterating along the other axes.
+        Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
         matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
         Keyword arguments:

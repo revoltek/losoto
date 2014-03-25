@@ -5,11 +5,6 @@
 
 import logging
 from operations_lib import *
-from pylab import *
-from lofar.expion import baselinefitting
-import pyrap.measures
-import scipy.interpolate
-import re
 
 logging.debug('Loading TECFIT module.')
 
@@ -18,6 +13,8 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     """
     Collects and returns phase solutions, etc. needed for fitting
     """
+    import numpy as np
+    from pylab import find
     logging.info("Scanning for solutions needed for TEC fitting...")
 
     # Determine axis lengths
@@ -72,13 +69,13 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     while has_dup:
         has_dup = False
         for freq in freqs[:]:
-            nfreq = len( find( (array(freqs) > (freq-freq_tol)) &
-                               (array(freqs) < (freq+freq_tol)) ) )
+            nfreq = len( find( (np.array(freqs) > (freq-freq_tol)) &
+                               (np.array(freqs) < (freq+freq_tol)) ) )
             if nfreq > 1:
                 has_dup = True
                 freqs.remove(freq)
                 break
-    freqs = array(sorted(freqs))
+    freqs = np.array(sorted(freqs))
     N_freqs = len(freqs)
     stations_set = set(stations)
     sources_set = set(sources)
@@ -90,7 +87,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
             if dir in sources_set:
                 sources_filt.append(dir)
         sources_set = set(sources_filt)
-    source_names = array(sorted(list(sources_set)))
+    source_names = np.array(sorted(list(sources_set)))
     N_sources = len(set(source_names))
     N_stations = len(set(stations))
     N_times = N_times_max
@@ -101,15 +98,15 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     logging.info('  Number of freqs: {0}'.format(N_freqs))
 
     # Initialize the arrays
-    freqwidths = zeros(N_freqs)
-    timewidths = zeros(N_times)
-    m = zeros((N_sources, N_freqs))
-    phases0 = zeros((N_sources, N_stations, N_freqs, N_times))
-    phases1 = zeros((N_sources, N_stations, N_freqs, N_times))
-    flags = ones((N_sources, N_stations, N_freqs, N_times))
-    source_positions = zeros((N_sources, 2))
-    solset_array_dir_dep = chararray((N_sources, N_freqs), itemsize=100)
-    solset_array_dir_indep = chararray((N_freqs), itemsize=100)
+    freqwidths = np.zeros(N_freqs)
+    timewidths = np.zeros(N_times)
+    m = np.zeros((N_sources, N_freqs))
+    phases0 = np.zeros((N_sources, N_stations, N_freqs, N_times))
+    phases1 = np.zeros((N_sources, N_stations, N_freqs, N_times))
+    flags = np.ones((N_sources, N_stations, N_freqs, N_times))
+    source_positions = np.zeros((N_sources, 2))
+    solset_array_dir_dep = np.chararray((N_sources, N_freqs), itemsize=100)
+    solset_array_dir_indep = np.chararray((N_freqs), itemsize=100)
 
     # Populate the arrays
     for solset in solsets:
@@ -124,7 +121,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
             t = solFetcher(soltabs[soltab])
             solns, axes = t.getValues()
             freq = axes['freq'][0]
-            freq_indx = find( (array(freqs) > (freq-freq_tol)) & (array(freqs) < (freq+freq_tol)) )
+            freq_indx = find( (np.array(freqs) > (freq-freq_tol)) & (np.array(freqs) < (freq+freq_tol)) )
 
             for source in sources:
                 if source in source_names:
@@ -146,12 +143,12 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     source_dict = H.getSou(first_solset)
     ra = source_dict['pointing'][0]
     dec = source_dict['pointing'][1]
-    pointing = array([cos(ra) * cos(dec), sin(ra) * cos(dec), sin(dec)])
+    pointing = np.array([np.cos(ra) * np.cos(dec), np.sin(ra) * np.cos(dec), np.sin(dec)])
 
     # Collect source positions and phase solutions for each band
     logging.info('Collecting phase solutions...')
+    pbar = progressbar.ProgressBar(maxval=len(source_names)).start()
     for i, source1 in enumerate(source_names):
-        logging.info('  Source {0}'.format(source1))
         for k in range(N_freqs):
             if m[i, k]:
                 solset_name = solset_array_dir_dep[i, k]
@@ -173,7 +170,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                     else:
                         sf_dir_dep.setSelection(ant=station, pol='XX', dir=source1)
                     values_dir_dep = sf_dir_dep.getValues()
-                    v1_phase = array(values_dir_dep[0]).squeeze()
+                    v1_phase = np.array(values_dir_dep[0]).squeeze()
                     times_dir_dep = values_dir_dep[1]['time']
                     if sf_dir_indep is not None:
                         if soln_type_dirindep == 'scalarphase':
@@ -181,7 +178,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                         else:
                             sf_dir_indep.setSelection(ant=station, pol='XX')
                         values_dir_indep = sf_dir_indep.getValues()
-                        v1_dir_indep = array(values_dir_indep[0]).squeeze()
+                        v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                         times_dir_indep = values_dir_indep[1]['time']
                         v1_dir_indep_interp = interpolate_phase(v1_dir_indep, times_dir_indep, times_dir_dep)
                         v1_phase += v1_dir_indep_interp
@@ -194,7 +191,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                     else:
                         sf_dir_dep.setSelection(ant=station, pol='YY', dir=source1)
                         values_dir_dep = sf_dir_dep.getValues()
-                        v1_phase = array(values_dir_dep[0]).squeeze()
+                        v1_phase = np.array(values_dir_dep[0]).squeeze()
                         times_dir_dep = values_dir_dep[1]['time']
                         if sf_dir_indep is not None:
                             if soln_type_dirindep == 'scalarphase':
@@ -202,7 +199,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                             else:
                                 sf_dir_indep.setSelection(ant=station, pol='YY')
                             values_dir_indep = sf_dir_indep.getValues()
-                            v1_dir_indep = array(values_dir_indep[0]).squeeze()
+                            v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                             times_dir_indep = values_dir_indep[1]['time']
                             v1_dir_indep_interp = interpolate_phase(v1_dir_indep, times_dir_indep, times_dir_dep)
                             v1_phase += v1_dir_indep_interp
@@ -211,6 +208,8 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                         phases1[i, l, k, :] = v1_phase
 
                     flags[i, l, k, :] = sf_dir_dep.getValues(weight=True, retAxesVals=False)
+        pbar.update(i)
+    pbar.finish()
 
     # Invert the weights to give flags (0 => unflagged, 1 => flagged)
     zeroflags = np.where(flags == 0.0)
@@ -226,6 +225,8 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
 
     If time2 is a coarser grid, averaging is done instead.
     """
+    import numpy as np
+    import scipy.interpolate
 
     phase1 = unwrap_fft(phase1)
 
@@ -248,6 +249,7 @@ def unwrap_fft(phase, iterations=1):
     For details, see:
     Marvin A. Schofield & Yimei Zhu, Optics Letters, 28, 14 (2003)
     """
+    import numpy as np
 
     puRadius=lambda x : np.roll( np.roll(
           np.add.outer( np.arange(-x.shape[0]/2+1,x.shape[0]/2+1)**2.0,
@@ -283,6 +285,8 @@ def unwrap_fft(phase, iterations=1):
 
 def average_phase(phase, nslots, times=None):
     """Averages input phases over nslots time slots"""
+    import numpy as np
+
     phase = (phase+np.pi) % (2*np.pi) - np.pi
     phase_avg = []
     p_subarray = []
@@ -313,6 +317,10 @@ def average_phase(phase, nslots, times=None):
 
 def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     init_sols_per_pair=False, propagate=False, nband_min=2, offset=0):
+    """Fits TEC values to phase solutions per source pair"""
+    from pylab import pinv, newaxis, find
+    import numpy as np
+    from lofar.expion import baselinefitting
 
     sols_list = []
     eq_list = []
@@ -329,27 +337,28 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     N_pairs = k
 
     if init_sols is None and not init_sols_per_pair:
-        init_sols = zeros((N_sources, N_times, N_stations), dtype = float) + offset
+        init_sols = np.zeros((N_sources, N_times, N_stations), dtype = np.float) + offset
     elif init_sols is None and init_sols_per_pair:
-        init_sols = zeros((N_pairs, N_times, N_stations), dtype = float) + offset
-    vars = zeros((N_times, N_stations), dtype = float)
+        init_sols = np.zeros((N_pairs, N_times, N_stations), dtype = np.float) + offset
+    vars = np.zeros((N_times, N_stations), dtype = np.float)
     source_pairs = []
 
     k = 0
+    logging.info('Fitting TEC values...')
+    pbar = progressbar.ProgressBar(maxval=N_pairs).start()
     for i in range(N_sources):
         for j in range(i):
             subband_selection = find(mask[i,:] * mask[j,:])
             if len(subband_selection) < nband_min:
                 continue
-            logging.info('Fitting TEC values for source pair: {0}-{1}'.format(i, j))
             source_pairs.append((i,j))
             p = phases[i, :, subband_selection, :] - phases[j, :, subband_selection, :]
-            A = zeros((len(subband_selection), 1))
+            A = np.zeros((len(subband_selection), 1))
             A[:,0] = 8.44797245e9/freqs[subband_selection]
 
             flags_source_pair = flags[i, :, subband_selection, :] * flags[j, :, subband_selection, :]
-            constant_parms = zeros((1, N_stations), dtype = bool)
-            sols = zeros((N_times, N_stations), dtype = float)
+            constant_parms = np.zeros((1, N_stations), dtype = np.bool)
+            sols = np.zeros((N_times, N_stations), dtype = np.float)
 
             if init_sols_per_pair:
                 p_0 = init_sols[k, 0, :][newaxis,:]
@@ -363,41 +372,48 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
                     if init_sols_per_pair:
                         p_0 = init_sols[k, t_idx, :][newaxis,:]
                     else:
-                        p_0 = (init_sols[i, t_idx, :] - init_sols[j, 0, :])[newaxis,:]
+                        p_0 = (init_sols[i, t_idx, :] - init_sols[j, 0, :])[newaxis, :]
                 sol = baselinefitting.fit(x, A, p_0, f, constant_parms)
 
                 if propagate:
                     p_0 = sol.copy()
                 sols[t_idx, :] = sol[0, :]
-            sols = sols[:, :]-mean(sols[:, :], axis=1)[:,newaxis]
+            sols = sols[:, :] - np.mean(sols[:, :], axis=1)[:, newaxis]
             weight = len(subband_selection)
             sols_list.append(sols*weight)
             vars_list.append(vars*weight)
-            eq = zeros(N_sources)
+            eq = np.zeros(N_sources)
             eq[i] = weight
             eq[j] = -weight
             eq_list.append(eq)
-            var_eq = zeros(N_sources)
+            var_eq = np.zeros(N_sources)
             var_eq[i] = weight
             var_eq[j] = weight
             var_eq_list.append(var_eq)
             k += 1
+            pbar.update(k)
+    pbar.finish()
 
-    sols = array(sols_list)
-    B = array(eq_list)
-    source_selection = find(sum(abs(B), axis=0))
+    sols = np.array(sols_list)
+    B = np.array(eq_list)
+    source_selection = find(np.sum(abs(B), axis=0))
     N_sources = len(source_selection)
     if N_sources == 0:
-        logging.error('No sources with enough bands.')
+        logging.error('All sources have fewer than the required minimum number of bands.')
         return None, None, None, None
     pinvB = pinv(B)
-    r = dot(pinvB, sols.transpose([1,0,2]))
+    r = np.dot(pinvB, sols.transpose([1,0,2]))
     r = r[source_selection, :, :]
 
     return r, source_selection, sols, source_pairs
 
 
 def add_stations(station_selection, phases0, phases1, flags, mask, station_names, station_positions, source_names, source_selection, times, freqs, r, nband_min=2, soln_type='phase', nstations_max=None):
+    """Adds stations using a iterative search to ensure the global min is found
+    """
+    from pylab import pinv, newaxis, find, amin
+    import numpy as np
+    from lofar.expion import baselinefitting
 
     N_sources_selected = len(source_selection)
     N_stations_selected = len(station_selection)
@@ -406,13 +422,13 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
     N_stations = len(station_names)
     N_sources = len(source_names)
 
-    D = resize( station_positions, ( N_stations, N_stations, 3 ) )
-    D = transpose( D, ( 1, 0, 2 ) ) - D
-    D = sqrt(sum( D**2, axis=2 ))
+    D = np.resize( station_positions, ( N_stations, N_stations, 3 ) )
+    D = np.transpose( D, ( 1, 0, 2 ) ) - D
+    D = np.sqrt(np.sum( D**2, axis=2 ))
 
     station_selection1 = station_selection
 
-    stations_to_add = array([i for i in range(len(station_names)) if i not in station_selection1])
+    stations_to_add = np.array([i for i in range(len(station_names)) if i not in station_selection1])
 
     # Check if desired number of stations is already reached
     if nstations_max is not None:
@@ -444,41 +460,41 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
                     continue
                 logging.info('Fitting {0} TEC values for source pair: {1}-{2}'.format(station_names[station_to_add], i, j))
                 p0 = phases0[i, station_selection1[:,newaxis], subband_selection[newaxis,:], :] - phases0[j, station_selection1[:,newaxis], subband_selection[newaxis,:], :]
-                p0 = p0 - mean(p0, axis=0)[newaxis,:,:]
+                p0 = p0 - np.mean(p0, axis=0)[newaxis,:,:]
                 if soln_type != 'scalarphase':
                     p1 = phases1[i, station_selection1[:,newaxis], subband_selection[newaxis,:], :] - phases1[j, station_selection1[:,newaxis], subband_selection[newaxis,:], :]
-                    p1 = p1 - mean(p1, axis=0)[newaxis,:,:]
-                A = zeros((len(subband_selection), 1))
-                A[:,0] = 8.44797245e9/freqs[subband_selection]
+                    p1 = p1 - np.mean(p1, axis=0)[newaxis,:,:]
+                A = np.zeros((len(subband_selection), 1))
+                A[:, 0] = 8.44797245e9/freqs[subband_selection]
 
                 flags_source_pair = flags[i, station_selection1[:,newaxis], subband_selection[newaxis,:], :] * flags[j, station_selection1[:,newaxis], subband_selection[newaxis,:], :]
-                constant_parms = zeros((1, N_stations_selected1), dtype = bool)
-                sols = zeros((N_times, N_stations_selected1), dtype = float)
+                constant_parms = np.zeros((1, N_stations_selected1), dtype = np.bool)
+                sols = np.zeros((N_times, N_stations_selected1), dtype = np.float)
 
                 for t_idx in range(N_times):
                     if np.mod(t_idx, 10) == 0:
                         min_e = Inf
                         for offset in linspace(-0.1, 0.1,21) :
-                            p_0 = zeros((1, N_stations_selected1), double)
+                            p_0 = np.zeros((1, N_stations_selected1), double)
                             p_0[0,:N_stations_selected1-1] = (q[ii, t_idx, :] - q[jj, t_idx, :])[newaxis,:]
                             p_0[0,-1] = offset
 
                             x = p0[:,:,t_idx].copy()
                             f = flags_source_pair[:,:,t_idx].copy()
                             sol0 = baselinefitting.fit(x.T, A, p_0, f, constant_parms)
-                            sol0 -= mean(sol0)
-                            residual = mod(dot(A,sol0) - x.T + pi, 2*pi) - pi
+                            sol0 -= np.mean(sol0)
+                            residual = np.mod(np.dot(A, sol0) - x.T + pi, 2*pi) - pi
                             residual = residual[f.T==0]
-                            e = var(residual)
+                            e = np.var(residual)
 
                             if soln_type != 'scalarphase':
                                 x = p1[:,:,t_idx].copy()
                                 f = flags_source_pair[:,:,t_idx].copy()
                                 sol1 = baselinefitting.fit(x.T, A, p_0, f, constant_parms)
-                                sol1 -= mean(sol1)
-                                residual = mod(dot(A,sol1) - x.T + pi, 2*pi) - pi
+                                sol1 -= np.mean(sol1)
+                                residual = np.mod(np.dot(A, sol1) - x.T + pi, 2*pi) - pi
                                 residual = residual[f.T==0]
-                                e += var(residual)
+                                e += np.var(residual)
                             else:
                                 sol1 = sol0
 
@@ -491,13 +507,13 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
                         x = p0[:,:,t_idx].copy()
                         f = flags_source_pair[:,:,t_idx].copy()
                         sol0 = baselinefitting.fit(x.T, A, p_0_best, f, constant_parms)
-                        sol0 -= mean(sol0)
+                        sol0 -= np.mean(sol0)
 
                         if soln_type != 'scalarphase':
                             x = p1[:,:,t_idx].copy()
                             f = flags_source_pair[:,:,t_idx].copy()
                             sol1 = baselinefitting.fit(x.T, A, p_0_best, f, constant_parms)
-                            sol1 -= mean(sol1)
+                            sol1 -= np.mean(sol1)
                         else:
                             sol1 = sol0
                         sols[t_idx, :] = (sol0[0,:] + sol1[0,:])/2
@@ -505,11 +521,11 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
                 ### Remove outliers
                 for kk in range(10):
                     s = sols[:,-1].copy()
-                    selection = zeros(len(s), bool)
+                    selection = np.zeros(len(s), bool)
                     for t_idx in range(len(s)):
-                        start_idx = max(t_idx-10, 0)
-                        end_idx = min(t_idx+10, len(s))
-                        selection[t_idx] = sum(abs(s[start_idx:end_idx] - s[t_idx])<0.02) > (end_idx - start_idx - 8)
+                        start_idx = np.max(t_idx-10, 0)
+                        end_idx = np.min(t_idx+10, len(s))
+                        selection[t_idx] = np.sum(abs(s[start_idx:end_idx] - s[t_idx])<0.02) > (end_idx - start_idx - 8)
                     outliers = find(logical_not(selection))
                     if len(outliers) == 0:
                         break
@@ -529,19 +545,19 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
                         else:
                             s[t_idx] = (s[idx0] * (idx1-t_idx) + s[idx1] * (t_idx-idx0)) / (idx1-idx0)
 
-                        p_0 = zeros((1, N_stations_selected1), double)
+                        p_0 = np.zeros((1, N_stations_selected1), double)
                         p_0[0,:] = sols[t_idx,:]
                         p_0[0,-1] = s[t_idx]
 
                         x = p0[:,:,t_idx].copy()
                         f = flags_source_pair[:,:,t_idx].copy()
                         sol0 = baselinefitting.fit(x.T, A, p_0, f, constant_parms)
-                        sol0 -= mean(sol0)
+                        sol0 -= np.mean(sol0)
 
                         if soln_type != 'scalarphase':
                             x = p1[:,:,t_idx].copy()
                             sol1 = baselinefitting.fit(x.T, A, p_0, f, constant_parms)
-                            sol1 -= mean(sol1)
+                            sol1 -= np.mean(sol1)
                         else:
                             sol1 = sol0
 
@@ -550,13 +566,13 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
                 weight = 1.0
                 sols_list.append(weight*sols)
                 min_e_list.append(min_e)
-                eq = zeros(N_sources)
+                eq = np.zeros(N_sources)
                 eq[ii] = weight
                 eq[jj] = -weight
                 eq_list.append(eq)
 
-        sols = array(sols_list)
-        B = array(eq_list)
+        sols = np.array(sols_list)
+        B = np.array(eq_list)
         pinvB = pinv(B)
 
         q = dot(pinvB, sols.transpose([1,0,2]))
@@ -577,8 +593,10 @@ def run( step, parset, H ):
     The TEC values are stored in the specified output soltab with type 'tec'.
 
     """
-    import numpy as np
     from h5parm import solFetcher, solWriter
+    import numpy as np
+    from pylab import find
+    import re
 
     ants = getParAxis( step, parset, H, 'ant' )
     pols = getParAxis( step, parset, H, 'pol' )
@@ -602,11 +620,11 @@ def run( step, parset, H ):
     excluded_stations = [s for s in station_names if s not in included_stations]
 
     # Select stations to use for first pass
-    dist_cut_m = 2e3
-    logging.info("Excluding stations: {0}".format(sort(excluded_stations)))
-    mean_position = np.array([median(station_positions[:, 0]), median(station_positions[:, 1]), median(station_positions[:, 2])])
-    station_selection1 = find(sqrt(sum((station_positions - mean_position)**2, axis=1)) < dist_cut_m)
-    station_selection = array([i for i in range(len(station_names)) if i in station_selection1 and station_names[i] not in excluded_stations])
+    dist_cut_m = 3e3
+    logging.info("Excluding stations: {0}".format(np.sort(excluded_stations)))
+    mean_position = np.array([np.median(station_positions[:, 0]), np.median(station_positions[:, 1]), np.median(station_positions[:, 2])])
+    station_selection1 = find(np.sqrt(np.sum((station_positions - mean_position)**2, axis=1)) < dist_cut_m)
+    station_selection = np.array([i for i in range(len(station_names)) if i in station_selection1 and station_names[i] not in excluded_stations])
 
     # Fit a TEC value to the phase solutions per source pair. No search for the
     # global minimum is done

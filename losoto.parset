@@ -3,8 +3,8 @@
 #
 # step variable override global variable
 
-LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, apply]
-# this is only global
+# this are the global values
+LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, clip]
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [phase]
@@ -14,16 +14,43 @@ LoSoTo.pol = [XX, YY]
 LoSoTo.dir = [pointing]
 LoSoTo.axisName = []
 
-# parameters available in every step
+# parameters available in every step to overwrite the global selection
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
 LoSoTo.Steps.everystep.ant = []
 LoSoTo.Steps.everystep.pol = []
 LoSoTo.Steps.everystep.dir = []
-LoSoTo.Steps.everystep.axisName = []
 LoSoTo.Steps.everystep.SolType = []
 
 LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
+
+LoSoTo.Steps.plot.Operation = PLOT
+LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
+LoSoTo.Steps.plot.Axes = [time]
+LoSoTo.Steps.plot.MinMax = [0,0]
+LoSoTo.Steps.plot.Prefix = images/test_
+
+LoSoTo.Steps.smooth.Operation = SMOOTH
+LoSoTo.Steps.smooth.FWHM = [10, 5]
+LoSoTo.Steps.smooth.Axes = [freq, time]
+
+LoSoTo.Steps.clocktec.Operation = CLIP
+LoSoTo.Steps.clocktec.ClipLevel = 5 # factor above/below median at which to clip
+
+LoSoTo.Steps.flag.Operation = FLAG
+LoSoTo.Steps.flag.Sigma = 5
+
+LoSoTo.Steps.norm.Operation = NORM
+LoSoTo.Steps.norm.NormVal = 1.
+LoSoTo.Steps.norm.NormAxis = time
+
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
+LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
+LoSoTo.Steps.interp.InterpAxes = [time, freq]
+LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
+LoSoTo.Steps.interp.Rescale = False
+LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
 LoSoTo.Steps.clocktec.Algorithm =
@@ -37,33 +64,4 @@ LoSoTo.Steps.tecfit.OutSoltab = ion000/tec000
 LoSoTo.Steps.tecscreen.Operation = TECSCREEN
 LoSoTo.Steps.tecscreen.Height = 200e3
 LoSoTo.Steps.tecscreen.Order = 15
-LoSoTo.Steps.tecscreen.OutSoltabTEC = [ion000/tecfitwhite000]
-LoSoTo.Steps.tecscreen.OutSoltabPP = [ion000/piercepoint000]
-
-LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Sigma = 5
-
-LoSoTo.Steps.smooth.Operation = SMOOTH
-LoSoTo.Steps.smooth.FWHM = [10, 5]
-LoSoTo.Steps.smooth.Axes = [freq, time]
-
-LoSoTo.Steps.interp.Operation = INTERP
-LoSoTo.Steps.interp.CalSoltab = cal001/amplitude000
-LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
-LoSoTo.Steps.interp.InterpAxes = [time, freq]
-LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
-LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxes = [time] # rescale the median of this axis
-
-LoSoTo.Steps.plot.Operation = PLOT
-LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
-LoSoTo.Steps.plot.Axes = [time]
-LoSoTo.Steps.plot.MinMax = [0,0]
-LoSoTo.Steps.plot.Prefix = images/test_
-
-LoSoTo.Steps.apply.Operation = APPLY
-LoSoTo.Steps.apply.MS = target.MS
-LoSoTo.Steps.apply.Beam = True
-LoSoTo.Steps.apply.InCol = DATA
-LoSoTo.Steps.apply.OutCol = CORRECTED_DATA
-LoSoTo.Steps.apply.Method = RawNearest
+LoSoTo.Steps.tecscreen.OutSoltab = [ion000/tecscreen000]

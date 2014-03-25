@@ -5,7 +5,7 @@
 # existing parmdb instrument table(s).
 #
 # It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
-_author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de), David Rafferty (drafferty@hs.uni-hamurg.de)"
+_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de), David Rafferty (drafferty@hs.uni-hamburg.de)"
 
 import sys, os, glob, re
 import numpy as np
@@ -131,17 +131,19 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
         return solTabList
 
 
-def  makeTECparmdb(H, solset, TECsolTab, PPsolTab, timewidths, freq, freqwidth):
+def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
     """Returns TEC screen parmdb parameters
 
     H - H5parm object
     solset - solution set with TEC screen parameters
-    TECsolTab = solution table with tecfitwhite values
-    PPsolTab = solution table with piercepoint values
+    TECsolTab = solution table with tecscreen values
     timewidths - time widths of output parmdb
     freq - frequency of output parmdb
     freqwidth - frequency width of output parmdb
     """
+    from pylab import pinv
+    global ipbar, pbar
+
     station_dict = H.getAnt(solset)
     station_names = station_dict.keys()
     station_positions = station_dict.values()
@@ -150,14 +152,13 @@ def  makeTECparmdb(H, solset, TECsolTab, PPsolTab, timewidths, freq, freqwidth):
     source_positions = source_dict.values()
 
     tec_sf = solFetcher(TECsolTab)
-    tec_fit_white, axis_vals = tec_sf.getValues()
+    tec_screen, axis_vals = tec_sf.getValues()
     times = axis_vals['time']
     beta = TECsolTab._v_attrs['beta']
     r_0 = TECsolTab._v_attrs['r_0']
     height = TECsolTab._v_attrs['height']
     order = TECsolTab._v_attrs['order']
-    pp_sf = solFetcher(PPsolTab)
-    pp, axis_vals = pp_sf.getValues()
+    pp = tec_sf.t.piercepoint
 
     N_sources = len(source_names)
     N_times = len(times)
@@ -202,6 +203,12 @@ def  makeTECparmdb(H, solset, TECsolTab, PPsolTab, timewidths, freq, freqwidth):
             parms[parmname] = v.copy()
 
     for k in range(N_times):
+        D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
+        D = np.transpose(D, ( 1, 0, 2 )) - D
+        D2 = np.sum(D**2, axis=2)
+        C = -(D2 / (r_0**2))**(beta / 2.0) / 2.0
+        tec_fit_white = np.dot(pinv(C),
+            tec_screen[:, k, :].reshape(N_piercepoints))
         pp_idx = 0
         for src, source_name in enumerate(source_names):
             for sta, station_name in enumerate(station_names):
@@ -216,16 +223,17 @@ def  makeTECparmdb(H, solset, TECsolTab, PPsolTab, timewidths, freq, freqwidth):
                 parms[parmname]['values'][k, 0] = pp[k, pp_idx, 2]
 
                 parmname = 'TECfit_white:%s:%s' % (station_name, source_name)
-                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+                parms[parmname]['values'][k, 0] = tec_fit_white[pp_idx]
 
                 parmname = 'TECfit_white:0:%s:%s' % (station_name, source_name)
-                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+                parms[parmname]['values'][k, 0] = tec_fit_white[pp_idx]
 
                 parmname = 'TECfit_white:1:%s:%s' % (station_name, source_name)
-                parms[parmname]['values'][k, 0] = tec_fit_white[src, k, sta]
+                parms[parmname]['values'][k, 0] = tec_fit_white[pp_idx]
 
                 pp_idx += 1
-
+        pbar.update(ipbar)
+        ipbar += 1
 
     time_start = times[0] - timewidths[0]/2
     time_end = times[-1] + timewidths[-1]/2
@@ -257,7 +265,7 @@ if __name__=='__main__':
         action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Name of solution set to export '
         '(default=sol000)', type='string', default='sol000')
-    opt.add_option('-o', '--outfile', help='Filename of global/SB to export parmdb to '
+    opt.add_option('-o', '--outfile', help='Filename of globaldb/SB to export parmdb to '
         '(default=input globaldb/SB filename)', type='string', default=None)
     opt.add_option('-r', '--root', help='Root string to prepend to input parmdb '
         'instrument directories to make the output parmdb directories '
@@ -267,6 +275,7 @@ if __name__=='__main__':
     opt.add_option('-c', '--clobber', help='Clobber exising files '
         '(default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
+    global ipbar, pbar
 
     # Check options
     if len(args) != 2:
@@ -341,17 +350,20 @@ if __name__=='__main__':
     if len(solTabs) == 0:
         logging.critical('No solution tables found in input H5parm file')
         sys.exit(1)
+    pdbSolTypes = solTypes[:]
+    for solType in pdbSolTypes:
+        solTabList = getSoltabFromSolType(solType, solTabs)
+        if solTabList is None:
+            logging.warning("Solution type {0} not found in solution set {1}. Skipping.".format(solType, solsetName))
+            solTypes.remove(solType)
 
-    # Look for tecfitwhite and piercepoint solution types in the solset. If
-    # found, add them to solTypes
+    # Look for tecscreen solution table in the solset. If
+    # found, add to solTypes
     st_tec = None
-    st_pp = None
     for name, st in solTabs.iteritems():
-        if st._v_title == 'tecfitwhite':
+        if st._v_title == 'tecscreen':
             st_tec = st
-        if st._v_title == 'piercepoint':
-            st_pp = st
-    if st_tec is not None and st_pp is not None:
+    if st_tec is not None:
         solTypes.append('TECScreen')
     solTypes = list(set(solTypes))
     logging.info('Found solution types in input parmdb and H5parm: '+', '.join(solTypes))
@@ -363,7 +375,9 @@ if __name__=='__main__':
         if solType != 'TECScreen':
             len_sol[solType] = len(pdb.getNames(solType+':*'))
         else:
-            len_sol[solType] = 1
+            tec_sf = solFetcher(st_tec)
+            N_times = tec_sf.getAxisLen(axis='time')
+            len_sol[solType] = N_times
 
     for instrumentdbFile in instrumentdbFiles:
         out_instrumentdbFile = out_globaldbFile + '/' + outroot + '_' + instrumentdbFile.split('/')[-1]
@@ -397,15 +411,11 @@ if __name__=='__main__':
                 solEntries = pdb_in.getNames(solType+':*')
                 data = pdb_in.getValuesGrid(solType+':*')
                 data_out = data.copy()
-                warned_of_skip = False
                 for solEntry in solEntries:
 
                     pol, dir, ant, parm = parmdbToAxes(solEntry)
                     solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
                     if solTabList is None:
-                        if not warned_of_skip:
-                            logging.warning("Solution type {0} not found in solution set {1}. Skipping.".format(solType, solsetName))
-                        warned_of_skip = True
                         continue
                     if len(solTabList) > 1:
                         logging.warning('More than one solution table found in H5parm '
@@ -471,19 +481,14 @@ if __name__=='__main__':
                 #
                 # Get timewidths, freqwidth and freq from first (non-TEC, phase)
                 # solentry
-                logging.info('Filling TECScreen values:')
-                for nonTECsolType in solTypes:
+                for nonTECsolType in pdbSolTypes:
                     if nonTECsolType != 'TECScreen' and 'Phase' in nonTECsolType:
                         break
                 parmname = pdb_in.getNames(nonTECsolType+':*')[0]
                 timewidths = pdb_in.getValuesGrid(parmname)[parmname]['timewidths']
                 freqwidth = pdb.getValuesGrid(parmname)[parmname]['freqwidths'][0]
                 freq = pdb.getValuesGrid(parmname)[parmname]['freqs'][0]
-                parms = makeTECparmdb(h5parm_in, solset, st_tec, st_pp, timewidths, freq, freqwidth)
-
-                data_out = parms
-                pbar.update(ipbar)
-                ipbar += 1
+                data_out = makeTECparmdb(h5parm_in, solset, st_tec, timewidths, freq, freqwidth)
 
             pdb_out.addValues(data_out)
 
