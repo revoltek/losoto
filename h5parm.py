@@ -238,7 +238,7 @@ class h5parm():
         if soltab == None:
             raise Exception("Solution-table not specified while querying for solution-table.")
 
-        if not soltab in self.getSoltabs():
+        if not soltab in self.getSoltabs(solset):
             logging.critical("Solution-table "+soltab+" not found in solset "+solset+".")
             raise Exception("Solution-table "+soltab+" not found in solset "+solset+".")
 

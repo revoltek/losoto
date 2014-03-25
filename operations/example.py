@@ -95,12 +95,27 @@ def run( step, parset, H ):
         logging.info("Polarizations are: "+str(t.pol))
 
         # finally the getValuesIter allaws to iterate across all possible combinations of a set of axes
+        logging.info('Iteration on time/freq')
         for vals, coord in t.getValuesIter(returnAxes=['time','freq']):
-            logging.info('Iteration on '+str(coord))
             # writing back the solutions
             coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
             tw.setSelection(**coord)
             tw.setValues(vals)
+        logging.info('Iteration on time')
+        for vals, coord in t.getValuesIter(returnAxes=['time']):
+            # writing back the solutions
+            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
+            tw.setSelection(**coord)
+            tw.setValues(vals)   
+        logging.info('Iteration on dir after selection to 1 dir')
+        t.setSelection(dir='pointing') 
+        for vals, coord in t.getValuesIter(returnAxes=['dir']):
+            # writing back the solutions
+            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
+            tw.setSelection(**coord)
+            tw.setValues(vals)
+ 
+ 
     
    return 0 # if everything went fine, otherwise 1
 

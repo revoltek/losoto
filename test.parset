@@ -6,6 +6,9 @@ LoSoTo.ant = [CS001LBA]
 LoSoTo.pol = [XX]
 LoSoTo.dir = [aaa]
 
+LoSoTo.Steps.example.Operation = EXAMPLE
+
+########################################
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.ant = [CS001LBA]
 LoSoTo.Steps.plot.PlotType = 1D
@@ -24,8 +27,7 @@ LoSoTo.Steps.smooth.Operation = SMOOTH
 LoSoTo.Steps.smooth.Axes = [time, freq]
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 
-LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.example.Operation = EXAMPLE
+
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
