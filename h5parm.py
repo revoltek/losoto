@@ -474,6 +474,9 @@ class solHandler():
                     return
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
+                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back    
+                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
+
             # dict -> min max
             elif type(selVal) is dict:
                 axisVals = self.getAxisValues(axis)
@@ -491,9 +494,9 @@ class solHandler():
             else:
                 if not type(selVal) is list: selVal = [selVal]
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
-                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
+            
+                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back    
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
-                #if len(self.selection[idx]) == 1: self.selection[idx] = self.selection[idx][0]
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
             if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:

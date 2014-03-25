@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # This is an example operation for LoSoTo
-# to use with: ./losoto.py -v examples/single.h5 test.parset
 
 import logging
 from operations_lib import *

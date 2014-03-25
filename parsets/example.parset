@@ -1,3 +1,6 @@
+# Example parset
+# to use with: ./losoto.py -v examples/example.h5 test.parset
+
 LoSoTo.Steps = [example]
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
