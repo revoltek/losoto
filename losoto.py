@@ -94,19 +94,22 @@ if __name__=='__main__':
 
     # Possible operations, linked to relative function
     import operations
-    operations = { "RESET": operations.reset,
-                   "EXAMPLE": operations.example,
-    #               "CLOCKTEC": operations.clocktec,
-    #               "FLAG": operations.flag,
+    operations = { 
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
+                   "INTERP": operations.interp,
+                   "NORM": operations.norm,
+                   "PLOT": operations.plot,
+                   "RESET": operations.reset,
+                   "SMOOTH": operations.smooth,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
-                   "SMOOTH": operations.smooth,
-                   "INTERP": operations.interp,
-                   "PLOT": operations.plot,
-    #               "COPY": operations.copy,
-                   "NORM": operations.norm
+                   # example operation
+                   "EXAMPLE": operations.example
+                   # TBI operations
+                   #"CLOCKTEC": operations.clocktec,
+                   #"FLAG": operations.flag,
+                   #"COPY": operations.copy,
     }
 
     for step in steps:
