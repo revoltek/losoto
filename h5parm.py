@@ -383,7 +383,7 @@ class h5parm():
                 info += "\nNo tables\n"
             else:
                 # For each table, print length of each axis and history of
-                # operations applied to the table. As the getValuesAxis() call
+                # operations applied to the table.
                 for soltab_name in soltabs.keys():
                     try:
                         sf = solFetcher(soltabs[soltab_name])
