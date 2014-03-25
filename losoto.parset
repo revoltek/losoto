@@ -4,7 +4,7 @@
 # step variable override global variable
 
 # this are the global values
-LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, clip]
+LoSoTo.Steps = [reset, clocktec, tecfit, tecscreen, flag, smooth, interp, rescale, plot, clip, abs]
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [phase]

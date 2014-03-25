@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is an example operation for LoSoTo
+# to use with: ./losoto.py -v examples/single.h5 test.parset
 
 import logging
 from operations_lib import *
@@ -68,8 +69,8 @@ def run( step, parset, H ):
         logging.info("Get data using t.val")
         val = t.val
         logging.debug('shape of val: '+str(t.val.shape))
-        logging.info("$ val is "+str(val[0,100]))
-        flag = t.weight
+        logging.info("$ val is "+str(val[0,0,0,0,100]))
+        weight = t.weight
         time = t.time
         thisTime = t.time[100]
 
@@ -97,10 +98,9 @@ def run( step, parset, H ):
         for vals, coord in t.getValuesIter(returnAxes=['time','freq']):
             logging.info('Iteration on '+str(coord))
             # writing back the solutions
-            coord = removeKeys(coord, ['time','freq'])
+            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
             tw.setSelection(**coord)
             tw.setValues(vals)
-            break
     
    return 0 # if everything went fine, otherwise 1
 

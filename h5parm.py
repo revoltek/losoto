@@ -482,8 +482,9 @@ class solHandler():
             else:
                 if not type(selVal) is list: selVal = [selVal]
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
-                # remove list if only one element, necessary when slicying
-                if len(self.selection[idx]) == 1: self.selection[idx] = self.selection[idx][0]
+                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
+                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
+                #if len(self.selection[idx]) == 1: self.selection[idx] = self.selection[idx][0]
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
             if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:
@@ -712,14 +713,14 @@ class solFetcher(solHandler):
                     if axisName in returnAxes:
                         thisAxesVals[axisName] = self.getAxisValues(axisName)
                         # add a slice with all possible values
-                        refSelection.append(slice(0,self.getAxisLen(axisName)))
+                        refSelection.append(slice(0,self.getAxisLen(axisName),None))
                     else:
                         thisAxesVals[axisName] = self.getAxisValues(axisName)[axisIdx[i]]
                         # add this index to the refined selection, this will return a single value for this axis
-                        refSelection.append(tuple([axisIdx[i]]))
+                        refSelection.append(axisIdx[i])
                         i += 1
                 # costly command
-                data = np.squeeze(dataVals[tuple(refSelection)])
+                data = dataVals[tuple(refSelection)]
                 yield (data, thisAxesVals)
 
         return g()
