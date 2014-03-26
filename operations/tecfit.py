@@ -15,6 +15,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     """
     import numpy as np
     from pylab import find
+    import progressbar
     logging.info("Scanning for solutions needed for TEC fitting...")
 
     # Determine axis lengths
@@ -321,6 +322,7 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     from pylab import pinv, newaxis, find
     import numpy as np
     from lofar.expion import baselinefitting
+    import progressbar
 
     sols_list = []
     eq_list = []
