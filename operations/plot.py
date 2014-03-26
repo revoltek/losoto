@@ -298,7 +298,8 @@ def run( step, parset, H ):
                 height, order, beta_val, r_0, prefix=prefix, remove_gradient=True)
 
             # Plot and compare TEC values resulting from screen to those
-            # obtained from peeling
+            # obtained from peeling for each station and source
+            axesToPlot = ['time']
             sf_tscr = solFetcher(st_scr)
             ref_ant = sf_tscr.getAxisValues(axis='ant')[0]
 
