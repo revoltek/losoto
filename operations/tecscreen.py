@@ -29,7 +29,6 @@ def calculate_piercepoints(station_positions, source_positions, times, height = 
         '%fm' % station_positions[0,1], '%fm' % station_positions[0,2])
     me.doframe(position)
 
-
     pp = np.zeros((N_times, N_piercepoints,3))
     airmass = np.zeros((N_times, N_piercepoints))
 
@@ -190,19 +189,22 @@ def run( step, parset, H ):
     """
     Fits a screen to TEC values derived by the TECFIT operation.
 
-    The TEC values are read from the specified tec-type soltab.
+    The TEC values are read from the specified tec soltab.
 
-    The results of the fit are stored in the specified tecfitwhite- and
-    piercepoint-type soltabs.
+    The results of the fit are stored in the specified tecscreen solution table.
+    These values are the screen TEC values per station per pierce point per
+    solution interval. The pierce point locations are stored in an auxiliary
+    array in the output solution table.
 
     TEC screens can be plotted with the PLOT operation by setting PlotType =
     TECScreen.
 
-    Note that the output screens are not normalized (any normalization was lost
-    due to the use of source-to-source phase gradients in the TECFIT operation).
-    Therefore, a direction-independent calibration must be done after exporting
-    the screens to a parmdb file, with the following settings in the BBS solve
-    step:
+    The H5parm_exporter.py tool can be used to export the screen to a parmdb
+    that BBS and the AWimager can use. Note, however, that the output screens
+    are not normalized properly (any normalization was lost due to the use of
+    source-to-source phase gradients in the TECFIT operation). Therefore, a
+    direction-independent calibration must be done after exporting the screens
+    to a parmdb file, with the following settings in the BBS solve step:
 
         Model.Ionosphere.Enable = T
         Model.Ionosphere.Type = EXPION

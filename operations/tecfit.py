@@ -350,13 +350,13 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     pbar = progressbar.ProgressBar(maxval=N_pairs).start()
     for i in range(N_sources):
         for j in range(i):
-            subband_selection = find(mask[i,:] * mask[j,:])
+            subband_selection = find(mask[i, :] * mask[j, :])
             if len(subband_selection) < nband_min:
                 continue
             source_pairs.append((i,j))
             p = phases[i, :, subband_selection, :] - phases[j, :, subband_selection, :]
             A = np.zeros((len(subband_selection), 1))
-            A[:,0] = 8.44797245e9/freqs[subband_selection]
+            A[:, 0] = 8.44797245e9/freqs[subband_selection]
 
             flags_source_pair = flags[i, :, subband_selection, :] * flags[j, :, subband_selection, :]
             constant_parms = np.zeros((1, N_stations), dtype = np.bool)
@@ -368,11 +368,11 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
                 p_0 = (init_sols[i, 0, :] - init_sols[j, 0, :])[newaxis,:]
 
             for t_idx in range(N_times):
-                x = p[:,:,t_idx].copy()
-                f = flags_source_pair[:,:,t_idx].copy()
+                x = p[:, :, t_idx].copy()
+                f = flags_source_pair[:, :, t_idx].copy()
                 if not propagate:
                     if init_sols_per_pair:
-                        p_0 = init_sols[k, t_idx, :][newaxis,:]
+                        p_0 = init_sols[k, t_idx, :][newaxis, :]
                     else:
                         p_0 = (init_sols[i, t_idx, :] - init_sols[j, 0, :])[newaxis, :]
                 sol = baselinefitting.fit(x, A, p_0, f, constant_parms)
@@ -404,7 +404,7 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
         logging.error('All sources have fewer than the required minimum number of bands.')
         return None, None, None, None
     pinvB = pinv(B)
-    r = np.dot(pinvB, sols.transpose([1,0,2]))
+    r = np.dot(pinvB, sols.transpose([1, 0, 2]))
     r = r[source_selection, :, :]
 
     return r, source_selection, sols, source_pairs
@@ -590,10 +590,22 @@ def run( step, parset, H ):
     Fit source-to-source phase gradients to obtain TEC values per direction.
 
     Phase solutions are assumed to be stored in solsets of the H5parm file, one
-    solset per band per field.
+    solset per band per field. All phase- or scalarphase-type solution tables
+    are used. If direction-independent solutions are found (in addition to the
+    direction-dependent ones), they are added, after averaging, the the
+    corresponding direction-dependent ones. Phase solutions are automatically
+    grouped by field and by band.
 
-    The TEC values are stored in the specified output soltab with type 'tec'.
+    The derived TEC values are stored in the specified output soltab of type
+    'tec', with one TEC value per station per direction per solution interval.
+    The TEC values are derived using the ``lofar.expion.baselinefitting.fit()``
+    function to fit a TEC value to the phases. The term that is minimized
+    includes all baselines, so there is no preferred reference station, and the
+    residual is computed as the complex number 1.0 - exp(1i phasedifference),
+    which is zero when the phase difference is a multiple of 2pi.
 
+    The TEC solution table may be used to derive TEC screens using the
+    TECSCREEN operation.
     """
     from h5parm import solFetcher, solWriter
     import numpy as np
@@ -628,10 +640,8 @@ def run( step, parset, H ):
     station_selection1 = find(np.sqrt(np.sum((station_positions - mean_position)**2, axis=1)) < dist_cut_m)
     station_selection = np.array([i for i in range(len(station_names)) if i in station_selection1 and station_names[i] not in excluded_stations])
 
-    # Fit a TEC value to the phase solutions per source pair. No search for the
+    # Fit a TEC value to the phase solutions per source pair. No iterative search for the
     # global minimum is done
-    search_tec = True
-    nsteps = 21
     if soln_type == 'scalarphase':
         r, source_selection, sols0, source_pairs = fit_tec_per_source_pair(phases0[:,station_selection,:,:], flags[:,station_selection,:,:], mask, freqs, propagate = True, nband_min=nband_min)
         if r is None:
@@ -646,7 +656,7 @@ def run( step, parset, H ):
         # take the mean of the two polarizations
         r = (r0+r1)/2
 
-    # Add stations by searching for global minimum in solution space
+    # Add stations by searching iteratively for global minimum in solution space
     station_selection, sols, r = add_stations(station_selection, phases0, phases1, flags, mask, station_names, station_positions, source_names, source_selection, times, freqs, r, nband_min=nband_min, soln_type=soln_type, nstations_max=nstations_max)
 
     # Save TEC values to the output solset
