@@ -9,25 +9,25 @@ from operations_lib import *
 logging.debug('Loading TECFIT module.')
 
 
-def collect_solutions(H, dirs=None, freq_tol=1e6):
+def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
     """
     Collects and returns phase solutions, etc. needed for fitting
     """
     import numpy as np
     from pylab import find
     import progressbar
+    import re
     logging.info("Scanning for solutions needed for TEC fitting...")
 
     # Determine axis lengths
     sources = []
     freqs = []
     stations = []
-    solsets = H.getSolsets().keys()
+    if solsets is None:
+        solsets = H.getSolsets().keys()
     N_times_max = 0
     first_solset = None
     for solset in solsets[:]:
-        if 'ion' in solset:
-            continue
         logging.info('  --Scanning solution set {0}...'.format(solset))
         has_phase_st = False
         soltabs = H.getSoltabs(solset)
@@ -38,7 +38,6 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                 logging.info('    --Scanning solution table {0}...'.format(soltab))
                 has_phase_st = True
                 solset_sources = H.getSou(solset)
-                # Ignore direction-independent soltabs
                 if len(solset_sources) == 1 and 'pointing' in solset_sources:
                     logging.info('      Found direction-independent solutions')
                     dir_indep = True
@@ -48,6 +47,8 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
                 else:
                     logging.info('      Found direction-dependent solutions')
                     dir_indep = False
+                    if first_solset is None:
+                        first_solset = solset
                 if not dir_indep:
                     soln_type_dirdep = soltabs[soltab]._v_title
                     logging.info('      Found sources: {0}'.format(H.getSou(solset).keys()))
@@ -97,6 +98,10 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     logging.info('  Number of stations: {0}'.format(N_stations))
     logging.info('  Number of times: {0}'.format(N_times))
     logging.info('  Number of freqs: {0}'.format(N_freqs))
+    if N_sources == 0 or N_stations == 0 or N_times == 0 or N_freqs == 0:
+        logging.error('No solutions found.')
+        return (None, None, None, None, None, None, None, None, None, None,
+            None, None)
 
     # Initialize the arrays
     freqwidths = np.zeros(N_freqs)
@@ -106,17 +111,14 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     phases1 = np.zeros((N_sources, N_stations, N_freqs, N_times))
     flags = np.ones((N_sources, N_stations, N_freqs, N_times))
     source_positions = np.zeros((N_sources, 2))
-    solset_array_dir_dep = np.chararray((N_sources, N_freqs), itemsize=100)
-    solset_array_dir_indep = np.chararray((N_freqs), itemsize=100)
+    solset_array_dir_dep = np.zeros((N_sources, N_freqs), dtype='|S100')
+    solset_array_dir_indep = np.zeros(N_freqs, dtype='|S100')
 
     # Populate the arrays
     for solset in solsets:
-        if 'ion' in solset:
-            continue
         source_dict = H.getSou(solset)
         sources = source_dict.keys()
         soltabs = H.getSoltabs(solset)
-        # TODO: restrict to soltabs with phase and amp only (e.g., exclude tec soltabs)
 
         for soltab in soltabs:
             t = solFetcher(soltabs[soltab])
@@ -152,9 +154,9 @@ def collect_solutions(H, dirs=None, freq_tol=1e6):
     for i, source1 in enumerate(source_names):
         for k in range(N_freqs):
             if m[i, k]:
-                solset_name = solset_array_dir_dep[i, k]
+                solset_name = str(solset_array_dir_dep[i, k])
                 soltab = H.getSoltab(solset=solset_name, soltab=soln_type_dirdep+'000')
-                solset_dir_indep_name = solset_array_dir_indep[k]
+                solset_dir_indep_name = str(solset_array_dir_indep[k])
                 source_dict = H.getSou(solset_name)
                 source_positions[i, ] = source_dict[source1]
 
@@ -346,14 +348,15 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     source_pairs = []
 
     k = 0
+    ipbar = 0
     logging.info('Fitting TEC values...')
-    pbar = progressbar.ProgressBar(maxval=N_pairs).start()
+    pbar = progressbar.ProgressBar(maxval=N_pairs*N_times).start()
     for i in range(N_sources):
         for j in range(i):
             subband_selection = find(mask[i, :] * mask[j, :])
             if len(subband_selection) < nband_min:
                 continue
-            source_pairs.append((i,j))
+            source_pairs.append((i, j))
             p = phases[i, :, subband_selection, :] - phases[j, :, subband_selection, :]
             A = np.zeros((len(subband_selection), 1))
             A[:, 0] = 8.44797245e9/freqs[subband_selection]
@@ -363,9 +366,9 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
             sols = np.zeros((N_times, N_stations), dtype = np.float)
 
             if init_sols_per_pair:
-                p_0 = init_sols[k, 0, :][newaxis,:]
+                p_0 = init_sols[k, 0, :][newaxis, :]
             else:
-                p_0 = (init_sols[i, 0, :] - init_sols[j, 0, :])[newaxis,:]
+                p_0 = (init_sols[i, 0, :] - init_sols[j, 0, :])[newaxis, :]
 
             for t_idx in range(N_times):
                 x = p[:, :, t_idx].copy()
@@ -376,10 +379,11 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
                     else:
                         p_0 = (init_sols[i, t_idx, :] - init_sols[j, 0, :])[newaxis, :]
                 sol = baselinefitting.fit(x, A, p_0, f, constant_parms)
-
                 if propagate:
                     p_0 = sol.copy()
                 sols[t_idx, :] = sol[0, :]
+                pbar.update(ipbar)
+                ipbar += 1
             sols = sols[:, :] - np.mean(sols[:, :], axis=1)[:, newaxis]
             weight = len(subband_selection)
             sols_list.append(sols*weight)
@@ -393,7 +397,6 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
             var_eq[j] = weight
             var_eq_list.append(var_eq)
             k += 1
-            pbar.update(k)
     pbar.finish()
 
     sols = np.array(sols_list)
@@ -437,6 +440,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask, station_names
         if len(station_selection1) >= nstations_max:
             return station_selection1, None, r
 
+    logging.info("Using fitting with iterative search for stations: {0}".format(station_names[stations_to_add]))
     q = r
     while len(stations_to_add)>0:
         D1 = D[stations_to_add[:,newaxis], station_selection1[newaxis,:]]
@@ -590,7 +594,7 @@ def run( step, parset, H ):
     Fit source-to-source phase gradients to obtain TEC values per direction.
 
     Phase solutions are assumed to be stored in solsets of the H5parm file, one
-    solset per band per field. All phase- or scalarphase-type solution tables
+    solset per band per field. Only phase- or scalarphase-type solution tables
     are used. If direction-independent solutions are found (in addition to the
     direction-dependent ones), they are added, after averaging, the the
     corresponding direction-dependent ones. Phase solutions are automatically
@@ -612,17 +616,20 @@ def run( step, parset, H ):
     from pylab import find
     import re
 
+    solsets = getParSolsets( step, parset, H )
     ants = getParAxis( step, parset, H, 'ant' )
     pols = getParAxis( step, parset, H, 'pol' )
     dirs = getParAxis( step, parset, H, 'dir' )
     nband_min = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MinBands"]), '8' ))
+    dist_cut_m = np.float(parset.getString('.'.join(["LoSoTo.Steps", step, "DistCut"]), '2e3' ))
     nstations_max = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MaxStations"]), '100' ))
     outSolset = parset.getString('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), '' ).split('/')[0]
     outSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), '' ).split('/')[1]
 
     # Collect solutions, etc. into arrays for fitting.
-    # At the moment, all solsets of H are searched for phase solutions.
-    phases0, phases1, flags, mask, station_names, station_positions, source_names, source_positions, freqs, times, pointing, soln_type = collect_solutions(H, dirs=dirs)
+    phases0, phases1, flags, mask, station_names, station_positions, source_names, source_positions, freqs, times, pointing, soln_type = collect_solutions(H, dirs=dirs, solsets=solsets)
+    if phases0 is None:
+        return 1
 
     # Build list of stations to include
     included_stations = []
@@ -634,21 +641,28 @@ def run( step, parset, H ):
     excluded_stations = [s for s in station_names if s not in included_stations]
 
     # Select stations to use for first pass
-    dist_cut_m = 3e3
-    logging.info("Excluding stations: {0}".format(np.sort(excluded_stations)))
+    if len(excluded_stations) > 0:
+        logging.info("Excluding stations: {0}".format(np.sort(excluded_stations)))
     mean_position = np.array([np.median(station_positions[:, 0]), np.median(station_positions[:, 1]), np.median(station_positions[:, 2])])
     station_selection1 = find(np.sqrt(np.sum((station_positions - mean_position)**2, axis=1)) < dist_cut_m)
     station_selection = np.array([i for i in range(len(station_names)) if i in station_selection1 and station_names[i] not in excluded_stations])
+    logging.info("Using normal fitting (no iterative search) for stations:\n{0}".format(station_names[station_selection]))
 
     # Fit a TEC value to the phase solutions per source pair. No iterative search for the
     # global minimum is done
     if soln_type == 'scalarphase':
-        r, source_selection, sols0, source_pairs = fit_tec_per_source_pair(phases0[:,station_selection,:,:], flags[:,station_selection,:,:], mask, freqs, propagate = True, nband_min=nband_min)
+        r, source_selection, sols0, source_pairs = fit_tec_per_source_pair(
+            phases0[:, station_selection, :, :], flags[:, station_selection, :, :],
+            mask, freqs, propagate=True, nband_min=nband_min)
         if r is None:
             return 1
     else:
-        r0, source_selection, sols0, source_pairs = fit_tec_per_source_pair(phases0[:,station_selection,:,:], flags[:,station_selection,:,:], mask, freqs, propagate = True, nband_min=nband_min)
-        r1, source_selection, sols1, source_pairs = fit_tec_per_source_pair(phases1[:,station_selection,:,:], flags[:,station_selection,:,:], mask, freqs, propagate = True, nband_min=nband_min)
+        r0, source_selection, sols0, source_pairs = fit_tec_per_source_pair(
+            phases0[:, station_selection, :, :], flags[:, station_selection, :, :],
+            mask, freqs, propagate=True, nband_min=nband_min)
+        r1, source_selection, sols1, source_pairs = fit_tec_per_source_pair(
+            phases1[:, station_selection, :, :], flags[:, station_selection, :, :],
+            mask, freqs, propagate=True, nband_min=nband_min)
 
         if r0 is None or r1 is None:
             return 1
@@ -657,7 +671,10 @@ def run( step, parset, H ):
         r = (r0+r1)/2
 
     # Add stations by searching iteratively for global minimum in solution space
-    station_selection, sols, r = add_stations(station_selection, phases0, phases1, flags, mask, station_names, station_positions, source_names, source_selection, times, freqs, r, nband_min=nband_min, soln_type=soln_type, nstations_max=nstations_max)
+    station_selection, sols, r = add_stations(station_selection, phases0,
+        phases1, flags, mask, station_names, station_positions, source_names,
+        source_selection, times, freqs, r, nband_min=nband_min,
+        soln_type=soln_type, nstations_max=nstations_max)
 
     # Save TEC values to the output solset
     solset = H.makeSolset(outSolset)
