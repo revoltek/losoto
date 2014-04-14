@@ -159,7 +159,7 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     rr -- array of TEC solutions
     times -- array of times
     height -- height of screen (m)
-    order -- order of screen (e.g., number of KL base vectors to keep)
+    order -- order of screen (i.e., number of KL base vectors to keep)
     r_0 -- scale size of phase fluctuations (m)
     beta -- power-law index for phase structure function (5/3 =>
         pure Kolmogorov turbulence)
@@ -349,17 +349,6 @@ def run( step, parset, H ):
         tec_screen_solset = tec_screen_st._v_parent._v_name
         H.H.create_carray('/'+tec_screen_solset+'/'+tec_screen_st._v_name,
             'piercepoint', obj=pp)
-
-        # Copy over peeling phase solutions
-        phases0 = soltab.peelphase0[:]
-        phases1 = soltab.peelphase1[:]
-        freqs = soltab.freq[:]
-        H.H.create_carray('/'+tec_screen_solset+'/'+tec_screen_st._v_name,
-            'peelphase0', obj=phases0)
-        H.H.create_carray('/'+tec_screen_solset+'/'+tec_screen_st._v_name,
-            'peelphase1', obj=phases1)
-        H.H.create_carray('/'+tec_screen_solset+'/'+tec_screen_st._v_name,
-            'freq', obj=freqs)
 
         # Add histories
         sw = solWriter(tec_screen_st)

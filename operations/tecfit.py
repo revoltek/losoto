@@ -530,7 +530,8 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
         if len(station_selection1) >= nstations_max:
             return station_selection1, r
 
-    logging.info("Using fitting with iterative search for remaining stations")
+    logging.info("Using fitting with iterative search for remaining stations "
+        "(up to {0} stations in total)".format(nstations_max))
     q = r
     while len(stations_to_add)>0:
         D1 = D[stations_to_add[:,newaxis], station_selection1[newaxis,:]]
@@ -625,7 +626,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                                     p_0[0, -1]))
                                 min_e = e
                                 p_0_best = p_0
-                                sols[t_idx, :] = (sol0[0,:] + sol1[0,:])/2
+                                sols[t_idx, :] = (sol0[0, :] + sol1[0, :])/2
                     else:
                         # Use previous init
                         x = p0[:, :, t_idx].copy()
@@ -642,7 +643,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                             sol1 -= np.mean(sol1)
                         else:
                             sol1 = sol0
-                        sols[t_idx, :] = (sol0[0,:] + sol1[0,:])/2
+                        sols[t_idx, :] = (sol0[0, :] + sol1[0, :])/2
 
                     ipbar += 1
                     pbar.update(ipbar)
@@ -782,9 +783,9 @@ def run( step, parset, H ):
         if i in station_selection1 and station_names[i] not in excluded_stations])
     if len(station_selection) > nstations_max:
         station_selection = station_selection[:nstations_max]
-    logging.info("Using normal fitting (no iterative search) for stations:"
-        "\n{0}".format(station_names[station_selection]))
-
+    logging.info("Using normal fitting (no iterative search) for {0} stations "
+        "within {1} km of the core:\n{2}".format(len(station_selection),
+        dist_cut_m/1000.0, station_names[station_selection]))
 
     # Fit a TEC value to the phase solutions per source pair. No iterative search for the
     # global minimum is done
@@ -815,7 +816,7 @@ def run( step, parset, H ):
         phases1, flags, mask, station_names, station_positions, source_names,
         source_selection, times, freqs, r, nband_min=nband_min,
         soln_type=soln_type, nstations_max=nstations_max, excluded_stations=
-        excluded_stations, search_full_tec_range=True)
+        excluded_stations, search_full_tec_range=False)
 
     # Save TEC values to the output solset
     solset = H.makeSolset(outSolset)
@@ -841,17 +842,6 @@ def run( step, parset, H ):
         axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times, ants_out],
         vals=r[source_selection, :, :],
         weights=np.ones_like(r[source_selection, :, :]))
-    sw = solFetcher(tf_st)
-
-    # Store peeling phase solutions
-    phases0_filt = phases0[:, station_selection, :, :]
-    phases1_filt = phases1[:, station_selection, :, :]
-    tf_solset = tf_st._v_parent._v_name
-    H.H.create_carray('/'+tf_solset+'/'+tf_st._v_name, 'peelphase0',
-        obj=phases0_filt[source_selection, :, :, :])
-    H.H.create_carray('/'+tf_solset+'/'+tf_st._v_name, 'peelphase1',
-        obj=phases1_filt[source_selection, :, :, :])
-    H.H.create_carray('/'+tf_solset+'/'+tf_st._v_name, 'freq', obj=freqs)
 
     # Add history
     sw = solWriter(tf_st)

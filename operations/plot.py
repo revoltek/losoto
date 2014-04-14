@@ -287,6 +287,7 @@ def run( step, parset, H ):
 
     elif plotType.lower() == 'tecscreen':
         # Plot various TEC-screen properties
+
         for st_scr in openSoltabs(H, soltabs):
 
             # Check if soltab is a tecscreen table
@@ -321,128 +322,6 @@ def run( step, parset, H ):
             make_tec_screen_plots(pp, tec_screen, residuals,
                 np.array(station_positions), np.array(source_names), times,
                 height, order, beta_val, r_0, prefix=prefix,
-                remove_gradient=True, show_source_names=True)
-
-            # Plot and compare TEC values resulting from screen to those
-            # obtained from peeling for each station and source
-            axesToPlot = ['time']
-            if ants is not None and dirs is not None:
-                plot_tec = True
-            else:
-                plot_tec = False
-            plot_tec = False
-            if plot_tec:
-                logging.info('Plotting TEC values...')
-                sf_scr.setSelection(ant=ants, dir=dirs)
-                for vc_scr, vc_resid in zip(
-                        sf_scr.getValuesIter(returnAxes=['time']),
-                        sf_scr.getValuesIter(returnAxes=['time'], weight=True)):
-
-                    # Plot TEC values: peeling (top), screen (middle), and
-                    # residual (bottom)
-                    coord = vc_scr[1]
-                    title = 'TEC_'
-                    for axis in coord:
-                        if axis in axesToPlot: continue
-                        title += str(coord[axis]) + '_'
-                    title = title[:-1]
-
-                    f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, sharey=True)
-                    p1 = ax1.plot(coord[axesToPlot[0]], vc_scr[0]+vc_resid[0])
-                    p2 = ax2.plot(coord[axesToPlot[0]], vc_scr[0])
-                    p3 = ax3.plot(coord[axesToPlot[0]], vc_resid[0])
-                    f.subplots_adjust(hspace=0)
-                    ax1.set_title(title)
-                    ax1.set_ylabel('Fit (TECU)')
-                    ax2.set_ylabel('Screen (TECU)')
-                    ax3.set_ylabel('Residual (TECU)')
-                    if not (minZ == 0 and maxZ == 0):
-                        plt.ylim(ymin=minZ, ymax=maxZ)
-                    plt.xlabel('Time (s)')
-
-                    plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-                    plt.savefig(prefix+title+'.png')
-                    logging.info("Saving "+prefix+title+'.png')
-                plt.close(f)
-
-            # Plot and compare peeling phase solutions to phase screen solutions
-            plot_phase = False
-            if ants is not None and dirs is not None:
-                if len(ants) == 2 and len(dirs) == 2:
-                    plot_phase = True
-            if plot_phase:
-                logging.info('Plotting phase solutions...')
-                from operations.tecfit import unwrap_fft
-
-                phases0 = st_scr.peelphase0
-                iondatafile = '/data/scratch/rafferty/MSSS/iondata-L103931.npz'
-                iondata = np.load( iondatafile )
-                phases0 = iondata['phases0']
-
-                freqs = st_scr.freq[:]
-                source0 = dirs[0]
-                source1 = dirs[1]
-                ant0 = ants[0] # reference ant
-                ant1 = ants[1]
-                freq = freqs[0] # loop over freqs instead?
-                title = '_'.join([ant1, source0, source1])
-
-                ants = sf_scr.getAxisValues(axis='ant', ignoreSelection=True)
-                dirs = sf_scr.getAxisValues(axis='dir', ignoreSelection=True)
-                s0indx = dirs.tolist().index(source0)
-                s1indx = dirs.tolist().index(source1)
-                a0indx = ants.tolist().index(ant0)
-                a1indx = ants.tolist().index(ant1)
-                findx = freqs.tolist().index(freq)
-
-                # Find peeling phase differences. We need four phases:
-                #   1. Phase for ant1 and src0
-                #   2. Phase for ant1 and src1
-                #   3. Phase for ant0 and src0 (ref ant)
-                #   4. Phase for ant0 and src1 (ref ant)
-                #
-                # Total phase difference is then:
-                #   tot = (1 - 3) - (2 - 4)
-                #
-                # Phase array shape is (N_sources, N_stations, N_freqs, N_times).
-                phase_s0_a0 = phases0[s0indx, a0indx, findx, :]
-                phase_s1_a0 = phases0[s1indx, a0indx, findx, :]
-                phase_s0_a1 = phases0[s0indx, a1indx, findx, :]
-                phase_s1_a1 = phases0[s1indx, a1indx, findx, :]
-                phase_s0 = (phase_s0_a1 - phase_s0_a0)
-                phase_s1 = (phase_s1_a1 - phase_s1_a0)
-                phase = (phase_s0_a1 - phase_s0_a0) - (phase_s1_a1 - phase_s1_a0)
-                r, axis_vals = sf_scr.getValues()
-                time = axis_vals['time']
-
-                # Find screen phases.
-                sf_scr.setSelection(ant=ant1, dir=source0)
-                screen0 = sf_scr.getValues()
-                screen_s0_a1 = 8.44797245e9 / freq * np.array(screen0[0]).squeeze()
-                sf_scr.setSelection(ant=ant1, dir=source1)
-                screen1 = sf_scr.getValues()
-                screen_s1_a1 = 8.44797245e9 / freq * np.array(screen1[0]).squeeze()
-                sf_scr.setSelection(ant=ant0, dir=source0)
-                screen_ref0 = sf_scr.getValues()
-                screen_s0_a0 = 8.44797245e9 / freq * np.array(screen_ref0[0]).squeeze()
-                sf_scr.setSelection(ant=ant0, dir=source1)
-                screen_ref1 = sf_scr.getValues()
-                screen_s1_a0 = 8.44797245e9 / freq * np.array(screen_ref1[0]).squeeze()
-                screen_phase = (screen_s0_a1 - screen_s0_a0) - (screen_s1_a1 - screen_s1_a0)
-                resid_phase = phase - screen_phase
-                resid_phase = (resid_phase + np.pi) % (2*np.pi) - np.pi
-
-                f, (ax1, ax2, ax3) = plt.subplots(3, sharex=True, sharey=True)
-                p1 = ax1.plot(time, unwrap_fft(phase))
-                p2 = ax2.plot(time, unwrap_fft(screen_phase))
-                p3 = ax3.plot(time, resid_phase)
-                f.subplots_adjust(hspace=0)
-                plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-                ax1.set_ylabel('Peel (rad)')
-                ax2.set_ylabel('Screen (rad)')
-                ax3.set_ylabel('Resid (rad)')
-                plt.savefig(prefix+title+'.png')
-                logging.info("Saving "+prefix+title+'.png')
-                plt.close(f)
+                remove_gradient=True, show_source_names=False)
 
     return 0
