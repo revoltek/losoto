@@ -11,7 +11,7 @@ logging.debug('Loading PLOT module.')
 
 def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     source_names, times, height, order, beta_val, r_0, prefix = 'frame_',
-    remove_gradient=True, show_source_names=False):
+    remove_gradient=True, show_source_names=False, min_tec=None, max_tec=None):
     """Makes plots of TEC screens
 
     Keyword arguments:
@@ -28,6 +28,8 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     prefix -- prefix for output file names
     remove_gradient -- fit and remove a gradient from each screen
     show_source_names -- label sources on screen plots
+    min_tec -- minimum TEC value for plot range
+    max_tec -- maximum TEC value for plot range
     """
     from pylab import kron, concatenate, pinv, norm, newaxis, normalize
     import matplotlib.pyplot as plt
@@ -128,8 +130,14 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
-    vmin = np.min([np.amin(screen), np.amin(fitted_tec1)])
-    vmax = np.max([np.amax(screen), np.amax(fitted_tec1)])
+    if min_tec is None:
+        vmin = np.min([np.amin(screen), np.amin(fitted_tec1)])
+    else:
+        vmin = min_tec
+    if max_tec is None:
+        vmax = np.max([np.amax(screen), np.amax(fitted_tec1)])
+    else:
+        vmax = max_tec
 
     logging.info('Plotting TEC screens...')
     fig, ax = plt.subplots(figsize=[7, 7])
@@ -319,9 +327,17 @@ def run( step, parset, H ):
             r_0 = st_scr._v_attrs['r_0']
             pp = sf_scr.t.piercepoint
 
+            if (minZ == 0 and maxZ == 0):
+                min_tec = None
+                max_tec = None
+            else:
+                min_tec = minZ
+                max_tec = maxZ
+
             make_tec_screen_plots(pp, tec_screen, residuals,
                 np.array(station_positions), np.array(source_names), times,
                 height, order, beta_val, r_0, prefix=prefix,
-                remove_gradient=True, show_source_names=False)
+                remove_gradient=True, show_source_names=False, min_tec=min_tec,
+                max_tec=max_tec)
 
     return 0
