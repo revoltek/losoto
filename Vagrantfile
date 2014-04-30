@@ -11,7 +11,7 @@ Vagrant::Config.run do |config|
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = "http://www.roe.ac.uk/~jsm/lofar_vm/LOFAR_precise64.box"
+  config.vm.box_url = "http://lofar.adrastea.es:8080/~jsm/LOFAR_VM.box"
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   # config.vm.boot_mode = :gui
