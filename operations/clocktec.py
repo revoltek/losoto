@@ -75,9 +75,6 @@ def run( step, parset, H ):
             ph=vals[:]
             stations=coord['ant']
             axes=[i for i in names if i in returnAxes]
-            print "STATIONS",stations.shape
-            print "bals",ph.shape
-            print "axes",axes
             clock,tec,offset,newstations=doFit(ph,freqs,stations,station_positions,axes)
             times=coord['time']
             tf_st = H.makeSoltab(solsetname, 'tec', 'tec',
