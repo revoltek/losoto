@@ -107,7 +107,7 @@ if __name__=='__main__':
                    # example operation
                    "EXAMPLE": operations.example
                    # TBI operations
-                   #"CLOCKTEC": operations.clocktec,
+                   "CLOCKTEC": operations.clocktec,
                    #"FLAG": operations.flag,
                    #"COPY": operations.copy,
     }
