@@ -105,7 +105,7 @@ if __name__=='__main__':
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
                    # example operation
-                   "EXAMPLE": operations.example
+                   "EXAMPLE": operations.example,
                    # TBI operations
                    "CLOCKTEC": operations.clocktec,
                    #"FLAG": operations.flag,
