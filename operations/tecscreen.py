@@ -13,6 +13,12 @@ def calculate_piercepoints(station_positions, source_positions, times, height = 
     """
     Returns array of piercepoint locations and airmass values for a
     screen at the given height (in m)
+
+    Keyword arguments:
+    station_positions -- array of station positions
+    source_positions -- array of source positions
+    times -- array of times
+    height -- height of screen (m)
     """
     import pyrap.measures
     import numpy as np
@@ -28,7 +34,6 @@ def calculate_piercepoints(station_positions, source_positions, times, height = 
     position = me.position('ITRF', '%fm' % station_positions[0,0],
         '%fm' % station_positions[0,1], '%fm' % station_positions[0,2])
     me.doframe(position)
-
 
     pp = np.zeros((N_times, N_piercepoints,3))
     airmass = np.zeros((N_times, N_piercepoints))
@@ -64,7 +69,12 @@ def calculate_piercepoints(station_positions, source_positions, times, height = 
 def calc_piercepoint(pos, direction, height):
     """
     Calculates pierce point locations and airmass values for given station
-    position, source direction, and height
+    position, source direction, and height (in m)
+
+    Keyword arguments:
+    pos -- array of station positions
+    direction -- array of source directions
+    height -- height of screen (m)
     """
     import numpy as np
     pp = np.zeros(3)
@@ -139,7 +149,20 @@ def calc_piercepoint(pos, direction, height):
 def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     height, order, r_0, beta):
     """
-    Fits a screen to given TEC values
+    Fits a screen to given TEC values using Karhunen-Lo`eve base vectors
+
+    Keyword arguments:
+    station_names -- array of station names
+    source_names -- array of source names
+    pp -- array of piercepoint locations
+    airmass -- array of airmass values
+    rr -- array of TEC solutions
+    times -- array of times
+    height -- height of screen (m)
+    order -- order of screen (i.e., number of KL base vectors to keep)
+    r_0 -- scale size of phase fluctuations (m)
+    beta -- power-law index for phase structure function (5/3 =>
+        pure Kolmogorov turbulence)
     """
     import numpy as np
     from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
@@ -153,8 +176,8 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     tec_fit_all = np.zeros((N_times, N_sources, N_stations))
     residual_all = np.zeros((N_times, N_sources, N_stations))
 
-    A = concatenate([kron(eye(N_sources), np.ones((N_stations,1))),
-        kron(np.ones((N_sources,1)), eye(N_stations))], axis=1)
+    A = concatenate([kron(eye(N_sources), np.ones((N_stations, 1))),
+        kron(np.ones((N_sources, 1)), eye(N_stations))], axis=1)
 
     N_piercepoints = N_sources * N_stations
     P = eye(N_piercepoints) - np.dot(np.dot(A, pinv(np.dot(A.T, A))), A.T)
@@ -162,7 +185,7 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     for k in range(N_times):
-        D = np.resize(pp[k,:,:], (N_piercepoints, N_piercepoints, 3))
+        D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
         D = np.transpose(D, (1, 0, 2)) - D
         D2 = np.sum(D**2, axis=2)
         C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
@@ -176,7 +199,7 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
         rr1 = np.dot(P, rr[:, k])
         tec_fit = np.dot(U[:, :order], np.dot(pinvB, rr1))
         tec_fit_all[k, :, :] = tec_fit.reshape((N_sources, N_stations))
-        residual = np.dot(B, np.dot(pinvB, rr1)) - rr1
+        residual =  rr1 - np.dot(B, np.dot(pinvB, rr1))
         residual_all[k, :, :] = residual.reshape((N_sources, N_stations))
 
         pbar.update(ipbar)
@@ -190,19 +213,22 @@ def run( step, parset, H ):
     """
     Fits a screen to TEC values derived by the TECFIT operation.
 
-    The TEC values are read from the specified tec-type soltab.
+    The TEC values are read from the specified tec soltab.
 
-    The results of the fit are stored in the specified tecfitwhite- and
-    piercepoint-type soltabs.
+    The results of the fit are stored in the specified tecscreen solution table.
+    These values are the screen TEC values per station per pierce point per
+    solution interval. The pierce point locations are stored in an auxiliary
+    array in the output solution table.
 
     TEC screens can be plotted with the PLOT operation by setting PlotType =
     TECScreen.
 
-    Note that the output screens are not normalized (any normalization was lost
-    due to the use of source-to-source phase gradients in the TECFIT operation).
-    Therefore, a direction-independent calibration must be done after exporting
-    the screens to a parmdb file, with the following settings in the BBS solve
-    step:
+    The H5parm_exporter.py tool can be used to export the screen to a parmdb
+    that BBS and the AWimager can use. Note, however, that the output screens
+    are not normalized properly (any normalization was lost due to the use of
+    source-to-source phase gradients in the TECFIT operation). Therefore, a
+    direction-independent calibration must be done after exporting the screens
+    to a parmdb file, with the following settings in the BBS solve step:
 
         Model.Ionosphere.Enable = T
         Model.Ionosphere.Type = EXPION
@@ -213,9 +239,8 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
     outSoltabs = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), [] )
-    height = np.float(parset.getString('.'.join(["LoSoTo.Steps", step, "Height"]), '200' ))
+    height = np.array(parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "Height"]), [200e3] ))
     order = int(parset.getString('.'.join(["LoSoTo.Steps", step, "Order"]), '15' ))
-    logging.info('Using height = {0} m and order = {1}'.format(height, order))
 
     # Load TEC values from TECFIT operation
     indx = 0
@@ -228,62 +253,80 @@ def run( step, parset, H ):
         solset = soltabs[indx].split('/')[0]
         logging.info('Using input solution table: {0}'.format(soltabs[indx]))
         logging.info('Using output solution table: {0}'.format(outSoltabs[indx]))
-        station_dict = H.getAnt(solset)
-        station_names = station_dict.keys()
-        station_positions = station_dict.values()
-        source_dict = H.getSou(solset)
-        source_names = source_dict.keys()
-        source_positions = source_dict.values()
 
+        # Collect station and source names and positions and times, making sure
+        # that they are ordered correctly.
         t = solFetcher(soltab)
         r, axis_vals = t.getValues()
+        source_names = axis_vals['dir']
+        source_dict = H.getSou(solset)
+        source_positions = []
+        for source in source_names:
+            source_positions.append(source_dict[source])
+        station_names = axis_vals['ant']
+        station_dict = H.getAnt(solset)
+        station_positions = []
+        for station in station_names:
+            station_positions.append(station_dict[station])
         times = axis_vals['time']
+
+        # Get sizes
         N_sources = len(source_names)
         N_times = len(times)
         N_stations = len(station_names)
         N_piercepoints = N_sources * N_stations
-        rr = np.reshape(r.transpose([0,2,1]), [N_piercepoints, N_times])
+        rr = np.reshape(r.transpose([0, 2, 1]), [N_piercepoints, N_times])
 
-        # Find pierce points and airmass values for given screen height
-        pp, airmass = calculate_piercepoints(np.array(station_positions),
-            np.array(source_positions), np.array(times), height)
+        heights = set(np.linspace(height[0], height[-1], 5))
+        if len(heights) > 1:
+            logging.info('Trying range of heights: {0} m'.format(list(heights)))
+        for i, height in enumerate(heights):
+            # Find pierce points and airmass values for given screen height
+            logging.info('Using height = {0} m and order = {1}'.format(height, order))
+            pp, airmass = calculate_piercepoints(np.array(station_positions),
+                np.array(source_positions), np.array(times), height)
 
-        # Fit a TEC screen
-        r_0 = 10e3
-        beta = 5.0 / 3.0
-        tec_screen, residual = fit_screen_to_tec(station_names, source_names,
-            pp, airmass, rr, times, height, order, r_0, beta)
+            # Fit a TEC screen
+            r_0 = 10e3
+            beta = 5.0 / 3.0
+            tec_screen, residual = fit_screen_to_tec(station_names, source_names,
+                pp, airmass, rr, times, height, order, r_0, beta)
+            total_resid = np.sum(np.abs(residual))
+            if i > 0:
+                if total_resid < best_resid:
+                    tec_screen_best = tec_screen
+                    pp_best = pp
+                    height_best = height
+                    best_resid = total_resid
+            else:
+                tec_screen_best = tec_screen
+                pp_best = pp
+                height_best = height
+                best_resid = total_resid
+            if len(heights) > 1:
+                logging.info('Total residual for fit: {0}\n'.format(total_resid))
+
+        # Use screen with lowest total residual
+        if len(heights) > 1:
+            tec_screen = tec_screen_best
+            pp = pp_best
+            height = height_best
+            logging.info('Using height (with lowest total residual) of {0} m'.format(height))
 
         # Write the results to the output solset
-        dirs_out = []
-        dirs_pos = []
-        for s in range(N_sources):
-            dirs_out.append(source_names[s])
-
+        dirs_out = source_names
         times_out = times
-
-        ants_out = []
-        ants_pos = []
-        for s in range(N_stations):
-            ants_out.append(station_names[s])
+        ants_out = station_names
 
         # Make output tecscreen table
         outSolset = outSoltabs[indx].split('/')[0]
         outSoltab = outSoltabs[indx].split('/')[1]
         if not outSolset in H.getSolsets().keys():
             solsetTEC = H.makeSolset(outSolset)
-            dirs_out = []
-            dirs_pos = []
-            for s in range(N_sources):
-                dirs_out.append(source_names[s])
-                dirs_pos.append(source_positions[s])
+            dirs_pos = source_positions
             sourceTable = solsetTEC._f_get_child('source')
             sourceTable.append(zip(*(dirs_out, dirs_pos)))
-            ants_out = []
-            ants_pos = []
-            for s in range(N_stations):
-                ants_out.append(station_names[s])
-                ants_pos.append(station_positions[s])
+            ants_pos = station_positions
             antennaTable = solsetTEC._f_get_child('antenna')
             antennaTable.append(zip(*(ants_out, ants_pos)))
 
@@ -313,5 +356,3 @@ def run( step, parset, H ):
         indx += 1
 
     return 0
-
-

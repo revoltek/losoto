@@ -12,7 +12,6 @@ LoSoTo.ant = [] # to exclude stations, use ^((?!string1|string2|string3).)*$ to 
                 # with names containing string1, string2, or string3
 LoSoTo.pol = [XX, YY]
 LoSoTo.dir = [pointing]
-LoSoTo.axisName = []
 
 # parameters available in every step to overwrite the global selection
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]

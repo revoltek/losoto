@@ -270,8 +270,10 @@ if __name__=='__main__':
     opt.add_option('-r', '--root', help='Root string to prepend to input parmdb '
         'instrument directories to make the output parmdb directories '
         '(default=solution-set name)', type='string', default=None)
-    opt.add_option('-t', '--soltab', help='Solution tables to export; e.g., "amplitude000, phase000" '
-        '(default=all)', type='string', default='all')
+    opt.add_option('-t', '--soltab', help='Solution tables to export; e.g., '
+        '"amplitude000, phase000" (default=all)', type='string', default='all')
+    opt.add_option('-i', '--instrument', help='Name of the instrument table '
+        '(default=instrument*)', type='string', default='instrument*')
     opt.add_option('-c', '--clobber', help='Clobber exising files '
         '(default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
@@ -324,7 +326,7 @@ if __name__=='__main__':
 
     # Make a list of all available instrument tables (only 1 for a standard MS)
     instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
-        glob.glob(os.path.join(globaldbFile,'instrument*')) \
+        glob.glob(os.path.join(globaldbFile, options.instrument)) \
         if os.path.isdir(instrumentdbFile) ]
     if len(instrumentdbFiles) == 0:
         logging.critical('No parmdb table(s) found in input globaldb/SB file.')
