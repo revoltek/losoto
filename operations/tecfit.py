@@ -100,6 +100,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
     N_sources = len(set(source_names))
     N_stations = len(set(stations))
     N_times = N_times_max
+    times = times_max
     logging.info('Scanning complete')
     logging.info('  Number of sources: {0}'.format(N_sources))
     logging.info('  Number of stations: {0}'.format(N_stations))
