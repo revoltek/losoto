@@ -224,8 +224,12 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                                 times_max)
                         phases1[i, l, k, :] = v1_phase
 
-                    flags[i, l, k, :] = sf_dir_dep.getValues(weight=True,
-                        retAxesVals=False)
+                    if len(times_dir_dep) != N_times_max:
+                        # Set all weights to unity if interpolation was required
+                        flags[i, l, k, :] = 1.0
+                    else:
+                        flags[i, l, k, :] = sf_dir_dep.getValues(weight=True,
+                            retAxesVals=False)
                     if np.all(phases0[i, l, k, :] == 0.0):
                         # Check for flagged stations
                         flags[i, l, k, :] = 0.0
