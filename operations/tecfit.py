@@ -197,7 +197,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                             times_dir_indep, times_dir_dep)
                         v1_phase += v1_dir_indep_interp
                     if len(times_dir_dep) != N_times_max:
-                        phases0 = interpolate_phase(phases0, times_dir_indep,
+                        phases0 = interpolate_phase(phases0, times_dir_dep,
                             times_max)
                     phases0[i, l, k, :] = v1_phase
 
@@ -220,7 +220,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                                 times_dir_indep, times_dir_dep)
                             v1_phase += v1_dir_indep_interp
                         if len(times_dir_dep) != N_times_max:
-                            phases1 = interpolate_phase(phases1, times_dir_indep,
+                            phases1 = interpolate_phase(phases1, times_dir_dep,
                                 times_max)
                         phases1[i, l, k, :] = v1_phase
 
@@ -467,7 +467,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
     station_names, station_positions, source_names, source_selection,
     times, freqs, r, nband_min=2, soln_type='phase', nstations_max=None,
     excluded_stations=None, t_step=5, tec_step1=5, tec_step2=21,
-    search_full_tec_range=False):
+    search_full_tec_range=True):
     """
     Adds stations to TEC fitting using an iterative initial-guess search to
     ensure the global min is found
@@ -572,6 +572,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                     p1 = p1 - np.mean(p1, axis=0)[newaxis, :, :]
                 A = np.zeros((len(subband_selection), 1))
                 A[:, 0] = 8.44797245e9 / freqs[subband_selection]
+                sd = (0.1 * 30e6) / freqs[subband_selection] # standard deviation of phase solutions as function of frequency (rad)
 
                 flags_source_pair = flags[i, station_selection1[:,newaxis],
                     subband_selection[newaxis,:], :] * flags[j,
@@ -604,8 +605,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                             sol0 -= np.mean(sol0)
                             residual = np.mod(np.dot(A, sol0) - x.T + np.pi,
                                 2 * np.pi) - np.pi
-                            residual = residual[f.T==0]
-                            e = np.var(residual)
+                            e = np.var(residual[f.T==0])
 
                             if soln_type != 'scalarphase':
                                 x = p1[:,:,t_idx].copy()
