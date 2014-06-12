@@ -197,7 +197,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                             times_dir_indep, times_dir_dep)
                         v1_phase += v1_dir_indep_interp
                     if len(times_dir_dep) != N_times_max:
-                        phases0 = interpolate_phase(phases0, times_dir_dep,
+                        v1_phase = interpolate_phase(v1_phase, times_dir_dep,
                             times_max)
                     phases0[i, l, k, :] = v1_phase
 
@@ -220,7 +220,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                                 times_dir_indep, times_dir_dep)
                             v1_phase += v1_dir_indep_interp
                         if len(times_dir_dep) != N_times_max:
-                            phases1 = interpolate_phase(phases1, times_dir_dep,
+                            v1_phase = interpolate_phase(v1_phase, times_dir_dep,
                                 times_max)
                         phases1[i, l, k, :] = v1_phase
 
