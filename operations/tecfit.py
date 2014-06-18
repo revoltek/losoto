@@ -263,7 +263,7 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
     interpMethod -- interpolation method (see scipy.interpolate.griddata)
     """
     import numpy as np
-    import scipy.interpolate
+    from scipy.interpolate import interp1d
 
     phase1 = unwrap_fft(phase1)
 
@@ -274,7 +274,9 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
         valsNew = average_phase(phase1, nslots)
     else:
         # Interpolate
-        valsNew = scipy.interpolate.griddata(time1, phase1, time2, interpMethod)
+        f = interp1d(time1, phase1, kind=interpMethod, fill_value=0.0,
+            bounds_error=False)
+        valsNew = f(time2)
 
     return valsNew
 
