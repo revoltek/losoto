@@ -186,6 +186,10 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                     values_dir_dep = sf_dir_dep.getValues()
                     v1_phase = np.array(values_dir_dep[0]).squeeze()
                     times_dir_dep = values_dir_dep[1]['time']
+                    ind = np.where(~np.isnan(v1_phase))
+                    v1_phase = v1_phase[ind]
+                    times_dir_dep = times_dir_dep[ind]
+
                     if sf_dir_indep is not None:
                         if soln_type_dirindep == 'scalarphase':
                             sf_dir_indep.setSelection(ant=station)
@@ -194,11 +198,14 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                         values_dir_indep = sf_dir_indep.getValues()
                         v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                         times_dir_indep = values_dir_indep[1]['time']
+                        ind = np.where(~np.isnan(v1_dir_indep))
+                        v1_dir_indep = v1_dir_indep[ind]
+                        times_dir_indep = times_dir_indep[ind]
                         v1_dir_indep_interp = interpolate_phase(v1_dir_indep,
                             times_dir_indep, times_dir_dep)
                         v1_phase += v1_dir_indep_interp
                     if len(times_dir_dep) != N_times_max:
-                        v1_phase = interpolate_phase(v1_phase, times_dir_dep,
+                         v1_phase = interpolate_phase(v1_phase, times_dir_dep,
                             times_max)
                     phases0[i, l, k, :] = v1_phase
 
@@ -209,6 +216,10 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                         values_dir_dep = sf_dir_dep.getValues()
                         v1_phase = np.array(values_dir_dep[0]).squeeze()
                         times_dir_dep = values_dir_dep[1]['time']
+                        ind = np.where(~np.isnan(v1_phase))
+                        v1_phase = v1_phase[ind]
+                        times_dir_dep = times_dir_dep[ind]
+
                         if sf_dir_indep is not None:
                             if soln_type_dirindep == 'scalarphase':
                                 sf_dir_indep.setSelection(ant=station)
@@ -217,6 +228,9 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                             values_dir_indep = sf_dir_indep.getValues()
                             v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                             times_dir_indep = values_dir_indep[1]['time']
+                            ind = np.where(~np.isnan(v1_dir_indep))
+                            v1_dir_indep = v1_dir_indep[ind]
+                            times_dir_indep = times_dir_indep[ind]
                             v1_dir_indep_interp = interpolate_phase(v1_dir_indep,
                                 times_dir_indep, times_dir_dep)
                             v1_phase += v1_dir_indep_interp
