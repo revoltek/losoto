@@ -277,12 +277,15 @@ def run( step, parset, H ):
         N_piercepoints = N_sources * N_stations
         rr = np.reshape(r.transpose([0, 2, 1]), [N_piercepoints, N_times])
 
-        heights = set(np.linspace(height[0], height[-1], 5))
+        heights = list(set(np.linspace(height[0], height[-1], 5)))
+        heights.sort()
         if len(heights) > 1:
-            logging.info('Trying range of heights: {0} m'.format(list(heights)))
+            logging.info('Trying range of heights: {0} m'.format(heights))
         for i, height in enumerate(heights):
             # Find pierce points and airmass values for given screen height
             logging.info('Using height = {0} m and order = {1}'.format(height, order))
+            if height < 100e3:
+                logging.warning("Height is less than 100e3 m.")
             pp, airmass = calculate_piercepoints(np.array(station_positions),
                 np.array(source_positions), np.array(times), height)
 

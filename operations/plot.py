@@ -81,15 +81,35 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
 
     extent = upper - lower
 
-    Nx = 25
+    residuals = residuals.transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
+    fitted_tec1 = tec_screen.transpose([0, 2, 1]).reshape(N_piercepoints, N_times) + residuals
+
+    Nx = 50
     Ny = int(extent[1] / extent[0] * np.float(Nx))
     xr = np.arange(lower[0], upper[0], extent[0]/Nx)
     yr = np.arange(lower[1], upper[1], extent[1]/Ny)
+    x = [] # x coordinates for plot (km)
+    y = [] # y coordinates for plot (km)
+    xs = [] # nearest screen x coordinates of pierce points (m)
+    ys = [] # # nearest screen y coordinates of pierce points (m)
+    for j in range(fitted_tec1.shape[0]):
+        x.append(pp1[j, 0] / 1000.0)
+        y.append(pp1[j, 1] / 1000.0)
+        xindx = np.where(np.array(xr) > pp1[j, 0])[0]
+        if len(xindx) == 0:
+            xindx = 0
+        else:
+            xindx = xindx[0]
+        yindx = np.where(np.array(yr) > pp1[j, 1])[0]
+        if len(yindx) == 0:
+            yindx = 0
+        else:
+            yindx = yindx[0]
+        xs.append(xindx)
+        ys.append(yindx)
+
     screen = np.zeros((Nx, Ny, N_times))
     gradient = np.zeros((Nx, Ny, N_times))
-
-    residuals = residuals.transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
-    fitted_tec1 = tec_screen.transpose([0, 2, 1]).reshape(N_piercepoints, N_times) + residuals
 
     logging.info('Calculating TEC screen images...')
     pbar = progressbar.ProgressBar(maxval=N_times).start()
@@ -100,33 +120,41 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
         D2 = np.sum(D**2, axis=2)
         C = -(D2 / r_0**2)**(beta_val / 2.0) / 2.0
         f = np.dot(pinv(C), tec_screen[:, k, :].reshape(N_piercepoints))
-        for i, x in enumerate(xr[0: Nx]):
-            for j, y in enumerate(yr[0: Ny]):
-                p = calc_piercepoint(np.dot(np.array([x, y]), np.array([east, north])), up, height)
+        for i, xi in enumerate(xr[0: Nx]):
+            for j, yi in enumerate(yr[0: Ny]):
+                p = calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
                 d2 = np.sum(np.square(pp[k, :, :] - p[0]), axis=1)
                 c = -(d2 / ( r_0**2 ))**(beta_val / 2.0) / 2.0
                 screen[i, j, k] = np.dot(c, f)
 
         # Fit and remove a gradient.
-        # Plot gradient in lower-left corner with its own color bar?
         if remove_gradient:
-            xs, ys = np.indices(screen.shape[0:2])
+            xscr, yscr = np.indices(screen.shape[0:2])
             zs = screen[:, :, k]
             XYZ = []
-            for xf, yf in zip(xs.flatten().tolist(), ys.flatten().tolist()):
+            for xf, yf in zip(xscr.flatten().tolist(), yscr.flatten().tolist()):
                 XYZ.append([xf, yf, zs[xf, yf]])
             XYZ = np.array(XYZ)
             a, b, c = fitPLaneLTSQ(XYZ)
-            grad_plane = a * xs + b * ys + c
+            grad_plane = a * xscr + b * yscr + c
             gradient[:, :, k] = grad_plane
             screen[:, :, k] = screen[:, :, k] - grad_plane
             screen[:, :, k] = screen[:, :, k] - np.mean(screen[:, :, k])
+
+            # Match fitted values to screen
             for t in range(fitted_tec1.shape[0]):
-                xs_pt = np.where(np.array(xr) > pp1[t, 0])[0][0]
-                ys_pt = np.where(np.array(yr) > pp1[t, 1])[0][0]
+                xs_pt = (pp1[t, 0] - lower[0]) / extent[0] * Nx
+                ys_pt = (pp1[t, 1] - lower[1]) / extent[1] * Ny
                 grad_plane_pt = a * xs_pt + b * ys_pt + c
                 fitted_tec1[t, k] = fitted_tec1[t, k] - grad_plane_pt
-            fitted_tec1[:, k] = fitted_tec1[:, k] - np.mean(fitted_tec1[:, k])
+
+            fitted_tec1_src = fitted_tec1[:, k].reshape((N_sources, N_stations))
+            xs_src = np.array(xs).reshape((N_sources, N_stations))
+            ys_src = np.array(ys).reshape((N_sources, N_stations))
+            for s in range(N_sources):
+                fitted_tec1_src[s, :] -= np.mean(fitted_tec1_src[s, :]) - np.mean(screen[xs_src[s, :], ys_src[s, :], k])
+
+            fitted_tec1[:, k] = fitted_tec1_src.reshape(N_piercepoints)
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
@@ -143,7 +171,18 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     fig, ax = plt.subplots(figsize=[7, 7])
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
+    sm = plt.cm.ScalarMappable(cmap=plt.cm.jet,
+        norm=normalize(vmin=vmin, vmax=vmax))
+    sm._A = []
+
     for k in range(N_times):
+        s = []
+        c = []
+        for j in range(fitted_tec1.shape[0]):
+            fit_screen_diff = abs(residuals[j, k])
+            s.append(max(20*fit_screen_diff/0.01, 10))
+            c.append(sm.to_rgba(fitted_tec1[j, k]))
+
         plt.clf()
         im = plt.imshow(screen.transpose([1, 0, 2])[:, :, k],
             cmap = plt.cm.jet,
@@ -152,24 +191,8 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
             extent = (xr[0]/1000.0, xr[-1]/1000.0, yr[0]/1000.0, yr[-1]/1000.0),
             vmin=vmin, vmax=vmax)
 
-        sm = plt.cm.ScalarMappable(cmap=plt.cm.jet,
-            norm=normalize(vmin=vmin, vmax=vmax))
-        sm._A = []
         cbar = plt.colorbar(im)
         cbar.set_label('TECU', rotation=270)
-
-        x = []
-        y = []
-        s = []
-        c = []
-        for j in range(fitted_tec1.shape[0]):
-            x.append(pp1[j, 0] / 1000.0)
-            y.append(pp1[j, 1] / 1000.0)
-            xs = np.where(np.array(xr) > pp1[j, 0])[0][0]
-            ys = np.where(np.array(yr) > pp1[j, 1])[0][0]
-            fit_screen_diff = abs(fitted_tec1[j, k] - screen[xs, ys, k])
-            s.append(max(20*fit_screen_diff/0.01, 10))
-            c.append(sm.to_rgba(fitted_tec1[j, k]))
 
         plt.scatter(x, y, s=s, c=c)
         if show_source_names:

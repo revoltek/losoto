@@ -16,7 +16,7 @@ def run( step, parset, H ):
     import scipy.interpolate
     import numpy as np
     from h5parm import solFetcher, solWriter
-    
+
     solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
     solTypes = getParSolTypes( step, parset, H )
@@ -34,7 +34,7 @@ def run( step, parset, H ):
     if interpMethod not in ["nearest", "linear", "cubic"]:
         logging.error('Interpolation method must be nearest, linear or cubic.')
         return 1
-    
+
     if rescale and medAxis == '':
         logging.error('A medAxis is needed for rescaling.')
         return 1
@@ -73,7 +73,7 @@ def run( step, parset, H ):
             # fill medAxis with the median value
             axis = cAxesNames.index(medAxis)
             calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
-              
+
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
 

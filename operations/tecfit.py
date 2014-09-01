@@ -100,6 +100,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
     N_sources = len(set(source_names))
     N_stations = len(set(stations))
     N_times = N_times_max
+    times = times_max
     logging.info('Scanning complete')
     logging.info('  Number of sources: {0}'.format(N_sources))
     logging.info('  Number of stations: {0}'.format(N_stations))
@@ -185,6 +186,10 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                     values_dir_dep = sf_dir_dep.getValues()
                     v1_phase = np.array(values_dir_dep[0]).squeeze()
                     times_dir_dep = values_dir_dep[1]['time']
+                    ind = np.where(~np.isnan(v1_phase))
+                    v1_phase = v1_phase[ind]
+                    times_dir_dep = times_dir_dep[ind]
+
                     if sf_dir_indep is not None:
                         if soln_type_dirindep == 'scalarphase':
                             sf_dir_indep.setSelection(ant=station)
@@ -193,11 +198,14 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                         values_dir_indep = sf_dir_indep.getValues()
                         v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                         times_dir_indep = values_dir_indep[1]['time']
+                        ind = np.where(~np.isnan(v1_dir_indep))
+                        v1_dir_indep = v1_dir_indep[ind]
+                        times_dir_indep = times_dir_indep[ind]
                         v1_dir_indep_interp = interpolate_phase(v1_dir_indep,
                             times_dir_indep, times_dir_dep)
                         v1_phase += v1_dir_indep_interp
                     if len(times_dir_dep) != N_times_max:
-                        phases0 = interpolate_phase(phases0, times_dir_indep,
+                         v1_phase = interpolate_phase(v1_phase, times_dir_dep,
                             times_max)
                     phases0[i, l, k, :] = v1_phase
 
@@ -208,6 +216,10 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                         values_dir_dep = sf_dir_dep.getValues()
                         v1_phase = np.array(values_dir_dep[0]).squeeze()
                         times_dir_dep = values_dir_dep[1]['time']
+                        ind = np.where(~np.isnan(v1_phase))
+                        v1_phase = v1_phase[ind]
+                        times_dir_dep = times_dir_dep[ind]
+
                         if sf_dir_indep is not None:
                             if soln_type_dirindep == 'scalarphase':
                                 sf_dir_indep.setSelection(ant=station)
@@ -216,16 +228,23 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                             values_dir_indep = sf_dir_indep.getValues()
                             v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                             times_dir_indep = values_dir_indep[1]['time']
+                            ind = np.where(~np.isnan(v1_dir_indep))
+                            v1_dir_indep = v1_dir_indep[ind]
+                            times_dir_indep = times_dir_indep[ind]
                             v1_dir_indep_interp = interpolate_phase(v1_dir_indep,
                                 times_dir_indep, times_dir_dep)
                             v1_phase += v1_dir_indep_interp
                         if len(times_dir_dep) != N_times_max:
-                            phases1 = interpolate_phase(phases1, times_dir_indep,
+                            v1_phase = interpolate_phase(v1_phase, times_dir_dep,
                                 times_max)
                         phases1[i, l, k, :] = v1_phase
 
-                    flags[i, l, k, :] = sf_dir_dep.getValues(weight=True,
-                        retAxesVals=False)
+                    if len(times_dir_dep) != N_times_max:
+                        # Set all weights to unity if interpolation was required
+                        flags[i, l, k, :] = 1.0
+                    else:
+                        flags[i, l, k, :] = sf_dir_dep.getValues(weight=True,
+                            retAxesVals=False)
                     if np.all(phases0[i, l, k, :] == 0.0):
                         # Check for flagged stations
                         flags[i, l, k, :] = 0.0
@@ -258,7 +277,7 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
     interpMethod -- interpolation method (see scipy.interpolate.griddata)
     """
     import numpy as np
-    import scipy.interpolate
+    from scipy.interpolate import interp1d
 
     phase1 = unwrap_fft(phase1)
 
@@ -269,7 +288,9 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
         valsNew = average_phase(phase1, nslots)
     else:
         # Interpolate
-        valsNew = scipy.interpolate.griddata(time1, phase1, time2, interpMethod)
+        f = interp1d(time1, phase1, kind=interpMethod, fill_value=0.0,
+            bounds_error=False)
+        valsNew = f(time2)
 
     return valsNew
 
@@ -422,7 +443,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
     station_names, station_positions, source_names, source_selection,
     times, freqs, r, nband_min=2, soln_type='phase', nstations_max=None,
     excluded_stations=None, t_step=5, tec_step1=5, tec_step2=21,
-    search_full_tec_range=False):
+    search_full_tec_range=True):
     """
     Adds stations to TEC fitting using an iterative initial-guess search to
     ensure the global min is found
@@ -527,6 +548,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                     p1 = p1 - np.mean(p1, axis=0)[newaxis, :, :]
                 A = np.zeros((len(subband_selection), 1))
                 A[:, 0] = 8.44797245e9 / freqs[subband_selection]
+                sd = (0.1 * 30e6) / freqs[subband_selection] # standard deviation of phase solutions as function of frequency (rad)
 
                 flags_source_pair = flags[i, station_selection1[:,newaxis],
                     subband_selection[newaxis,:], :] * flags[j,
@@ -559,8 +581,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                             sol0 -= np.mean(sol0)
                             residual = np.mod(np.dot(A, sol0) - x.T + np.pi,
                                 2 * np.pi) - np.pi
-                            residual = residual[f.T==0]
-                            e = np.var(residual)
+                            e = np.var(residual[f.T==0])
 
                             if soln_type != 'scalarphase':
                                 x = p1[:,:,t_idx].copy()

@@ -93,7 +93,7 @@ class h5parm():
 
             # add direction table
             logging.info('--Creating new source table.')
-            descriptor = np.dtype([('name', np.str_, 16),('dir', np.float32, 2)])
+            descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
             soltab = self.H.createTable(solset, 'source', descriptor, \
                     title = 'Source names and directions', expectedrows = 10)
             soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
@@ -474,7 +474,7 @@ class solHandler():
                     return
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
-                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back    
+                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
 
             # dict -> min max
@@ -494,8 +494,8 @@ class solHandler():
             else:
                 if not type(selVal) is list: selVal = [selVal]
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
-            
-                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back    
+
+                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
