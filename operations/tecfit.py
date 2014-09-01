@@ -274,51 +274,6 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
     return valsNew
 
 
-def unwrap_fft(phase, iterations=1):
-    """
-    Unwrap phase using Fourier techniques.
-
-    For details, see:
-    Marvin A. Schofield & Yimei Zhu, Optics Letters, 28, 14 (2003)
-
-    Keyword arguments:
-    phase -- array of phase solutions
-    iterations -- number of iterations to perform
-    """
-    import numpy as np
-
-    puRadius=lambda x : np.roll( np.roll(
-          np.add.outer( np.arange(-x.shape[0]/2+1,x.shape[0]/2+1)**2.0,
-                        np.arange(-x.shape[1]/2+1,x.shape[1]/2+1)**2.0 ),
-          x.shape[1]/2+1,axis=1), x.shape[0]/2+1,axis=0)+1e-9
-
-    idt,dt=np.fft.ifft2,np.fft.fft2
-    puOp=lambda x : idt( np.where(puRadius(x)==1e-9,1,puRadius(x)**-1.0)*dt(
-          np.cos(x)*idt(puRadius(x)*dt(np.sin(x)))
-         -np.sin(x)*idt(puRadius(x)*dt(np.cos(x))) ) )
-
-    def phaseUnwrapper(ip):
-       mirrored=np.zeros([x*2 for x in ip.shape])
-       mirrored[:ip.shape[0],:ip.shape[1]]=ip
-       mirrored[ip.shape[0]:,:ip.shape[1]]=ip[::-1,:]
-       mirrored[ip.shape[0]:,ip.shape[1]:]=ip[::-1,::-1]
-       mirrored[:ip.shape[0],ip.shape[1]:]=ip[:,::-1]
-
-       return (ip+2*np.pi*
-             np.round((puOp(mirrored).real[:ip.shape[0],:ip.shape[1]]-ip)
-             /2/np.pi))
-
-    phase2D = phase[:, None]
-    i = 0
-    if iterations < 1:
-        interations = 1
-    while i < iterations:
-        i += 1
-        phase2D = phaseUnwrapper(phase2D)
-
-    return phase2D[:, 0]
-
-
 def average_phase(phase, nslots, times=None):
     """Averages input phases over nslots time slots
 
