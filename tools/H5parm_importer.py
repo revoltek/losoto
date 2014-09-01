@@ -134,7 +134,7 @@ if __name__=='__main__':
     solset = h5parm.makeSolset(solsetName)
 
     # Create tables using the first instrumentdb
-    # TODO: is there a better solution which check all the instrumentdbs?
+    # TODO: all the instrument tables should be checked
     pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
 
     solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))

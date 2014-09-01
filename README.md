@@ -7,6 +7,7 @@ Authors:
 * Marting Hardcastle
 * Maaijke Mevius
 * Bas van der Tol
+* Jose Sabater Montes
 
 Contents:
 * __doc/__: documentation
