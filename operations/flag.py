@@ -9,7 +9,7 @@ from operations_lib import *
 logging.debug('Loading FLAG module.')
 
 
-def smooth(data, times, window = 60., order = 1, max_gap = 5.*60 ):
+def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
     """
     Remove a trend from the data
     window = in timestamps, sliding window dimension
@@ -31,7 +31,7 @@ def smooth(data, times, window = 60., order = 1, max_gap = 5.*60 ):
         # check and remove big gaps in data
         if ( len( data_offsets ) > 1 ):
           ddata_offsets = data_offsets[ 1 : ] - data_offsets[ : -1 ]
-          sel = np.where( ddata_offsets > max_gap * 60. )[0]
+          sel = np.where( ddata_offsets > max_gap )[0]
           if ( len( sel ) > 0 ):
             min_data_index = 0
             max_data_index = len( data_offsets )
@@ -67,7 +67,7 @@ def smooth(data, times, window = 60., order = 1, max_gap = 5.*60 ):
     return final_data
 
 
-def outlier_rej(val, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.):
+def outlier_rej(val, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60.):
     """
     Reject outliers using a running median
     val = the array (avg must be 0)
@@ -120,7 +120,7 @@ def run( step, parset, H ):
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
     window = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Window"]), 10. )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
-    maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5. )
+    maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5.*60. )
     
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
@@ -144,12 +144,13 @@ def run( step, parset, H ):
 
         for vals, coord in sf.getValuesIter(returnAxes=axisToFlag):
 
-            # if phase, then unwrap
-            if 
-                vals_unwrap = unwrap_phase(vals)
+            # if phase, then unwrap and flag
+            if sf.getType() == 'phase' or sf.getType() == 'scalarphase':
+                vals_unwrap = unwrap_fft(vals)
+                flags, rms = outlier_rej(vals_unwrap, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
+            else:
+                flags, rms = outlier_rej(vals, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
 
-            # clipping
-            flags, rms = outlier_rej(vals, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
             logging.info('Final rms: '+str(rms))
             np.putmask(vals, flags, np.nan)
         
