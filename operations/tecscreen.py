@@ -340,7 +340,7 @@ def run( step, parset, H ):
             antennaTable.append(zip(*(ants_out, ants_pos)))
 
         # Store tecscreen values. The residual values are stored in the weights
-        # table
+        # table. Flagged values of the screen have weights set to 0.0.
         vals = tec_screen.transpose([1, 0, 2])
         weights = residual.transpose([1, 0, 2])
         tec_screen_st = H.makeSoltab(outSolset, 'tecscreen', outSoltab,
