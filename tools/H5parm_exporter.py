@@ -452,6 +452,12 @@ if __name__=='__main__':
                     else:
                         val = sf.getValues()[0]
 
+                    # Apply flags
+                    weights = sf.getValues(weight=True)[0]
+                    flags = np.zeros(shape=weights.shape, type=bool)
+                    flags[np.where(weights == 0)] = True
+                    np.putmask(val, flags, np.nan)
+
                     # Match the frequency or frequencies of instrumentdb under
                     # consideration
                     sffreqs = sf.freq

@@ -457,12 +457,12 @@ class solHandler():
                                                 for axisName in self.getAxesNames()]
 
         for axis, selVal in args.iteritems():
+            # if None continue and keep all the values
+            if selVal == None: continue
+
             if not axis in self.getAxesNames():
                 logging.error("Cannot select on axis "+axis+", it doesn't exist.")
                 return
-
-            # if None continue and keep all the values
-            if selVal == None: continue
 
             # find the index of the working axis
             idx = self.getAxesNames().index(axis)

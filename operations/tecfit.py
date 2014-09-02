@@ -245,6 +245,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                     else:
                         flags[i, l, k, :] = sf_dir_dep.getValues(weight=True,
                             retAxesVals=False)
+
                     if np.all(phases0[i, l, k, :] == 0.0):
                         # Check for flagged stations
                         flags[i, l, k, :] = 0.0
@@ -718,6 +719,12 @@ def run( step, parset, H ):
     """
     from h5parm import solFetcher, solWriter
     import numpy as np
+    # Switch to the Agg backend to prevent problems with pylab imports when
+    # DISPLAY env. variable is not set
+    import os
+    if 'DISPLAY' not in os.environ:
+        import matplotlib
+        matplotlib.use("Agg")
     from pylab import find
     import re
 
