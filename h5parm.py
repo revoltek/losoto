@@ -16,13 +16,13 @@ if int(tables.__version__.split('.')[0]) < 3:
 
 class h5parm():
 
-    def __init__(self, h5parmFile, readonly = True, complevel = 5, complib='lzo'):
+    def __init__(self, h5parmFile, readonly = True, complevel = 5, complib='zlib'):
         """
         Keyword arguments:
         h5parmFile -- H5parm filename
         readonly -- if True the table is open in readonly mode (default=True)
         complevel -- compression level from 0 to 9 (default=5) when creating the file
-        complib -- library for compression: lzo, zlib, bzip2 (default=lzo)
+        complib -- library for compression: lzo, zlib, bzip2 (default=zlib)
         """
         if os.path.isfile(h5parmFile):
             if tables.is_pytables_file(h5parmFile) == None:
@@ -150,7 +150,7 @@ class h5parm():
         axesVals -- list with the axes values
         chunkShape -- list with the chunk shape
         vals --
-        weights --
+        weights -- 0->FLAGGED, 1->MAX_WEIGHT
         parmdbType -- original parmdb solution type
         """
 

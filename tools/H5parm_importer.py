@@ -260,21 +260,27 @@ if __name__=='__main__':
 
         pbar.finish()
         if solType == '*RotationAngle':
+            weights[np.where(vals == 0.)] = 0 # flag where val=0
             h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
+            weights[np.where(vals == 0.)] = 0 # flag where val=0
             h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
+            weights[np.where(vals == 0.)] = 0 # flag where val=0
             h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'TEC':
+            weights[np.where(vals == 0.)] = 0 # flag where val=0
             h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
+            weights[np.where(vals == 1.)] = 0 # flag where val=1
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
+            weights[np.where(vals == 0.)] = 0 # flag where val=0
             h5parm.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 

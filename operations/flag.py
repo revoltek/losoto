@@ -152,12 +152,12 @@ def run( step, parset, H ):
                 flags, rms = outlier_rej(vals, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
 
             logging.info('Final rms: '+str(rms))
-            np.putmask(vals, flags, np.nan)
-        
+
             # writing back the solutions
             coord = removeKeys(coord, axisToFlag)
             sw.setSelection(**coord)
-            sw.setValues(vals)
+            # convert boolean flag to 01 binary array (0->flagged)
+            sw.setValues((~flags).astype(int), weigth=True)
 
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
     return 0

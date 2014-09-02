@@ -23,6 +23,9 @@ To run it on CEP1:
 * check the helps of the scripts in tools/ and of losoto.py
 * in case of problems write to fdg@hs.uni-hamburg.de
 
+Flag:
+LoSoTo has an internl flag system encoded in the weigth column. Weigths are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs in the H5parm_exporter.py
+
 Used packages:
 * PyTables version:  3.0.0
 * HDF5 version:      1.8.4
