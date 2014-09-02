@@ -313,7 +313,7 @@ def run( step, parset, H ):
                         plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
                     p = ax.plot(coord[axesToPlot[0]], vals)
-                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals, 'ro') # plot flagged points
+                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
