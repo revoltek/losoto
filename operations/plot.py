@@ -302,6 +302,7 @@ def run( step, parset, H ):
                     if not (minZ == 0 and maxZ == 0):
                         plt.zlim(zmin=minZ, zmax=maxZ)
                     plt.savefig(title+'.png')
+                    plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
                 if plotType == '1D':
@@ -314,6 +315,7 @@ def run( step, parset, H ):
                     plt.xlabel(axesToPlot[0])
                     p = ax.plot(coord[axesToPlot[0]], vals)
                     plt.savefig(prefix+title+'.png')
+                    plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
     elif plotType.lower() == 'tecscreen':
