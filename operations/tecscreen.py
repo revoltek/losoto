@@ -236,6 +236,12 @@ def run( step, parset, H ):
     import numpy as np
     import re
     from h5parm import solFetcher, solWriter
+    # Switch to the Agg backend to prevent problems with pylab imports when
+    # DISPLAY env. variable is not set
+    import os
+    if 'DISPLAY' not in os.environ:
+        import matplotlib
+        matplotlib.use("Agg")
 
     soltabs = getParSoltabs( step, parset, H )
     outSoltabs = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), [] )
