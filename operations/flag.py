@@ -5,6 +5,7 @@
 
 import logging
 from operations_lib import *
+import numpy as np
 
 logging.debug('Loading FLAG module.')
 
@@ -67,10 +68,11 @@ def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
     return final_data
 
 
-def outlier_rej(val, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60.):
+def outlier_rej(val, weights, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60.):
     """
     Reject outliers using a running median
     val = the array (avg must be 0)
+    weights = the weights to convert into flags
     time = array of seconds
     max_ncycles = maximum number of cycles
     max_rms = number of rms times for outlier flagging
@@ -78,7 +80,8 @@ def outlier_rej(val, time, max_ncycles = 10, max_rms = 3., window = 60., order =
 
     return: flags array and final rms
     """
-    flags = np.zeros(shape=val.shape, dtype=np.bool)
+    flags = np.zeros(shape=weights.shape, dtype=np.bool)
+    flags[np.where(weights == 0.)] == True # initialize flags to weights
     val_detrend = np.zeros(shape=val.shape)
 
     for i in xrange(max_ncycles):
@@ -107,7 +110,6 @@ def outlier_rej(val, time, max_ncycles = 10, max_rms = 3., window = 60., order =
 
 def run( step, parset, H ):
 
-    import numpy as np
     from h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
@@ -116,11 +118,11 @@ def run( step, parset, H ):
     dirs = getParAxis( step, parset, H, 'dir' )
 
     axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), '' )
-    maxCycles = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5. )
+    maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
-    window = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Window"]), 10. )
+    window = parset.getInt('.'.join(["LoSoTo.Steps", step, "Window"]), 10 )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
-    maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5.*60. )
+    maxGap = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
     
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
@@ -134,30 +136,31 @@ def run( step, parset, H ):
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
 
-        logging.info("Smoothing soltab: "+soltab.name)
+        logging.info("Smoothing soltab: "+soltab._v_name)
 
         sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
-        if axisToFlag not in sf.getAxes():
+        if axisToFlag not in sf.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')
             return 1
 
-        for vals, coord in sf.getValuesIter(returnAxes=axisToFlag):
+        for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
 
             # if phase, then unwrap and flag
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase':
                 vals_unwrap = unwrap_fft(vals)
-                flags, rms = outlier_rej(vals_unwrap, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
+                flags, rms = outlier_rej(vals_unwrap, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
             else:
-                flags, rms = outlier_rej(vals, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
+                flags, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
 
-            logging.info('Final rms: '+str(rms))
+            logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
+                    % (removeKeys(coord, axisToFlag), len(np.where(weights==0)[0])/float(len(weights)), sum(flags)/float(len(flags))))
 
             # writing back the solutions
             coord = removeKeys(coord, axisToFlag)
             sw.setSelection(**coord)
             # convert boolean flag to 01 binary array (0->flagged)
-            sw.setValues((~flags).astype(int), weigth=True)
+            sw.setValues((~flags).astype(int), weight=True)
 
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
     return 0

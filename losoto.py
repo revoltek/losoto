@@ -104,26 +104,27 @@ if __name__=='__main__':
                    "SMOOTH": operations.smooth,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
-                   # example operation
-                   "EXAMPLE": operations.example,
-                   # TBI operations
                    "CLOCKTEC": operations.clocktec,
-                   #"FLAG": operations.flag,
+                   "FLAG": operations.flag,
+                   # example operation
+                   "EXAMPLE": operations.example
                    #"COPY": operations.copy,
     }
 
     for step in steps:
-       operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
-       logging.info("--> Starting \'" + step + "\' step (operation: " + operation + ").")
-       start = time.clock()
-       returncode = operations[ operation ].run( step, parset, H )
-       if returncode != 0:
-          logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
-       else:
-          logging.info("Step \'" + step + "\' completed successfully.")
-       elapsed = (time.clock() - start)
-       logging.debug("Time for this step: "+str(elapsed)+" s.")
-
+        operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
+        if not operation in operations:
+            logging.error('Unkown operation: '+operation)
+            continue
+        logging.info("--> Starting \'" + step + "\' step (operation: " + operation + ").")
+        start = time.clock()
+        returncode = operations[ operation ].run( step, parset, H )
+        if returncode != 0:
+           logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
+        else:
+           logging.info("Step \'" + step + "\' completed successfully.")
+        elapsed = (time.clock() - start)
+        logging.debug("Time for this step: "+str(elapsed)+" s.")
 
     del H
     logging.info("Done.")

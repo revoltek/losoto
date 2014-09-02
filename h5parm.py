@@ -701,14 +701,15 @@ class solFetcher(solHandler):
         matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
         Keyword arguments:
         returnAxes -- axes of the returned array, all others will be cycled
-        weight -- if true store in the weights instead that in the vals (default: False)
+        weight -- if true return also the weights (default: False)
         Return:
-        1) ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
-        2) a dict with axis values in the form:
+        1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
+        2) (if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
+        3) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         """
-        if weight: dataVals = self.t.weight[tuple(self.selection)]
-        else: dataVals = self.t.val[tuple(self.selection)]
+        if weight: weigthVals = self.t.weight[tuple(self.selection)]
+        dataVals = self.t.val[tuple(self.selection)]
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]
@@ -733,6 +734,10 @@ class solFetcher(solHandler):
                         i += 1
                 # costly command
                 data = dataVals[tuple(refSelection)]
-                yield (data, thisAxesVals)
+                if weight:
+                    weights = weigthVals[tuple(refSelection)]
+                    yield (data, weights, thisAxesVals)
+                else:
+                    yield (data, thisAxesVals)
 
         return g()

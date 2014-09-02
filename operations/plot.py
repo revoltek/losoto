@@ -283,8 +283,7 @@ def run( step, parset, H ):
                 logging.error('Wrong number of axes.')
                 return 1
 
-            for vals, coord in sf.getValuesIter(returnAxes=axesToPlot):
-                # TODO: implement flag control, using different color?
+            for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
                 title = ''
                 for axis in coord:
@@ -314,6 +313,7 @@ def run( step, parset, H ):
                         plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
                     p = ax.plot(coord[axesToPlot[0]], vals)
+                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals, 'ro') # plot flagged points
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')

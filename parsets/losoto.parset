@@ -26,9 +26,14 @@ LoSoTo.Steps.clip.Operation = CLIP
 LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 
-# TBI
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Sigma = 5
+LoSoTo.Steps.flag.Axis = '' # axis to flag (e.g. 'time')
+LoSoTo.Steps.flag.MaxCycles = 5. # number of flagging cycles
+LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
+LoSoTo.Steps.flag.Window = 10. # window to remove trends (in timestamps)
+LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal
+LoSoTo.Steps.flag.MaxGap = 300. # maximum gaps allowed before fitting 2 trends (in timestamps)
+
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
