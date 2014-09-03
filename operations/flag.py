@@ -80,9 +80,10 @@ def outlier_rej(vals, weights, time, max_ncycles = 10, max_rms = 3., window = 60
 
     return: flags array and final rms
     """
+
     flags = np.zeros(shape=weights.shape, dtype=np.bool)
     orig_flags = np.zeros(shape=weights.shape, dtype=np.bool)
-    orig_flags[np.where(weights == 0.)] == True # initialize orig_flags to weights
+    orig_flags[np.where(weights == 0.)] = True # initialize orig_flags to weights
 
     for i in xrange(max_ncycles):
 
@@ -116,7 +117,7 @@ def outlier_rej(vals, weights, time, max_ncycles = 10, max_rms = 3., window = 60
             new_vals[ new_flags ] = vals_smoothed[ new_flags ]
             vals[ s ] = new_vals
 
-    return flags, vals, rms
+    return flags | orig_flags, vals, rms
 
 
 def run( step, parset, H ):
@@ -159,10 +160,17 @@ def run( step, parset, H ):
 
         for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
 
-            # if phase, then unwrap, flag and wrap again
+            # if phase, then convert to real/imag, run the flagger on those, and convert back to pahses
+            # best way to avoid unwrapping
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase' or sf.getType() == 'rotation':
-                flags, vals, rms = outlier_rej(unwrap(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
-                vals = (vals+np.pi) % (2*np.pi) - np.pi
+                re = 1. * np.cos(vals)
+                im = 1. * np.sin(vals)
+                flags_re, re, rms = outlier_rej(re, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                flags_im, im, rms = outlier_rej(im, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                vals = np.arctan2(im, re)
+                flags = flags_re | flags_im
+                #flags, vals, rms = outlier_rej(unwrap(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                #vals = (vals+np.pi) % (2*np.pi) - np.pi
             else:
                 flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
 
