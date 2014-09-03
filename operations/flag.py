@@ -61,9 +61,8 @@ def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
             if ( dim >= 2 ):
                 P[ : , 2 ] = data_offsets**2
             Pt = np.transpose( P )
-            smooth_data = np.dot( np.linalg.inv( np.dot( Pt, P ) ), np.dot( Pt, data_array ) )[ 0 ]
-          n = np.where( times == time )[0]
-          final_data[n] = smooth_data
+            smooth_data = np.dot( np.linalg.inv( np.dot( Pt, P ) ), np.dot( Pt, data_array ) )[0]
+          final_data[np.where( times == time )] = smooth_data
 
     return final_data
 
@@ -159,10 +158,10 @@ def run( step, parset, H ):
 
         for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
 
-            # if phase, then unwrap and flag
+            # if phase, then unwrap, flag and wrap again
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase':
-                vals_unwrap = unwrap_fft(vals)
-                flags, vals, rms = outlier_rej(vals_unwrap, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                flags, vals, rms = outlier_rej(unwrap_fft(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                vals = (vals+np.pi) % (2*np.pi) - np.pi
             else:
                 flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
 

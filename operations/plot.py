@@ -316,7 +316,10 @@ def run( step, parset, H ):
                     if not (minZ == 0 and maxZ == 0):
                         plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
-                    p = ax.plot(coord[axesToPlot[0]], vals)
+                    if sf.getType() == 'amplitude':
+                        p = ax.plot(coord[axesToPlot[0]], vals, 'k-')
+                    else:
+                        p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
                     p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
