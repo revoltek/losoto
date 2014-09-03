@@ -127,7 +127,7 @@ def getParAxis( step, parset, H, axisName ):
     # local val
     axisVals = parset.getString( stepOptName, '' )
     # if the user defined a vector, load it as a vector, otherwise keep string
-    if axisVals != '' and xisVals[0] == '[' and axisVals[-1] == ']':
+    if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
         axisVals = parset.getStringVector( stepOptName, [] )
 
     # global val
