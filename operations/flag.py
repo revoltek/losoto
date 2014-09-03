@@ -68,7 +68,7 @@ def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
     return final_data
 
 
-def outlier_rej(val, weights, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60.):
+def outlier_rej(vals, weights, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60., replace = False):
     """
     Reject outliers using a running median
     val = the array (avg must be 0)
@@ -77,35 +77,47 @@ def outlier_rej(val, weights, time, max_ncycles = 10, max_rms = 3., window = 60.
     max_ncycles = maximum number of cycles
     max_rms = number of rms times for outlier flagging
     window, order, max_gap = see "smooth"
+    replace = instead of flag it, replace the data point with the smoothed one
 
     return: flags array and final rms
     """
     flags = np.zeros(shape=weights.shape, dtype=np.bool)
-    flags[np.where(weights == 0.)] == True # initialize flags to weights
-    val_detrend = np.zeros(shape=val.shape)
+    orig_flags = np.zeros(shape=weights.shape, dtype=np.bool)
+    orig_flags[np.where(weights == 0.)] == True # initialize orig_flags to weights
 
     for i in xrange(max_ncycles):
 
         # smoothing (input with no flags!)
-        val_smoothed = smooth(val[~flags], time[~flags], window, order, max_gap)
-        val_detrend[~flags] = val[~flags] - val_smoothed
+        s = ~orig_flags & ~flags # selecting non-flagged data
+        vals_smoothed = smooth(vals[ s ], time[ s ], window, order, max_gap)
+        vals_detrend = vals[ s ] - vals_smoothed
         
         # median calc
-        rms =  1.4826 * np.median(abs(val_detrend[~flags]))
+        rms =  1.4826 * np.median( abs(vals_detrend) )
 
         # rejection  
-        flags[ ~flags ] = np.logical_or(flags[~flags], abs(val_detrend[~flags]) > max_rms * rms )
+        new_flags = abs(vals_detrend) > max_rms * rms
+        flags[ s ] = new_flags
 
+        # all is flagged? break
         if (flags == True).all():
             rms == 0.
             break
 
         # median calc
-        this_rms =  1.4826 * np.median(abs(val_detrend[~flags]))
+        this_rms =  1.4826 * np.median( abs(vals_detrend[ ~new_flags ]) )
+
+        # no flags? break
         if rms - this_rms == 0.:
             break
 
-    return flags, rms
+        # replace flagged values with smoothed ones
+        if replace:
+            new_vals = vals[ s ]
+            new_vals[ new_flags ] = vals_smoothed[ new_flags ]
+            vals[ s ] = new_vals
+
+    return flags, vals, rms
 
 
 def run( step, parset, H ):
@@ -123,6 +135,7 @@ def run( step, parset, H ):
     window = parset.getInt('.'.join(["LoSoTo.Steps", step, "Window"]), 10 )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
     maxGap = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
+    replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
@@ -149,18 +162,22 @@ def run( step, parset, H ):
             # if phase, then unwrap and flag
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase':
                 vals_unwrap = unwrap_fft(vals)
-                flags, rms = outlier_rej(vals_unwrap, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
+                flags, vals, rms = outlier_rej(vals_unwrap, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
             else:
-                flags, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap)
+                flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
 
-            logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
+            logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %%' \
                     % (removeKeys(coord, axisToFlag), len(np.where(weights==0)[0])/float(len(weights)), sum(flags)/float(len(flags))))
 
             # writing back the solutions
             coord = removeKeys(coord, axisToFlag)
             sw.setSelection(**coord)
-            # convert boolean flag to 01 binary array (0->flagged)
-            sw.setValues((~flags).astype(int), weight=True)
+            if replace:
+                # rewrite solutions (flagged values are overwritten)
+                sw.setValues(vals, weight=False)
+            else:
+                # convert boolean flag to 01 binary array (0->flagged)
+                sw.setValues((~flags).astype(int), weight=True)
 
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
     return 0
