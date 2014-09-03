@@ -770,29 +770,46 @@ def run( step, parset, H ):
         "within {1} km of the core:\n{2}".format(len(station_selection),
         dist_cut_m/1000.0, station_names[station_selection]))
 
-    # Fit a TEC value to the phase solutions per source pair. No iterative search for the
-    # global minimum is done
-    if soln_type == 'scalarphase':
-        r, source_selection = fit_tec_per_source_pair(
-            phases0[:, station_selection, :, :],
-            flags[:, station_selection, :, :],
-            mask, freqs, propagate=True, nband_min=nband_min)
-        if r is None:
-            return 1
-    else:
-        r0, source_selection = fit_tec_per_source_pair(
-            phases0[:, station_selection, :, :],
-            flags[:, station_selection, :, :],
-            mask, freqs, propagate=True, nband_min=nband_min)
-        r1, source_selection = fit_tec_per_source_pair(
-            phases1[:, station_selection, :, :],
-            flags[:, station_selection, :, :],
-            mask, freqs, propagate=True, nband_min=nband_min)
-        if r0 is None or r1 is None:
-            return 1
+    niter = 1
+    iter = 0
+    while iter < niter:
+        # Iterate to exclude bad stations/directions
+        iter += 1
 
-        # take the mean of the two polarizations
-        r = (r0 + r1) / 2
+        # Fit a TEC value to the phase solutions per source pair. No iterative search for the
+        # global minimum is done
+        if soln_type == 'scalarphase':
+            r, source_selection = fit_tec_per_source_pair(
+                phases0[:, station_selection, :, :],
+                flags[:, station_selection, :, :],
+                mask, freqs, propagate=True, nband_min=nband_min)
+            if r is None:
+                return 1
+        else:
+            r0, source_selection = fit_tec_per_source_pair(
+                phases0[:, station_selection, :, :],
+                flags[:, station_selection, :, :],
+                mask, freqs, propagate=True, nband_min=nband_min)
+            r1, source_selection = fit_tec_per_source_pair(
+                phases1[:, station_selection, :, :],
+                flags[:, station_selection, :, :],
+                mask, freqs, propagate=True, nband_min=nband_min)
+            if r0 is None or r1 is None:
+                return 1
+
+            # take the mean of the two polarizations
+            r = (r0 + r1) / 2
+
+        # Loop over sources to identify bad stations and remove them from the
+        # station_selection.
+        nsig = 2.5
+        for i in range(len(source_names)):
+            r_median = np.median(r[i, :, :], axis=1)
+            r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
+            for j, station_indx in enumerate(station_selection):
+                r_tot_meddiff[j] = np.sum(r[i, :, station_idx] - r_median)
+            good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
+        station_selection = station_selection[good_stations]
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
