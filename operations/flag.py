@@ -139,6 +139,7 @@ def run( step, parset, H ):
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
         return 1
+
     if order > 2 or order < 0:
         logging.error("Order must be 0 (mean), 1 (linear), 2 (cubic)")
         return 1

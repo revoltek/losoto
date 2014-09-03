@@ -7,36 +7,6 @@ import sys
 import logging
 from h5parm import solFetcher
 
-#def getParAnts( step, parset, H ):
-#    """
-#    Return the Ant array for this step.
-#    If more then one solset is involved, return the intersection
-#    The order is:
-#    * local step value
-#    * global value
-#    * default = all
-#    """
-#    allAnts = []
-#    for solset in getParSolsets(step, parset, H):
-#        allAnts.append(set(H.getAnt(solset).keys()))
-#    allAnts = list(set.intersection(*allAnts))
-#
-#    # local val
-#    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Ant" ] )
-#    ants = parset.getStringVector( stepOptName, [] )
-#
-#    # global val or default
-#    if ants == []:
-#        ants = parset.getStringVector( "LoSoTo.Ant", allAnts )
-#
-#    # sanity check
-#    for ant in ants[:]:
-#        if ant not in allAnts:
-#            logging.warning("Antenna \""+ant+"\" not found. Ignoring.")
-#            ants.remove(ant)
-#
-#    return ants
-
 
 def getParSolsets( step, parset, H ):
     """
@@ -144,38 +114,6 @@ def getParSolTypes( step, parset, H ):
     return solTypes
 
 
-#def getParDirs( step, parset, H ):
-#    """
-#    Return the directions array for this step.
-#        - check if at least one solset has this direction.
-#    The order is:
-#    * local step value
-#    * global value
-#    * default = []
-#    """
-#    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Dir" ] )
-#    # local val
-#    dirs = parset.getStringVector( stepOptName, [] )
-#
-#    # global val or default
-#    if dirs == []:
-#        dirs = parset.getStringVector( "LoSoTo.Dir", [] )
-#
-#    # check that directions are valid for at least one solset in step
-#    solsets = getParSolsets( step, parset, H )
-#    for dir in dirs[:]:
-#        found = False
-#        for solset in solsets:
-#            if dir in H.getSou(solset).keys():
-#                found = True
-#                break
-#        if not found:
-#            logging.warning("Direction \""+dir+"\" not found. Ignoring.")
-#            dirs.remove(dir)
-#
-#    return dirs
-
-
 def getParAxis( step, parset, H, axisName ):
     """
     Return the axis val array for this step.
@@ -187,31 +125,20 @@ def getParAxis( step, parset, H, axisName ):
     """
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName.lower() ] )
     # local val
-    axisVals = parset.getStringVector( stepOptName, [] )
+    axisVals = parset.getString( stepOptName, '' )
+    # if the user defined a vector, load it as a vector, otherwise keep string
+    if axisVals != '' and xisVals[0] == '[' and axisVals[-1] == ']':
+        axisVals = parset.getStringVector( stepOptName, [] )
 
     # global val
-    if axisVals == []:
-        axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
+    if axisVals == [] or axisVals == '':
+        axisVals = parset.getString( "LoSoTo."+axisName.lower(), '' )
+        # if the user defined a vector, load it as a vector, otherwise keep string
+        if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
+            axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
 
     # default val
-    if axisVals == []: axisVals = None
-
-    # check that pols are valid for at least one soltab in step
-#    solsets = getParSolsets( step, parset, H )
-#    for axisVal in axisVals[:]:
-#        found = False
-#        for solset in solsets:
-#            soltabs = H.getSoltabs(solset=solset)
-#            for soltab_name in soltabs.keys():
-#                sf = solFetcher(soltabs[soltab_name])
-#                if axisVal in sf.getValuesAxis(axisName):
-#                    found = True
-#                    break
-#            if found:
-#                break
-#        if not found:
-#            logging.warning("Values \""+axisVal+"\" not found. Ignoring.")
-#            axisVals.remove(axisVal)
+    if axisVals == [] or axisVals == '': axisVals = None
 
     return axisVals
 
@@ -243,7 +170,7 @@ def removeKeys( dic, keys = [] ):
     return dicCopy
 
 
-def unwrap_fft(phase, iterations=1):
+def unwrap_fft(phase, iterations=3):
     """
     Unwrap phase using Fourier techniques.
 
@@ -286,3 +213,36 @@ def unwrap_fft(phase, iterations=1):
         phase2D = phaseUnwrapper(phase2D)
 
     return phase2D[:, 0]
+
+
+def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
+    clip_range = [ 170., 180. ] ):
+    """
+    Unwrap the x array, if it is shorter than 2*window, use np.unwrap()
+    """
+
+    if len(x) < 2*window: return np.unwrap(x)
+
+    xx = np.array( x, dtype = np.float64 )
+#   a = zeros( ( window ), dtype = np.float64 )
+#   a[ -1 ] = 1.
+    if ( len( clip_range ) == 2 ):
+        o = clip_range[ 0 ]
+        s = ( clip_range[ 1 ] - clip_range[ 0 ] ) / 90.
+    a = np.ones( ( window ), dtype = np.float64 ) / float( window )
+    xs = xx[ 0 ]
+    for j in range( 2 * iterations ):
+        for k in range( window, len( x ) ):
+            xi = xx[ k - window : k ]
+            xp = np.dot( xi, a )
+            e = xx[ k ] - xp
+            e = np.mod( e + 180., 360. ) - 180.
+            if ( len( clip_range ) == 2 ):
+                if ( abs( e ) > o ):
+                    e = sign( e ) * ( s * degrees( atan( radians( ( abs( e ) - o ) / s ) ) ) + o )
+            xx[ k ] = xp + e
+#           a = a + xx[ k - window : k ] * alpha * e / 360.
+            a = a + xi * alpha * e / ( np.dot( xi, xi ) + 1.e-6 )
+        xx = xx[ : : -1 ].copy()
+    xx = xx - xx[ 0 ] + xs
+    return xx

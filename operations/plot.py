@@ -323,8 +323,10 @@ def run( step, parset, H ):
                     if sf.getType() == 'amplitude':
                         p = ax.plot(coord[axesToPlot[0]], vals, 'k-')
                     else:
-                        p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
-                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                        #p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
+                        p = ax.plot(coord[axesToPlot[0]][range(300)], vals[range(300)], 'ko')
+                    p = ax.plot(coord[axesToPlot[0]][range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #TODO: DEBUG!
+                    #p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
