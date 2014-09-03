@@ -185,22 +185,28 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     for k in range(N_times):
-        D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
-        D = np.transpose(D, (1, 0, 2)) - D
-        D2 = np.sum(D**2, axis=2)
-        C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
-        P1 = eye(N_piercepoints) - np.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
-        C1 = np.dot(np.dot(P1, C), P1)
-        U, S, V = svd(C1)
+        try:
+            D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
+            D = np.transpose(D, (1, 0, 2)) - D
+            D2 = np.sum(D**2, axis=2)
+            C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
+            P1 = eye(N_piercepoints) - np.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
+            C1 = np.dot(np.dot(P1, C), P1)
+            U, S, V = svd(C1)
 
-        B = np.dot(P, np.dot(np.diag(airmass[k, :]), U[:, :order]))
-        pinvB = pinv(B, rcond=1e-3)
+            B = np.dot(P, np.dot(np.diag(airmass[k, :]), U[:, :order]))
+            pinvB = pinv(B, rcond=1e-3)
 
-        rr1 = np.dot(P, rr[:, k])
-        tec_fit = np.dot(U[:, :order], np.dot(pinvB, rr1))
-        tec_fit_all[k, :, :] = tec_fit.reshape((N_sources, N_stations))
-        residual =  rr1 - np.dot(B, np.dot(pinvB, rr1))
-        residual_all[k, :, :] = residual.reshape((N_sources, N_stations))
+            rr1 = np.dot(P, rr[:, k])
+            tec_fit = np.dot(U[:, :order], np.dot(pinvB, rr1))
+            tec_fit_all[k, :, :] = tec_fit.reshape((N_sources, N_stations))
+            residual =  rr1 - np.dot(B, np.dot(pinvB, rr1))
+            residual_all[k, :, :] = residual.reshape((N_sources, N_stations))
+        except:
+            # Set screen to zero if fit did not work
+            logging.debug('Tecscreen fit failed for timeslot {0}'.format(k))
+            tec_fit_all[k, :, :] = np.zeros((N_sources, N_stations))
+            residual_all[k, :, :] = np.ones((N_sources, N_stations))
 
         pbar.update(ipbar)
         ipbar += 1
