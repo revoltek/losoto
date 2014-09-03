@@ -280,7 +280,7 @@ def interpolate_phase(phase1, time1, time2, interpMethod='cubic'):
     import numpy as np
     from scipy.interpolate import interp1d
 
-    phase1 = unwrap_fft(phase1)
+    phase1 = unwrap(phase1)
 
     if len(time2) < len(time1):
         # Average

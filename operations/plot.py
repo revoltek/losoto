@@ -267,7 +267,7 @@ def run( step, parset, H ):
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
-    unwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
+    dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
 
     if plotType.lower() in ['1d', '2d']:
         for soltab in openSoltabs( H, soltabs ):
@@ -291,7 +291,7 @@ def run( step, parset, H ):
             for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
                 # unwrap if required
-                if plotType.lower() == '1d' and unwrap: vals = unwrap_fft(vals)
+                if plotType.lower() == '1d' and dounwrap: vals = unwrap(vals)
 
                 title = ''
                 for axis in coord:
@@ -323,10 +323,10 @@ def run( step, parset, H ):
                     if sf.getType() == 'amplitude':
                         p = ax.plot(coord[axesToPlot[0]], vals, 'k-')
                     else:
-                        #p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
-                        p = ax.plot(coord[axesToPlot[0]][range(300)], vals[range(300)], 'ko')
-                    p = ax.plot(coord[axesToPlot[0]][range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #TODO: DEBUG!
-                    #p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                        p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
+                        #p = ax.plot(coord[axesToPlot[0]][range(300)], vals[range(300)], 'ko') # DEBUG
+                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                    #p = ax.plot(coord[axesToPlot[0]][range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #DEBUG
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')

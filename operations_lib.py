@@ -170,6 +170,7 @@ def removeKeys( dic, keys = [] ):
     return dicCopy
 
 
+# unwrap fft
 def unwrap_fft(phase, iterations=3):
     """
     Unwrap phase using Fourier techniques.
@@ -215,11 +216,62 @@ def unwrap_fft(phase, iterations=3):
     return phase2D[:, 0]
 
 
+# unwrap windowed
+def unwrap(phase, window_size=5):
+    """
+    Unwrap phase by estimating the trend of the phase signal.
+    """
+    import numpy, math
+
+    # Allocate result.
+    out = numpy.zeros(phase.shape)
+
+    windowl = numpy.array([math.fmod(phase[0], 2.0 * math.pi)] * window_size)
+
+    delta = math.fmod(phase[1] - windowl[0], 2.0 * math.pi)
+    if delta < -math.pi:
+        delta += 2.0 * math.pi
+    elif delta > math.pi:
+        delta -= 2.0 * math.pi
+    windowu = numpy.array([windowl[0] + delta] * window_size)
+
+    out[0] = windowl[0]
+    out[1] = windowu[0]
+
+    meanl = windowl.mean()
+    meanu = windowu.mean()
+    slope = (meanu - meanl) / float(window_size)
+
+    for i in range(2, len(phase)):
+        ref = meanu + (1.0 + (float(window_size) - 1.0) / 2.0) * slope
+        delta = math.fmod(phase[i] - ref, 2.0 * math.pi)
+
+        if delta < -math.pi:
+            delta += 2.0 * math.pi
+        elif delta > math.pi:
+            delta -= 2.0 * math.pi
+
+        out[i] = ref + delta
+
+        windowl[:-1] = windowl[1:]
+        windowl[-1] = windowu[0]
+        windowu[:-1] = windowu[1:]
+        windowu[-1] = out[i]
+
+        meanl = windowl.mean()
+        meanu = windowu.mean()
+        slope = (meanu - meanl) / float(window_size)
+
+    return out
+
+
+# unwrap huib
 def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
     clip_range = [ 170., 180. ] ):
     """
     Unwrap the x array, if it is shorter than 2*window, use np.unwrap()
     """
+    import numpy as np
 
     if len(x) < 2*window: return np.unwrap(x)
 

@@ -161,7 +161,7 @@ def run( step, parset, H ):
 
             # if phase, then unwrap, flag and wrap again
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase' or sf.getType() == 'rotation':
-                flags, vals, rms = outlier_rej(unwrap_fft(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+                flags, vals, rms = outlier_rej(unwrap(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
                 vals = (vals+np.pi) % (2*np.pi) - np.pi
             else:
                 flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
