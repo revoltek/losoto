@@ -8,7 +8,8 @@ LoSoTo.Steps = [abs,clip,interp,norm,plot,reset,smooth,tecfit,tecscreen] # copy 
 LoSoTo.Solset = [sol000]
 LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
 LoSoTo.SolType = [phase]
-LoSoTo.ant = [] # to exclude stations, use ^((?!string1|string2|string3).)*$ to exclude stations
+LoSoTo.ant = [] # string used for regex selections, vectors for complete names (equal for 'pol' and 'dir')
+                # to exclude stations, use ^((?!string1|string2|string3).)*$ to exclude stations
                 # with names containing string1, string2, or string3
 LoSoTo.pol = [XX, YY]
 LoSoTo.dir = [pointing]
