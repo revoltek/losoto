@@ -148,7 +148,7 @@ def run( step, parset, H ):
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
 
-        logging.info("Smoothing soltab: "+soltab._v_name)
+        logging.info("Flagging soltab: "+soltab._v_name)
 
         sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
@@ -159,14 +159,14 @@ def run( step, parset, H ):
         for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
 
             # if phase, then unwrap, flag and wrap again
-            if sf.getType() == 'phase' or sf.getType() == 'scalarphase':
+            if sf.getType() == 'phase' or sf.getType() == 'scalarphase' or sf.getType() == 'rotation':
                 flags, vals, rms = outlier_rej(unwrap_fft(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
                 vals = (vals+np.pi) % (2*np.pi) - np.pi
             else:
                 flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
 
             logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %%' \
-                    % (removeKeys(coord, axisToFlag), len(np.where(weights==0)[0])/float(len(weights)), sum(flags)/float(len(flags))))
+                    % (removeKeys(coord, axisToFlag), 100.*len(np.where(weights==0)[0])/len(weights), 100.*sum(flags)/len(flags)))
 
             # writing back the solutions
             coord = removeKeys(coord, axisToFlag)

@@ -267,6 +267,7 @@ def run( step, parset, H ):
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+    unwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
 
     if plotType.lower() in ['1d', '2d']:
         for soltab in openSoltabs( H, soltabs ):
@@ -288,6 +289,9 @@ def run( step, parset, H ):
                 return 1
 
             for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
+
+                # unwrap if required
+                if plotType.lower() == '1d' and unwrap: vals = unwrap_fft(vals)
 
                 title = ''
                 for axis in coord:

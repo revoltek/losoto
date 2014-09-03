@@ -29,9 +29,9 @@ LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axis = '' # axis to flag (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
-LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
-LoSoTo.Steps.flag.Window = 60 # window to remove trends (in timestamps)
-LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal
+LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers (amp: 3, ph: 6)
+LoSoTo.Steps.flag.Window = 60 # window to remove trends (in timestamps) (amp:60, ph:100)
+LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal (amp: 1, ph: 2)
 LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in timestamps)
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 
@@ -52,6 +52,7 @@ LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
 LoSoTo.Steps.plot.Axes = [time]
 LoSoTo.Steps.plot.MinMax = [0,0]
 LoSoTo.Steps.plot.Prefix = images/test_
+LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 
 LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
