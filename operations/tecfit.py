@@ -785,9 +785,13 @@ def run( step, parset, H ):
                     r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median))
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
             station_selection = station_selection[good_stations]
-            print(good_stations)
-            print(station_selection)
-            print(r_tot_meddiff)
+            new_excluded_stations = [station_names[s] for s in
+                station_selection_orig if s not in station_selection]
+            if len(new_excluded_stations) > 0:
+                logging.info('Excluding stations due to TEC solutions that differ '
+                    'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
+                logging.info('Updating fit...')
+                excluded_stations += new_excluded_stations
 
         # Fit a TEC value to the phase solutions per source pair.
         # No iterative search for the global minimum is done
@@ -813,11 +817,6 @@ def run( step, parset, H ):
             # take the mean of the two polarizations
             r = (r0 + r1) / 2
         iter += 1
-
-    new_excluded_stations = [station_names[s] for s in station_selection_orig if s not in station_selection]
-    if len(new_excluded_stations) > 0:
-        logging.info('Excluding stations due to TEC solutions that differ '
-            'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
