@@ -770,15 +770,27 @@ def run( step, parset, H ):
         "within {1} km of the core:\n{2}".format(len(station_selection),
         dist_cut_m/1000.0, station_names[station_selection]))
 
-    niter = 1
+    niter = 2
     iter = 0
     station_selection_orig = station_selection
-    while iter < niter+1:
-        # Iterate to exclude bad stations/directions
-        iter += 1
+    while iter < niter:
+        # Loop over sources to identify bad stations and remove them from the
+        # station_selection.
+        nsig = 2.5
+        if iter > 0:
+            for i in range(len(source_names)):
+                r_median = np.median(r[i, :, :], axis=1)
+                r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
+                for j, station_indx in enumerate(station_selection):
+                    r_tot_meddiff[j] = np.sum(r[i, :, j] - r_median)
+            good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
+            station_selection = station_selection[good_stations]
+            print(good_stations)
+            print(station_selection)
+            print(r_tot_meddiff)
 
-        # Fit a TEC value to the phase solutions per source pair. No iterative search for the
-        # global minimum is done
+        # Fit a TEC value to the phase solutions per source pair.
+        # No iterative search for the global minimum is done
         if soln_type == 'scalarphase':
             r, source_selection = fit_tec_per_source_pair(
                 phases0[:, station_selection, :, :],
@@ -800,21 +812,12 @@ def run( step, parset, H ):
 
             # take the mean of the two polarizations
             r = (r0 + r1) / 2
+        iter += 1
 
-        # Loop over sources to identify bad stations and remove them from the
-        # station_selection.
-        nsig = 2.5
-        for i in range(len(source_names)):
-            r_median = np.median(r[i, :, :], axis=1)
-            r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
-            for j, station_indx in enumerate(station_selection):
-                r_tot_meddiff[j] = np.sum(r[i, :, j] - r_median)
-            good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
-        station_selection = station_selection[good_stations]
     new_excluded_stations = [station_names[s] for s in station_selection_orig if s not in station_selection]
     if len(new_excluded_stations) > 0:
-        logging.info('Station(s) {0} excluded due to TEC solutions that differ '
-            'significantly from mean'.format(new_excluded_stations))
+        logging.info("Excluding stations due to TEC solutions that differ '
+            'significantly from mean: {0}".format(np.sort(new_excluded_stations)))
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
