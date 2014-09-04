@@ -782,7 +782,7 @@ def run( step, parset, H ):
                 r_median = np.median(r[i, :, :], axis=1)
                 r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
                 for j, station_indx in enumerate(station_selection):
-                    r_tot_meddiff[j] = np.sum(r[i, :, j] - r_median)
+                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median))
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
             station_selection = station_selection[good_stations]
             print(good_stations)
