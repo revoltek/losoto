@@ -26,13 +26,15 @@ To run it on CEP1:
 Flag:
 LoSoTo has an internl flag system encoded in the weigth column. Weigths are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs in the H5parm_exporter.py
 
+Documentation:
+Documentation extracted from the LOFAR cookbook is present in the doc directory
+
 Used packages:
 * PyTables version:  3.0.0
 * HDF5 version:      1.8.4
 * NumPy version:     1.7.1
 * Numexpr version:   2.1 (not using Intel's VML/MKL)
 * Zlib version:      1.2.3.3 (in Python interpreter)
-* LZO version:       2.06 (Aug 12 2011)
 * BZIP2 version:     1.0.5 (10-Dec-2007)
 * Blosc version:     1.2.3 (2013-05-17)
 * Cython version:    0.19.1
