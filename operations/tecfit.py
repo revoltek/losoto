@@ -770,7 +770,7 @@ def run( step, parset, H ):
         "within {1} km of the core:\n{2}".format(len(station_selection),
         dist_cut_m/1000.0, station_names[station_selection]))
 
-    niter = 2
+    niter = 3
     iter = 0
     station_selection_orig = station_selection
     while iter < niter:
