@@ -792,6 +792,7 @@ def run( step, parset, H ):
                     'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
                 logging.info('Updating fit...')
                 excluded_stations += new_excluded_stations
+                nstations_max -= len(new_excluded_stations)
 
         # Fit a TEC value to the phase solutions per source pair.
         # No iterative search for the global minimum is done
