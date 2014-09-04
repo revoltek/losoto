@@ -816,8 +816,8 @@ def run( step, parset, H ):
 
     new_excluded_stations = [station_names[s] for s in station_selection_orig if s not in station_selection]
     if len(new_excluded_stations) > 0:
-        logging.info("Excluding stations due to TEC solutions that differ '
-            'significantly from mean: {0}".format(np.sort(new_excluded_stations)))
+        logging.info('Excluding stations due to TEC solutions that differ '
+            'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
