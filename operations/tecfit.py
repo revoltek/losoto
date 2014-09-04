@@ -773,7 +773,7 @@ def run( step, parset, H ):
     niter = 1
     iter = 0
     station_selection_orig = station_selection
-    while iter < niter:
+    while iter < niter+1:
         # Iterate to exclude bad stations/directions
         iter += 1
 
@@ -811,9 +811,10 @@ def run( step, parset, H ):
                 r_tot_meddiff[j] = np.sum(r[i, :, j] - r_median)
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
         station_selection = station_selection[good_stations]
-    new_excluded_stations = [station_names[s] for s in station_selection if s not in station_selection_orig]
+    new_excluded_stations = [station_names[s] for s in station_selection_orig if s not in station_selection]
     if len(new_excluded_stations) > 0:
-        logging.info('Stations {0} excluded due to TEC solutions'.format(new_excluded_stations))
+        logging.info('Station(s) {0} excluded due to TEC solutions that differ '
+            'significantly from mean'.format(new_excluded_stations))
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
