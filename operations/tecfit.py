@@ -727,6 +727,7 @@ def run( step, parset, H ):
         matplotlib.use("Agg")
     from pylab import find
     import re
+    from .tecscreen import calculate_piercepoints
 
     solsets = getParSolsets( step, parset, H )
     ants = getParAxis( step, parset, H, 'ant' )
@@ -770,21 +771,41 @@ def run( step, parset, H ):
         "within {1} km of the core:\n{2}".format(len(station_selection),
         dist_cut_m/1000.0, station_names[station_selection]))
 
-    niter = 3
-    iter = 0
     station_selection_orig = station_selection
-    while iter < niter:
-        # Loop over sources to identify bad stations and remove them from the
-        # station_selection.
+    for iter in range(niter):
+        # Loop over groups of nearby pierce points to identify bad stations and
+        # remove them from the station_selection.
         nsig = 2.5
         if iter > 0:
+            logging.info("Identifying bad stations from outlier TEC fits...")
+            # For each source, find all the pierce points within 1 km (projected)
+            # distance from the median pierce point x,y location. Assume a typical
+            # screen height of 200 km.
+            pp, airmass = calculate_piercepoints(station_positions[station_selection],
+                source_positions[source_selection], times, height = 200e3)
+            pp = pp[0, :, :] # use first time [times, stations, dimension]
             for i in range(len(source_names)):
-                r_median = np.median(r[i, :, :], axis=1)
-                r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
-                for j, station_indx in enumerate(station_selection):
+                x_median = np.median(pp[:, 0]) / 1000.0
+                y_median = np.median(pp[:, 1]) / 1000.0
+                dist = np.sqrt( (pp[:, 0] / 1000.0 - x_median)**2 +
+                    (pp[:, 1] / 1000.0 - y_median)**2 )
+                within_3km_radius = np.where(dist < 3.0)
+                if len(within_3km_radius) < 10:
+                    logging.info("Insufficient number of closely-spaced pierce "
+                        "points for bad-station detection. Skipping...")
+                    abort_iter = True
+                    break
+                else:
+                    abort_iter = False
+                r_median = np.median(r[i, :, within_3km_radius], axis=1)
+                r_tot_meddiff = np.zeros(len(station_selection[within_3km_radius]),
+                    dtype=float)
+                for j in range(len(station_selection[within_3km_radius])):
                     r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median))
+            if abort_iter:
+                break
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
-            station_selection = station_selection[good_stations]
+            station_selection = station_selection[[within_3km_radius[good_stations]]
             new_excluded_stations = [station_names[s] for s in
                 station_selection_orig if s not in station_selection]
             if len(new_excluded_stations) > 0:
@@ -817,7 +838,6 @@ def run( step, parset, H ):
 
             # take the mean of the two polarizations
             r = (r0 + r1) / 2
-        iter += 1
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
