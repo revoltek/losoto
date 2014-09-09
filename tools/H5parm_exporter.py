@@ -453,7 +453,7 @@ if __name__=='__main__':
 
                     # Apply flags
                     weights = sf.getValues(weight=True)[0]
-                    flags = np.zeros(shape=weights.shape, type=bool)
+                    flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
                     np.putmask(val, flags, np.nan)
 
