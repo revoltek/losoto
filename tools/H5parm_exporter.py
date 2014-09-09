@@ -141,7 +141,6 @@ def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
     freq - frequency of output parmdb
     freqwidth - frequency width of output parmdb
     """
-    from pylab import pinv
     global ipbar, pbar
 
     station_dict = H.getAnt(solset)
@@ -207,7 +206,7 @@ def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
         D = np.transpose(D, ( 1, 0, 2 )) - D
         D2 = np.sum(D**2, axis=2)
         C = -(D2 / (r_0**2))**(beta / 2.0) / 2.0
-        tec_fit_white = np.dot(pinv(C),
+        tec_fit_white = np.dot(np.linalg.inv(C),
             tec_screen[:, k, :].reshape(N_piercepoints))
         pp_idx = 0
         for src, source_name in enumerate(source_names):
