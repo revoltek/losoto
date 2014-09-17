@@ -76,12 +76,12 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     pp1 = np.dot(pp[0, :, :], T)
     min_xy = np.amin(pp1, axis=0)
     max_xy = np.amax(pp1, axis=0)
-#     pp1 = np.dot(pp[-1, :, :], T)
-#     min_xy2 = np.amin(pp1, axis=0)
-#     max_xy2 = np.amax(pp1, axis=0)
-#     for i in range(2):
-#         min_xy[i] = min(min_xy[i], min_xy2[i])
-#         max_xy[i] = max(max_xy[i], max_xy2[i])
+    pp1 = np.dot(pp[-1, :, :], T)
+    min_xy2 = np.amin(pp1, axis=0)
+    max_xy2 = np.amax(pp1, axis=0)
+    for i in range(2):
+        min_xy[i] = min(min_xy[i], min_xy2[i])
+        max_xy[i] = max(max_xy[i], max_xy2[i])
     extent = max_xy - min_xy
     lower = min_xy - 0.05 * extent
     upper = max_xy + 0.05 * extent
@@ -105,12 +105,6 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     ipbar = 0
     for k in range(N_times):
         pp1 = np.dot(pp[k, :, :], T)
-
-        x = [] # x coordinates for plot (km)
-        y = [] # y coordinates for plot (km)
-        for j in range(fitted_tec1.shape[0]):
-            x.append(pp1[j, 0] / 1000.0)
-            y.append(pp1[j, 1] / 1000.0)
 
         D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
         D = np.transpose(D, (1, 0, 2)) - D
@@ -166,6 +160,14 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     plt.gca().set_aspect('equal')
 
     for k in range(N_times):
+        pp1 = np.dot(pp[k, :, :], T)
+
+        x = [] # x coordinates for plot (km)
+        y = [] # y coordinates for plot (km)
+        for j in range(fitted_tec1.shape[0]):
+            x.append(pp1[j, 0] / 1000.0)
+            y.append(pp1[j, 1] / 1000.0)
+
         s = []
         c = []
         for j in range(fitted_tec1.shape[0]):
