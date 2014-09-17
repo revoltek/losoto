@@ -138,13 +138,12 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
             screen[:, :, k] = screen[:, :, k] - grad_plane
             screen[:, :, k] = screen[:, :, k] - np.mean(screen[:, :, k])
 
-            # Match fitted values to screen
+            # Match fitted values to gradient-free screen
             for t in range(fitted_tec1.shape[0]):
                 xs_pt = (pp1[t, 0] - lower[0]) / m_per_pix
                 ys_pt = (pp1[t, 1] - lower[1]) / m_per_pix
-                grad_plane_pt = a * xs_pt + b * ys_pt + c
-                fitted_tec1[t, k] = fitted_tec1[t, k] - grad_plane_pt
-            fitted_tec1[:, k] = fitted_tec1[:, k] - np.mean(fitted_tec1[:, k])
+                fitted_tec1[t, k] = screen[xs_pt, ys_pt, k] + residuals[t, k]
+
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
