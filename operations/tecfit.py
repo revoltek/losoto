@@ -734,6 +734,7 @@ def run( step, parset, H ):
     pols = getParAxis( step, parset, H, 'pol' )
     dirs = getParAxis( step, parset, H, 'dir' )
     nband_min = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MinBands"]), '8' ))
+    niter = int(parset.getString('.'.join(["LoSoTo.Steps", step, "NumIter"]), '1' ))
     dist_cut_m = np.float(parset.getString('.'.join(["LoSoTo.Steps", step, "DistCut"]), '2e3' ))
     nstations_max = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MaxStations"]), '100' ))
     outSolset = parset.getString('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), '' ).split('/')[0]
