@@ -76,12 +76,12 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     pp1 = np.dot(pp[0, :, :], T)
     min_xy = np.amin(pp1, axis=0)
     max_xy = np.amax(pp1, axis=0)
-    pp1 = np.dot(pp[-1, :, :], T)
-    min_xy2 = np.amin(pp1, axis=0)
-    max_xy2 = np.amax(pp1, axis=0)
-    for i in range(2):
-        min_xy[i] = min(min_xy[i], min_xy2[i])
-        max_xy[i] = max(max_xy[i], max_xy2[i])
+#     pp1 = np.dot(pp[-1, :, :], T)
+#     min_xy2 = np.amin(pp1, axis=0)
+#     max_xy2 = np.amax(pp1, axis=0)
+#     for i in range(2):
+#         min_xy[i] = min(min_xy[i], min_xy2[i])
+#         max_xy[i] = max(max_xy[i], max_xy2[i])
     extent = max_xy - min_xy
     lower = min_xy - 0.05 * extent
     upper = max_xy + 0.05 * extent
