@@ -728,6 +728,7 @@ def run( step, parset, H ):
     from pylab import find
     import re
     from .tecscreen import calculate_piercepoints
+    from numpy.linalg import norm
 
     solsets = getParSolsets( step, parset, H )
     ants = getParAxis( step, parset, H, 'ant' )
@@ -785,12 +786,21 @@ def run( step, parset, H ):
             pp, airmass = calculate_piercepoints(station_positions[station_selection],
                 source_positions[source_selection], times, height = 200e3)
             pp = pp[0, :, :] # use first time [times, stations, dimension]
+            x, y, z = station_positions[station_selection][0,:]
+            east = np.array([-y, x, 0])
+            east = east / norm(east)
+            north = np.array([ -x, -y, (x*x + y*y)/z])
+            north = north / norm(north)
+            up = np.array([x ,y, z])
+            up = up / norm(up)
+            T = np.concatenate([east[:, np.newaxis], north[:, np.newaxis]], axis=1)
+            pp1 = np.dot(pp, T).reshape((len(source_names), len(station_selection), 2))
             for i in range(len(source_names)):
-                x_median = np.median(pp[:, 0]) / 1000.0
-                y_median = np.median(pp[:, 1]) / 1000.0
-                dist = np.sqrt( (pp[:, 0] / 1000.0 - x_median)**2 +
-                    (pp[:, 1] / 1000.0 - y_median)**2 )
-                within_3km_radius = np.where(dist < 3.0)
+                x_median = np.median(pp1[i, :, 0]) / 1000.0
+                y_median = np.median(pp1[i, :, 1]) / 1000.0
+                dist = np.sqrt( (pp1[i, :, 0] / 1000.0 - x_median)**2 +
+                    (pp1[i, :, 1] / 1000.0 - y_median)**2 )
+                within_3km_radius = np.where(dist < 3.0)[0]
                 if len(within_3km_radius) < 10:
                     logging.info("Insufficient number of closely-spaced pierce "
                         "points for bad-station detection. Skipping...")
@@ -802,7 +812,7 @@ def run( step, parset, H ):
                 r_tot_meddiff = np.zeros(len(station_selection[within_3km_radius]),
                     dtype=float)
                 for j in range(len(station_selection[within_3km_radius])):
-                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median))
+                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median[j]))
             if abort_iter:
                 break
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
@@ -815,6 +825,9 @@ def run( step, parset, H ):
                 logging.info('Updating fit...')
                 excluded_stations += new_excluded_stations
                 nstations_max -= len(new_excluded_stations)
+            else:
+                logging.info('No bad stations found.')
+                break
 
         # Fit a TEC value to the phase solutions per source pair.
         # No iterative search for the global minimum is done
