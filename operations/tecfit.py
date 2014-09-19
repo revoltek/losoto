@@ -781,7 +781,10 @@ def run( step, parset, H ):
         radius = 2.0 # projected radius in km within which to compare
         if iter > 0:
             logging.info("Identifying bad stations from outlier TEC fits...")
-            # For each source, find all the pierce points within 1 km (projected)
+            logging.info("Finding nearby piercepoints (assuming typical screen "
+                "height of 200 km...")
+
+            # For each source, find all the pierce points within give (projected)
             # distance from the median pierce point x,y location. Assume a typical
             # screen height of 200 km.
             pp, airmass = calculate_piercepoints(station_positions[station_selection],
@@ -801,7 +804,8 @@ def run( step, parset, H ):
                 y_median = np.median(pp1[i, :, 1]) / 1000.0
                 dist = np.sqrt( (pp1[i, :, 0] / 1000.0 - x_median)**2 +
                     (pp1[i, :, 1] / 1000.0 - y_median)**2 )
-                within_radius = np.where(dist < radius)[0]
+                within_radius = np.where(dist <= radius)[0]
+                outside_radius = np.where(dist > radius)
                 if len(within_radius) < 10:
                     logging.info("Insufficient number of closely-spaced pierce "
                         "points for bad-station detection. Skipping...")
@@ -813,13 +817,16 @@ def run( step, parset, H ):
                 r_tot_meddiff = np.zeros(len(station_selection[within_radius]),
                     dtype=float)
                 for j in range(len(station_selection[within_radius])):
-                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median[j]))
+                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, within_radius[j]] - r_median[j]))
             if abort_iter:
                 break
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
-            station_selection = station_selection[within_radius[good_stations]]
+            station_selection = np.append(station_selection[within_radius[good_stations]],
+                station_selection[outside_radius])
+
             new_excluded_stations = [station_names[s] for s in
-                station_selection_orig if s not in station_selection]
+                station_selection_orig if (s not in station_selection and
+                s not in excluded_stations)]
             if len(new_excluded_stations) > 0:
                 logging.info('Excluding stations due to TEC solutions that differ '
                     'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
