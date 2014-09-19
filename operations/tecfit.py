@@ -817,7 +817,7 @@ def run( step, parset, H ):
             if abort_iter:
                 break
             good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
-            station_selection = station_selection[within_3km_radius[good_stations]]
+            station_selection = station_selection[within_radius[good_stations]]
             new_excluded_stations = [station_names[s] for s in
                 station_selection_orig if s not in station_selection]
             if len(new_excluded_stations) > 0:
