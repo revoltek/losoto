@@ -777,7 +777,8 @@ def run( step, parset, H ):
     for iter in range(niter):
         # Loop over groups of nearby pierce points to identify bad stations and
         # remove them from the station_selection.
-        nsig = 2.5
+        nsig = 2.5 # number of sigma for cut
+        radius = 2.0 # projected radius in km within which to compare
         if iter > 0:
             logging.info("Identifying bad stations from outlier TEC fits...")
             # For each source, find all the pierce points within 1 km (projected)
@@ -800,18 +801,18 @@ def run( step, parset, H ):
                 y_median = np.median(pp1[i, :, 1]) / 1000.0
                 dist = np.sqrt( (pp1[i, :, 0] / 1000.0 - x_median)**2 +
                     (pp1[i, :, 1] / 1000.0 - y_median)**2 )
-                within_3km_radius = np.where(dist < 3.0)[0]
-                if len(within_3km_radius) < 10:
+                within_radius = np.where(dist < radius)[0]
+                if len(within_radius) < 10:
                     logging.info("Insufficient number of closely-spaced pierce "
                         "points for bad-station detection. Skipping...")
                     abort_iter = True
                     break
                 else:
                     abort_iter = False
-                r_median = np.median(r[i, :, within_3km_radius], axis=1)
-                r_tot_meddiff = np.zeros(len(station_selection[within_3km_radius]),
+                r_median = np.median(r[i, :, within_radius], axis=1)
+                r_tot_meddiff = np.zeros(len(station_selection[within_radius]),
                     dtype=float)
-                for j in range(len(station_selection[within_3km_radius])):
+                for j in range(len(station_selection[within_radius])):
                     r_tot_meddiff[j] = np.sum(np.abs(r[i, :, j] - r_median[j]))
             if abort_iter:
                 break
