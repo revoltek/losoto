@@ -31,7 +31,8 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     min_tec -- minimum TEC value for plot range
     max_tec -- maximum TEC value for plot range
     """
-    from pylab import kron, concatenate, pinv, norm, newaxis, normalize
+    from numpy import kron, concatenate, newaxis
+    from numpy.linalg import pinv, norm
     import matplotlib.pyplot as plt
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     import numpy as np
@@ -71,42 +72,32 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
 
     T = concatenate([east[:, newaxis], north[:, newaxis]], axis=1)
 
-    pp1 = np.dot(pp[0, :, :], T)
-    lower = np.amin(pp1, axis=0)
-    upper = np.amax(pp1, axis=0)
-    extent = upper - lower
-
-    lower = lower - 0.05 * extent
-    upper = upper + 0.05 * extent
-
-    extent = upper - lower
+    # Use pierce point locations of first time slot to estimate
+    # required size of plot in meters
+    pp1_0 = np.dot(pp[0, :, :], T)
+    min_xy = np.amin(pp1_0, axis=0)
+    max_xy = np.amax(pp1_0, axis=0)
+    extent = max_xy - min_xy
+    lower = min_xy - 0.1 * extent
+    upper = max_xy + 0.1 * extent
+    im_extent_m = upper - lower
 
     residuals = residuals.transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
     fitted_tec1 = tec_screen.transpose([0, 2, 1]).reshape(N_piercepoints, N_times) + residuals
 
-    Nx = 50
-    Ny = int(extent[1] / extent[0] * np.float(Nx))
-    xr = np.arange(lower[0], upper[0], extent[0]/Nx)
-    yr = np.arange(lower[1], upper[1], extent[1]/Ny)
+    Nx = 24
+    Ny = 0
+    while Ny < 20:
+        pix_per_m = Nx / im_extent_m[0]
+        m_per_pix = 1.0 / pix_per_m
+        Ny = int(im_extent_m[1] * pix_per_m)
+        Nx += 1
+
     x = [] # x coordinates for plot (km)
     y = [] # y coordinates for plot (km)
-    xs = [] # nearest screen x coordinates of pierce points (m)
-    ys = [] # # nearest screen y coordinates of pierce points (m)
     for j in range(fitted_tec1.shape[0]):
-        x.append(pp1[j, 0] / 1000.0)
-        y.append(pp1[j, 1] / 1000.0)
-        xindx = np.where(np.array(xr) > pp1[j, 0])[0]
-        if len(xindx) == 0:
-            xindx = 0
-        else:
-            xindx = xindx[0]
-        yindx = np.where(np.array(yr) > pp1[j, 1])[0]
-        if len(yindx) == 0:
-            yindx = 0
-        else:
-            yindx = yindx[0]
-        xs.append(xindx)
-        ys.append(yindx)
+        x.append(pp1_0[j, 0] / 1000.0)
+        y.append(pp1_0[j, 1] / 1000.0)
 
     screen = np.zeros((Nx, Ny, N_times))
     gradient = np.zeros((Nx, Ny, N_times))
@@ -115,6 +106,19 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     for k in range(N_times):
+        pp1 = np.dot(pp[k, :, :], T)
+        min_xy = np.amin(pp1, axis=0)
+        max_xy = np.amax(pp1, axis=0)
+        extent = max_xy - min_xy
+        lowerk = min_xy - 0.1 * extent
+        upperk = max_xy + 0.1 * extent
+        im_extent_mk = upperk - lowerk
+        pix_per_mk = Nx / im_extent_mk[0]
+        m_per_pixk = 1.0 / pix_per_mk
+
+        xr = np.arange(lowerk[0], upperk[0], m_per_pixk)
+        yr = np.arange(lowerk[1], upperk[1], m_per_pixk)
+
         D = np.resize(pp[k, :, :], (N_piercepoints, N_piercepoints, 3))
         D = np.transpose(D, (1, 0, 2)) - D
         D2 = np.sum(D**2, axis=2)
@@ -122,10 +126,10 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
         f = np.dot(pinv(C), tec_screen[:, k, :].reshape(N_piercepoints))
         for i, xi in enumerate(xr[0: Nx]):
             for j, yi in enumerate(yr[0: Ny]):
-                p = calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
-                d2 = np.sum(np.square(pp[k, :, :] - p[0]), axis=1)
+                p, airmass = calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
+                d2 = np.sum(np.square(pp[k, :, :] - p), axis=1)
                 c = -(d2 / ( r_0**2 ))**(beta_val / 2.0) / 2.0
-                screen[i, j, k] = np.dot(c, f)
+                screen[i, j, k] = airmass * np.dot(c, f)
 
         # Fit and remove a gradient.
         if remove_gradient:
@@ -141,20 +145,12 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
             screen[:, :, k] = screen[:, :, k] - grad_plane
             screen[:, :, k] = screen[:, :, k] - np.mean(screen[:, :, k])
 
-            # Match fitted values to screen
+            # Match fitted values to gradient-free screen
             for t in range(fitted_tec1.shape[0]):
-                xs_pt = (pp1[t, 0] - lower[0]) / extent[0] * Nx
-                ys_pt = (pp1[t, 1] - lower[1]) / extent[1] * Ny
-                grad_plane_pt = a * xs_pt + b * ys_pt + c
-                fitted_tec1[t, k] = fitted_tec1[t, k] - grad_plane_pt
+                xs_pt = (x[t] * 1000.0 - lower[0]) / m_per_pix
+                ys_pt = (y[t] * 1000.0 - lower[1]) / m_per_pix
+                fitted_tec1[t, k] = screen[xs_pt, ys_pt, k] + residuals[t, k]
 
-            fitted_tec1_src = fitted_tec1[:, k].reshape((N_sources, N_stations))
-            xs_src = np.array(xs).reshape((N_sources, N_stations))
-            ys_src = np.array(ys).reshape((N_sources, N_stations))
-            for s in range(N_sources):
-                fitted_tec1_src[s, :] -= np.mean(fitted_tec1_src[s, :]) - np.mean(screen[xs_src[s, :], ys_src[s, :], k])
-
-            fitted_tec1[:, k] = fitted_tec1_src.reshape(N_piercepoints)
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
@@ -172,8 +168,9 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     sm = plt.cm.ScalarMappable(cmap=plt.cm.jet,
-        norm=normalize(vmin=vmin, vmax=vmax))
+        norm=plt.normalize(vmin=vmin, vmax=vmax))
     sm._A = []
+    plt.gca().set_aspect('equal')
 
     for k in range(N_times):
         s = []
@@ -188,7 +185,7 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
             cmap = plt.cm.jet,
             origin = 'lower',
             interpolation = 'nearest',
-            extent = (xr[0]/1000.0, xr[-1]/1000.0, yr[0]/1000.0, yr[-1]/1000.0),
+            extent = (lower[0]/1000.0, upper[0]/1000.0, lower[1]/1000.0, upper[1]/1000.0),
             vmin=vmin, vmax=vmax)
 
         cbar = plt.colorbar(im)
@@ -204,12 +201,20 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
                     textcoords = 'offset points', ha = 'right', va = 'bottom')
 
         plt.title('Screen {0}'.format(k))
-        plt.xlim(xr[-1]/1000.0, xr[0]/1000.0)
-        plt.ylim(yr[0]/1000.0, yr[-1]/1000.0)
+        plt.xlim(upper[0]/1000.0, lower[0]/1000.0)
+        plt.ylim(lower[1]/1000.0, upper[1]/1000.0)
         plt.xlabel('Projected Distance along RA (km)')
         plt.ylabel('Projected Distance along Dec (km)')
 
         if remove_gradient:
+            pp1 = np.dot(pp[k, :, :], T)
+            min_xy = np.amin(pp1, axis=0)
+            max_xy = np.amax(pp1, axis=0)
+            extent = max_xy - min_xy
+            lowerk = min_xy - 0.05 * extent
+            upperk = max_xy + 0.05 * extent
+            xr = np.arange(lowerk[0], upperk[0], m_per_pix)
+            yr = np.arange(lowerk[1], upperk[1], m_per_pix)
             axins = inset_axes(ax, width="15%", height="10%", loc=2)
             axins.imshow(gradient.transpose([1, 0, 2])[:, : ,k],
                 cmap = plt.cm.jet,

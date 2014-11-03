@@ -200,7 +200,8 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
             rr1 = np.dot(P, rr[:, k])
             tec_fit = np.dot(U[:, :order], np.dot(pinvB, rr1))
             tec_fit_all[k, :, :] = tec_fit.reshape((N_sources, N_stations))
-            residual =  rr1 - np.dot(B, np.dot(pinvB, rr1))
+
+            residual = rr1 - np.dot(P, tec_fit)
             residual_all[k, :, :] = residual.reshape((N_sources, N_stations))
         except:
             # Set screen to zero if fit did not work

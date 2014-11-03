@@ -727,12 +727,15 @@ def run( step, parset, H ):
         matplotlib.use("Agg")
     from pylab import find
     import re
+    from .tecscreen import calculate_piercepoints
+    from numpy.linalg import norm
 
     solsets = getParSolsets( step, parset, H )
     ants = getParAxis( step, parset, H, 'ant' )
     pols = getParAxis( step, parset, H, 'pol' )
     dirs = getParAxis( step, parset, H, 'dir' )
     nband_min = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MinBands"]), '8' ))
+    niter = int(parset.getString('.'.join(["LoSoTo.Steps", step, "NumIter"]), '1' ))
     dist_cut_m = np.float(parset.getString('.'.join(["LoSoTo.Steps", step, "DistCut"]), '2e3' ))
     nstations_max = int(parset.getString('.'.join(["LoSoTo.Steps", step, "MaxStations"]), '100' ))
     outSolset = parset.getString('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), '' ).split('/')[0]
@@ -770,15 +773,72 @@ def run( step, parset, H ):
         "within {1} km of the core:\n{2}".format(len(station_selection),
         dist_cut_m/1000.0, station_names[station_selection]))
 
-    niter = 1
-    iter = 0
     station_selection_orig = station_selection
-    while iter < niter:
-        # Iterate to exclude bad stations/directions
-        iter += 1
+    for iter in range(niter):
+        # Loop over groups of nearby pierce points to identify bad stations and
+        # remove them from the station_selection.
+        nsig = 2.5 # number of sigma for cut
+        radius = 2.0 # projected radius in km within which to compare
+        if iter > 0:
+            logging.info("Identifying bad stations from outlier TEC fits...")
+            logging.info("Finding nearby piercepoints (assuming typical screen "
+                "height of 200 km...")
 
-        # Fit a TEC value to the phase solutions per source pair. No iterative search for the
-        # global minimum is done
+            # For each source, find all the pierce points within give (projected)
+            # distance from the median pierce point x,y location. Assume a typical
+            # screen height of 200 km.
+            pp, airmass = calculate_piercepoints(station_positions[station_selection],
+                source_positions[source_selection], times, height = 200e3)
+            pp = pp[0, :, :] # use first time [times, stations, dimension]
+            x, y, z = station_positions[station_selection][0,:]
+            east = np.array([-y, x, 0])
+            east = east / norm(east)
+            north = np.array([ -x, -y, (x*x + y*y)/z])
+            north = north / norm(north)
+            up = np.array([x ,y, z])
+            up = up / norm(up)
+            T = np.concatenate([east[:, np.newaxis], north[:, np.newaxis]], axis=1)
+            pp1 = np.dot(pp, T).reshape((len(source_names), len(station_selection), 2))
+            for i in range(len(source_names)):
+                x_median = np.median(pp1[i, :, 0]) / 1000.0
+                y_median = np.median(pp1[i, :, 1]) / 1000.0
+                dist = np.sqrt( (pp1[i, :, 0] / 1000.0 - x_median)**2 +
+                    (pp1[i, :, 1] / 1000.0 - y_median)**2 )
+                within_radius = np.where(dist <= radius)[0]
+                outside_radius = np.where(dist > radius)
+                if len(within_radius) < 10:
+                    logging.info("Insufficient number of closely-spaced pierce "
+                        "points for bad-station detection. Skipping...")
+                    abort_iter = True
+                    break
+                else:
+                    abort_iter = False
+                r_median = np.median(r[i, :, within_radius], axis=1)
+                r_tot_meddiff = np.zeros(len(station_selection[within_radius]),
+                    dtype=float)
+                for j in range(len(station_selection[within_radius])):
+                    r_tot_meddiff[j] = np.sum(np.abs(r[i, :, within_radius[j]] - r_median[j]))
+            if abort_iter:
+                break
+            good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
+            station_selection = np.append(station_selection[within_radius[good_stations]],
+                station_selection[outside_radius])
+
+            new_excluded_stations = [station_names[s] for s in
+                station_selection_orig if (s not in station_selection and
+                s not in excluded_stations)]
+            if len(new_excluded_stations) > 0:
+                logging.info('Excluding stations due to TEC solutions that differ '
+                    'significantly from mean: {0}'.format(np.sort(new_excluded_stations)))
+                logging.info('Updating fit...')
+                excluded_stations += new_excluded_stations
+                nstations_max -= len(new_excluded_stations)
+            else:
+                logging.info('No bad stations found.')
+                break
+
+        # Fit a TEC value to the phase solutions per source pair.
+        # No iterative search for the global minimum is done
         if soln_type == 'scalarphase':
             r, source_selection = fit_tec_per_source_pair(
                 phases0[:, station_selection, :, :],
@@ -800,20 +860,6 @@ def run( step, parset, H ):
 
             # take the mean of the two polarizations
             r = (r0 + r1) / 2
-
-        # Loop over sources to identify bad stations and remove them from the
-        # station_selection.
-        nsig = 2.5
-        for i in range(len(source_names)):
-            r_median = np.median(r[i, :, :], axis=1)
-            r_tot_meddiff = np.zeros(len(station_selection), dtype=float)
-            for j, station_indx in enumerate(station_selection):
-                r_tot_meddiff[j] = np.sum(r[i, :, j] - r_median)
-            good_stations = np.where(r_tot_meddiff < nsig * np.median(r_tot_meddiff))
-        station_selection = station_selection[good_stations]
-    new_excluded_stations = [station_names[s] for s in station_selection if s not in station_selection_orig]
-    if len(new_excluded_stations) > 0:
-        logging.info('Stations {0} excluded due to TEC solutions'.format(new_excluded_stations))
 
     # Add stations by searching iteratively for global minimum in solution space
     station_selection, r = add_stations(station_selection, phases0,
