@@ -183,16 +183,20 @@ if __name__=='__main__':
         pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames(solType+':*'))).start()
         ipbar = 0
 
-        for instrumentdbFile in instrumentdbFiles:
+        for instrumentdbFile in sorted(instrumentdbFiles):
 
             pdb = lofar.parmdb.parmdb(instrumentdbFile)
 
             # create the axes grid, necessary if not all entries have the same axes lenght
             data = pdb.getValuesGrid(solType+':*')
+
+            # check good instrument table
+            if len(data) == 0:
+                logging.error('Instrument table %s is empty, ignoring.' % instrumentdbFile)
+
             for solEntry in data:
 
                 pol, dir, ant, parm = parmdbToAxes(solEntry)
-
                 if pol != None: pols |= set([pol])
                 if dir != None: dirs |= set([dir])
                 if ant != None: ants |= set([ant])
