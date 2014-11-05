@@ -32,7 +32,7 @@ class h5parm():
                 logging.debug('Reading from '+h5parmFile+'.')
                 self.H = tables.openFile(h5parmFile, 'r')
             else:
-                logging.debug('Appending to '+h5parmFile+'.')
+                logging.warn('Appending to '+h5parmFile+'.')
                 self.H = tables.openFile(h5parmFile, 'r+')
         else:
             if readonly:

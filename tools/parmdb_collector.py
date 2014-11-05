@@ -4,6 +4,7 @@
 # This tool uses a gds file to collect all the necessary fiels from the
 # cluster and create a set of parmdbs that can be used by H5parm_creator.py
 # to create an H5parm file.
+# It also collect the necessary sky, FIELD and ANTENNA tables from one MS.
 
 # Authors:
 # Francesco de Gasperin
