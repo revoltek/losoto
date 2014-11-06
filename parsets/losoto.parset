@@ -53,6 +53,7 @@ LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
 LoSoTo.Steps.plot.Axes = [time]
 LoSoTo.Steps.plot.MinMax = [0,0]
 LoSoTo.Steps.plot.Prefix = images/test_
+LoSoTo.Steps.plot.Log = F # plot in log scale
 LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 
 LoSoTo.Steps.reset.Operation = RESET

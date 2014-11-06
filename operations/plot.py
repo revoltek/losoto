@@ -273,8 +273,11 @@ def run( step, parset, H ):
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
+    log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), False )
 
-    if plotType.lower() in ['1d', '2d']:
+    plotType = plotType.lower()
+
+    if plotType in ['1d', '2d']:
         for soltab in openSoltabs( H, soltabs ):
 
             sf = solFetcher(soltab)
@@ -288,50 +291,54 @@ def run( step, parset, H ):
                     logging.error('Axis \"'+axis+'\" not found.')
                     return 1
 
-            if (len(axesToPlot) != 2 and plotType == '2D') or \
-               (len(axesToPlot) != 1 and plotType == '1D'):
+            if (len(axesToPlot) != 2 and plotType == '2d') or \
+               (len(axesToPlot) != 1 and plotType == '1d'):
                 logging.error('Wrong number of axes.')
                 return 1
 
             for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
                 # unwrap if required
-                if plotType.lower() == '1d' and dounwrap: vals = unwrap(vals)
+                if plotType == '1d' and dounwrap: vals = unwrap(vals)
 
                 title = ''
                 for axis in coord:
                     if axis in axesToPlot: continue
                     title += str(coord[axis])+'_'
                 title = title[:-1]
+                if log: title = 'Log '+title
 
-                if plotType == '2D':
+                if plotType == '2d':
                     fig = plt.figure()
                     ax = plt.subplot(111)
                     plt.title(title)
                     plt.ylabel(axesToPlot[0])
                     plt.xlabel(axesToPlot[1])
-                    p = ax.imshow(coord[axesToPlot[1]], coord[axesToPlot[0]], vals)
+                    if log: plt.pcolormesh(coord[axesToPlot[1]], coord[axesToPlot[0]], np.log10(vals))
+                    else: plt.pcolormesh(coord[axesToPlot[1]], coord[axesToPlot[0]], vals)
                     if not (minZ == 0 and maxZ == 0):
+                        print "setting zlim"
                         plt.zlim(zmin=minZ, zmax=maxZ)
-                    plt.savefig(title+'.png')
+                    plt.colorbar()
+                    plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
-                if plotType == '1D':
+                if plotType == '1d':
                     fig = plt.figure()
                     ax = plt.subplot(111)
                     plt.title(title)
                     plt.ylabel(sf.getType())
                     if not (minZ == 0 and maxZ == 0):
                         plt.ylim(ymin=minZ, ymax=maxZ)
+                        plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
                     if sf.getType() == 'amplitude':
                         p = ax.plot(coord[axesToPlot[0]], vals, 'k-')
                     else:
                         p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
-                        #p = ax.plot(coord[axesToPlot[0]][range(300)], vals[range(300)], 'ko') # DEBUG
                     p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
-                    #p = ax.plot(coord[axesToPlot[0]][range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #DEBUG
+                    if log: ax.set_yscale('log')
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')

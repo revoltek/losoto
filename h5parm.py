@@ -187,18 +187,24 @@ class h5parm():
         # create axes
         assert len(axesNames) == len(axesVals)
         dim = []
+        newChunkShape = []
         for i, axisName in enumerate(axesNames):
             axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
                     obj=axesVals[i], chunkshape=[len(axesVals[i])])
             axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
+        
+        # Put time/freq on max lenght for better performances
+            if chunkShape == None:
+                if axisName == 'time' or axisName == 'freq':
+                    newChunkShape.append(len(axesVals[i])) 
+                else:
+                    newChunkShape.append(1) 
+        if chunkShape == None: chunkShape = newChunkShape
 
         # check if the axes were in the proper order
         assert dim == list(vals.shape)
         assert dim == list(weights.shape)
-
-        if chunkShape == None:
-            chunkShape = 1+np.array(dim)/4
 
         # create the val/weight Carrays
         val = self.H.create_carray('/'+solsetName+'/'+soltabName, 'val', obj=vals, chunkshape=chunkShape)
