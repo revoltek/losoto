@@ -306,7 +306,7 @@ def run( step, parset, H ):
                     if axis in axesToPlot: continue
                     title += str(coord[axis])+'_'
                 title = title[:-1]
-                if log: title = 'Log '+title
+                if log: title = 'Log'+title
 
                 if plotType == '2d':
                     fig = plt.figure()
