@@ -467,8 +467,8 @@ class solHandler():
             if selVal == None: continue
 
             if not axis in self.getAxesNames():
-                logging.error("Cannot select on axis "+axis+", it doesn't exist.")
-                return
+                logging.error("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
+                continue
 
             # find the index of the working axis
             idx = self.getAxesNames().index(axis)
@@ -476,8 +476,8 @@ class solHandler():
             # string -> regular expression
             if type(selVal) is str:
                 if self.getAxis(axis).atom.dtype.kind != 'S':
-                    logging.error("Cannot select on axis "+axis+" with a regular expression.")
-                    return
+                    logging.warning("Cannot select on axis \""+axis+"\" with a regular expression. Use all available values.")
+                    continue
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
@@ -506,7 +506,7 @@ class solHandler():
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
             if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:
-                logging.error("Empty/wrong selection on axis \""+axis+"\". Use all available values.")
+                logging.warning("Empty/wrong selection on axis \""+axis+"\". Use all available values.")
                 self.selection[idx] = slice(0,self.getAxisLen(axisName, ignoreSelection=True))
 
 
@@ -648,7 +648,9 @@ class solWriter(solHandler):
         if weight: dataVals = self.t.weight
         else: dataVals = self.t.val
 
-        dataVals[tuple(self.selection)] = vals
+        # remove degeneracy, squeeze references (no copy)
+        dataValsSel = np.squeeze(dataVals[tuple(self.selection)])
+        dataValsSel = vals
 
 
 class solFetcher(solHandler):
