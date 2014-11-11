@@ -255,9 +255,9 @@ def fitPLaneLTSQ(XYZ):
 def run( step, parset, H ):
 
     import os
-    if 'DISPLAY' not in os.environ:
-        import matplotlib
-        matplotlib.use("Agg")
+#    if 'DISPLAY' not in os.environ:
+    import matplotlib
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
     from h5parm import solFetcher
@@ -295,7 +295,7 @@ def run( step, parset, H ):
                (len(axesToPlot) != 1 and plotType == '1d'):
                 logging.error('Wrong number of axes.')
                 return 1
-
+            
             for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
                 # unwrap if required
