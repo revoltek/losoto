@@ -125,9 +125,6 @@ def run( step, parset, H ):
     from h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
 
     axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), '' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
@@ -152,7 +149,11 @@ def run( step, parset, H ):
 
         logging.info("Flagging soltab: "+soltab._v_name)
 
-        sf.setSelection(ant=ants, pol=pols, dir=dirs)
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        sf.setSelection(**userSel)
 
         if axisToFlag not in sf.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')

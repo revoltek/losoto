@@ -262,12 +262,7 @@ def run( step, parset, H ):
     import numpy as np
     from h5parm import solFetcher
 
-    solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
-    freqs = getParAxis( step, parset, H, 'freq' )
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
@@ -284,7 +279,11 @@ def run( step, parset, H ):
             sf = solFetcher(soltab)
             logging.info("Plotting soltab: "+soltab._v_name)
 
-            sf.setSelection(ant=ants, pol=pols, dir=dirs, freq=freqs)
+            # axis selection
+            userSel = {}
+            for axis in sf.getAxesNames():
+                userSel[axis] = getParAxis( step, parset, H, axis )
+            sf.setSelection(**userSel)
 
             # some checks
             for axis in axesToPlot:

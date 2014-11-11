@@ -17,9 +17,6 @@ def run( step, parset, H ):
     from h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
 
     axesToClip = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     clipLevel = parset.getFloat('.'.join(["LoSoTo.Steps", step, "ClipLevel"]), 0. )
@@ -38,10 +35,13 @@ def run( step, parset, H ):
 
         logging.info("Clipping soltab: "+soltab._v_name)
 
-        sf.setSelection(ant=ants, pol=pols, dir=dirs)
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        sf.setSelection(**userSel)
 
         # some checks
-
         for i, axis in enumerate(axesToClip[:]):
             if axis not in sf.getAxesNames():
                 del axesToClip[i]

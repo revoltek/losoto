@@ -21,14 +21,13 @@ def run( step, parset, H ):
     import numpy as np
     from h5parm import solFetcher, solWriter
 
-    ants = getParAxis( step, parset, H, 'ant' )
-    logging.info('Ant: '+str(ants))
-    pols = getParAxis( step, parset, H, 'pol' )
-    logging.info('Pol: '+str(pols))
-    dirs = getParAxis( step, parset, H, 'dir' )
-    logging.info('Dir: '+str(dirs))
+#    ants = getParAxis( step, parset, H, 'ant' )
+#    logging.info('Ant: '+str(ants))
+#    pols = getParAxis( step, parset, H, 'pol' )
+#    logging.info('Pol: '+str(pols))
+#    dirs = getParAxis( step, parset, H, 'dir' )
+#    logging.info('Dir: '+str(dirs))
 
-    
     # get involved solsets using local step values or global values or all
     solsets = getParSolsets( step, parset, H )
     logging.info('Solset: '+str(solsets))
@@ -54,8 +53,13 @@ def run( step, parset, H ):
            
            logging.info("Soltab type of "+soltab._v_name+" is: "+solType," should be phase")
            continue
+
         # this will make a selection for the getValues() and getValuesIter()
-        t.setSelection(ant=ants, pol=pols, dir=dirs)
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        t.setSelection(**userSel)
+
         logging.info("Selection is: "+str(t.selection))
         names=t.getAxesNames()
         logging.info("axis names"+str(t.getAxesNames()))
@@ -66,7 +70,6 @@ def run( step, parset, H ):
         for i, station_name in enumerate(stations):
             station_positions[i, 0] = station_dict[station_name][0]
             station_positions[i, 1] = station_dict[station_name][1]
-
             station_positions[i, 2] = station_dict[station_name][2]
             
         returnAxes=['ant','freq','pol','time']

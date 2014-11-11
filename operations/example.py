@@ -22,18 +22,9 @@ def run( step, parset, H ):
    # get involved soltabs using local step values or global values or all
    soltabs = getParSoltabs( step, parset, H )
    logging.info('Soltab: '+str(soltabs))
-   # get list of Antennas using local step values or global values or all
-   ants = getParAxis( step, parset, H, 'ant' )
-   logging.info('Ant: '+str(ants))
-   # get list of Polarizations using local step values or global values or all
-   pols = getParAxis( step, parset, H, 'pol' )
-   logging.info('Pol: '+str(pols))
    # get list of SolTypes using local step values or global values or all
    solTypes = getParSolTypes( step, parset, H )
    logging.info('SolType: '+str(solTypes))
-   # get list of Directions using local step values or global values or all
-   dirs = getParAxis( step, parset, H, 'dir' )
-   logging.info('Dir: '+str(dirs))
 
 
    # do something on every soltab (use the openSoltab LoSoTo function)
@@ -50,6 +41,12 @@ def run( step, parset, H ):
         logging.info("Soltab type is: "+solType)
 
         # this will make a selection for the getValues() and getValuesIter()
+        # interpret every entry in the parset which has an axis name as a selector
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        t.setSelection(**userSel)
+
         t.setSelection(ant=ants, pol=pols, dir=dirs)
         logging.info("Selection is: "+str(t.selection))
 

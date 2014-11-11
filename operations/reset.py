@@ -14,9 +14,6 @@ def run( step, parset, H ):
    from h5parm import solWriter
 
    soltabs = getParSoltabs( step, parset, H )
-   ants = getParAxis( step, parset, H, 'ant' )
-   pols = getParAxis( step, parset, H, 'pol' )
-   dirs = getParAxis( step, parset, H, 'dir' )
 
    setWeight = parset.getBool('.'.join(["LoSoTo.Steps", step, "Weight"]), False )
 
@@ -25,7 +22,13 @@ def run( step, parset, H ):
         logging.info("Resetting soltab: "+soltab._v_name)
 
         t = solWriter(soltab)
-        t.setSelection(ant=ants, pol=pols, dir=dirs)
+
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        t.setSelection(**userSel)
+
         solType = t.getType()
 
         if setWeight:

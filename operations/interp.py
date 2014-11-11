@@ -17,12 +17,8 @@ def run( step, parset, H ):
     import numpy as np
     from h5parm import solFetcher, solWriter
 
-    solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
     solTypes = getParSolTypes( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
 
     calSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "CalSoltab"]), '' )
     calDir = parset.getString('.'.join(["LoSoTo.Steps", step, "CalDir"]), '' )
@@ -59,7 +55,12 @@ def run( step, parset, H ):
             logging.error('Axis '+medAxis+' not found. Cannot proceed.')
             return 1
 
-        tr.setSelection(ant=ants, pol=pols, dir=dirs)
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        tr.setSelection(**userSel)
+
         for vals, coord in tr.getValuesIter(returnAxes=interpAxes):
 
             # construct grid

@@ -15,12 +15,8 @@ def run( step, parset, H ):
     import numpy as np
     from h5parm import solFetcher, solWriter
     
-    solsets = getParSolsets( step, parset, H )
     soltabs = getParSoltabs( step, parset, H )
     solTypes = getParSolTypes( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
 
     normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
     normAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "NormAxis"]), 'time' )
@@ -36,7 +32,12 @@ def run( step, parset, H ):
             logging.error('Normalization axis '+normAxis+' not found.')
             return 1
 
-        tr.setSelection(ant=ants, pol=pols, dir=dirs)
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        tr.setSelection(**userSel)
+
         for vals, coord in tr.getValuesIter(returnAxes=normAxis):
 
             # construct grid

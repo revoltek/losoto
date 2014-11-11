@@ -14,9 +14,6 @@ def run( step, parset, H ):
     from h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
-    ants = getParAxis( step, parset, H, 'ant' )
-    pols = getParAxis( step, parset, H, 'pol' )
-    dirs = getParAxis( step, parset, H, 'dir' )
 
     axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
@@ -30,9 +27,13 @@ def run( step, parset, H ):
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
 
-        logging.info("Smoothing soltab: "+soltab._v_name)
+        # axis selection
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        sf.setSelection(**userSel)
 
-        sf.setSelection(ant=ants, pol=pols, dir=dirs)
+        logging.info("Smoothing soltab: "+soltab._v_name)
 
         for i, axis in enumerate(axesToSmooth[:]):
             if axis not in sf.getAxesNames():
