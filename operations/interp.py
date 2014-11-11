@@ -57,7 +57,7 @@ def run( step, parset, H ):
 
         # axis selection
         userSel = {}
-        for axis in sf.getAxesNames():
+        for axis in tr.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
         tr.setSelection(**userSel)
 

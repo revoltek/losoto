@@ -43,7 +43,7 @@ def run( step, parset, H ):
         # this will make a selection for the getValues() and getValuesIter()
         # interpret every entry in the parset which has an axis name as a selector
         userSel = {}
-        for axis in sf.getAxesNames():
+        for axis in t.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
         t.setSelection(**userSel)
 

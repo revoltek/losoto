@@ -663,8 +663,12 @@ class solWriter(solHandler):
         else: dataVals = self.t.val
 
         # remove degeneracy, squeeze references (no copy)
-        dataValsSel = np.squeeze(dataVals[tuple(self.selection)])
-        dataValsSel = vals
+        
+        #dataValsSel = np.squeeze(dataVals[tuple(self.selection)])
+        #dataValsSel[:] = vals
+        #print np.sum(dataVals)
+        dataVals[tuple(self.selection)] = vals
+        #print np.sum(dataVals)
 
 
 class solFetcher(solHandler):
