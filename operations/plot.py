@@ -267,6 +267,7 @@ def run( step, parset, H ):
     ants = getParAxis( step, parset, H, 'ant' )
     pols = getParAxis( step, parset, H, 'pol' )
     dirs = getParAxis( step, parset, H, 'dir' )
+    freqs = getParAxis( step, parset, H, 'freq' )
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
@@ -283,7 +284,7 @@ def run( step, parset, H ):
             sf = solFetcher(soltab)
             logging.info("Plotting soltab: "+soltab._v_name)
 
-            sf.setSelection(ant=ants, pol=pols, dir=dirs)
+            sf.setSelection(ant=ants, pol=pols, dir=dirs, freq=freqs)
 
             # some checks
             for axis in axesToPlot:

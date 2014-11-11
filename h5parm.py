@@ -493,12 +493,14 @@ class solHandler():
                 elif 'max' in selVal:
                     self.selection[idx] = slice(0,np.where(axisVals <= selVal['max'])[0][-1]+1)
                 else:
-                    logging.error("Selection with a dict must have 'min' and/or 'max' entry.")
-                    return
+                    logging.error("Selection with a dict must have 'min' and/or 'max' entry. Use all available values.")
+                    continue
 
             # single val/list -> exact matching
             else:
                 if not type(selVal) is list: selVal = [selVal]
+                # convert to correct data type (from parset everything is a str)
+                selVal = np.array(selVal, dtype=self.getAxisType(axis))
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
@@ -552,6 +554,18 @@ class solHandler():
             return self.t._f_get_child(axis).nrows
         else:
             return len(self.getAxisValues(axis))
+
+
+    def getAxisType(self, axis = None):
+        """
+        Return the axis dtype
+        Keyword arguments:
+        axis -- the name of the axis whose type is returned
+        """
+        if not axis in self.getAxesNames():
+            logging.error("Cannot find "+axis+", it doesn't exist.")
+            return None
+        return self.t._f_get_child(axis).dtype
 
 
     def getAxisValues(self, axis='', ignoreSelection = False):
