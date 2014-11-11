@@ -255,9 +255,10 @@ def fitPLaneLTSQ(XYZ):
 def run( step, parset, H ):
 
     import os
-#    if 'DISPLAY' not in os.environ:
-    import matplotlib
-    matplotlib.use("Agg")
+    # avoids error if re-setting "agg" a second run of plot
+    if not 'matplotlib' in sys.modules:
+        import matplotlib
+        matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
     from h5parm import solFetcher
