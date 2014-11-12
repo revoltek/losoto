@@ -39,7 +39,7 @@ def run( step, parset, H ):
             if sf.getType() == 'amplitude': weights[np.where(vals == 1)] = 0
             else: weights[np.where(vals == 0)] = 0
 
-        logging.debug('Percentage of data flagged: %.3f %%' % (100.*len(np.where(weights==0)[0])/len(weights)))
+        logging.debug('Percentage of data flagged: %.3f %%' % (100.*len(np.where(weights==0)[0])/len(weights.flat)))
 
         sw.setValues(weights, weight=True)
 
