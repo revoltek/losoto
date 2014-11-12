@@ -107,9 +107,9 @@ if __name__=='__main__':
                    "CLOCKTEC": operations.clocktec,
                    "FLAG": operations.flag,
                    "UNFLAG": operations.unflag,
-                   # example operation
-                   "EXAMPLE": operations.example
                    #"COPY": operations.copy,
+                   # example operation
+                   #"EXAMPLE": operations.example
     }
 
     for step in steps:
