@@ -662,13 +662,12 @@ class solWriter(solHandler):
         if weight: dataVals = self.t.weight
         else: dataVals = self.t.val
 
-        # remove degeneracy, squeeze references (no copy)
-        
-        #dataValsSel = np.squeeze(dataVals[tuple(self.selection)])
-        #dataValsSel[:] = vals
-        #print np.sum(dataVals)
-        dataVals[tuple(self.selection)] = vals
-        #print np.sum(dataVals)
+        # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
+        try:
+            dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
+        except Exception, e:
+            logging.error('Problem in writing solutions')
+            print e
 
 
 class solFetcher(solHandler):

@@ -133,6 +133,7 @@ def run( step, parset, H ):
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
     maxGap = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
+    preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
     
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
@@ -160,6 +161,10 @@ def run( step, parset, H ):
             return 1
 
         for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
+
+            if preflagzeros:
+                if sf.getType() == 'amplitude': weights[np.where(vals == 1)] = 0
+                else: weights[np.where(vals == 0)] = 0
 
             # if phase, then convert to real/imag, run the flagger on those, and convert back to pahses
             # best way to avoid unwrapping

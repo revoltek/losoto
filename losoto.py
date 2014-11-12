@@ -106,6 +106,7 @@ if __name__=='__main__':
                    "TECSCREEN": operations.tecscreen,
                    "CLOCKTEC": operations.clocktec,
                    "FLAG": operations.flag,
+                   "UNFLAG": operations.unflag,
                    # example operation
                    "EXAMPLE": operations.example
                    #"COPY": operations.copy,

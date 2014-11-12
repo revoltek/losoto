@@ -91,9 +91,6 @@ def run( step, parset, H ):
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
 
-    # Add history
-    sw.addHistory('Run CLOCKTECFIT operation')
-    
     return 0 # if everything went fine, otherwise 1
 
 
