@@ -48,7 +48,6 @@ LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
 LoSoTo.Steps.norm.Operation = NORM
 LoSoTo.Steps.norm.NormVal = 1.
 LoSoTo.Steps.norm.NormAxis = time
-LoSoTo.Steps.norm.UseWeights = True # normalization takes the weights into account
 
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen

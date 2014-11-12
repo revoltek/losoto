@@ -21,7 +21,6 @@ def run( step, parset, H ):
 
     normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
     normAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "NormAxis"]), 'time' )
-    useWeights = parset.getBool('.'.join(["LoSoTo.Steps", step, "UseWeights"]), True )
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab._v_name)
@@ -46,9 +45,6 @@ def run( step, parset, H ):
             coordSel = removeKeys(coord, normAxis)
             logging.debug("Working on coords:"+str(coordSel))
 
-            if not useWeights:
-                weights = None
-            
             # rescale solutions
             valsMean = np.average(vals, weights=weights)
             valsNew = normVal*vals/valsMean
