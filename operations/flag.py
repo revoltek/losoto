@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a flagging procedure
+# WEIGHT: flag-only compliant
 
 import logging
 from operations_lib import *

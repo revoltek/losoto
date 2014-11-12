@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Take absolute value. Needed before smooth if amplitudes are negative!
+# WEIGHT: no need to be weight compliant
 
 # Implemented by Martin Hardcastle based on clip/flag code
 

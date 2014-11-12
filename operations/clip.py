@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Clip solutions around the median by a factor specified by the user.
-# Flagging is implemented by setting values to NaN.
+# WEIGHT: flag compliant, putting weights into median is tricky
 
 # Implemented by Martin Hardcastle based on original flag.py code
 
@@ -47,31 +47,36 @@ def run( step, parset, H ):
                 del axesToClip[i]
                 logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
+        if sf.getType() != 'amplitude':
+            logging.error('CLIP is for "amplitude" tables, not %s.' % sf.getType())
+            continue
+
         before_count=0
         after_count=0
         total=0
-        for vals, coord in sf.getValuesIter(returnAxes=axesToClip):
+        for vals, weights, coord in sf.getValuesIter(returnAxes=axesToClip, weight = True):
 
             total+=len(vals)
-            before_count+=np.count_nonzero(np.isnan(vals))
+            before_count+=(len(weights)-np.count_nonzero(weights))
 
             # clipping
             # first find the median and standard deviation
-            valmedian = np.median(vals)
+            valmedian = np.median(vals[np.where(weights > 0)])
             clipvalue = valmedian * clipLevel
-            np.putmask(vals, vals > clipvalue, np.nan)
+            np.putmask(weights, vals > clipvalue, 0)
             clipvalue = valmedian / clipLevel
-            np.putmask(vals, vals < clipvalue, np.nan)
+            np.putmask(weights, vals < clipvalue, 0)
         
-            after_count+=np.count_nonzero(np.isnan(vals))
+            after_count+=(len(weights)-np.count_nonzero(weights))
 
             # writing back the solutions
             coord = removeKeys(coord, axesToClip)
             sw.setSelection(**coord)
-            sw.setValues(vals)
+            sw.setValues(weights, weight=True)
 
         sw.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
-        logging.info('Clip: %i points initially bad, %i after clipping (%f %%)' % (before_count,after_count,float(after_count)/total))
+        logging.info('Clip: %i points initially bad, %i after clipping (%f %%)' \
+                % (before_count, after_count, 100.*float(after_count)/total))
         
     return 0
 
