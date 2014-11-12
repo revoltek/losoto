@@ -28,7 +28,7 @@ LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Axis = '' # axis to flag (e.g. 'time')
+LoSoTo.Steps.flag.Axis = '' # axis along which to smooth/find outlier (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
 LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers (amp: 3, ph: 6)
 LoSoTo.Steps.flag.Window = 60 # window to remove trends (in timestamps) (amp:60, ph:100)

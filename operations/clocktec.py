@@ -23,7 +23,6 @@ def run( step, parset, H ):
 
     # get involved solsets using local step values or global values or all
     soltabs = getParSoltabs( step, parset, H )
-    logging.info('Soltab: '+str(soltabs))
      
     # do something on every soltab (use the openSoltab LoSoTo function)
     #for soltab in openSoltabs( H, soltabs ):
@@ -46,10 +45,8 @@ def run( step, parset, H ):
         for axis in t.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
         t.setSelection(**userSel)
-        logging.info("Selection is: "+str(t.selection))
 
         names=t.getAxesNames()
-        logging.info("Axis names"+str(t.getAxesNames()))
 
         # Collect station properties
         station_dict = H.getAnt(solsetname)

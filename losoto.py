@@ -51,6 +51,7 @@ if __name__=='__main__':
     opt.add_option('-v', help='Verbose', action='store_true', default=False)
     opt.add_option('-f', '--filter', help='Filter to use with "-i" option to filter on solution set names (default=None)', type='string', default=None)
     opt.add_option('-i', help='List information about h5parm file (default=False). A filter on the solution set names can be specified with the "-f" option.', action='store_true', default=False)
+    opt.add_option('-d', '--delete', help='Specify a solution table to be deleted. Use the solset/soltab sintax.', type='string', default=None)
     (options, args) = opt.parse_args()
 
     atexit.register(my_close_open_files, False) # Suppress info about closing open files at exit
@@ -76,7 +77,7 @@ if __name__=='__main__':
     if not os.path.isfile(h5parmFile):
         logging.critical("Missing h5parm file.")
         sys.exit(1)
-    if not os.path.isfile(parsetFile) and not options.i:
+    if not os.path.isfile(parsetFile) and not options.i and options.delete == None:
         logging.critical("Missing parset file, I don't know what to do :'(")
         sys.exit(1)
 
@@ -86,6 +87,12 @@ if __name__=='__main__':
     # List h5parm information if desired
     if options.i:
         print(H.printInfo(options.filter))
+        sys.exit()
+
+    # Delete the soltab and exit
+    if options.delete != None:
+        solset, soltab = options.delete.split('/')
+        H.delSoltab(solset, soltab)
         sys.exit()
 
     # from ~vdtol/Expion-2011-05-03/src

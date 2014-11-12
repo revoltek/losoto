@@ -217,6 +217,23 @@ class h5parm():
         return soltab
 
 
+    def delSoltab(self, solset=None, soltab=None):
+        """
+        Delete a solution-table of a specific solution-set
+        Keyword arguments:
+        solset -- a solution-set name (String) or instance (required if soltab is a string)
+        soltab -- a solution-table name (String) or instance
+        """
+        if soltab == None:
+            raise Exception("Solution-table not specified while deleting a solution-table.")
+
+        if type(soltab) is str:
+            soltabobj = self.getSoltab(solset, soltab)
+
+        soltabobj._f_remove(recursive=True)
+        logging.info("Soltab \""+soltab+"\" deleted.")
+
+
     def getSoltabs(self, solset=None):
         """
         Return a dict {name1: object1, name2: object2, ...}
