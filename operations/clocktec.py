@@ -22,11 +22,8 @@ def run( step, parset, H ):
     from h5parm import solFetcher, solWriter
 
     # get involved solsets using local step values or global values or all
-    solsets = getParSolsets( step, parset, H )
-    logging.info('Solset: '+str(solsets))
     soltabs = getParSoltabs( step, parset, H )
     logging.info('Soltab: '+str(soltabs))
-    solTypes = ['phase']
      
     # do something on every soltab (use the openSoltab LoSoTo function)
     #for soltab in openSoltabs( H, soltabs ):
@@ -38,9 +35,7 @@ def run( step, parset, H ):
         t = solFetcher(soltab)
         tw = solWriter(soltab)
 
-        axisNames = t.getAxesNames()
-        logging.info("Axis names are: "+str(axisNames))
-
+        # some checks
         solType = t.getType()
         if solType != 'phase':
            logging.warning("Soltab type of "+soltab._v_name+" is: "+solType+" should be phase. Ignoring.")
@@ -51,13 +46,14 @@ def run( step, parset, H ):
         for axis in t.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
         t.setSelection(**userSel)
-
         logging.info("Selection is: "+str(t.selection))
+
         names=t.getAxesNames()
-        logging.info("axis names"+str(t.getAxesNames()))
+        logging.info("Axis names"+str(t.getAxesNames()))
+
         # Collect station properties
         station_dict = H.getAnt(solsetname)
-        stations=t.getAxisValues('ant')
+        stations = t.getAxisValues('ant')
         station_positions = np.zeros((len(stations), 3), dtype=np.float)
         for i, station_name in enumerate(stations):
             station_positions[i, 0] = station_dict[station_name][0]
@@ -67,11 +63,11 @@ def run( step, parset, H ):
         returnAxes=['ant','freq','pol','time']
         for vals, coord in t.getValuesIter(returnAxes=returnAxes):
             freqs=coord['freq']
-            ph=vals[:]
             stations=coord['ant']
+            times=coord['time']
+            ph=vals[:]
             axes=[i for i in names if i in returnAxes]
             clock,tec,offset,newstations=doFit(ph,freqs,stations,station_positions,axes)
-            times=coord['time']
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,
