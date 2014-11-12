@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement the unflagging procedure
+# WEIGHT: flag compliant, no need for weight
 
 import logging
 from operations_lib import *

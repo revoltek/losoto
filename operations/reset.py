@@ -3,7 +3,7 @@
 
 # This operation reset all the selected amplitudes to 1
 # and all other selected solution types to 0
-# WEIGHT: no need to be weight compliant
+# WEIGHT: flag compliant, no need for weight
 
 from operations_lib import *
 import logging

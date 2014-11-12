@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a smoothing function
+# WEIGTH: not ready
 
 import logging
 from operations_lib import *
@@ -45,22 +46,6 @@ def run( step, parset, H ):
 
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
         
-            # TODO: implement flag control
-            # find the local mean (without any nans)
-#            valmean = np.ma.mean(np.ma.masked_array(vals, np.isnan(vals)), axis=0)
-            # print 'mean value: ' + str(valmean)
-            # replace any nans with median
-#            valbool = np.isnan(vals)
-#            nanindex = np.where(valbool)
-#            if valbool.any():
-#                logging.warning('Found NaNs in solutions. Replacing with local mean.')
-                # check if valmean is iterable
-#                if valmean.shape is tuple():
-#                    np.putmask(vals, valbool, valmean)
-#                else:
-#                    for x,mval in enumerate(valmean):
-#                        np.putmask(vals[:,x], valbool[:,x], mval)
-
             # writing back the solutions (selection on all the coord axis)
             # this can be properly broacasted
             coord = removeKeys(coord, axesToSmooth)
