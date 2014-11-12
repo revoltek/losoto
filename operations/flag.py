@@ -182,7 +182,7 @@ def run( step, parset, H ):
                 flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
 
             logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %%' \
-                    % (removeKeys(coord, axisToFlag), 100.*len(np.where(weights==0)[0])/len(weights), 100.*sum(flags)/len(flags)))
+                    % (removeKeys(coord, axisToFlag), 100.*(len(weights)-np.count_nonzero(weights))/len(weights), 100.*sum(flags)/len(flags)))
 
             # writing back the solutions
             coord = removeKeys(coord, axisToFlag)
