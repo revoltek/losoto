@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is an interpolation script for LoSoTo
-# WEIGHT: no flag/weight compliant
+# WEIGHT: not ready
 
 import logging
 from operations_lib import *

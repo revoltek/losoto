@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a smoothing function
-# WEIGTH: not ready
+# WEIGHH: not ready
 
 import logging
 from operations_lib import *
