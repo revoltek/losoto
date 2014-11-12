@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is an interpolation script for LoSoTo
+# Weights compliant
 
 import logging
 from operations_lib import *
@@ -20,6 +21,7 @@ def run( step, parset, H ):
 
     normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
     normAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "NormAxis"]), 'time' )
+    useWeights = parset.getBool('.'.join(["LoSoTo.Steps", step, "UseWeights"]), True )
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab._v_name)
@@ -38,14 +40,17 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         tr.setSelection(**userSel)
 
-        for vals, coord in tr.getValuesIter(returnAxes=normAxis):
+        for vals, weights, coord in tr.getValuesIter(returnAxes=normAxis, weight = True):
 
             # construct grid
             coordSel = removeKeys(coord, normAxis)
             logging.debug("Working on coords:"+str(coordSel))
 
+            if not useWeights:
+                weights = None
+            
             # rescale solutions
-            valsMean = np.mean(vals)
+            valsMean = np.average(vals, weights=weights)
             valsNew = normVal*vals/valsMean
             logging.debug("Rescaling by: "+str(normVal/valsMean))
 
