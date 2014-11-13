@@ -330,7 +330,7 @@ class h5parm():
         return sources
 
 
-    def printInfo(self, filter=None):
+    def printInfo(self, filter=None, verbouse=False):
         """
         Returns string with info about H5parm contents
         """
@@ -429,6 +429,9 @@ class h5parm():
                                 pls = ""
                             axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
                         info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
+                        if verbouse:
+                            weights = sf.getValues(weight = True, retAxesVals = False)
+                            info += 'Flagged data %.3f%%\n' % (100.*len(np.where(weights==0)[0])/len(weights.flat))
                         history = sf.getHistory()
                         if history != "":
                             info += "\n" + 4*" " + "History:\n" + 4*" "

@@ -266,7 +266,7 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
 
-    plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '' )
+    plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '1d' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )

@@ -86,7 +86,7 @@ if __name__=='__main__':
 
     # List h5parm information if desired
     if options.i:
-        print(H.printInfo(options.filter))
+        print(H.printInfo(options.filter, verbouse=options.v))
         sys.exit()
 
     # Delete the soltab and exit
