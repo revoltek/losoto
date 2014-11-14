@@ -501,7 +501,7 @@ class solHandler():
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
-                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
+                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1)
 
             # dict -> min max
             elif type(selVal) is dict:
@@ -509,7 +509,7 @@ class solHandler():
                 if 'min' in selVal and 'max' in selVal:
                     self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],np.where(axisVals <= selVal['max'])[0][-1]+1)
                 elif 'min' in selVal:
-                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],self.getAxisLen(axisName, ignoreSelection=True))
+                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],None)
                 elif 'max' in selVal:
                     self.selection[idx] = slice(0,np.where(axisVals <= selVal['max'])[0][-1]+1)
                 else:
@@ -521,15 +521,24 @@ class solHandler():
                 if not type(selVal) is list: selVal = [selVal]
                 # convert to correct data type (from parset everything is a str)
                 selVal = np.array(selVal, dtype=self.getAxisType(axis))
+
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
+                # quick check for mispelled values
+                for selValCheck in selVal:
+                    if not selValCheck in self.getAxisValues(axis, ignoreSelection=True):
+                        logging.warning('Values '+str(selValCheck)+' not found for axis '+axis+'. Ignored.')
+
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
-                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1,None)
+                if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
+                # transform list of continuous numbers in slices (faster)
+                elif len(self.selection[idx])-1 == self.selection[idx][-1] - self.selection[idx][0]:
+                    self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][-1])
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
             if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:
                 logging.warning("Empty/wrong selection on axis \""+axis+"\". Use all available values.")
-                self.selection[idx] = slice(0,self.getAxisLen(axisName, ignoreSelection=True))
+                self.selection[idx] = slice(None)
 
 
     def getType(self):
@@ -682,12 +691,31 @@ class solWriter(solHandler):
         if weight: dataVals = self.t.weight
         else: dataVals = self.t.val
 
+        # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
+        # Conversely, one can apply how many slices he wants.
+        # Single values/contigous values are converted in slices in h5parm.
+        # This try/except implements a workaround for this limitation. One the pytables will be updated, the except can be removed.
+
         # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
+        # the float check allows quick reset of large arrays to a single value
         try:
-            dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
-        except Exception, e:
-            logging.error('Problem in writing solutions')
-            print e
+            if type(vals) == float: dataVals[tuple(self.selection)] = vals
+            else: dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
+        except:
+            logging.debug('Optimizing selection writing '+str(self.selection))
+            selectionListsIdx = [i for i, s in enumerate(self.selection) if type(s) is list]
+            subSelection = self.selection[:]
+            # create a subSelection also for the "vals" array
+            subSelectionForVals = [slice(None) for i in xrange(len(subSelection))]
+            # cycle across lists and save data index by index
+            import itertools
+            for selectionListValsIter in itertools.product(*[self.selection[selectionListIdx] for selectionListIdx in selectionListsIdx[1:]]):
+                for i, selectionListIdx in enumerate(selectionListsIdx[1:]):
+                    # this is the sub selection which has a slice for every slice and a single value for every list
+                    subSelection[selectionListIdx] = selectionListValsIter[i]
+                    subSelectionForVals[selectionListIdx] = i
+                if type(vals) == float: dataVals[tuple(subSelection)] = vals
+                else: dataVals[tuple(subSelection)] = vals[tuple(subSelectionForVals)]
 
 
 class solFetcher(solHandler):
@@ -718,25 +746,50 @@ class solFetcher(solHandler):
 
     def getValues(self, retAxesVals = True, weight = False):
         """
-        Creates a simple matrix of values. Fetching all selected rows into memory.
+        Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
         Keyword arguments:
         retAxisVals -- if true returns also the axes vals as a dict of:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         weight -- if true store in the weights instead that in the vals (default: False)
+        Return:
+        A numpy ndarrey (values or weights depending on parameters)
+        If selected, returns also the axes values
         """
 
         if weight: dataVals = self.t.weight
         else: dataVals = self.t.val
 
-        # Use the slices set by setSelection to slice the data
+        # apply the self.selection
+        # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
+        # Conversely, one can apply how many slices he wants.
+        # Single values/contigous values are converted in slices in h5parm.
+        # This try/except implements a workaround for this limitation. One the pytables will be updated, the except can be removed.
+        try:
+            dataVals = dataVals[tuple(self.selection)]
+        except:
+            logging.debug('Optimizing selection reading '+str(self.selection))
+            # for performances is important to minimize the fetched data
+            # convert all lists other then the first (pytables allowes one!) to slices
+            selectionListsIdx = [i for i, s in enumerate(self.selection) if type(s) is list]
+            firstSelection = self.selection[:]
+            for i in selectionListsIdx[1:]:
+                firstSelection[i] = slice(None)
+            # create a second selection using np.ix_
+            secondSelection = []
+            for i, sel in enumerate(self.selection):
+                if i == selectionListsIdx[0]: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
+                elif type(sel) is list: secondSelection.append(sel)
+                elif type(sel) is slice: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
+            dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
+
         if not retAxesVals:
-            return dataVals[tuple(self.selection)]
+            return dataVals
 
         axisVals = {}
         for axis in self.getAxesNames():
             axisVals[axis] = self.getAxisValues(axis)
 
-        return dataVals[tuple(self.selection)], axisVals
+        return dataVals, axisVals
 
 
     def getValuesIter(self, returnAxes= [], weight = False):
@@ -753,14 +806,14 @@ class solFetcher(solHandler):
         3) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         """
-        if weight: weigthVals = self.t.weight[tuple(self.selection)]
-        dataVals = self.t.val[tuple(self.selection)]
+        if weight: weigthVals = self.getValues(retAxesVals = False, weight = True)
+        dataVals = self.getValues(retAxesVals = False, weight = False)
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]
 
         # generator to cycle over all the combinations of iterAxes
-        # it "simply" get the indexes of this particular combination of iterAxes
+        # it "simply" gets the indexes of this particular combination of iterAxes
         # and use them to refine the selection.
         def g():
             for axisIdx in np.ndindex(tuple(iterAxesDim)):

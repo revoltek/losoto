@@ -167,6 +167,7 @@ def run( step, parset, H ):
                 if sf.getType() == 'amplitude': weights[np.where(vals == 1)] = 0
                 else: weights[np.where(vals == 0)] = 0
 
+
             # if phase, then convert to real/imag, run the flagger on those, and convert back to pahses
             # best way to avoid unwrapping
             if sf.getType() == 'phase' or sf.getType() == 'scalarphase' or sf.getType() == 'rotation':

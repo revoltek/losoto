@@ -44,6 +44,9 @@ def run( step, parset, H ):
         userSel = {}
         for axis in t.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
+            if axis == 'ant' and userSel[axis] != None and len(userSel[axis]) < 10:
+                logging.error('Clock/TEC separation needs at least 10 antennas selected.')
+                return 1
         t.setSelection(**userSel)
 
         names=t.getAxesNames()
