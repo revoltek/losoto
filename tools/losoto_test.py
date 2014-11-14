@@ -24,13 +24,16 @@ del H5
 logging.info("Open in read-only mode")
 H5 = h5parm('test.h5', readonly=True)
 del H5
-print "###########################################"
 
 # solsets
+print "###########################################"
+logging.info('### solSets')
 H5 = h5parm('test.h5', readonly=False)
-logging.info("Create solsets (using same names)")
+logging.info("Create solset")
 H5.makeSolset('ssTest')
+logging.info("Create solsets (using same name)")
 H5.makeSolset('ssTest')
+logging.info("Create solsets (using default name)")
 H5.makeSolset()
 logging.info('Get a solset object')
 ss=H5.getSolset('ssTest')
@@ -40,14 +43,17 @@ logging.info('Get sources')
 sou=H5.getSou(ss)
 logging.info('Get all solsets:')
 print H5.getSolsets()
-print "###########################################"
 
 # soltabs
-logging.info("Create soltabs (using same names)")
-axesVals = [['a','b','c','d'], np.arange(100), np.arange(1000)]
-vals = np.arange(4*100*1000).reshape(4,100,1000)
+print "###########################################"
+logging.info('### solTabs')
+axesVals = [['a','b','c','d'], np.arange(10), np.arange(100)]
+vals = np.arange(4*10*100).reshape(4,10,100)
+logging.info("Create soltab")
 H5.makeSoltab(ss, 'amplitude', 'stTest', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
+logging.info("Create soltab (using same name)")
 H5.makeSoltab(ss, 'amplitude', 'stTest', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
+logging.info("Create soltab (using default name)")
 H5.makeSoltab(ss, 'amplitude', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
 logging.info('Get a soltab object')
 st=H5.getSoltab(ss,'stTest')
@@ -55,54 +61,74 @@ logging.info('Get all soltabs:')
 print H5.getSoltabs(ss)
 
 print "###########################################"
-logging.info('printInfo()')
-print H5.printInfo()
-
-print "###########################################"
-logging.info('solFetcher/solWriter')
+logging.info('### solFetcher/solWriter - General')
 Hsf = solFetcher(st)
 Hsw = solWriter(st)
-logging.info('Get Axes Names')
-print Hsf.getAxesNames()
-logging.info('Get Axes1 Len (exp 4)')
-print Hsf.getAxisLen('axis1')
 logging.info('Get solution Type (exp: amplitude)')
 print Hsf.getType()
-logging.info('Get axisValues (exp: a,b,c,d)')
+logging.info('Get Axes Names')
+print Hsf.getAxesNames()
+logging.info('Get Axis1 Len (exp: 4)')
+print Hsf.getAxisLen('axis1')
+logging.info('Get Axis1 Type (exp: str)')
+print Hsf.getAxisType('axis1')
+logging.info('Get Axis2 Type (exp: float)')
+print Hsf.getAxisType('axis2')
+logging.info('Get Axis1 Values (exp: a,b,c,d)')
 print Hsf.getAxisValues('axis1')
 logging.info('Set new axes values')
-print Hsw.setAxisValues('axis1',['e','f','g','h'])
-logging.info('Get axisValues (exp: e,f,g,h)')
+Hsw.setAxisValues('axis1',['e','f','g','h'])
+logging.info('Get new Axis1 Values (exp: e,f,g,h)')
 print Hsf.getAxisValues('axis1')
-logging.info('Set a selection using single/multiple vals and append (exp: 1x1x2)')
-Hsf.setSelection(axis1='e', axis2=1, axis3=[1,10])
+
+print "###########################################"
+logging.info('### solFetcher/solWriter - selection')
+logging.info('Set a selection using single/multiple vals and append (exp: 3x1x2)')
+Hsf.setSelection(axis1=['f','e','h'], axis2=1, axis3=[1,10])
 v,a = Hsf.getValues()
 print v.shape
+print v
 print a
-logging.info('Set a selection using min max (exp: 4x10x10)')
-Hsf.setSelection(axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
+logging.info('Writing back with selction')
+Hsw.setSelection(axis1=['f','e','h'], axis2=1, axis3=[1,10])
+Hsw.setValues(v)
+
+logging.info('Set a selection using min max (exp: 4x4x10)')
+Hsf.setSelection(axis1='e', axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
 v,a = Hsf.getValues()
 print v.shape
 print a
 logging.info('Writing back with selction')
-Hsw.setSelection(axis1='e', axis2={'min':10,'max':19}, axis3={'min':990, 'max':1e6})
-Hsw.setValues(v[0])
-logging.info('Set/Get history')
-Hsw.addHistory('history is working.')
-print Hsw.getHistory()
+Hsw.setSelection(axis1='e', axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
+Hsw.setValues(v)
+
 logging.info('Get Vaues Iter (exp: 40 and 10)')
 i=0
 for matrix, coord in Hsf.getValuesIter(returnAxes=['axis3']):
+    print matrix.shape
     i += 1
 print "Iterations:", i
 i=0
 for matrix, coord in Hsf.getValuesIter(returnAxes=['axis2','axis3']):
+    print matrix.shape
     print coord
     i += 1
 print "Iterations:", i
 
 
+print "###########################################"
+logging.info('### solHandler - History and info')
+logging.info('Set a selection using single/multiple vals and append (exp: 3x1x2)')
+logging.info('Set/Get history')
+Hsw.addHistory('History is working.')
+print Hsw.getHistory()
+
+logging.info('printInfo()')
+print H5.printInfo()
+
 # close the H5parm file
 del Hsf
 del Hsw
 del H5
+os.system('rm test.h5')
+logging.info('Done.')

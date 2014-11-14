@@ -1,5 +1,5 @@
 # Validation of LoSoTo parset
-# to sun with losoto.py -v examples/validation.h5 parsets/validation.parset
+# to run with losoto.py -v examples/validation.h5 parsets/validation.parset
 
 LoSoTo.Steps = [plot0,abs,plot1,clip,plot2,interp,plot3,interp2,plot3b,norm,plot4,smooth,plot5,reset,plot6]
 LoSoTo.Solset = [sol000]
