@@ -119,26 +119,42 @@ def getParAxis( step, parset, H, axisName ):
     Return the axis val array for this step.
         - check if all the soltabs have this axis.
     The order is:
-    * local step value
-    * global value
+    * local
+    * local minmax
+    * global
+    * global minmax
     * default = None (which keep all in setSelection)
     """
     stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName.lower() ] )
-    # local val
+
+    # local
     axisVals = parset.getString( stepOptName, '' )
     # if the user defined a vector, load it as a vector, otherwise keep string
     if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
         axisVals = parset.getStringVector( stepOptName, [] )
+    
+    # minmax - local
+    if axisVals == '' or axisVals == []:
+        axisVals = parset.getDoubleVector( stepOptName+'.minmax', [] )
+        if axisVals != []:
+            axisVals = {'min':axisVals[0],'max':axisVals[1]} 
 
-    # global val
-    if axisVals == [] or axisVals == '':
+    # global
+    if axisVals == '' or axisVals == []:
         axisVals = parset.getString( "LoSoTo."+axisName.lower(), '' )
         # if the user defined a vector, load it as a vector, otherwise keep string
         if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
             axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
 
+    # minmax - global
+    if axisVals == '' or axisVals == []:
+        axisVals = parset.getDoubleVector( "LoSoTo."+axisName.lower()+'.minmax', [] )
+        if axisVals != []:
+            axisVals = {'min':axisVals[0],'max':axisVals[1]} 
+
     # default val
-    if axisVals == [] or axisVals == '': axisVals = None
+    if axisVals == '' or axisVals == []:
+        axisVals = None
 
     return axisVals
 
