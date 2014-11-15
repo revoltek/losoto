@@ -533,7 +533,7 @@ class solHandler():
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
                 # transform list of continuous numbers in slices (faster)
                 elif len(self.selection[idx])-1 == self.selection[idx][-1] - self.selection[idx][0]:
-                    self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][-1])
+                    self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][-1]+1)
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
             if type(self.selection[idx]) is list and len(self.selection[idx]) == 0:

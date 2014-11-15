@@ -44,9 +44,6 @@ def run( step, parset, H ):
         userSel = {}
         for axis in t.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
-            if axis == 'ant' and userSel[axis] != None and len(userSel[axis]) < 10:
-                logging.error('Clock/TEC separation needs at least 10 antennas selected.')
-                return 1
         t.setSelection(**userSel)
 
         names=t.getAxesNames()
@@ -62,10 +59,19 @@ def run( step, parset, H ):
             
         returnAxes=['ant','freq','pol','time']
         for vals, coord in t.getValuesIter(returnAxes=returnAxes):
+
+            if len(coord['ant']) < 10:
+                logging.error('Clock/TEC separation needs at least 10 antennas selected.')
+                return 1
+            if len(coord['pol']) < 2:
+                logging.error('Clock/TEC separation needs both polarizations.')
+                return 1
+
             freqs=coord['freq']
             stations=coord['ant']
             times=coord['time']
             ph=vals[:]
+
             axes=[i for i in names if i in returnAxes]
             clock,tec,offset,newstations=doFit(ph,freqs,stations,station_positions,axes)
             tf_st = H.makeSoltab(solsetname, 'tec',
