@@ -66,7 +66,6 @@ def run( step, parset, H ):
             if len(coord['pol']) < 2:
                 logging.error('Clock/TEC separation needs both polarizations.')
                 return 1
-            print vals.shape
 
             freqs=coord['freq']
             stations=coord['ant']
