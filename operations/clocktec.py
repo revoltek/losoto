@@ -66,14 +66,14 @@ def run( step, parset, H ):
             if len(coord['pol']) < 2:
                 logging.error('Clock/TEC separation needs both polarizations.')
                 return 1
+            print vals.shape
 
             freqs=coord['freq']
             stations=coord['ant']
             times=coord['time']
-            ph=vals[:]
 
             axes=[i for i in names if i in returnAxes]
-            clock,tec,offset,newstations=doFit(ph,freqs,stations,station_positions,axes)
+            clock,tec,offset,newstations=doFit(vals,freqs,stations,station_positions,axes)
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,

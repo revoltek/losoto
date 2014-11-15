@@ -826,6 +826,7 @@ class solFetcher(solHandler):
                         # add a slice with all possible values
                         refSelection.append(slice(0,self.getAxisLen(axisName),None))
                     else:
+                        #TODO: the iteration axes are not into a 1 element array, is it a problem?
                         thisAxesVals[axisName] = self.getAxisValues(axisName)[axisIdx[i]]
                         # add this index to the refined selection, this will return a single value for this axis
                         refSelection.append(axisIdx[i])
