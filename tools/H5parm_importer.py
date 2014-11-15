@@ -136,7 +136,6 @@ if __name__=='__main__':
     # Create tables using the first instrumentdb
     # TODO: all the instrument tables should be checked
     pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
-    print instrumentdbFiles[0]
 
     solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))
     logging.info('Found solution types: '+', '.join(solTypes))
