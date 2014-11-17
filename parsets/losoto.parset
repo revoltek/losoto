@@ -60,6 +60,9 @@ LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
+LoSoTo.Steps.ewweight.Operation = REWEIGHT
+LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
+
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]

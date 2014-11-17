@@ -33,7 +33,7 @@ def run( step, parset, H ):
         solType = t.getType()
 
         if setWeight:
-            t.setValues(1., weight=setWeight)
+            t.setValues(weightVal, weight=1.)
         elif solType == 'amplitude':
             t.setValues(1.)
         else:

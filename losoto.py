@@ -104,15 +104,16 @@ if __name__=='__main__':
     operations = { 
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
+                   "CLOCKTEC": operations.clocktec,
+                   "FLAG": operations.flag,
                    "INTERP": operations.interp,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
                    "RESET": operations.reset,
+                   "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
-                   "CLOCKTEC": operations.clocktec,
-                   "FLAG": operations.flag,
                    "UNFLAG": operations.unflag,
                    #"COPY": operations.copy,
                    # example operation
