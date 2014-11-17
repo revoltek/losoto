@@ -13,6 +13,7 @@ _author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)\n\
 Bas van der Tol (vdtol@strw.leidenuniv.nl)"
 
 import sys, os, re
+import glob
 import logging
 import lofar.parameterset
 import losoto._version
@@ -56,7 +57,9 @@ if __name__=='__main__':
             +_author, version='%prog '+losoto._version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
     opt.add_option('-o', '--overwrite', help='Overwrite an existing globaldb (default=False)', action='store_true', default=False)
+    opt.add_option('-m', '--mss', help='Regular expression to locate the MSs', type='string', default='')
     opt.add_option('-d', '--gds', help='Gds file used to construct the globaldb', type='string', default='')
+    opt.add_option('-p', '--parmdb', help='Parmdb name inside the MSs (default=instrument)', type='string', default='instrument')
     opt.add_option('-g', '--globaldb', help='Output globaldb name (default=globaldb)', type='string', default='globaldb')
     (options, args) = opt.parse_args()
 
@@ -67,17 +70,11 @@ if __name__=='__main__':
     if options.verbose: losoto._logging.setLevel('debug')
 
     overwrite = options.overwrite
-    gdsFile = options.gds
-    logging.info("GDS filename = "+gdsFile)
+
     globaldbFile = options.globaldb
     logging.info("globaldb filename = "+globaldbFile)
-
-    # hardcoded, maybe can be turned in an option...
-    instrumentName='instrument'
-
-    if not os.path.isfile(gdsFile):
-        logging.critical('gdsFile '+gdsFile+' not found.')
-        sys.exit()
+    instrumentName=options.parmdb
+    logging.info("MS parmdb name = "+instrumentName)
 
     if os.path.exists(globaldbFile):
         if overwrite:
@@ -87,6 +84,39 @@ if __name__=='__main__':
             logging.warning(globaldbFile+' already exists. I will not overwrite existing files.')
     else:
         os.makedirs(globaldbFile)
+
+    msRegex = options.mss
+    gdsFile = options.gds
+
+    if msRegex != '':
+        mss = glob.glob(msRegex)
+        if mss != [] and gdsFile != '':
+            logging.warning('Ignoring GDS file, MS list provided.')
+        if mss == []:
+            logging.error("No MS selected with "+msRegex+".")
+            sys.exit(1)
+        logging.info("Selecting "+str(len(mss))+" files:")
+        print sorted(mss)
+        for i, ms in enumerate(sorted(mss)):
+            if not os.path.isfile(globaldbFile+'/instrument-%03i' % i):
+                os.system('cp -r '+ms+'/'+instrumentName+' '+globaldbFile+'/instrument-%03i' % i)
+            if i == 0:
+                if not os.path.isfile(globaldbFile+'/ANTENNA'):
+                    os.system('cp -r '+ms+'/ANTENNA '+globaldbFile)
+                if not os.path.isfile(globaldbFile+'/ANTENNA'):
+                    os.system('cp -r '+ms+'/FIELD '+globaldbFile)
+                if not os.path.isfile(globaldbFile+'/ANTENNA'):
+                    os.system('cp -r '+ms+'/sky '+globaldbFile)
+        # file copied from MS list, quit.
+        logging.info("Done.")
+        sys.exit(0)
+    
+    # MS list not provided, go on with the GDS 
+    if os.path.isfile(gdsFile):
+        logging.info("GDS filename = "+gdsFile)
+    else:
+        logging.error("Cannot find GDS file: "+gdsFile+".")
+        sys.exit(1)
 
     # Create an instrumentdb named as gdsFile.instrumentName
     # which is like the gds file but points to the "instrument" parmdb table
