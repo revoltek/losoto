@@ -262,14 +262,23 @@ def run( step, parset, H ):
         matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
-    from h5parm import solFetcher
+    from h5parm import solFetcher, solHandler
 
     soltabs = getParSoltabs( step, parset, H )
+    
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '1d' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+    # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
+    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxes"]), 'ant' )
+    # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
+    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxes"]), 'pol' )
+    # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot #
+    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxes"]), 'freq' )
+    # the axis to plot on a different page - new plot - new image name  e.g. combine with axesToPlot amp vs time for all freq or amp vs freq for all time#
+    axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxes"]), '' )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), False )
 
@@ -302,6 +311,11 @@ def run( step, parset, H ):
 
                 # unwrap if required
                 if plotType == '1d' and dounwrap: vals = unwrap(vals)
+                
+                # if plotting vs antenna - convert to number
+                xvals = coord[axesToPlot[0]]
+                if axesToPlot[0] == 'ant':
+                    xvals = np.arange(len(xvals))
 
                 title = ''
                 for axis in coord:
@@ -316,8 +330,8 @@ def run( step, parset, H ):
                     plt.title(title)
                     plt.ylabel(axesToPlot[0])
                     plt.xlabel(axesToPlot[1])
-                    if log: plt.pcolormesh(coord[axesToPlot[1]], coord[axesToPlot[0]], np.log10(vals))
-                    else: plt.pcolormesh(coord[axesToPlot[1]], coord[axesToPlot[0]], vals)
+                    if log: plt.pcolormesh(coord[axesToPlot[1]], xvals , np.log10(vals))
+                    else: plt.pcolormesh(coord[axesToPlot[1]], xvals, vals)
                     if not (minZ == 0 and maxZ == 0):
                         print "setting zlim"
                         plt.zlim(zmin=minZ, zmax=maxZ)
@@ -336,16 +350,182 @@ def run( step, parset, H ):
                         plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
                     if sf.getType() == 'amplitude':
-                        p = ax.plot(coord[axesToPlot[0]], vals, 'k-')
+                        p = ax.plot(xvals, vals, 'k-')
                     else:
-                        p = ax.plot(coord[axesToPlot[0]], vals, 'ko')
-                    p = ax.plot(coord[axesToPlot[0]][np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                        p = ax.plot(xvals, vals, 'ko')
+                    p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     if log: ax.set_yscale('log')
                     plt.savefig(prefix+title+'.png')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
-    elif plotType.lower() == 'tecscreen':
+    elif plotType == '1d_table':
+        
+        import matplotlib as mpl
+        mpl.rc('font',size =8 )
+        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+        
+        ants = getParAxis( step, parset, H, 'ant' )
+        pols = getParAxis( step, parset, H, 'pol' )
+        dirs = getParAxis( step, parset, H, 'dir' )
+        
+        for soltab in openSoltabs( H, soltabs ):
+            plotprefix = prefix + soltab._v_name
+            #print prefix
+
+            sf = solFetcher(soltab)
+            logging.info("Plotting soltab: "+soltab._v_name)
+
+            sf.setSelection(ant=ants, pol=pols, dir=dirs)
+
+            # some checks
+            for axis in axesToPlot:
+                if axis not in sf.getAxesNames():
+                    logging.error('Axis \"'+axis+'\" not found.')
+                    return 1
+
+            if (len(axesToPlot) != 1 and '1d' in plotType):
+                logging.error('Wrong number of axes.')
+                return 1
+
+            sh = solHandler(soltab)
+            axesNames = sh.getAxesNames()
+            Nplots = sh.getAxisLen(axisInTable)
+            if axesToPlot[0] in axesNames:
+                xAxes =  sh.getAxisValues(axesToPlot[0])
+            else:
+                xAxes = []
+            if axisInTable in axesNames:
+                tableAxes =  sh.getAxisValues(axisInTable)
+            else:
+                tableAxes = []
+            if axisInCol in axesNames:
+                colAxes = sh.getAxisValues(axisInCol)
+            else:
+                colAxes = []
+            if axisInShade in axesNames:
+                shadeAxes = sh.getAxisValues(axisInShade)
+            else:
+                shadeAxes = []
+            if axisOnPage in axesNames:
+                pageAxes = sh.getAxisValues(axisOnPage)
+            else:
+                pageAxes = []
+            #print Nplots
+            Nr = int(np.ceil(np.sqrt(Nplots)))
+            Nc = int(np.ceil(np.float(Nplots)/Nr))
+            #print Nr, Nc
+        
+            logging.info('Nplots: ' +str(Nplots))
+            logging.info('X Axis: %s (%i)' %(axesToPlot[0], len(xAxes)))
+            logging.info('In Table: %s (%i)' %(axisInTable, len(tableAxes)))
+            logging.info('In colour: %s (%i)' %(axisInCol, len(colAxes)))
+            logging.info('In shades: %s (%i)' %(axisInShade, len(shadeAxes)))
+            logging.info('On Page: %s (%i)' %(axisOnPage, len(pageAxes)))
+            
+            colours = ['b','g','r','y']
+            nshades = len(shadeAxes)
+            if nshades > 0:
+                shades = np.arange(0.1,1,0.9/nshades)
+            else:
+                shades = []
+            
+            #for axi in range(len(pageAxes)):
+                #print sh.getValues(pageAxes[axi])
+            
+            col='k'
+            shade = 1
+            
+            pages = True
+            # if there is no pageAxes - we must still make a single plot
+            nPages = len(pageAxes)
+            if nPages == 0:
+                pages = False
+                nPages = 1
+            
+            for page_i in range(nPages):
+                sf = solFetcher(soltab)
+                if pages:
+                    kw = {'ant': ants, 'pol': pols, 'dir': dirs, axisOnPage: pageAxes[page_i]}
+                    plotprefix = prefix + axisOnPage+ str(page_i)
+                else:
+                    kw = {'ant': ants, 'pol': pols, 'dir': dirs}
+                    plotprefix = prefix
+                    
+                sf.setSelection( **kw )
+                
+                
+            
+                figgrid, axa = plt.subplots(Nr, Nc, figsize=(16,12), sharex=True, sharey=True)
+                
+                axa[Nr-1][0].set_ylabel(sf.getType())
+                axa[Nr-1][0].set_xlabel(axesToPlot[0])
+                
+                axsgrid = axa.reshape((Nr*Nc))
+                
+                axes = range(len(axsgrid))
+
+                axi = -1
+            
+                for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
+                    # unwrap if required
+                    if plotType == '1d' and dounwrap: vals = unwrap(vals)
+                    
+                    xvals = coord[axesToPlot[0]]
+                    if axesToPlot[0] == 'ant':
+                        xvals = np.arange(len(xvals))
+
+                    #title = ''
+                    for axis in coord:
+                        if axis in axesToPlot: continue
+                        #title += str(coord[axis])+'_'
+                        
+                        #print str(coord[axis])
+                        if coord[axis] in tableAxes: 
+                            axi = np.where(tableAxes==coord[axis])[0][0]
+                            #print axi, tableAxes[axi], coord[axis]
+                            title = str(coord[axis])
+                            
+                        if coord[axis] in colAxes: 
+                            col = colours[np.where(colAxes==coord[axis])[0][0]]
+                            #print col, np.where(colAxes==coord[axis])[0][0]
+                        if coord[axis] in shadeAxes: 
+                            shade = shades[np.where(shadeAxes==coord[axis])[0][0]]
+                        
+                    #title = title[:-1]
+                    
+
+                    ax = axsgrid[axi]
+                    #print ax
+                    axsgrid[axi].set_title(title)
+                    if not (minZ == 0 and maxZ == 0):
+                        axsgrid[axi].set_ylim(ymin=minZ, ymax=maxZ)
+                    if sf.getType() == 'amplitude':
+                        p = axsgrid[axi].plot(xvals, vals, color=col, ls='-', alpha=shade)
+                    else:
+                        #print shade
+                        #print axsgrid[axi], axi, col
+                        p = axsgrid[axi].plot(xvals, vals, color=col, marker='.', ls='none', alpha=shade)
+                        #p = ax.plot(xvals[range(300)], vals[range(300)], 'ko') # DEBUG
+                    p = axsgrid[axi].plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], color='r', marker='.', ls='none', alpha=shade) # plot flagged points
+                    #print vals
+                    #p = ax.plot(xvals[range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #DEBUG
+                    logging.debug("Plotting "+plotprefix+": "+title+' ('+ str(axi)+') '+' ('+ col+') ')
+                    
+                    axi += 1
+                    
+                    y1,y2 = axsgrid[axi].get_ylim()
+                    axsgrid[axi].set_ylim(min(vals.min(),y1), max(vals.max(),y2))
+                    axsgrid[axi].set_xlim(xvals.min(), xvals.max())
+                    
+                #plt.savefig(prefix+title+'.png')
+                plt.savefig(plotprefix+'.png',dpi=100)
+                    
+                plt.close(figgrid)
+                #logging.info("Saving "+prefix+title+'.png')
+                logging.info("Saving "+plotprefix+'.png')
+
+    elif plotType == 'tecscreen':
         # Plot various TEC-screen properties
 
         for st_scr in openSoltabs(H, soltabs):
