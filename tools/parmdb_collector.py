@@ -115,8 +115,11 @@ if __name__=='__main__':
         instrumentdbHostname = instrumentdbParset.getString('Part0.FileSys').split(':')[0]
         instrumentdbFile = os.path.splitext(instrumentdbGdsFile)[0]
         if not os.path.exists(instrumentdbFile):
-            logging.info("Collectiong "+instrumentdbFile)
-            os.system('scp -r %s:%s %s > /dev/null' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
+            logging.info("Collecting "+instrumentdbFile)
+            if instrumentdbHostname == 'localhost':
+                os.system('cp -r %s %s > /dev/null' % (instrumentdbRemoteFile, instrumentdbFile))
+            else:
+                os.system('scp -r %s:%s %s > /dev/null' % (instrumentdbHostname, instrumentdbRemoteFile, instrumentdbFile))
         else:
             logging.info("Skipping "+instrumentdbFile)
         instrumentdbFiles.append(instrumentdbFile)
@@ -129,17 +132,26 @@ if __name__=='__main__':
     # Collect the skydb from the first SB
     skydbFile = os.path.join(globaldbFile, 'sky')
     if not os.path.exists(skydbFile):
-        logging.info("Collectiong the skydb")
-        os.system('scp -r %s:%s/sky %s > /dev/null' % (hostname, msname, skydbFile))
+        logging.info("Collecting the skydb")
+        if hostname == 'localhost':
+            os.system('cp -r %s/sky %s > /dev/null' % (msname, skydbFile))
+        else:
+            os.system('scp -r %s:%s/sky %s > /dev/null' % (hostname, msname, skydbFile))
     # Collect the ANTENNA table from the first SB
     antennaFile = os.path.join(globaldbFile, 'ANTENNA')
     if not os.path.exists(antennaFile):
-        logging.info("Collectiong the antenna table")
-        os.system('scp -r %s:%s/ANTENNA %s > /dev/null' % (hostname, msname, antennaFile))
+        logging.info("Collecting the antenna table")
+        if hostname == 'localhost':
+            os.system('cp -r %s/ANTENNA %s > /dev/null' % (msname, antennaFile))
+        else:
+            os.system('scp -r %s:%s/ANTENNA %s > /dev/null' % (hostname, msname, antennaFile))
     # Collect the FILED table from the first SB
     fieldFile = os.path.join(globaldbFile, 'FIELD')
     if not os.path.exists(fieldFile):
-        logging.info("Collectiong the field table")
-        os.system('scp -r %s:%s/FIELD %s > /dev/null' % (hostname, msname, fieldFile))
+        logging.info("Collecting the field table")
+        if hostname == 'localhost':
+            os.system('cp -r %s/FIELD %s > /dev/null' % (msname, fieldFile))
+        else:
+            os.system('scp -r %s:%s/FIELD %s > /dev/null' % (hostname, msname, fieldFile))
 
     logging.info("Done.")
