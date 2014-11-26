@@ -30,7 +30,6 @@ def run( step, parset, H ):
         solsetname=soltabname.split('/')[0]
         soltab=H.getSoltab(solset=solsetname, soltab=soltabname.split('/')[1])
         logging.info("--> Working on soltab: "+soltab._v_name)
-        # use the solFetcher from the H5parm lib
         t = solFetcher(soltab)
         tw = solWriter(soltab)
 
@@ -60,7 +59,8 @@ def run( step, parset, H ):
         returnAxes=['ant','freq','pol','time']
         for vals,flags, coord in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
-            logging.info('flags'+str(np.sum(flags))+' '+str(vals.shape))
+            logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
+
             if len(coord['ant']) < 10:
                 logging.error('Clock/TEC separation needs at least 10 antennas selected.')
                 return 1
@@ -93,6 +93,4 @@ def run( step, parset, H ):
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
 
-    return 0 # if everything went fine, otherwise 1
-
-
+    return 0
