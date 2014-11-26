@@ -72,7 +72,9 @@ if __name__=='__main__':
         sys.exit(1)
 
     try: parsetFile = args[1]
-    except: parsetFile = 'losoto.parset'
+    except: 
+        logging.warning('Using default parset: losoto.parset')
+        parsetFile = 'losoto.parset'
 
     if not os.path.isfile(h5parmFile):
         logging.critical("Missing h5parm file.")

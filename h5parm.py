@@ -416,18 +416,30 @@ class h5parm():
             else:
                 # For each table, print length of each axis and history of
                 # operations applied to the table.
+                if verbouse:
+                    logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
+                    f = file(self.fileName+'-axes_values.txt','w')
                 for soltab_name in soltabs.keys():
                     try:
+                        if verbouse: 
+                            f.write("### "+soltab_name+"\n")
                         sf = solFetcher(soltabs[soltab_name])
                         axisNames = sf.getAxesNames()
                         axis_str_list = []
                         for axisName in axisNames:
-                            nslots = len(sf.getAxisValues(axisName))
+                            nslots = sf.getAxisLen(axisName)
                             if nslots > 1:
                                 pls = "s"
                             else:
                                 pls = ""
                             axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
+                            if verbouse: 
+                                f.write(axisName+": ")
+                                vals = sf.getAxisValues(axisName)
+                                # ugly hardcoded workaround to print all the important decimal values for time/freq
+                                if axisName == 'freq': f.write(" ".join(["{0:.8f}".format(v) for v in vals])+"\n\n")
+                                elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
+                                else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
                         info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
                         if verbouse:
                             weights = sf.getValues(weight = True, retAxesVals = False)
@@ -439,7 +451,8 @@ class h5parm():
                             info += joinstr.join(wrap(history)) + "\n"
                     except tables.exceptions.NoSuchNodeError:
                         info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
-
+                if verbouse:
+                    f.close()
         return info
 
 
@@ -495,7 +508,7 @@ class solHandler():
 
             # string -> regular expression
             if type(selVal) is str:
-                if self.getAxis(axis).atom.dtype.kind != 'S':
+                if not self.getAxisType(axis).char is 'S':
                     logging.warning("Cannot select on axis \""+axis+"\" with a regular expression. Use all available values.")
                     continue
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
@@ -532,7 +545,7 @@ class solHandler():
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
                 # transform list of continuous numbers in slices (faster)
-                elif len(self.selection[idx])-1 == self.selection[idx][-1] - self.selection[idx][0]:
+                elif len(self.selection[idx]) != 0 and len(self.selection[idx])-1 == self.selection[idx][-1] - self.selection[idx][0]:
                     self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][-1]+1)
 
             # if a selection return an empty list (maybe because of a wrong name), then use all values
