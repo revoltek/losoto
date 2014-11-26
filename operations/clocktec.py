@@ -58,31 +58,32 @@ def run( step, parset, H ):
             station_positions[i, 2] = station_dict[station_name][2]
             
         returnAxes=['ant','freq','pol','time']
-        for vals, coord in t.getValuesIter(returnAxes=returnAxes):
+        for vals,flags, coord in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
+            logging.info('flags'+str(np.sum(flags))+' '+str(vals.shape))
             if len(coord['ant']) < 10:
                 logging.error('Clock/TEC separation needs at least 10 antennas selected.')
                 return 1
-            if len(coord['pol']) < 2:
-                logging.error('Clock/TEC separation needs both polarizations.')
-                return 1
+           # if len(coord['pol']) < 2:
+           #     logging.error('Clock/TEC separation needs both polarizations.')
+           #     return 1
 
             freqs=coord['freq']
             stations=coord['ant']
             times=coord['time']
 
             axes=[i for i in names if i in returnAxes]
-            clock,tec,offset,newstations=doFit(vals,freqs,stations,station_positions,axes)
+            clock,tec,offset,newstations=doFit(vals,np.logical_not(flags),freqs,stations,station_positions,axes)
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,
-                                 weights=np.ones_like(tec))
+                                 weights=tec>-5.)
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
             tf_st = H.makeSoltab(solsetname, 'clock',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=clock,
-                                 weights=np.ones_like(clock))
+                                 weights=tec>-5)
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
             tf_st = H.makeSoltab(solsetname, 'phase_offset',
