@@ -123,8 +123,8 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                     iD2=20
                  else:
                      if 'RS' in stations[ist]:
-                         iD1=-150
-                         iD2=150
+                         iD1=-250
+                         iD2=250
                          iTEC1=-1.5
                          iTEC2=1.5
                      else: #large TEC variation for EU stations
@@ -344,7 +344,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
             data=np.arctan2(np.imag(data),np.real(data)) #np.angle doesnot yet return masked array!!
             npol=1
     # guess clock, remove from data
-    if len(initSol)<1:
+    if (not 'LBA' in stations[0]) and len(initSol)<1:
         initclock=getInitClock(data[nT/2:nT/2+100][:,:,RSstations+otherstations],freqs)
         logging.info("initial clocks: "+str(initclock[1])) 
         #init CS clocks to 0
@@ -368,7 +368,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
         #logging.info("sending masked data "+str(data[:,:,:,pol].count()))
         initialchi2cut=chi2cut
         if removePhaseWraps:
-            initialchi2cut=1000.
+            initialchi2cut=30000.
         tecarray,clockarray,residualarray=getClockTECFit(np.ma.copy(data[:,:,:,pol]),freqs,stations,initSol=initSol,returnResiduals=True,chi2cut=initialchi2cut)
         if removePhaseWraps:
             #correctfrist times only,try to make init correct ?
@@ -407,7 +407,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
                 clock[:,:,pol]=clockarray[:,:]
         logging.info("tec iter 2, pol %d: "%(pol)+str(tec[0,:,pol]))
         logging.info("clock iter 2, pol %d: "%(pol)+str(clock[0,:,pol]))
-    if len(initSol)<1:
+    if (not 'LBA' in stations[0]) and len(initSol)<1:
         clock[:,RSstations+otherstations]+=initclock[1][np.newaxis,:,:]
     if doFitoffset:
         return clock,tec,offset,fitoffset,stations

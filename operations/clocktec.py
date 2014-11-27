@@ -74,16 +74,19 @@ def run( step, parset, H ):
 
             axes=[i for i in names if i in returnAxes]
             clock,tec,offset,newstations=doFit(vals,np.logical_not(flags),freqs,stations,station_positions,axes)
+            weights=tec>-5
+            tec[np.logical_not(weights)]=0
+            clock[np.logical_not(weights)]=0
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,
-                                 weights=tec>-5.)
+                                 weights=weights)
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
             tf_st = H.makeSoltab(solsetname, 'clock',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=clock,
-                                 weights=tec>-5)
+                                 weights=weights)
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
             tf_st = H.makeSoltab(solsetname, 'phase_offset',
