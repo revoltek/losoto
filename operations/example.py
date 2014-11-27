@@ -3,6 +3,8 @@
 
 # This is an example operation for LoSoTo
 
+# For an example on how to write a parallel version of an operation, look at the flag operation
+
 import logging
 from operations_lib import *
 

@@ -224,7 +224,7 @@ def run( step, parset, H ):
 
         solType = sf.getType()
 
-        # fill the queue
+        # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
             inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag])
 
