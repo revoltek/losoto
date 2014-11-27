@@ -407,7 +407,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
                 clock[:,:,pol]=clockarray[:,:]
         logging.info("tec iter 2, pol %d: "%(pol)+str(tec[0,:,pol]))
         logging.info("clock iter 2, pol %d: "%(pol)+str(clock[0,:,pol]))
-    if len(initSol)<1:
+    if (not 'LBA' in stations[0]) and len(initSol)<1:
         clock[:,RSstations+otherstations]+=initclock[1][np.newaxis,:,:]
     if doFitoffset:
         return clock,tec,offset,fitoffset,stations
