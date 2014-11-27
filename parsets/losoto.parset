@@ -36,6 +36,7 @@ LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal
 LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in timestamps)
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
+LoSoTo.Steps.flag.Ncpu = 1 # use multiple cores
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal/amplitude000

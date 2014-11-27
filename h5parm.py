@@ -14,7 +14,7 @@ if int(tables.__version__.split('.')[0]) < 3:
     logging.critical('pyTables version must be >= 3.0.0, found: '+tables.__version__)
     sys.exit(1)
 
-class h5parm():
+class h5parm( object ):
 
     def __init__(self, h5parmFile, readonly = True, complevel = 5, complib='zlib'):
         """
@@ -456,7 +456,7 @@ class h5parm():
         return info
 
 
-class solHandler():
+class solHandler( object ):
     """
     Generic class to principally handle selections
     Selections are:
@@ -753,8 +753,9 @@ class solFetcher(solHandler):
         elif axis in self.getAxesNames():
             return self.getAxisValues(axis)
         else:
-            logging.error("Cannot find axis \""+axis+"\".")
-            return None
+            return object.__getattribute__(self, axis)
+            #logging.error("Cannot find axis \""+axis+"\".")
+            #return None
 
 
     def getValues(self, retAxesVals = True, weight = False):
