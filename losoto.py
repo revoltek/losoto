@@ -38,7 +38,7 @@ def my_close_open_files(verbose):
                 print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
             open_files[fileh].close()
         if verbose:
-            print >> sys.stderr, "done",
+            print >> sys.stderr, "Done.",
     if verbose and are_open_files:
         print >> sys.stderr
 
