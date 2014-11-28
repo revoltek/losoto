@@ -20,10 +20,10 @@ def run( step, parset, H ):
     
     for soltab in openSoltabs( H, soltabs ):
 
+        logging.info("Unflagging soltab: "+soltab._v_name)
+
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
-
-        logging.info("Unflagging soltab: "+soltab._v_name)
 
         # axis selection
         userSel = {}

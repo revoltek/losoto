@@ -25,16 +25,16 @@ def run( step, parset, H ):
 
     for soltab in openSoltabs( H, soltabs ):
 
+        logging.info("Smoothing soltab: "+soltab._v_name)
+
         sf = solFetcher(soltab)
-        sw = solWriter(soltab)
+        sw = solWriter(soltab, useCache = True) # remember to flush!
 
         # axis selection
         userSel = {}
         for axis in sf.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
         sf.setSelection(**userSel)
-
-        logging.info("Smoothing soltab: "+soltab._v_name)
 
         for i, axis in enumerate(axesToSmooth[:]):
             if axis not in sf.getAxesNames():
@@ -45,13 +45,11 @@ def run( step, parset, H ):
         for vals, coord in sf.getValuesIter(returnAxes=axesToSmooth):
 
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
-        
-            # writing back the solutions (selection on all the coord axis)
-            # this can be properly broacasted
             coord = removeKeys(coord, axesToSmooth)
             sw.setSelection(**coord)
             sw.setValues(valsnew)
 
+        sw.flush()
         sw.addHistory('SMOOTH (over %s with box size = %s)' % (axesToSmooth, FWHM))
     return 0
 

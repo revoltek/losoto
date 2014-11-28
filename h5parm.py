@@ -675,9 +675,17 @@ class solHandler( object ):
 
 class solWriter(solHandler):
 
-    def __init__(self, table, **args):
+    def __init__(self, table, useCache = False, **args):
+        """
+        useCache -- write the data on a local copy of the table,
+        use flush() to write them on the disk, speeds up writing
+        """
         solHandler.__init__(self, table = table, **args)
-
+        self.useCache = useCache
+        if self.useCache:
+            logging.info("Caching...")
+            self.cacheWeight = np.copy(self.t.weight)
+            self.cacheVal = np.copy(self.t.val)
 
     def setAxisValues(self, axis = None, vals = None):
         """
@@ -701,18 +709,22 @@ class solWriter(solHandler):
         vals -- values to write as an n-dimentional array which match the selection dimention
         weight -- if true store in the weights instead that in the vals (default: False)
         """
-        if weight: dataVals = self.t.weight
-        else: dataVals = self.t.val
+        if self.useCache:
+            if weight: dataVals = self.cacheWeight
+            else: dataVals = self.cacheVal
+        else:
+            if weight: dataVals = self.t.weight
+            else: dataVals = self.t.val
 
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
         # Conversely, one can apply how many slices he wants.
         # Single values/contigous values are converted in slices in h5parm.
-        # This try/except implements a workaround for this limitation. One the pytables will be updated, the except can be removed.
+        # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
 
-        # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
-        # the float check allows quick reset of large arrays to a single value
         try:
+            # the float check allows quick reset of large arrays to a single value
             if type(vals) == float: dataVals[tuple(self.selection)] = vals
+            # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
             else: dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
         except:
             logging.debug('Optimizing selection writing '+str(self.selection))
@@ -729,6 +741,14 @@ class solWriter(solHandler):
                     subSelectionForVals[selectionListIdx] = i
                 if type(vals) == float: dataVals[tuple(subSelection)] = vals
                 else: dataVals[tuple(subSelection)] = vals[tuple(subSelectionForVals)]
+
+    def flush(self):
+        """
+        Copy cached values into the table
+        """
+        logging.info("Writing results...")
+        self.t.weight[:] = self.cacheWeight
+        self.t.val[:] = self.cacheVal
 
 
 class solFetcher(solHandler):
@@ -806,11 +826,12 @@ class solFetcher(solHandler):
         return dataVals, axisVals
 
 
-    def getValuesIter(self, returnAxes= [], weight = False):
+    def getValuesIter(self, returnAxes = [], weight = False):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
         matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
+        Note that all the data are fetched in memory before returning them one at a time. This is quick.
         Keyword arguments:
         returnAxes -- axes of the returned array, all others will be cycled
         weight -- if true return also the weights (default: False)

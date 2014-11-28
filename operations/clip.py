@@ -30,10 +30,9 @@ def run( step, parset, H ):
 
     for soltab in openSoltabs( H, soltabs ):
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab)
-
         logging.info("Clipping soltab: "+soltab._v_name)
+
+        sf = solFetcher(soltab)
 
         # axis selection
         userSel = {}
@@ -50,6 +49,8 @@ def run( step, parset, H ):
         if sf.getType() != 'amplitude':
             logging.error('CLIP is for "amplitude" tables, not %s.' % sf.getType())
             continue
+
+        sw = solWriter(soltab, useCache=True) # remember to flush()
 
         before_count=0
         after_count=0
@@ -73,6 +74,8 @@ def run( step, parset, H ):
             coord = removeKeys(coord, axesToClip)
             sw.setSelection(**coord)
             sw.setValues(weights, weight=True)
+
+        sw.flush()
 
         sw.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
         logging.info('Clip: %i points initially bad, %i after clipping (%f %%)' \

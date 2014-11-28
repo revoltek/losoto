@@ -42,7 +42,8 @@ def run( step, parset, H ):
     cAxesNames = cr.getAxesNames()
 
     for soltab in openSoltabs( H, soltabs ):
-        logging.info("--> Working on soltab: "+soltab._v_name)
+
+        logging.info("Interpolating soltab: "+soltab._v_name)
 
         tr = solFetcher(soltab)
         tw = solWriter(soltab)

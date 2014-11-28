@@ -287,8 +287,9 @@ def run( step, parset, H ):
     if plotType in ['1d', '2d']:
         for soltab in openSoltabs( H, soltabs ):
 
-            sf = solFetcher(soltab)
             logging.info("Plotting soltab: "+soltab._v_name)
+
+            sf = solFetcher(soltab)
 
             # axis selection
             userSel = {}
@@ -370,12 +371,11 @@ def run( step, parset, H ):
         dirs = getParAxis( step, parset, H, 'dir' )
         
         for soltab in openSoltabs( H, soltabs ):
-            plotprefix = prefix + soltab._v_name
-            #print prefix
 
-            sf = solFetcher(soltab)
             logging.info("Plotting soltab: "+soltab._v_name)
 
+            plotprefix = prefix + soltab._v_name
+            sf = solFetcher(soltab)
             sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
             # some checks

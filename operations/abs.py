@@ -18,15 +18,12 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
 
-    # No need to specify an axis, just use time
-    axesToAbs = ['time']
-
     for soltab in openSoltabs( H, soltabs ):
+
+        logging.info("Taking ABSolute value of soltab: "+soltab._v_name)
 
         sf = solFetcher(soltab)
         sw = solWriter(soltab)
-
-        logging.info("Taking ABSolute value of soltab: "+soltab._v_name)
 
         # axis selection
         userSel = {}
@@ -34,20 +31,13 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         sf.setSelection(**userSel)
 
-        total=0
-        count=0
-        for vals, coord in sf.getValuesIter(returnAxes=axesToAbs):
+        vals = sf.getValues(retAxesVals = False)
+        count = np.count_nonzero(vals<0)
 
-            total+=len(vals)
-            count+=np.count_nonzero(vals<0)
-            valsnew=np.abs(vals)
+        logging.info('Abs: %i points initially negative (%f %%)' % (count,100*float(count)/np.count_nonzero(vals)))
 
-            # writing back the solutions
-            coord = removeKeys(coord, axesToAbs)
-            sw.setSelection(**coord)
-            sw.setValues(valsnew)
-
-        logging.info('Abs: %i points initially negative (%f %%)' % (count,float(count)/total))
+        # writing back the solutions
+        sw.setValues(np.abs(vals))
 
         sw.addHistory('ABSolute value taken')
         

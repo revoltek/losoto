@@ -200,17 +200,17 @@ def run( step, parset, H ):
         return 1
 
     # start processes for multi-thread
-    logging.debug('Spowining %i threads...' % ncpu)
+    logging.debug('Spowning %i threads...' % ncpu)
     for i in range(ncpu):
         t = multiThread(inQueue, outQueue)
         t.start()
 
     for soltab in openSoltabs( H, soltabs ):
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab)
-
         logging.info("Flagging soltab: "+soltab._v_name)
+
+        sf = solFetcher(soltab)
+        sw = solWriter(soltab, useCache=True) # remember to flush!
 
         # axis selection
         userSel = {}
@@ -236,6 +236,7 @@ def run( step, parset, H ):
         inQueue.join()
         
         # writing back the solutions
+        logging.info("Collecting results")
         while outQueue.empty() != True:
             coord, vals, flags = outQueue.get()
             coord = removeKeys(coord, axisToFlag)
@@ -246,6 +247,8 @@ def run( step, parset, H ):
             else:
                 # convert boolean flag to 01 binary array (0->flagged)
                 sw.setValues((~flags).astype(int), weight=True)
+
+        sw.flush()
 
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
     return 0

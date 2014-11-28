@@ -23,10 +23,11 @@ def run( step, parset, H ):
     normAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "NormAxis"]), 'time' )
 
     for soltab in openSoltabs( H, soltabs ):
-        logging.info("--> Working on soltab: "+soltab._v_name)
+
+        logging.info("Normalizing soltab: "+soltab._v_name)
 
         tr = solFetcher(soltab)
-        tw = solWriter(soltab)
+        tw = solWriter(soltab, useCache = True) # remember to flush!
 
         axesNames = tr.getAxesNames()
         if normAxis not in axesNames:
@@ -54,5 +55,7 @@ def run( step, parset, H ):
             tw.setSelection(**coordSel)
             tw.setValues(valsNew)
 
-    tw.addHistory('NORM (on axis %s)' % (normAxis))
+        tw.flush()
+        tw.addHistory('NORM (on axis %s)' % (normAxis))
+
     return 0

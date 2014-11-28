@@ -22,17 +22,17 @@ def run( step, parset, H ):
 
         logging.info("Reweighting soltab: "+soltab._v_name+" (weight = "+str(weightVal)+")")
 
-        t = solWriter(soltab)
+        sw = solWriter(soltab)
 
         # axis selection
         userSel = {}
-        for axis in t.getAxesNames():
+        for axis in sw.getAxesNames():
             userSel[axis] = getParAxis( step, parset, H, axis )
-        t.setSelection(**userSel)
+        sw.setSelection(**userSel)
 
-        solType = t.getType()
+        solType = sw.getType()
 
-        t.setValues(weightVal, weight=True)
+        sw.setValues(weightVal, weight=True)
 
-        t.addHistory('REWEIGHTED to '+str(weightVal)+' for selection:'+str(userSel))
+        sw.addHistory('REWEIGHTED to '+str(weightVal)+' for selection:'+str(userSel))
    return 0
