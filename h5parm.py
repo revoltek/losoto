@@ -870,7 +870,7 @@ class solFetcher(solHandler):
                         # add this index to the refined selection, this will return a single value for this axis
                         refSelection.append(axisIdx[i])
                         # for the return selection use the complete axis and find the correct index
-                        returnSelection.append( np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0] )
+                        returnSelection.append( list(np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0]) )
                         i += 1
                 # costly command
                 data = dataVals[tuple(refSelection)]
