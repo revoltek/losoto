@@ -55,7 +55,7 @@ def run( step, parset, H ):
         before_count=0
         after_count=0
         total=0
-        for vals, weights, coord in sf.getValuesIter(returnAxes=axesToClip, weight = True):
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToClip, weight = True):
 
             total+=len(vals)
             before_count+=(len(weights)-np.count_nonzero(weights))
@@ -71,8 +71,7 @@ def run( step, parset, H ):
             after_count+=(len(weights)-np.count_nonzero(weights))
 
             # writing back the solutions
-            coord = removeKeys(coord, axesToClip)
-            sw.setSelection(**coord)
+            sw.selection = selection
             sw.setValues(weights, weight=True)
 
         sw.flush()

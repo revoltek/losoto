@@ -42,11 +42,10 @@ def run( step, parset, H ):
                 del FWHM[i]
                 logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
-        for vals, coord in sf.getValuesIter(returnAxes=axesToSmooth):
+        for vals, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth):
 
             valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
-            coord = removeKeys(coord, axesToSmooth)
-            sw.setSelection(**coord)
+            sw.selection = selection
             sw.setValues(valsnew)
 
         sw.flush()

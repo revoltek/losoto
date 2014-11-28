@@ -683,7 +683,7 @@ class solWriter(solHandler):
         solHandler.__init__(self, table = table, **args)
         self.useCache = useCache
         if self.useCache:
-            logging.info("Caching...")
+            logging.debug("Caching...")
             self.cacheWeight = np.copy(self.t.weight)
             self.cacheVal = np.copy(self.t.val)
 
@@ -840,6 +840,7 @@ class solFetcher(solHandler):
         2) (if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
         3) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
+        4) a selection which should be used to write this data back using a solWriter
         """
         if weight: weigthVals = self.getValues(retAxesVals = False, weight = True)
         dataVals = self.getValues(retAxesVals = False, weight = False)
@@ -870,8 +871,8 @@ class solFetcher(solHandler):
                 data = dataVals[tuple(refSelection)]
                 if weight:
                     weights = weigthVals[tuple(refSelection)]
-                    yield (data, weights, thisAxesVals)
+                    yield (data, weights, thisAxesVals, refSelection)
                 else:
-                    yield (data, thisAxesVals)
+                    yield (data, thisAxesVals, refSelection)
 
         return g()

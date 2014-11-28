@@ -308,7 +308,7 @@ def run( step, parset, H ):
                 logging.error('Wrong number of axes.')
                 return 1
             
-            for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
+            for vals, weight, coord, selection in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
                 # unwrap if required
                 if plotType == '1d' and dounwrap: vals = unwrap(vals)
@@ -467,7 +467,7 @@ def run( step, parset, H ):
 
                 axi = -1
             
-                for vals, weight, coord in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
+                for vals, weight, coord, selection in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
                     # unwrap if required
                     if plotType == '1d' and dounwrap: vals = unwrap(vals)
                     

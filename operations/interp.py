@@ -63,7 +63,7 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         tr.setSelection(**userSel)
 
-        for vals, coord in tr.getValuesIter(returnAxes=interpAxes):
+        for vals, coord, selection in tr.getValuesIter(returnAxes=interpAxes):
 
             # construct grid
             coordSel = removeKeys(coord, interpAxes)
@@ -71,7 +71,7 @@ def run( step, parset, H ):
             # change dir if sepcified
             if calDir != '':
                 coordSel['dir'] = calDir
-            cr.setSelection(**coordSel)
+            cr.selection = selection
             calValues, calCoord = cr.getValues()
             # fill medAxis with the median value
             axis = cAxesNames.index(medAxis)
@@ -107,8 +107,7 @@ def run( step, parset, H ):
                 #print "Rescaling by: ", valsNewMed[:,0]/valsMed[:,0]
 
             # writing back the solutions
-            coord = removeKeys(coord, interpAxes)
-            tw.setSelection(**coord)
+            tw.selection = selection
             tw.setValues(valsNew)
 
     tw.addHistory('INTERP (from table %s)' % (calSoltab))

@@ -94,23 +94,20 @@ def run( step, parset, H ):
 
         # finally the getValuesIter allaws to iterate across all possible combinations of a set of axes
         logging.info('Iteration on time/freq')
-        for vals, coord in t.getValuesIter(returnAxes=['time','freq']):
+        for vals, coord, selection in t.getValuesIter(returnAxes=['time','freq']):
             # writing back the solutions
-            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
-            tw.setSelection(**coord)
+            tw.selection = selection
             tw.setValues(vals)
         logging.info('Iteration on time')
-        for vals, coord in t.getValuesIter(returnAxes=['time']):
+        for vals, coord, selection in t.getValuesIter(returnAxes=['time']):
             # writing back the solutions
-            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
-            tw.setSelection(**coord)
+            tw.selection = selection
             tw.setValues(vals)   
         logging.info('Iteration on dir after selection to 1 dir')
         t.setSelection(dir='pointing') 
-        for vals, coord in t.getValuesIter(returnAxes=['dir']):
+        for vals, coord, selection in t.getValuesIter(returnAxes=['dir']):
             # writing back the solutions
-            coord = removeKeys(coord, ['time','freq']) # removeKeys is an function of the operation_lib
-            tw.setSelection(**coord)
+            tw.selection = selection
             tw.setValues(vals)
  
  

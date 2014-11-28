@@ -38,7 +38,7 @@ class multiThread(multiprocessing.Process):
             self.flag(*parms)
             self.inQueue.task_done()
 
-    def flag(self, vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag):
+    def flag(self, vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag, selection):
 
         def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
             """
@@ -172,7 +172,7 @@ class multiThread(multiprocessing.Process):
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.2f)' \
                 % (removeKeys(coord, axisToFlag), 100.*(len(weights)-np.count_nonzero(weights))/len(weights), 100.*sum(flags)/len(flags), rms))
 
-        self.outQueue.put([coord, vals, flags])
+        self.outQueue.put([vals, flags, selection])
         
             
 def run( step, parset, H ):
@@ -225,8 +225,8 @@ def run( step, parset, H ):
         solType = sf.getType()
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-        for vals, weights, coord in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
-            inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag])
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
+            inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag, selection])
 
         # add poison pills to kill processes
         for i in range(ncpu):
@@ -236,11 +236,9 @@ def run( step, parset, H ):
         inQueue.join()
         
         # writing back the solutions
-        logging.info("Collecting results")
         while outQueue.empty() != True:
-            coord, vals, flags = outQueue.get()
-            coord = removeKeys(coord, axisToFlag)
-            sw.setSelection(**coord)
+            vals, flags, selection = outQueue.get()
+            sw.selection = selection
             if replace:
                 # rewrite solutions (flagged values are overwritten)
                 sw.setValues(vals, weight=False)

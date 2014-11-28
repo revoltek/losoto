@@ -57,7 +57,7 @@ def run( step, parset, H ):
             station_positions[i, 2] = station_dict[station_name][2]
             
         returnAxes=['ant','freq','pol','time']
-        for vals,flags, coord in t.getValuesIter(returnAxes=returnAxes,weight=True):
+        for vals,flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
             logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
 

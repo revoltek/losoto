@@ -40,11 +40,7 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         tr.setSelection(**userSel)
 
-        for vals, weights, coord in tr.getValuesIter(returnAxes=normAxis, weight = True):
-
-            # construct grid
-            coordSel = removeKeys(coord, normAxis)
-            logging.debug("Working on coords:"+str(coordSel))
+        for vals, weights, coord, selection in tr.getValuesIter(returnAxes=normAxis, weight = True):
 
             # rescale solutions
             valsMean = np.average(vals, weights=weights)
@@ -52,7 +48,7 @@ def run( step, parset, H ):
             logging.debug("Rescaling by: "+str(normVal/valsMean))
 
             # writing back the solutions
-            tw.setSelection(**coordSel)
+            tw.selection = selecton
             tw.setValues(valsNew)
 
         tw.flush()
