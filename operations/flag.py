@@ -239,6 +239,7 @@ def run( step, parset, H ):
         while outQueue.empty() != True:
             vals, flags, selection = outQueue.get()
             sw.selection = selection
+            print selection
             if replace:
                 # rewrite solutions (flagged values are overwritten)
                 sw.setValues(vals, weight=False)

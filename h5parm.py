@@ -854,25 +854,30 @@ class solFetcher(solHandler):
         def g():
             for axisIdx in np.ndindex(tuple(iterAxesDim)):
                 refSelection = []
+                returnSelection = []
                 thisAxesVals = {}
                 i = 0
-                for axisName in self.getAxesNames():
+                for j, axisName in enumerate(self.getAxesNames()):
                     if axisName in returnAxes:
                         thisAxesVals[axisName] = self.getAxisValues(axisName)
-                        # add a slice with all possible values
+                        # add a slice with all possible values (main selection will be preapplied)
                         refSelection.append(slice(0,self.getAxisLen(axisName),None))
+                        # for the return selection use the "main" selection for the return axes
+                        returnSelection.append(self.selection[j])
                     else:
                         #TODO: the iteration axes are not into a 1 element array, is it a problem?
                         thisAxesVals[axisName] = self.getAxisValues(axisName)[axisIdx[i]]
                         # add this index to the refined selection, this will return a single value for this axis
                         refSelection.append(axisIdx[i])
+                        # for the return selection use the complete axis and find the correct index
+                        returnSelection.append( np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0] )
                         i += 1
                 # costly command
                 data = dataVals[tuple(refSelection)]
                 if weight:
                     weights = weigthVals[tuple(refSelection)]
-                    yield (data, weights, thisAxesVals, refSelection)
+                    yield (data, weights, thisAxesVals, returnSelection)
                 else:
-                    yield (data, thisAxesVals, refSelection)
+                    yield (data, thisAxesVals, returnSelection)
 
         return g()
