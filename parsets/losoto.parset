@@ -13,6 +13,7 @@ LoSoTo.ant = [] # string used for regex selections, vectors for complete names (
                 # with names containing string1, string2, or string3
 LoSoTo.pol = [XX, YY]
 LoSoTo.dir = [pointing]
+LoSoTo.Ncpu = 1 # number of cpus in multithread operations
 
 # parameters available in every step to overwrite the global selection
 LoSoTo.Steps.everystep.Soltab = [sol000/amplitude000,sol000/rotation000]
@@ -36,7 +37,6 @@ LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal
 LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in timestamps)
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
-LoSoTo.Steps.flag.Ncpu = 1 # use multiple cores
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal/amplitude000

@@ -189,7 +189,7 @@ def run( step, parset, H ):
     maxGap = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Steps", step, "Ncpu"]), 1 )
+    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
     
     if axisToFlag == '':
         logging.error("Please specify axis to flag. It must be a single one.")
