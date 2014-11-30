@@ -71,31 +71,30 @@ if __name__=='__main__':
         logging.critical('Missing H5parm file.')
         sys.exit(1)
 
-    try: parsetFile = args[1]
-    except: 
-        logging.warning('Using default parset: losoto.parset')
-        parsetFile = 'losoto.parset'
-
-    if not os.path.isfile(h5parmFile):
-        logging.critical("Missing h5parm file.")
-        sys.exit(1)
-    if not os.path.isfile(parsetFile) and not options.i and options.delete == None:
-        logging.critical("Missing parset file, I don't know what to do :'(")
-        sys.exit(1)
-
     # Open the H5parm
     H = h5parm(h5parmFile, readonly=False)
 
-    # List h5parm information if desired
     if options.i:
+        # List h5parm information if desired
         print(H.printInfo(options.filter, verbouse=options.v))
-        sys.exit()
-
-    # Delete the soltab and exit
-    if options.delete != None:
+        sys.exit(0)
+    elif options.delete != None:
+        # Delete the soltab and exit
         solset, soltab = options.delete.split('/')
         H.delSoltab(solset, soltab)
-        sys.exit()
+        sys.exit(0)
+    else:
+        try: parsetFile = args[1]
+        except: 
+            logging.warning('Using default parset: losoto.parset')
+            parsetFile = 'losoto.parset'
+
+        if not os.path.isfile(h5parmFile):
+            logging.critical("Missing h5parm file.")
+            sys.exit(1)
+        if not os.path.isfile(parsetFile) and options.delete == None:
+            logging.critical("Missing parset file, I don't know what to do :'(")
+            sys.exit(1)
 
     # from ~vdtol/Expion-2011-05-03/src
     parset = lofar.parameterset.parameterset( parsetFile )
