@@ -12,12 +12,14 @@ logging.debug('Loading SMOOTH module.')
 def run( step, parset, H ):
 
     import scipy.ndimage.filters
+    import numpy as np
     from h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
 
     axesToSmooth = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
+    mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), "runningmedian" )
 
     if len(axesToSmooth) != len(FWHM):
         logging.error("Axes and FWHM lenghts must be equal.")
@@ -44,7 +46,16 @@ def run( step, parset, H ):
 
         for vals, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth):
 
-            valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
+            if mode == 'runningmedian':
+                valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
+            elif mode == 'median':
+                valsnew = np.median(vals)
+            elif mode == 'mean':
+                valsnew = np.mean(vals)
+            else:
+                logging.error('Mode must be: runningmedian, median or mean')
+                return 1
+
             sw.selection = selection
             sw.setValues(valsnew)
 

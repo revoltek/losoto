@@ -67,6 +67,7 @@ LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]
+LoSoTo.Steps.smooth.Mode = runningmedian # or mean or median (these two values set all the solutions to the mean/median)
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
