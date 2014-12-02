@@ -60,7 +60,7 @@ def run( step, parset, H ):
             sw.setValues(valsnew)
 
         sw.flush()
-        sw.addHistory('SMOOTH (over %s with box size = %s)' % (axesToSmooth, FWHM))
+        sw.addHistory('SMOOTH (over %s with mode = %s)' % (axesToSmooth, mode))
     return 0
 
 
