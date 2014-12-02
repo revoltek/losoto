@@ -53,7 +53,7 @@ def run( step, parset, H ):
             if interpAxis not in axesNames or interpAxis not in cAxesNames:
                 logging.error('Axis '+interpAxis+' not found. Ignoring.')
                 del interpAxes[i]
-        if medAxis not in axesNames or medAxis not in cAxesNames:
+        if rescale and (medAxis not in axesNames or medAxis not in cAxesNames):
             logging.error('Axis '+medAxis+' not found. Cannot proceed.')
             return 1
 
@@ -71,11 +71,13 @@ def run( step, parset, H ):
             # change dir if sepcified
             if calDir != '':
                 coordSel['dir'] = calDir
-            cr.selection = selection
+            cr.setSelection(**coordSel)
             calValues, calCoord = cr.getValues()
+
             # fill medAxis with the median value
-            axis = cAxesNames.index(medAxis)
-            calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
+            if rescale:
+                axis = cAxesNames.index(medAxis)
+                calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
 
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
