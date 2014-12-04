@@ -49,6 +49,7 @@ def parmdbToAxes(solEntry):
     # For Clock assuming [Clock:ant]
     elif thisSolType == 'Clock':
         thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
 
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':

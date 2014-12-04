@@ -45,6 +45,16 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'ScalarPhase':
         thisSolType, ant, dir = solEntry.split(':')
 
+    # For TEC assuming [TEC:ant]
+    elif thisSolType == 'TEC':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
+    # For Clock assuming [Clock:ant]
+    elif thisSolType == 'Clock':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
         thisSolType, pol1, pol2, parm, ant = solEntry.split(':')
