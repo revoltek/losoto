@@ -337,7 +337,10 @@ def run( step, parset, H ):
                         print "setting zlim"
                         plt.zlim(zmin=minZ, zmax=maxZ)
                     plt.colorbar()
-                    plt.savefig(prefix+title+'.png')
+                    try:
+                        plt.savefig(prefix+title+'.png')
+                    except:
+                        logging.error('Error saving file, wrong path?')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
@@ -356,7 +359,10 @@ def run( step, parset, H ):
                         p = ax.plot(xvals, vals, 'ko')
                     p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     if log: ax.set_yscale('log')
-                    plt.savefig(prefix+title+'.png')
+                    try:
+                        plt.savefig(prefix+title+'.png')
+                    except:
+                        logging.error('Error saving file, wrong path?')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
@@ -519,7 +525,10 @@ def run( step, parset, H ):
                     axsgrid[axi].set_xlim(xvals.min(), xvals.max())
                     
                 #plt.savefig(prefix+title+'.png')
-                plt.savefig(plotprefix+'.png',dpi=100)
+                try:
+                    plt.savefig(plotprefix+'.png',dpi=100)
+                except:
+                    logging.error('Error saving file, wrong path?')
                     
                 plt.close(figgrid)
                 #logging.info("Saving "+prefix+title+'.png')
