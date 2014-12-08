@@ -256,16 +256,17 @@ def fitPLaneLTSQ(XYZ):
 def run( step, parset, H ):
 
     import os
-    # avoids error if re-setting "agg" a second run of plot
-    if not 'matplotlib' in sys.modules:
-        import matplotlib
-        matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import numpy as np
     from h5parm import solFetcher, solHandler
+    # avoids error if re-setting "agg" a second run of plot
+    if not 'matplotlib' in sys.modules:
+        import matplotlib as mpl
+        mpl.rc('font',size =8 )
+        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+        mpl.use("Agg")
+    import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
     soltabs = getParSoltabs( step, parset, H )
-    
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '1d' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
@@ -368,10 +369,6 @@ def run( step, parset, H ):
 
     elif plotType == '1d_table':
         
-        import matplotlib as mpl
-        mpl.rc('font',size =8 )
-        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-        
         ants = getParAxis( step, parset, H, 'ant' )
         pols = getParAxis( step, parset, H, 'pol' )
         dirs = getParAxis( step, parset, H, 'dir' )
@@ -460,8 +457,6 @@ def run( step, parset, H ):
                     
                 sf.setSelection( **kw )
                 
-                
-            
                 figgrid, axa = plt.subplots(Nr, Nc, figsize=(16,12), sharex=True, sharey=True)
                 
                 axa[Nr-1][0].set_ylabel(sf.getType())
@@ -498,9 +493,6 @@ def run( step, parset, H ):
                         if coord[axis] in shadeAxes: 
                             shade = shades[np.where(shadeAxes==coord[axis])[0][0]]
                         
-                    #title = title[:-1]
-                    
-
                     ax = axsgrid[axi]
                     #print ax
                     axsgrid[axi].set_title(title)
@@ -524,7 +516,6 @@ def run( step, parset, H ):
                     axsgrid[axi].set_ylim(min(vals.min(),y1), max(vals.max(),y2))
                     axsgrid[axi].set_xlim(xvals.min(), xvals.max())
                     
-                #plt.savefig(prefix+title+'.png')
                 try:
                     plt.savefig(plotprefix+'.png',dpi=100)
                 except:

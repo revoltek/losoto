@@ -60,7 +60,7 @@ class multiThread(multiprocessing.Process):
                 data_offsets = times[ np.where( abs(times - time) <= window / 2. ) ] - time
         
                 # check and remove big gaps in data
-                if len( data_offsets ) > 1 :
+                if len( data_offsets ) > 1:
                   ddata_offsets = data_offsets[ 1 : ] - data_offsets[ : -1 ]
                   sel = np.where( ddata_offsets > max_gap )[0]
                   if len( sel ) > 0 :
@@ -77,7 +77,7 @@ class multiThread(multiprocessing.Process):
                     # redefine data arrays
                     data_array = data_array[ min_data_index : max_data_index ]
                     data_offsets = data_offsets[ min_data_index : max_data_index ]
-        
+
                 # smooth
                 if len( data_array ) > 1:
                   dim = min( len( data_array ) - 2, order )
@@ -169,7 +169,10 @@ class multiThread(multiprocessing.Process):
         else:
             flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
         
-        logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.2f)' \
+        if (len(weights)-np.count_nonzero(weights))/float(len(weights)) == sum(flags)/float(len(flags)):
+            logging.debug('Percentage of data flagged/replaced (%s): None' % (removeKeys(coord, axisToFlag)))
+        else: 
+            logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
                 % (removeKeys(coord, axisToFlag), 100.*(len(weights)-np.count_nonzero(weights))/len(weights), 100.*sum(flags)/len(flags), rms))
 
         self.outQueue.put([vals, flags, selection])
@@ -184,9 +187,9 @@ def run( step, parset, H ):
     axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), '' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
-    window = parset.getInt('.'.join(["LoSoTo.Steps", step, "Window"]), 10 )
+    window = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Window"]), 100 )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
-    maxGap = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
+    maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
