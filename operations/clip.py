@@ -78,7 +78,7 @@ def run( step, parset, H ):
 
         sw.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
         logging.info('Clip: %i points initially bad, %i after clipping (%f %%)' \
-                % (before_count, after_count, 100.*float(after_count)/total))
+                % (before_count, after_count, 100.*after_count/total))
         
     return 0
 
