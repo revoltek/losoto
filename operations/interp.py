@@ -97,8 +97,17 @@ def run( step, parset, H ):
             # fill values outside boudaries with "nearest" solutions
             if interpMethod != 'nearest':
                 valsNewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
-                valsNew[ np.where(valsNew == np.nan) ] = valsNewNearest [ np.where(valsNew == np.nan) ]
-            valsNew = valsNew.reshape(vals.shape)
+                # NaN is != from itself
+                valsNew[ np.where(valsNew != valsNew) ] = valsNewNearest [ np.where(valsNew != valsNew) ]
+
+            # fix bug in Scipy which put NaNs outside the convex hull in 1D for 'nearest'
+            if interpMethod == 'nearest' and len(np.squeeze(vals).shape) == 1:
+                import scipy.cluster.vq as vq
+                valsNew = np.squeeze(valsNew)
+                code, dist = vq.vq(targetPoints, calPoints)
+                # NaN is != from itself
+                valsNew[ np.where(valsNew != valsNew) ] = calValues[code][ np.where(valsNew != valsNew) ]
+                valsNew = valsNew.reshape(vals.shape)
 
             if rescale:
                 # rescale solutions
