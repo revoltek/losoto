@@ -377,7 +377,7 @@ def run( step, parset, H ):
 
             logging.info("Plotting soltab: "+soltab._v_name)
 
-            plotprefix = prefix + soltab._v_name
+            prefix = prefix + soltab._v_name
             sf = solFetcher(soltab)
             sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
@@ -450,7 +450,7 @@ def run( step, parset, H ):
                 sf = solFetcher(soltab)
                 if pages:
                     kw = {'ant': ants, 'pol': pols, 'dir': dirs, axisOnPage: pageAxes[page_i]}
-                    plotprefix = prefix + axisOnPage+ str(page_i)
+                    plotprefix = prefix + '_'  + axisOnPage+ str(page_i)
                 else:
                     kw = {'ant': ants, 'pol': pols, 'dir': dirs}
                     plotprefix = prefix
