@@ -246,8 +246,9 @@ def run( step, parset, H ):
                 # rewrite solutions (flagged values are overwritten)
                 sw.setValues(vals, weight=False)
             else:
-                # convert boolean flag to 01 binary array (0->flagged)
-                sw.setValues((~flags).astype(int), weight=True)
+                # convert boolean flag to 01 float array (0->flagged)
+                # TODO: in this operation weight != 0,1 are lost
+                sw.setValues((~flags).astype(float), weight=True)
 
         sw.flush()
 
