@@ -745,6 +745,7 @@ class solWriter(solHandler):
         """
         Copy cached values into the table
         """
+        if not self.useCache: logging.error("Flushing non cached data.")
         logging.info("Writing results...")
         self.t.weight[:] = self.cacheWeight
         self.t.val[:] = self.cacheVal

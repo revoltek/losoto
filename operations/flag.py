@@ -239,16 +239,19 @@ def run( step, parset, H ):
         inQueue.join()
         
         # writing back the solutions
+        import time
         while outQueue.empty() != True:
-            vals, flags, selection = outQueue.get()
-            sw.selection = selection
+            v,f,sel = outQueue.get()
+            # ugly workaround for queue returning true if too quick queries are made
+            time.sleep(0.01)
+            sw.selection = sel
             if replace:
                 # rewrite solutions (flagged values are overwritten)
-                sw.setValues(vals, weight=False)
+                sw.setValues(v, weight=False)
             else:
                 # convert boolean flag to 01 float array (0->flagged)
                 # TODO: in this operation weight != 0,1 are lost
-                sw.setValues((~flags).astype(float), weight=True)
+                sw.setValues((~f).astype(float), weight=True)
 
         sw.flush()
 
