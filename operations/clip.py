@@ -74,11 +74,11 @@ def run( step, parset, H ):
             sw.selection = selection
             sw.setValues(weights, weight=True)
 
-        sw.flush()
-
         sw.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
-        logging.info('Clip: %i points initially bad, %i after clipping (%f %%)' \
-                % (before_count, after_count, 100.*float(after_count)/total))
+        logging.info('Clip, flagged data: %f %% -> %f %%' \
+                % (100.*before_count/total, 100.*after_count/total))
+
+        sw.flush()
         
     return 0
 

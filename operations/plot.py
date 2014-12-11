@@ -256,16 +256,17 @@ def fitPLaneLTSQ(XYZ):
 def run( step, parset, H ):
 
     import os
-    # avoids error if re-setting "agg" a second run of plot
-    if not 'matplotlib' in sys.modules:
-        import matplotlib
-        matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import numpy as np
     from h5parm import solFetcher, solHandler
+    # avoids error if re-setting "agg" a second run of plot
+    if not 'matplotlib' in sys.modules:
+        import matplotlib as mpl
+        mpl.rc('font',size =8 )
+        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+        mpl.use("Agg")
+    import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
     soltabs = getParSoltabs( step, parset, H )
-    
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '1d' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
@@ -337,7 +338,10 @@ def run( step, parset, H ):
                         print "setting zlim"
                         plt.zlim(zmin=minZ, zmax=maxZ)
                     plt.colorbar()
-                    plt.savefig(prefix+title+'.png')
+                    try:
+                        plt.savefig(prefix+title+'.png')
+                    except:
+                        logging.error('Error saving file, wrong path?')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
@@ -356,15 +360,14 @@ def run( step, parset, H ):
                         p = ax.plot(xvals, vals, 'ko')
                     p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     if log: ax.set_yscale('log')
-                    plt.savefig(prefix+title+'.png')
+                    try:
+                        plt.savefig(prefix+title+'.png')
+                    except:
+                        logging.error('Error saving file, wrong path?')
                     plt.close(fig)
                     logging.info("Saving "+prefix+title+'.png')
 
     elif plotType == '1d_table':
-        
-        import matplotlib as mpl
-        mpl.rc('font',size =8 )
-        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
         
         ants = getParAxis( step, parset, H, 'ant' )
         pols = getParAxis( step, parset, H, 'pol' )
@@ -374,7 +377,7 @@ def run( step, parset, H ):
 
             logging.info("Plotting soltab: "+soltab._v_name)
 
-            plotprefix = prefix + soltab._v_name
+            prefix = prefix + soltab._v_name
             sf = solFetcher(soltab)
             sf.setSelection(ant=ants, pol=pols, dir=dirs)
 
@@ -447,15 +450,13 @@ def run( step, parset, H ):
                 sf = solFetcher(soltab)
                 if pages:
                     kw = {'ant': ants, 'pol': pols, 'dir': dirs, axisOnPage: pageAxes[page_i]}
-                    plotprefix = prefix + axisOnPage+ str(page_i)
+                    plotprefix = prefix + '_'  + axisOnPage+ str(page_i)
                 else:
                     kw = {'ant': ants, 'pol': pols, 'dir': dirs}
                     plotprefix = prefix
                     
                 sf.setSelection( **kw )
                 
-                
-            
                 figgrid, axa = plt.subplots(Nr, Nc, figsize=(16,12), sharex=True, sharey=True)
                 
                 axa[Nr-1][0].set_ylabel(sf.getType())
@@ -492,9 +493,6 @@ def run( step, parset, H ):
                         if coord[axis] in shadeAxes: 
                             shade = shades[np.where(shadeAxes==coord[axis])[0][0]]
                         
-                    #title = title[:-1]
-                    
-
                     ax = axsgrid[axi]
                     #print ax
                     axsgrid[axi].set_title(title)
@@ -518,8 +516,10 @@ def run( step, parset, H ):
                     axsgrid[axi].set_ylim(min(vals.min(),y1), max(vals.max(),y2))
                     axsgrid[axi].set_xlim(xvals.min(), xvals.max())
                     
-                #plt.savefig(prefix+title+'.png')
-                plt.savefig(plotprefix+'.png',dpi=100)
+                try:
+                    plt.savefig(plotprefix+'.png',dpi=100)
+                except:
+                    logging.error('Error saving file, wrong path?')
                     
                 plt.close(figgrid)
                 #logging.info("Saving "+prefix+title+'.png')

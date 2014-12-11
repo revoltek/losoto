@@ -53,7 +53,7 @@ def run( step, parset, H ):
             if interpAxis not in axesNames or interpAxis not in cAxesNames:
                 logging.error('Axis '+interpAxis+' not found. Ignoring.')
                 del interpAxes[i]
-        if medAxis not in axesNames or medAxis not in cAxesNames:
+        if rescale and (medAxis not in axesNames or medAxis not in cAxesNames):
             logging.error('Axis '+medAxis+' not found. Cannot proceed.')
             return 1
 
@@ -71,11 +71,13 @@ def run( step, parset, H ):
             # change dir if sepcified
             if calDir != '':
                 coordSel['dir'] = calDir
-            cr.selection = selection
+            cr.setSelection(**coordSel)
             calValues, calCoord = cr.getValues()
+
             # fill medAxis with the median value
-            axis = cAxesNames.index(medAxis)
-            calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
+            if rescale:
+                axis = cAxesNames.index(medAxis)
+                calValues = np.repeat( np.expand_dims( np.median( calValues, axis ), axis ), calValues.shape[axis], axis )
 
             # create a list of values whose coords are calPoints
             calValues = np.ndarray.flatten(calValues)
@@ -95,8 +97,17 @@ def run( step, parset, H ):
             # fill values outside boudaries with "nearest" solutions
             if interpMethod != 'nearest':
                 valsNewNearest = scipy.interpolate.griddata(calPoints, calValues, targetPoints, 'nearest')
-                valsNew[ np.where(valsNew == np.nan) ] = valsNewNearest [ np.where(valsNew == np.nan) ]
-            valsNew = valsNew.reshape(vals.shape)
+                # NaN is != from itself
+                valsNew[ np.where(valsNew != valsNew) ] = valsNewNearest [ np.where(valsNew != valsNew) ]
+
+            # fix bug in Scipy which put NaNs outside the convex hull in 1D for 'nearest'
+            if interpMethod == 'nearest' and len(np.squeeze(vals).shape) == 1:
+                import scipy.cluster.vq as vq
+                valsNew = np.squeeze(valsNew)
+                code, dist = vq.vq(targetPoints, calPoints)
+                # NaN is != from itself
+                valsNew[ np.where(valsNew != valsNew) ] = calValues[code][ np.where(valsNew != valsNew) ]
+                valsNew = valsNew.reshape(vals.shape)
 
             if rescale:
                 # rescale solutions

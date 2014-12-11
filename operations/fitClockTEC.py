@@ -28,8 +28,6 @@ def ClockTECfuncAllStations(xarray,par):
     return drefract+delayfact
     #return drefract+delayfact
 
-
-
 def getInitClock(data,freq):
     nF=freq.shape[0]
     avgdata=np.ma.sum(np.cos(data)+1.j*np.sin(data),axis=0).swapaxes(0,-2)

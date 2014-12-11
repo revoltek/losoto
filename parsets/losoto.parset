@@ -32,9 +32,9 @@ LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axis = '' # axis along which to smooth/find outlier (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
 LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers (amp: 3, ph: 6)
-LoSoTo.Steps.flag.Window = 60 # window to remove trends (in timestamps) (amp:60, ph:100)
+LoSoTo.Steps.flag.Window = 100 # window to remove trends (in units of axis) (time:100, freq:10e6)
 LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal (amp: 1, ph: 2)
-LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in timestamps)
+LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in unit of axis) (time:500, freq=10e6)
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
 
@@ -67,6 +67,7 @@ LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]
+LoSoTo.Steps.smooth.Mode = runningmedian # or mean or median (these two values set all the solutions to the mean/median)
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
