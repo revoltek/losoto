@@ -63,7 +63,7 @@ def run( step, parset, H ):
             station_positions[i, 2] = station_dict[station_name][2]
             
         returnAxes=['ant','freq','pol','time']
-        for vals,flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
+        for vals, flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
             logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
 
@@ -81,6 +81,16 @@ def run( step, parset, H ):
             weights=tec>-5
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
+
+            # if pol are combined here we duplicate the output and save same values in XX and YY
+            if combinePol:
+                print "clock",clock.shape
+                print "vals",vals.shape
+                clock = np.tile(clock,(1,1,2))
+                tec = np.tile(tec,(1,1,2))
+                offset = np.tile(offset,(1,2))
+                weights = np.tile(weights,(1,1,2))
+
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,
