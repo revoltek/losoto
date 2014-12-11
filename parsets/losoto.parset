@@ -28,6 +28,13 @@ LoSoTo.Steps.clip.Operation = CLIP
 LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 
+LoSoTo.Steps.clocktec.Operation = CLOCKTEC
+LoSoTo.Steps.clocktec.FlagBadChannels = True # detect and remove bad channel before fitting
+LoSoTo.Steps.clocktec.FlagCut = 1.5
+LoSoTo.Steps.clocktec.Chi2cut = 30000.
+LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
+LoSoTo.Steps.clocktec.FitOffset = False
+
 LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axis = '' # axis along which to smooth/find outlier (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
@@ -61,7 +68,7 @@ LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
-LoSoTo.Steps.ewweight.Operation = REWEIGHT
+LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
