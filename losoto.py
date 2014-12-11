@@ -121,6 +121,7 @@ if __name__=='__main__':
                    #"EXAMPLE": operations.example
     }
 
+    globalstart = time.clock()
     for step in steps:
         operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
         if not operation in operations:
@@ -137,5 +138,6 @@ if __name__=='__main__':
         logging.debug("Time for this step: "+str(elapsed)+" s.")
 
     del H
+    elapsed = (time.clock() - globalstart)
+    logging.info("Time for all steps: "+str(elapsed)+" s.")
     logging.info("Done.")
-
