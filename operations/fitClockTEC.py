@@ -277,6 +277,7 @@ def correctWraps(tecarray,residualarray,freq,pos):
     return offsets,wraps,steps     
 
 
+# TODO: add in losoto: combine_pol refstIdx flagBadChannel flagcut chi2cut removePhaseWraps doFitoffset
 def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp',stationSelect='BA',flagBadChannels=True,flagcut=1.5,chi2cut=30000.,removePhaseWraps=True,combine_pol=False,ignore_stations=["NOTHING_TO_IGNORE",],doFitoffset=False,initSol=[],initoffsets=[]):
     #make sure order of axes is as expected
     stidx=axes.index('ant')
