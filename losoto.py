@@ -121,8 +121,8 @@ if __name__=='__main__':
                    #"EXAMPLE": operations.example
     }
 
-    globalstart = time.clock()
-    globalstartcpu = time.time()
+    globalstart = time.time()
+    globalstartcpu = time.clock()
     for step in steps:
         operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
         if not operation in operations:
