@@ -228,7 +228,9 @@ def run( step, parset, H ):
         solType = sf.getType()
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
+        runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
+            runs += 1
             inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag, selection])
 
         # add poison pills to kill processes
@@ -239,11 +241,12 @@ def run( step, parset, H ):
         inQueue.join()
         
         # writing back the solutions
-        import time
-        while outQueue.empty() != True:
-            v,f,sel = outQueue.get()
-            # ugly workaround for queue returning true if too quick queries are made
-            time.sleep(0.01)
+        # NOTE: do not use queue.empty() check which is unreliable
+        # https://docs.python.org/2/library/multiprocessing.html
+        logging.info('Writing solutions')
+        for i in range(runs):
+            q = outQueue.get()
+            v,f,sel = q
             sw.selection = sel
             if replace:
                 # rewrite solutions (flagged values are overwritten)

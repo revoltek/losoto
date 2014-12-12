@@ -62,7 +62,11 @@ def run( step, parset, H ):
 
             # clipping
             # first find the median and standard deviation
-            valmedian = np.median(vals[np.where(weights > 0)])
+            goodVals = vals[np.where(weights > 0)]
+            if len(goodVals) > 0:
+                valmedian = np.median(goodVals)
+            else:
+                valmedian = 0
             clipvalue = valmedian * clipLevel
             np.putmask(weights, vals > clipvalue, 0)
             clipvalue = valmedian / clipLevel
