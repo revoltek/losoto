@@ -150,6 +150,12 @@ class multiThread(multiprocessing.Process):
             return flags | orig_flags, vals, rms
         ########################################
 
+        # check if everything flagged
+        if np.count_nonzero(weights) == 0:
+            logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axisToFlag)))
+            self.outQueue.put([vals, np.ones(shape=weights.shape, dtype=np.bool), selection])
+            return
+
         if preflagzeros:
             if solType == 'amplitude': weights[np.where(vals == 1)] = 0
             else: weights[np.where(vals == 0)] = 0
