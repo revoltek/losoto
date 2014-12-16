@@ -107,6 +107,7 @@ if __name__=='__main__':
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
                    "FLAG": operations.flag,
+                   "FLAGEXTEND": operations.flagextend,
                    "INTERP": operations.interp,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
