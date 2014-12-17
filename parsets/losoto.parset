@@ -77,7 +77,7 @@ LoSoTo.Steps.reset.Operation = RESET
 
 LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
-LoSoTo.Steps.reweight.FlagBad = True # re-flag bad values
+LoSoTo.Steps.reweight.FlagBad = False # re-flag bad values
 
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]

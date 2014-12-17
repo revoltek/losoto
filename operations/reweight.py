@@ -19,7 +19,7 @@ def run( step, parset, H ):
 
    weightVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "WeightVal"]), 1. )
    mergeSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "MergeFromSoltab"]), '' )
-   flagBad = parset.getBool('.'.join(["LoSoTo.Steps", step, "FlagBad"]), True )
+   flagBad = parset.getBool('.'.join(["LoSoTo.Steps", step, "FlagBad"]), False )
 
    for soltab in openSoltabs( H, soltabs ):
 
@@ -53,6 +53,8 @@ def run( step, parset, H ):
         sw.setValues(weights, weight=True)
 
         if flagBad:
+            sf = solFetcher(soltab)
+            sf.setSelection(**userSel)
             weights = sf.getValues(weight = True, retAxesVals = False)
             vals = sf.getValues(retAxesVals = False)
             if sf.getType() == 'amplitude': weights[np.where(vals == 1)] = 0

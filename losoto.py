@@ -116,7 +116,6 @@ if __name__=='__main__':
                    "SMOOTH": operations.smooth,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
-                   "UNFLAG": operations.unflag,
                    #"COPY": operations.copy,
                    # example operation
                    #"EXAMPLE": operations.example
