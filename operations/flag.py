@@ -38,7 +38,7 @@ class multiThread(multiprocessing.Process):
             self.flag(*parms)
             self.inQueue.task_done()
 
-    def flag(self, vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag, selection):
+    def flag(self, vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection):
 
         def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
             """
@@ -96,8 +96,31 @@ class multiThread(multiprocessing.Process):
         
             return final_data
         ######################################
+
+        def clean_noisy(data, times, window, max_rms):
+            """
+            calculate a running RMS and remove noisy data
+
+            window = in timestamps, sliding window dimension
+            max_rms = flag points in a region with rms larger than max_rms times the rms of rmses
+            
+            return: an array of data dimensions with flags
+            """
+            if len(data) == 0: return []
+            # loop over solution times
+            rmses = np.zeros(shape=data.shape, dtype=np.float)
+            for i, time in enumerate(times):
         
-        def outlier_rej(vals, weights, time, max_ncycles = 10, max_rms = 3., window = 60., order = 1, max_gap = 5.*60., replace = False):
+                # get data to smooth (values inside the time window)
+                data_array = data[ np.where( abs(times - time) <= window / 2. ) ]
+                rmses[i] = np.std(data_array)
+
+            rms =  1.4826 * np.median( abs(rmses) )
+            flags = abs(rmses) > max_rms * rms
+ 
+            return flags
+        
+        def outlier_rej(vals, weights, time, max_ncycles = 10, max_rms = 3., max_rms_noise=2., window = 60., order = 1, max_gap = 5.*60., replace = False):
             """
             Reject outliers using a running median
             val = the array (avg must be 0)
@@ -122,33 +145,50 @@ class multiThread(multiprocessing.Process):
                 vals_smoothed = smooth(vals[ s ], time[ s ], window, order, max_gap)
                 vals_detrend = vals[ s ] - vals_smoothed
                 
+                # remove noisy regions of data
+                flag_noisy = clean_noisy(vals_detrend, time[ s ], window, max_rms_noise)
+                #print 'noise flagging', float(sum(flag_noisy))/len(flag_noisy)
+                flags[ s ] = flag_noisy # add flags g (shape s=True) to global flags
+                s[ s ] = ~flag_noisy # new refined selection
+                vals_detrend = vals[ s ] - vals_smoothed[ ~flag_noisy ] # keep only vals satisfying s and g
+
+                # all is flagged? break
+                if (flags == True).all():
+                    rms == 0.
+                    break
+
                 # median calc
                 rms =  1.4826 * np.median( abs(vals_detrend) )
         
                 # rejection  
-                new_flags = abs(vals_detrend) > max_rms * rms
-                flags[ s ] = new_flags
+                flag_outlier = abs(vals_detrend) > max_rms * rms
+                #print 'rms flagging', float(sum(flag_outlier))/len(flag_outlier)
+
+                flags[ s ] = flag_outlier
         
                 # all is flagged? break
                 if (flags == True).all():
                     rms == 0.
                     break
         
-                # median calc
-                this_rms =  1.4826 * np.median( abs(vals_detrend[ ~new_flags ]) )
-        
                 # no flags? break
-                if rms - this_rms == 0.:
+                if sum(flag_outlier) == 0 and sum(flag_noisy) == 0:
                     break
         
-                # replace flagged values with smoothed ones
+                # replace (outlier) flagged values with smoothed ones
                 if replace:
                     new_vals = vals[ s ]
-                    new_vals[ new_flags ] = vals_smoothed[ new_flags ]
+                    new_vals[ flag_outlier ] = vals_smoothed[ flag_outlier ]
                     vals[ s ] = new_vals
-        
+
             return flags | orig_flags, vals, rms
         ########################################
+
+        # check if everything flagged
+        if np.count_nonzero(weights) == 0:
+            logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axisToFlag)))
+            self.outQueue.put([vals, np.ones(shape=weights.shape, dtype=np.bool), selection])
+            return
 
         if preflagzeros:
             if solType == 'amplitude': weights[np.where(vals == 1)] = 0
@@ -159,15 +199,18 @@ class multiThread(multiprocessing.Process):
         if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
             re = 1. * np.cos(vals)
             im = 1. * np.sin(vals)
-            flags_re, re, rms_re = outlier_rej(re, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
-            flags_im, im, rms_im = outlier_rej(im, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+            flags_re, re, rms_re = outlier_rej(re, weights, coord[axisToFlag], maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace)
+            flags_im, im, rms_im = outlier_rej(im, weights, coord[axisToFlag], maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace)
             vals = np.arctan2(im, re)
             flags = flags_re | flags_im
             rms = np.sqrt(rms_re**2 + rms_im**2)
-            #flags, vals, rms = outlier_rej(unwrap(vals), weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+            #flags, vals, rms = outlier_rej(unwrap(vals), weights, coord[axisToFlag], maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace)
             #vals = (vals+np.pi) % (2*np.pi) - np.pi
+        elif solType == 'amplitude':
+            flags, vals, rms = outlier_rej(np.log10(vals), weights, coord[axisToFlag], maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace)
+            vals == 10**vals
         else:
-            flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, window, order, maxGap, replace)
+            flags, vals, rms = outlier_rej(vals, weights, coord[axisToFlag], maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace)
         
         if (len(weights)-np.count_nonzero(weights))/float(len(weights)) == sum(flags)/float(len(flags)):
             logging.debug('Percentage of data flagged/replaced (%s): None' % (removeKeys(coord, axisToFlag)))
@@ -187,6 +230,7 @@ def run( step, parset, H ):
     axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), '' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
+    maxRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRmsNoise"]), 3. )
     window = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Window"]), 100 )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
     maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )
@@ -228,8 +272,10 @@ def run( step, parset, H ):
         solType = sf.getType()
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
+        runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
-            inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, window, order, maxGap, replace, axisToFlag, selection])
+            runs += 1
+            inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection])
 
         # add poison pills to kill processes
         for i in range(ncpu):
@@ -239,16 +285,19 @@ def run( step, parset, H ):
         inQueue.join()
         
         # writing back the solutions
-        while outQueue.empty() != True:
-            vals, flags, selection = outQueue.get()
-            sw.selection = selection
+        # NOTE: do not use queue.empty() check which is unreliable
+        # https://docs.python.org/2/library/multiprocessing.html
+        for i in range(runs):
+            q = outQueue.get()
+            v,f,sel = q
+            sw.selection = sel
             if replace:
                 # rewrite solutions (flagged values are overwritten)
-                sw.setValues(vals, weight=False)
+                sw.setValues(v, weight=False)
             else:
                 # convert boolean flag to 01 float array (0->flagged)
                 # TODO: in this operation weight != 0,1 are lost
-                sw.setValues((~flags).astype(float), weight=True)
+                sw.setValues((~f).astype(float), weight=True)
 
         sw.flush()
 

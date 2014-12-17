@@ -28,15 +28,30 @@ LoSoTo.Steps.clip.Operation = CLIP
 LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 
+LoSoTo.Steps.clocktec.Operation = CLOCKTEC
+LoSoTo.Steps.clocktec.FlagBadChannels = True # detect and remove bad channel before fitting
+LoSoTo.Steps.clocktec.FlagCut = 1.5
+LoSoTo.Steps.clocktec.Chi2cut = 30000.
+LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
+LoSoTo.Steps.clocktec.FitOffset = False
+
+# PARALLEL
 LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axis = '' # axis along which to smooth/find outlier (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
-LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers (amp: 3, ph: 6)
+LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
+LoSoTo.Steps.flag.MaxRmsNoise = 3. # rms to clip noise data region ( ~MaxRms*2 )
 LoSoTo.Steps.flag.Window = 100 # window to remove trends (in units of axis) (time:100, freq:10e6)
 LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal (amp: 1, ph: 2)
 LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in unit of axis) (time:500, freq=10e6)
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
+
+# PARALLEL
+LoSoTo.Steps.flagextend.Operation = FLAGEXTEND
+LoSoTo.Steps.flagextend.Axes = ['freq','time'] # axes used to find close flags
+LoSoTo.Steps.flagextend.Percent = 90 # percent of flagged data around the point to flag it
+LoSoTo.Steps.flagextend.Size = 11 # size of the window (diameter, per axis)
 
 LoSoTo.Steps.interp.Operation = INTERP
 LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
@@ -61,7 +76,7 @@ LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 LoSoTo.Steps.reset.Operation = RESET
 LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
-LoSoTo.Steps.ewweight.Operation = REWEIGHT
+LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis

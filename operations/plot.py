@@ -355,9 +355,9 @@ def run( step, parset, H ):
                         plt.ylim(ymin=minZ, ymax=maxZ)
                     plt.xlabel(axesToPlot[0])
                     if sf.getType() == 'amplitude':
-                        p = ax.plot(xvals, vals, 'k-')
+                        p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k-')
                     else:
-                        p = ax.plot(xvals, vals, 'ko')
+                        p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k.')
                     p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                     if log: ax.set_yscale('log')
                     try:

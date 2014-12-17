@@ -23,7 +23,13 @@ def run( step, parset, H ):
 
     # get involved solsets using local step values or global values or all
     soltabs = getParSoltabs( step, parset, H )
-     
+
+    flagBadChannels = parset.getBool('.'.join(["LoSoTo.Steps", step, "FlagBadChannels"]), True )
+    flagCut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FlagCut"]), 1.5 )
+    chi2cut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Chi2cut"]), 30000. )
+    combinePol = parset.getBool('.'.join(["LoSoTo.Steps", step, "CombinePol"]), False )
+    fitOffset = parset.getBool('.'.join(["LoSoTo.Steps", step, "FitOffset"]), False )
+
     # do something on every soltab (use the openSoltab LoSoTo function)
     #for soltab in openSoltabs( H, soltabs ):
     for soltabname in soltabs:
@@ -57,7 +63,7 @@ def run( step, parset, H ):
             station_positions[i, 2] = station_dict[station_name][2]
             
         returnAxes=['ant','freq','pol','time']
-        for vals,flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
+        for vals, flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
             logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
 
@@ -70,10 +76,21 @@ def run( step, parset, H ):
             times=coord['time']
 
             axes=[i for i in names if i in returnAxes]
-            clock,tec,offset,newstations=doFit(vals,np.logical_not(flags),freqs,stations,station_positions,axes)
+            clock,tec,offset,newstations=doFit(vals,np.logical_not(flags),freqs,stations,station_positions,axes,\
+                    flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,doFitoffset=fitOffset)
             weights=tec>-5
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
+
+            # if pol are combined here we duplicate the output and save same values in XX and YY
+            if combinePol:
+                print "clock",clock.shape
+                print "vals",vals.shape
+                clock = np.tile(clock,(1,1,2))
+                tec = np.tile(tec,(1,1,2))
+                offset = np.tile(offset,(1,2))
+                weights = np.tile(weights,(1,1,2))
+
             tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,

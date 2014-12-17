@@ -107,6 +107,7 @@ if __name__=='__main__':
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
                    "FLAG": operations.flag,
+                   "FLAGEXTEND": operations.flagextend,
                    "INTERP": operations.interp,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
@@ -121,21 +122,23 @@ if __name__=='__main__':
                    #"EXAMPLE": operations.example
     }
 
+    globalstart = time.time()
+    globalstartcpu = time.clock()
     for step in steps:
         operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
         if not operation in operations:
             logging.error('Unkown operation: '+operation)
             continue
         logging.info("--> Starting \'" + step + "\' step (operation: " + operation + ").")
-        start = time.clock()
+        start = time.time()
+        startcpu = time.clock()
         returncode = operations[ operation ].run( step, parset, H )
         if returncode != 0:
            logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
         else:
            logging.info("Step \'" + step + "\' completed successfully.")
-        elapsed = (time.clock() - start)
-        logging.debug("Time for this step: "+str(elapsed)+" s.")
+        logging.debug("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - start), (time.clock() - startcpu) ))
 
     del H
+    logging.info("Time for all steps: %i s (cpu: %i s)." % ( ( time.time() - globalstart), (time.clock() - globalstartcpu) ))
     logging.info("Done.")
-
