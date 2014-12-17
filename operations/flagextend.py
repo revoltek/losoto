@@ -38,7 +38,7 @@ class multiThread(multiprocessing.Process):
             self.flag(*parms)
             self.inQueue.task_done()
 
-    def flag(self, weights, coord, axesToExt, selection, percent=90, size=11):
+    def flag(self, weights, coord, axesToExt, selection, percent=90, size=11, cycles=3):
         """
         Reject outliers using a running median
         weights = the weights to convert into flags
@@ -54,13 +54,18 @@ class multiThread(multiprocessing.Process):
                 return 0
 
         import scipy.ndimage
-        flag = scipy.ndimage.filters.generic_filter(weights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
-        new_weights = np.copy(weights)
-        new_weights[ np.where( flag == 1 ) ] = 0
-        logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
-            % (removeKeys(coord, axesToExt), 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights), 100.*(np.size(new_weights)-np.count_nonzero(new_weights))/np.size(new_weights)))
+        newWeights = np.copy(weights)
+        for cycle in xrange(cycles):
+            flag = scipy.ndimage.filters.generic_filter(newWeights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
+            newWeights[ np.where( flag == 1 ) ] = 0
+            # no new flags
+            if cycle != 0 and np.count_nonzero(flag) == np.count_nonzero(oldFlag): break
+            oldFlag = np.copy(flag)
 
-        self.outQueue.put([new_weights, selection])
+        logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
+            % (removeKeys(coord, axesToExt), 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights), 100.*(np.size(newWeights)-np.count_nonzero(newWeights))/np.size(newWeights)))
+
+        self.outQueue.put([newWeights, selection])
         
             
 def run( step, parset, H ):
@@ -72,6 +77,7 @@ def run( step, parset, H ):
     axesToExt = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), ['freq','time'] )
     size = parset.getInt('.'.join(["LoSoTo.Steps", step, "Size"]), 11 )
     percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 50 )
+    cycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "Cycles"]), 3 )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
     
     if axesToExt == []:
@@ -106,7 +112,7 @@ def run( step, parset, H ):
         runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
             runs += 1
-            inQueue.put([weights, coord, axesToExt, selection, percent, size])
+            inQueue.put([weights, coord, axesToExt, selection, percent, size, cycles])
 
         # add poison pills to kill processes
         for i in range(ncpu):
