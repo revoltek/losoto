@@ -37,10 +37,10 @@ LoSoTo.Steps.clocktec.FitOffset = False
 
 # PARALLEL
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Axis = '' # axis along which to smooth/find outlier (e.g. 'time')
+LoSoTo.Steps.flag.Axis = time # axis along which to smooth/find outlier (e.g. 'time')
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
 LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
-LoSoTo.Steps.flag.MaxRmsNoise = 3. # rms to clip noise data region ( ~MaxRms*2 )
+LoSoTo.Steps.flag.MaxRmsNoise = 5. # rms to clip noise data region
 LoSoTo.Steps.flag.Window = 100 # window to remove trends (in units of axis) (time:100, freq:10e6)
 LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal (amp: 1, ph: 2)
 LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in unit of axis) (time:500, freq=10e6)
@@ -54,12 +54,12 @@ LoSoTo.Steps.flagextend.Percent = 90 # percent of flagged data around the point 
 LoSoTo.Steps.flagextend.Size = 11 # size of the window (diameter, per axis)
 
 LoSoTo.Steps.interp.Operation = INTERP
-LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
-LoSoTo.Steps.interp.CalDir = 3C196 # use a specific dir instead that the same of the tgt
+LoSoTo.Steps.interp.CalSoltab = ''
+LoSoTo.Steps.interp.CalDir = '' # use a specific dir instead that the same of the tgt
 LoSoTo.Steps.interp.InterpAxes = [time, freq]
 LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
 LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxis = time # rescale the median of this axis
+LoSoTo.Steps.interp.MedAxis = '' # rescale the median of this axis
 
 LoSoTo.Steps.norm.Operation = NORM
 LoSoTo.Steps.norm.NormVal = 1.
@@ -67,17 +67,17 @@ LoSoTo.Steps.norm.NormAxis = time
 
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
-LoSoTo.Steps.plot.Axes = [time]
+LoSoTo.Steps.plot.Axes = []
 LoSoTo.Steps.plot.MinMax = [0,0]
-LoSoTo.Steps.plot.Prefix = images/test_
+LoSoTo.Steps.plot.Prefix = ''
 LoSoTo.Steps.plot.Log = F # plot in log scale
 LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
 
 LoSoTo.Steps.reset.Operation = RESET
-LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
 
 LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
+LoSoTo.Steps.reweight.FlagBad = True # re-flag bad values
 
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]
@@ -94,6 +94,3 @@ LoSoTo.Steps.tecscreen.Operation = TECSCREEN
 LoSoTo.Steps.tecscreen.Height = 200e3
 LoSoTo.Steps.tecscreen.Order = 15
 LoSoTo.Steps.tecscreen.OutSoltab = [ion000/tecscreen000]
-
-LoSoTo.Steps.unflag.Operation = UNFLAG
-LoSoTo.Steps.unflag.UnflagZeros = False # unflag also zeros/ones (bad solutions in BBS)

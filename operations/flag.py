@@ -227,10 +227,10 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
 
-    axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), '' )
+    axisToFlag = parset.getString('.'.join(["LoSoTo.Steps", step, "Axis"]), 'time' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
-    maxRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRmsNoise"]), 3. )
+    maxRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRmsNoise"]), 5. )
     window = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Window"]), 100 )
     order = parset.getInt('.'.join(["LoSoTo.Steps", step, "Order"]), 1 )
     maxGap = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxGap"]), 5*60 )

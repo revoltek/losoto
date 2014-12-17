@@ -69,9 +69,9 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
 
-    axesToExt = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
+    axesToExt = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), ['freq','time'] )
     size = parset.getInt('.'.join(["LoSoTo.Steps", step, "Size"]), 11 )
-    percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 90 )
+    percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 50 )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
     
     if axesToExt == []:
