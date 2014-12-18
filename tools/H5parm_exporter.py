@@ -7,7 +7,7 @@
 # It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
 _author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de), David Rafferty (drafferty@hs.uni-hamburg.de)"
 
-import sys, os, glob, re
+import sys, os, glob, re, time
 import numpy as np
 import shutil
 import progressbar
@@ -390,6 +390,7 @@ if __name__=='__main__':
             N_times = tec_sf.getAxisLen(axis='time')
             len_sol[solType] = N_times
 
+    cachedSolTabs = {}
     for instrumentdbFile in instrumentdbFiles:
         out_instrumentdbFile = out_globaldbFile + '/' + outroot + '_' + instrumentdbFile.split('/')[-1]
         logging.info('Filling '+out_instrumentdbFile+':')
@@ -422,8 +423,10 @@ if __name__=='__main__':
                 solEntries = pdb_in.getNames(solType+':*')
                 data = pdb_in.getValuesGrid(solType+':*')
                 data_out = data.copy()
+                print 'get data', time.clock(), solType
                 for solEntry in solEntries:
 
+                    print 'prepare',time.clock()
                     pol, dir, ant, parm = parmdbToAxes(solEntry)
                     solTabList = getSoltabFromSolType(solType, solTabs, parm=parm)
                     if solTabList is None:
@@ -432,8 +435,16 @@ if __name__=='__main__':
                         logging.warning('More than one solution table found in H5parm '
                             'matching parmdb entry "'+solType+'". Taking the first match.')
                     solTab = solTabList[0]
-                    sf = solFetcher(solTab)
 
+                    # search in the cache for open soltab
+                    print 'get sf',time.clock()
+                    if not solTab in cachedSolTabs:
+                        sf = solFetcher(solTab, useCache=True)
+                        cachedSolTabs[solTab] = sf
+                    else:
+                        sf = cachedSolTabs[solTab]
+
+                    print 'selection',time.clock()
                     if pol == None and dir == None:
                         sf.setSelection(ant=ant)
                     elif pol == None and dir != None:
@@ -445,23 +456,38 @@ if __name__=='__main__':
 
                     # If needed, convert Amp and Phase to Real and Imag respectively
                     if parm == 'Real':
+                        print 'get table',time.clock()
                         SolTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
-                        soltab_phase = SolTabList[0]
-                        sf_phase = solFetcher(soltab_phase, ant=ant, pol=pol, dir=dir)
+                        if not solTabList[0] in cachedSolTabs:
+                            sf_phase = solFetcher(solTab, useCache=True)
+                            cachedSolTabs[solTabList[0]] = sf_phase
+                        else:
+                            sf_phase = cachedSolTabs[solTabList[0]]
+                        print 'fetch 1',time.clock()
                         val_amp = sf.getValues()[0]
+                        print 'fetch 2',time.clock()
                         val_phase = sf_phase.getValues()[0]
+                        print 'fetch mix',time.clock()
                         val = val_amp * np.cos(val_phase)
                     elif parm == 'Imag':
+                        print 'get table',time.clock()
                         SolTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
-                        soltab_amp = SolTabList[0]
-                        sf_amp = solFetcher(soltab_amp, ant=ant, pol=pol, dir=dir)
+                        if not solTabList[0] in cachedSolTabs:
+                            sf_amp = solFetcher(solTab, useCache=True)
+                            cachedSolTabs[solTabList[0]] = sf_phase
+                        else:
+                            sf_amp = cachedSolTabs[solTabList[0]]
+                        print 'fetch 1',time.clock()
                         val_phase = sf.getValues()[0]
+                        print 'fetch 2',time.clock()
                         val_amp = sf_amp.getValues()[0]
+                        print 'fetch mix',time.clock()
                         val = val_amp * np.sin(val_phase)
                     else:
                         val = sf.getValues()[0]
 
                     # Apply flags
+                    print 'flag',time.clock()
                     weights = sf.getValues(weight=True)[0]
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
@@ -469,6 +495,7 @@ if __name__=='__main__':
 
                     # Match the frequency or frequencies of instrumentdb under
                     # consideration
+                    print 'freq matching',time.clock()
                     sffreqs = sf.freq
                     freqs = data[solEntry]['freqs']
                     freq_list = [freq for freq in freqs if freq in sffreqs]
@@ -481,7 +508,7 @@ if __name__=='__main__':
                         freq_ind = []
                         for i in range(len(val.shape)):
                             freq_ind.append(slice(None))
-                        freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
+                        freq_ind[freqAxisIdx] = [i for i,item in enumerate(freq_list) if item in sffreqs]
                         freq_ind = tuple(freq_ind)
 
                     shape = data_out[solEntry]['values'].shape
@@ -491,6 +518,7 @@ if __name__=='__main__':
                         logging.critical('Mismatch between parmdb table and H5parm '
                         'solution table: Differing number of frequencies and/or times')
                         sys.exit(1)
+                    print 'done',time.clock()
                 pbar.update(ipbar)
                 ipbar += 1
             else:

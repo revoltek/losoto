@@ -468,10 +468,11 @@ class solHandler( object ):
     axisName = {max: yyy} # to selct values lower or equal than yyy
     axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
     """
-    def __init__(self, table, **args):
+    def __init__(self, table, useCache = False, **args):
         """
         Keyword arguments:
         table -- table object
+        useCache -- cache all data in memory
         **args -- used to create a selection
         """
 
@@ -483,6 +484,11 @@ class solHandler( object ):
         self.selection = {}
         self.setSelection(**args)
 
+        self.useCache = useCache
+        if self.useCache:
+            logging.debug("Caching...")
+            self.cacheWeight = np.copy(self.t.weight)
+            self.cacheVal = np.copy(self.t.val)
 
     def setSelection(self, **args):
         """
@@ -680,12 +686,7 @@ class solWriter(solHandler):
         useCache -- write the data on a local copy of the table,
         use flush() to write them on the disk, speeds up writing
         """
-        solHandler.__init__(self, table = table, **args)
-        self.useCache = useCache
-        if self.useCache:
-            logging.debug("Caching...")
-            self.cacheWeight = np.copy(self.t.weight)
-            self.cacheVal = np.copy(self.t.val)
+        solHandler.__init__(self, table = table, useCache = useCache, **args)
 
     def setAxisValues(self, axis = None, vals = None):
         """
@@ -753,9 +754,8 @@ class solWriter(solHandler):
 
 class solFetcher(solHandler):
 
-    def __init__(self, table, **args):
-        solHandler.__init__(self, table = table, **args)
-
+    def __init__(self, table, useCache = False, **args):
+        solHandler.__init__(self, table = table, useCache = useCache, **args)
 
     def __getattr__(self, axis):
         """
@@ -790,8 +790,12 @@ class solFetcher(solHandler):
         If selected, returns also the axes values
         """
 
-        if weight: dataVals = self.t.weight
-        else: dataVals = self.t.val
+        if self.useCache:
+            if weight: dataVals = self.cacheWeight
+            else: dataVals = self.cacheVal
+        else:
+            if weight: dataVals = self.t.weight
+            else: dataVals = self.t.val
 
         # apply the self.selection
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
