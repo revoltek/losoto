@@ -48,7 +48,7 @@ def getInitClock(data,freq):
             #logging.info("remainder " +str(np.remainder(avgdata[ist,:,pol]+np.pi,2*np.pi)-np.pi)) 
     #print data.shape,avgdata.shape #stationsx freq x pol
     A=np.ones((nF,2),dtype=np.float)
-    A[:,1] = freq*2*np.pi*(-1e-9)
+    A[:,1] = freq*2*np.pi*(1e-9)
     return np.ma.dot(np.linalg.inv(np.dot(A.T,A)),np.ma.dot(A.T,avgdata).swapaxes(0,-2))
 
 def getInitPar(data,dTECArray, dClockArray,freqs,ff=ClockTECfunc):
@@ -89,7 +89,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
     if returnResiduals:
         residualarray=np.zeros((nT,nF,nSt),dtype=np.float32)
     A=np.ones((nF,nparms),dtype=np.float)
-    A[:,1] = freq*2*np.pi*(-1e-9)
+    A[:,1] = freq*2*np.pi*(1e-9)
     A[:,0] = -8.44797245e9/freq
     base,steps=getPhaseWrapBase(freq)
     stepdTEC=np.abs(steps[0])*stepFraction
@@ -212,7 +212,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
 def getPhaseWrapBase(freqs):
     nF=freqs.shape[0]
     A=np.zeros((nF,2),dtype=np.float)
-    A[:,1] = freqs*2*np.pi*(-1e-9)
+    A[:,1] = freqs*2*np.pi*(1e-9)
     A[:,0] = -8.44797245e9/freqs
     steps=np.dot(np.dot(np.linalg.inv(np.dot(A.T,A)),A.T),2*np.pi*np.ones((nF,),dtype=np.float))
     basef=np.dot(A,steps)-2*np.pi
