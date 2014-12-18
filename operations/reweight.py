@@ -41,7 +41,7 @@ def run( step, parset, H ):
             sf.setSelection(**userSel)
             weights, axes = sf.getValues(weight = True)
             mergeWeights, mergeAxes = msf.getValues(weight = True)
-            if axes.keys() != mergeAxes.keys() or newWeights.shape != mergeWeights.shape:
+            if axes.keys() != mergeAxes.keys() or weights.shape != mergeWeights.shape:
                 logging.error('Impossible merge two tables with different axes values')
                 return 1
             weights[ np.where(mergeWeights == 0) ] = 0.
