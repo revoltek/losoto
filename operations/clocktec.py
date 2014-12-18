@@ -99,7 +99,7 @@ def run( step, parset, H ):
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
             tf_st = H.makeSoltab(solsetname, 'clock',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
-                                 vals=clock,
+                                 vals=clock*1e-9,
                                  weights=weights)
             sw = solWriter(tf_st)
             sw.addHistory('CREATE (by CLOCKTECFIT operation)')
