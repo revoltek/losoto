@@ -445,16 +445,14 @@ if __name__=='__main__':
                         sf = cachedSolTabs[solTab]
 
                     print 'selection',time.clock()
-                    if pol == None and dir == None:
-                        sf.setSelection(ant=ant)
-                    elif pol == None and dir != None:
-                        sf.setSelection(ant=ant, dir=dir)
-                    elif pol != None and dir == None:
-                        sf.setSelection(ant=ant, pol=pol)
-                    else:
-                        sf.setSelection(ant=ant, pol=pol, dir=dir)
+                    sffreqs = sf.freq
+                    freqs = data[solEntry]['freqs']
+                    freq_list = [freq for freq in freqs if freq in sffreqs]
+                    if len(freq_list) == 0:
+                        freq_list = None
+                    sf.setSelection(ant=ant, pol=pol, dir=dir, freq=freq_list)
 
-                    # If needed, convert Amp and Phase to Real and Imag respectively
+                    # If needed, convert Amp and Phase to Real and Imag
                     if parm == 'Real':
                         print 'get table',time.clock()
                         SolTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
@@ -491,29 +489,17 @@ if __name__=='__main__':
                     weights = sf.getValues(weight=True)[0]
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
+                    if parm == 'Real':
+                        weights2 = sf_phase.getValues(weight=True)[0]
+                        flag[np.where(weights2 == 0)] = True
+                    if parm == 'Imag':
+                        weights2 = sf_amp.getValues(weight=True)[0]
+                        flag[np.where(weights2 == 0)] = True
                     np.putmask(val, flags, np.nan)
-
-                    # Match the frequency or frequencies of instrumentdb under
-                    # consideration
-                    print 'freq matching',time.clock()
-                    sffreqs = sf.freq
-                    freqs = data[solEntry]['freqs']
-                    freq_list = [freq for freq in freqs if freq in sffreqs]
-                    if len(freq_list) == 0:
-                        for i in range(len(val.shape)):
-                            freq_ind_list.append(slice(None))
-                        freq_ind = tuple(freq_ind_list)
-                    else:
-                        freqAxisIdx = sf.getAxesNames().index('freq')
-                        freq_ind = []
-                        for i in range(len(val.shape)):
-                            freq_ind.append(slice(None))
-                        freq_ind[freqAxisIdx] = [i for i,item in enumerate(freq_list) if item in sffreqs]
-                        freq_ind = tuple(freq_ind)
 
                     shape = data_out[solEntry]['values'].shape
                     try:
-                        data_out[solEntry]['values'] = val[freq_ind].T.reshape(shape)
+                        data_out[solEntry]['values'] = val.T.reshape(shape)
                     except ValueError, err:
                         logging.critical('Mismatch between parmdb table and H5parm '
                         'solution table: Differing number of frequencies and/or times')
