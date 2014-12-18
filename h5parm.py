@@ -440,7 +440,7 @@ class h5parm( object ):
                                 if axisName == 'freq': f.write(" ".join(["{0:.8f}".format(v) for v in vals])+"\n\n")
                                 elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
                                 else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
-                        info += "\nSolution table '%s': %s\n" % (soltab_name, ", ".join(axis_str_list))
+                        info += "\nSolution table '%s' (type: %s): %s\n" % (soltab_name, sf.getType(), ", ".join(axis_str_list))
                         if verbouse:
                             weights = sf.getValues(weight = True, retAxesVals = False)
                             info += 'Flagged data %.3f%%\n' % (100.*len(np.where(weights==0)[0])/len(weights.flat))
