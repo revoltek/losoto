@@ -48,7 +48,7 @@ def getInitClock(data,freq):
             #logging.info("remainder " +str(np.remainder(avgdata[ist,:,pol]+np.pi,2*np.pi)-np.pi)) 
     #print data.shape,avgdata.shape #stationsx freq x pol
     A=np.ones((nF,2),dtype=np.float)
-    A[:,1] = freq*2*np.pi*(1e-9)
+    A[:,1] = freq*2*np.pi*(-1e-9)
     return np.ma.dot(np.linalg.inv(np.dot(A.T,A)),np.ma.dot(A.T,avgdata).swapaxes(0,-2))
 
 def getInitPar(data,dTECArray, dClockArray,freqs,ff=ClockTECfunc):
@@ -154,13 +154,14 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                  
                  par = getInitPar(datatmp,dTECArray, dClockArray,freq,ClockTECfunc)
                  sol[ist,:]=par[:nparms]
+                 #logging.info("par "+str(par[:nparms]))  
         #wrapflags=np.ones((nSt,nF))     
         for nr_iter in range(2):
             estimate=ClockTECfuncAllStations(freq,sol.T).reshape((nSt,nF)).T
             wraps=np.ma.around(np.divide(estimate-data[itm],2*np.pi))
             data[itm,:]=np.add(2*np.pi*wraps,data[itm])
             #logging.info("fitting masked data itm:%d "%itm + str(data[itm,:].count(axis=0)))
-            wrapflags=np.absolute(estimate-data[itm,:])<(1./(nr_iter+1))*np.pi
+            wrapflags=np.absolute(estimate-data[itm,:])<(10./(nr_iter+1))*np.pi
             #logging.info("flagging dubious wraps" + str(np.sum(np.logical_not(wrapflags),axis=0)))
             #logging.info(str(itm)+":"+str(data[itm,:,-1])+" estimate: "+str(estimate[:,-1])+" "+str(data[itm,:,-1][wrapflags[:,-1]].count())+" "+str(sol[-1]))
             for ist in range(nSt):
