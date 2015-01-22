@@ -495,8 +495,8 @@ if __name__=='__main__':
                         logging.critical('Mismatch between parmdb table and H5parm '
                         'solution table: Differing number of frequencies and/or times')
                         sys.exit(1)
-                pbar.update(ipbar)
                 ipbar += 1
+                pbar.update(ipbar)
             else:
                 # Handle TECScreen parmdb
                 #

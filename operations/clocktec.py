@@ -84,8 +84,8 @@ def run( step, parset, H ):
 
             # if pol are combined here we duplicate the output and save same values in XX and YY
             if combinePol:
-                print "clock",clock.shape
-                print "vals",vals.shape
+                #print "clock",clock.shape
+                #print "vals",vals.shape
                 clock = np.tile(clock,(1,1,2))
                 tec = np.tile(tec,(1,1,2))
                 offset = np.tile(offset,(1,2))
