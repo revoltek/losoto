@@ -19,6 +19,7 @@ def run( step, parset, H ):
 
    weightVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "WeightVal"]), 1. )
    mergeSoltab = parset.getString('.'.join(["LoSoTo.Steps", step, "MergeFromSoltab"]), '' )
+   flagBad = parset.getBool('.'.join(["LoSoTo.Steps", step, "FlagBad"]), False )
 
    for soltab in openSoltabs( H, soltabs ):
 
@@ -38,15 +39,26 @@ def run( step, parset, H ):
             msf.setSelection(**userSel)
             sf = solFetcher(soltab)
             sf.setSelection(**userSel)
-            newWeights, axes = sf.getValues(weight = True)
+            weights, axes = sf.getValues(weight = True)
             mergeWeights, mergeAxes = msf.getValues(weight = True)
-            if axes.keys() != mergeAxes.keys() or newWeights.shape != mergeWeights.shape:
+            if axes.keys() != mergeAxes.keys() or weights.shape != mergeWeights.shape:
                 logging.error('Impossible merge two tables with different axes values')
                 return 1
-            newWeights[ np.where(mergeWeights == 0) ] = 0.
-            sw.setValues(newWeights, weight = True)
+            weights[ np.where(mergeWeights == 0) ] = 0.
             sw.addHistory('WEIGHT merged from '+mergeSoltab+' for selection:'+str(userSel))
         else:
-            sw.setValues(weightVal, weight=True)
+            weights = weightVal
             sw.addHistory('REWEIGHTED to '+str(weightVal)+' for selection:'+str(userSel))
+
+        sw.setValues(weights, weight=True)
+
+        if flagBad:
+            sf = solFetcher(soltab)
+            sf.setSelection(**userSel)
+            weights = sf.getValues(weight = True, retAxesVals = False)
+            vals = sf.getValues(retAxesVals = False)
+            if sf.getType() == 'amplitude': weights[np.where(vals == 1)] = 0
+            else: weights[np.where(vals == 0)] = 0
+            sw.setValues(weights, weight=True)
+
    return 0

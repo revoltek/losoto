@@ -16,8 +16,6 @@ def run( step, parset, H ):
 
    soltabs = getParSoltabs( step, parset, H )
 
-   setWeight = parset.getBool('.'.join(["LoSoTo.Steps", step, "Weight"]), False )
-
    for soltab in openSoltabs( H, soltabs ):
 
         logging.info("Resetting soltab: "+soltab._v_name)
@@ -32,9 +30,7 @@ def run( step, parset, H ):
 
         solType = t.getType()
 
-        if setWeight:
-            t.setValues(weightVal, weight=1.)
-        elif solType == 'amplitude':
+        if solType == 'amplitude':
             t.setValues(1.)
         else:
             t.setValues(0.)

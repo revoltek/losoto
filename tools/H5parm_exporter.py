@@ -7,7 +7,7 @@
 # It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
 _author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de), David Rafferty (drafferty@hs.uni-hamburg.de)"
 
-import sys, os, glob, re
+import sys, os, glob, re, time
 import numpy as np
 import shutil
 import progressbar
@@ -390,6 +390,7 @@ if __name__=='__main__':
             N_times = tec_sf.getAxisLen(axis='time')
             len_sol[solType] = N_times
 
+    cachedSolTabs = {}
     for instrumentdbFile in instrumentdbFiles:
         out_instrumentdbFile = out_globaldbFile + '/' + outroot + '_' + instrumentdbFile.split('/')[-1]
         logging.info('Filling '+out_instrumentdbFile+':')
@@ -432,29 +433,43 @@ if __name__=='__main__':
                         logging.warning('More than one solution table found in H5parm '
                             'matching parmdb entry "'+solType+'". Taking the first match.')
                     solTab = solTabList[0]
-                    sf = solFetcher(solTab)
 
-                    if pol == None and dir == None:
-                        sf.setSelection(ant=ant)
-                    elif pol == None and dir != None:
-                        sf.setSelection(ant=ant, dir=dir)
-                    elif pol != None and dir == None:
-                        sf.setSelection(ant=ant, pol=pol)
+                    # search in the cache for open soltab
+                    if not solTab._v_title in cachedSolTabs:
+                        sf = solFetcher(solTab, useCache=True)
+                        cachedSolTabs[solTab._v_title] = sf
                     else:
-                        sf.setSelection(ant=ant, pol=pol, dir=dir)
+                        sf = cachedSolTabs[solTab._v_title]
 
-                    # If needed, convert Amp and Phase to Real and Imag respectively
+                    #sffreqs = sf.freq
+                    freqs = data[solEntry]['freqs']
+                    #print freqs, sffreqs
+                    #freq_list = [freq for freq in freqs if freq in sffreqs]
+                    #print freq_list
+                    #if len(freq_list) == 0:
+                    #    freq_list = None
+                    sf.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
+
+                    # If needed, convert Amp and Phase to Real and Imag
                     if parm == 'Real':
-                        SolTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
-                        soltab_phase = SolTabList[0]
-                        sf_phase = solFetcher(soltab_phase, ant=ant, pol=pol, dir=dir)
+                        solTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
+                        if not solTabList[0]._v_title in cachedSolTabs:
+                            sf_phase = solFetcher(solTabList[0], useCache=True)
+                            cachedSolTabs[solTabList[0]._v_title] = sf_phase
+                        else:
+                            sf_phase = cachedSolTabs[solTabList[0]._v_title]
+                        sf_phase.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
                         val_amp = sf.getValues()[0]
                         val_phase = sf_phase.getValues()[0]
                         val = val_amp * np.cos(val_phase)
                     elif parm == 'Imag':
-                        SolTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
-                        soltab_amp = SolTabList[0]
-                        sf_amp = solFetcher(soltab_amp, ant=ant, pol=pol, dir=dir)
+                        solTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
+                        if not solTabList[0]._v_title in cachedSolTabs:
+                            sf_amp = solFetcher(solTabList[0], useCache=True)
+                            cachedSolTabs[solTabList[0]._v_title] = sf_amp
+                        else:
+                            sf_amp = cachedSolTabs[solTabList[0]._v_title]
+                        sf_amp.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
                         val_phase = sf.getValues()[0]
                         val_amp = sf_amp.getValues()[0]
                         val = val_amp * np.sin(val_phase)
@@ -465,34 +480,23 @@ if __name__=='__main__':
                     weights = sf.getValues(weight=True)[0]
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
+                    if parm == 'Real':
+                        weights2 = sf_phase.getValues(weight=True)[0]
+                        flags[np.where(weights2 == 0)] = True
+                    if parm == 'Imag':
+                        weights2 = sf_amp.getValues(weight=True)[0]
+                        flags[np.where(weights2 == 0)] = True
                     np.putmask(val, flags, np.nan)
-
-                    # Match the frequency or frequencies of instrumentdb under
-                    # consideration
-                    sffreqs = sf.freq
-                    freqs = data[solEntry]['freqs']
-                    freq_list = [freq for freq in freqs if freq in sffreqs]
-                    if len(freq_list) == 0:
-                        for i in range(len(val.shape)):
-                            freq_ind_list.append(slice(None))
-                        freq_ind = tuple(freq_ind_list)
-                    else:
-                        freqAxisIdx = sf.getAxesNames().index('freq')
-                        freq_ind = []
-                        for i in range(len(val.shape)):
-                            freq_ind.append(slice(None))
-                        freq_ind[freqAxisIdx] = np.where(sffreqs == freq_list)
-                        freq_ind = tuple(freq_ind)
 
                     shape = data_out[solEntry]['values'].shape
                     try:
-                        data_out[solEntry]['values'] = val[freq_ind].T.reshape(shape)
+                        data_out[solEntry]['values'] = val.T.reshape(shape)
                     except ValueError, err:
                         logging.critical('Mismatch between parmdb table and H5parm '
                         'solution table: Differing number of frequencies and/or times')
                         sys.exit(1)
-                pbar.update(ipbar)
                 ipbar += 1
+                pbar.update(ipbar)
             else:
                 # Handle TECScreen parmdb
                 #

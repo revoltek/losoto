@@ -119,9 +119,6 @@ if __name__=='__main__':
         logging.critical('Missing FIELD table.')
         sys.exit(1)
     skydbFile = os.path.join(globaldbFile,'sky')
-    if not os.path.isdir(skydbFile):
-        logging.critical('Missing skydb table.')
-        sys.exit(1)
 
     # Make a list of all available instrument tables (only 1 for a standard MS)
     instrumentdbFiles = [ instrumentdbFile for instrumentdbFile in \
@@ -322,6 +319,10 @@ if __name__=='__main__':
     # remove any pointing (already in the table)
     if 'pointing' in dirs:
         dirs.remove('pointing')
+
+    if not os.path.isdir(skydbFile) and dirs!=[]:
+        logging.critical('Missing skydb table.')
+        sys.exit(1)
 
     if dirs != []:
         logging.info('Collecting information from the sky table.')

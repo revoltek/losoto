@@ -143,7 +143,7 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 ######################################################
 # read+write
 logging.info("### Read all rotations for a dir/station and write them back")
-Hw = solWriter(H5.getSoltab(solset,'amplitude000'))
+Hw = solWriter(H5.getSoltab(solset,'rotation000'))
 
 start = time.clock()
 for i in xrange(n):
