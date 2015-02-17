@@ -5,7 +5,7 @@ import logging
 from lofar.expion import baselinefitting  as fitting
 
 def ClockTECfunc(xarray,par):
-    delay=np.array([-1*par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
+    delay=np.array([par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
     delayfact=2*np.pi*delay[:,np.newaxis]*xarray
     TEC=np.array([par[0]]).flatten();          # dTEC in TECU
     drefract=-8.4479745e9*TEC[:,np.newaxis]/xarray
@@ -16,7 +16,7 @@ def ClockTECfunc(xarray,par):
     #return drefract+delayfact
 
 def ClockTECfuncAllStations(xarray,par):
-    delay=np.array([-1*par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
+    delay=np.array([par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
     delayfact=2*np.pi*delay[:,np.newaxis]*xarray
     #print "delayfact",delayfact.shape
     TEC=np.array([par[0]]).flatten();          # dTEC in TECU
@@ -48,7 +48,7 @@ def getInitClock(data,freq):
             #logging.info("remainder " +str(np.remainder(avgdata[ist,:,pol]+np.pi,2*np.pi)-np.pi)) 
     #print data.shape,avgdata.shape #stationsx freq x pol
     A=np.ones((nF,2),dtype=np.float)
-    A[:,1] = freq*2*np.pi*(-1e-9)
+    A[:,1] = freq*2*np.pi*(1e-9)
     return np.ma.dot(np.linalg.inv(np.dot(A.T,A)),np.ma.dot(A.T,avgdata).swapaxes(0,-2))
 
 def getInitPar(data,dTECArray, dClockArray,freqs,ff=ClockTECfunc):
@@ -130,7 +130,11 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                          iD2=250
                          iTEC1=-5
                          iTEC2=5
-                        
+                     if 'LBA' in stations[ist]:
+                         # no init clock possible due to large TEC effect
+                         iD1=-500
+                         iD2=500
+                     
                 logging.info("First %f %f %f %f %f %f "%(iTEC1,iTEC2,stepdTEC,iD1,iD2,stepDelay))
 
              else:
@@ -346,7 +350,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
         #init CS clocks to 0
 
         #logging.info("data before init clock" + str(data[nT/2,:,-1]))
-        data[:,:,RSstations+otherstations]=data[:,:,RSstations+otherstations]-(freqs[np.newaxis,:,np.newaxis,np.newaxis]*initclock[1][np.newaxis,np.newaxis,:]*(-1e-9)*2*np.pi)
+        data[:,:,RSstations+otherstations]=data[:,:,RSstations+otherstations]-(freqs[np.newaxis,:,np.newaxis,np.newaxis]*initclock[1][np.newaxis,np.newaxis,:]*(1e-9)*2*np.pi)
         #logging.info("clock correction" + str(np.remainder(freqs*initclock[1][-1]*-1e-9*2*np.pi+np.pi,2*np.pi)-np.pi))
         #logging.info("data after init clock" + str(np.remainder(data[nT/2,:,-1]+np.pi,2*np.pi)-np.pi))
     offset=np.zeros((nSt,npol),dtype=np.float32)
