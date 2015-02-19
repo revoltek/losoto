@@ -4,6 +4,8 @@ import sys
 import logging
 from lofar.expion import baselinefitting  as fitting
 
+
+
 def ClockTECfunc(xarray,par):
     delay=np.array([par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
     delayfact=2*np.pi*delay[:,np.newaxis]*xarray
@@ -78,6 +80,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
     stepFraction=0.2
     nT=ph.shape[0]
     nF=freq.shape[0]
+    freqstep=np.average(freq[1:]-freq[:-1])
     nSt=ph.shape[2]
     data=ph
     logging.info("fitting masked data "+str(ph.count(axis=0)))
@@ -136,7 +139,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                          iD2=500
                      
                 logging.info("First %f %f %f %f %f %f "%(iTEC1,iTEC2,stepdTEC,iD1,iD2,stepDelay))
-
+             
              else:
                 sol[ist,:]=prevsol[ist,:]
                 iTEC1=prevsol[ist,0]-min(1.5,stepdTEC*int(nrFail[ist]/1))#/stepFraction
@@ -154,7 +157,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
              dClockArray=np.arange(iD1,iD2,stepDelay)
              datatmp=ph[itm,:,ist]
              #logging.info("getting init par for station %d"%ist)
-             if datatmp.count()/float(nF)>0.5:
+             if datatmp.count()/float(nF)>0.7:
                  
                  par = getInitPar(datatmp,dTECArray, dClockArray,freq,ClockTECfunc)
                  sol[ist,:]=par[:nparms]
@@ -163,9 +166,20 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
         for nr_iter in range(2):
             estimate=ClockTECfuncAllStations(freq,sol.T).reshape((nSt,nF)).T
             wraps=np.ma.around(np.divide(estimate-data[itm],2*np.pi))
-            data[itm,:]=np.add(2*np.pi*wraps,data[itm])
+            
+            
+
+            wrapjumps=data[itm,1:]+2*np.pi*wraps[1:]-data[itm,:-1]-2*np.pi*wraps[:-1]
+            jumps=np.int32(np.logical_and(np.absolute(wrapjumps[1:-1])>1.5*(freq[1:]-freq[:-1])[1:-1][:,np.newaxis]*np.pi/freqstep,np.logical_and(np.absolute(wrapjumps[2:])<0.5*np.pi,np.absolute(wrapjumps[:-2])<0.5*np.pi)))
+            jumps*=np.sign(wrapjumps[1:-1])
+            jumps=np.cumsum(jumps,axis=0)
+            wraps[2:-1]-=jumps
+            wraps[-1]-=jumps[-1]
+            data[itm,:]=np.add(2*np.pi*wraps,data[itm])            
+            data[itm,:]+=np.around(np.average(estimate-data[itm],axis=0)/(2*np.pi))[np.newaxis]*2*np.pi
+
             #logging.info("fitting masked data itm:%d "%itm + str(data[itm,:].count(axis=0)))
-            wrapflags=np.absolute(estimate-data[itm,:])<(10./(nr_iter+1))*np.pi
+            wrapflags=np.absolute(estimate-data[itm,:])<(4./(2*(nr_iter+1)))*np.pi
             #logging.info("flagging dubious wraps" + str(np.sum(np.logical_not(wrapflags),axis=0)))
             #logging.info(str(itm)+":"+str(data[itm,:,-1])+" estimate: "+str(estimate[:,-1])+" "+str(data[itm,:,-1][wrapflags[:,-1]].count())+" "+str(sol[-1]))
             for ist in range(nSt):
@@ -179,11 +193,11 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                 sol[ist]=np.ma.dot(np.linalg.inv(np.dot(B.T,B)),np.ma.dot(B.T,data[itm,:,ist][wrapflags[:,ist]])).T
                 #remove jumps in delay
                 #if not 'CS' in stations[ist]:
-                if initprevsol[ist] and np.abs(np.round((sol[ist,1]-prevsol[ist,1])/steps[1]))>0:
+                if initprevsol[ist] and np.abs((sol[ist,1]-prevsol[ist,1])/steps[1])>0.5:
                     sol[ist,:]-=np.round((sol[ist,1]-prevsol[ist,1])/steps[1])*steps
         residual = data[itm] - np.dot(A, sol.T)
-        residual = residual - residual[:, 0][:,np.newaxis]
-        residual = np.ma.remainder(residual+np.pi, 2*np.pi) - np.pi  
+        tmpresid = residual - residual[:, 0][:,np.newaxis]
+        residual = np.ma.remainder(tmpresid+np.pi, 2*np.pi) - np.pi  
         chi2=np.ma.sum(np.square(np.degrees(residual)),axis=0)/(nF)        
 
         if returnResiduals:
@@ -195,10 +209,12 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
             succes=False
             nrFail[chi2select]+=1
             nrFail[~chi2select]=0
-            prevsol[~chi2select]=sol[~chi2select]
+            #prevsol[~chi2select]=sol[~chi2select]
+            prevsol[~chi2select]=0.5*prevsol[~chi2select]+0.5*sol[~chi2select]
             initprevsol[~chi2select]=True
         else:
-            prevsol=np.copy(sol)
+            #prevsol=np.copy(sol)
+            prevsol=0.5*prevsol+0.5*np.copy(sol)
             succes=True
             initprevsol=np.ones(nSt,dtype=bool)
             nrFail=np.zeros(sol.shape[0],dtype=int)
