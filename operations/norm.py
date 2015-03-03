@@ -20,7 +20,7 @@ def run( step, parset, H ):
     solTypes = getParSolTypes( step, parset, H )
 
     normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
-    normAxis = parset.getString('.'.join(["LoSoTo.Steps", step, "NormAxis"]), 'time' )
+    normAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "NormAxes"]), ['time'] )
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -30,9 +30,10 @@ def run( step, parset, H ):
         tw = solWriter(soltab, useCache = True) # remember to flush!
 
         axesNames = tr.getAxesNames()
-        if normAxis not in axesNames:
-            logging.error('Normalization axis '+normAxis+' not found.')
-            return 1
+        for normAxis in normAxes:
+            if normAxis not in axesNames:
+                logging.error('Normalization axis '+normAxis+' not found.')
+                return 1
 
         # axis selection
         userSel = {}
@@ -40,20 +41,20 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         tr.setSelection(**userSel)
 
-        for vals, weights, coord, selection in tr.getValuesIter(returnAxes=normAxis, weight = True):
+        for vals, weights, coord, selection in tr.getValuesIter(returnAxes=normAxes, weight = True):
 
             # rescale solutions
-            if sum(weights) == 0: continue # skip flagged antenna
+            if np.sum(weights) == 0: continue # skip flagged antenna
             valsMean = np.average(vals, weights=weights)
             valsNew = normVal*vals/valsMean
+            logging.debug(str(coord))
             logging.debug("Rescaling by: "+str(normVal/valsMean))
-
 
             # writing back the solutions
             tw.selection = selection
             tw.setValues(valsNew)
 
         tw.flush()
-        tw.addHistory('NORM (on axis %s)' % (normAxis))
+        tw.addHistory('NORM (on axis %s)' % (normAxes))
 
     return 0
