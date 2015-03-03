@@ -48,6 +48,7 @@ def run( step, parset, H ):
             valsNew = normVal*vals/valsMean
             logging.debug("Rescaling by: "+str(normVal/valsMean))
 
+
             # writing back the solutions
             tw.selection = selection
             tw.setValues(valsNew)

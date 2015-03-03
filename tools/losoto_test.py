@@ -104,12 +104,12 @@ Hsw.setValues(v)
 
 logging.info('Get Vaues Iter (exp: 40 and 10)')
 i=0
-for matrix, coord in Hsf.getValuesIter(returnAxes=['axis3']):
+for matrix, coord, sel in Hsf.getValuesIter(returnAxes=['axis3']):
     print matrix.shape
     i += 1
 print "Iterations:", i
 i=0
-for matrix, coord in Hsf.getValuesIter(returnAxes=['axis2','axis3']):
+for matrix, coord, sel in Hsf.getValuesIter(returnAxes=['axis2','axis3']):
     print matrix.shape
     print coord
     i += 1

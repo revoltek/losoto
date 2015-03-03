@@ -285,7 +285,7 @@ if __name__=='__main__':
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
-            np.putmask(weights, vals == 0., 0)
+            #np.putmask(weights, vals == 0., 0) # TODO: NDPPP bug which put at 0 the reference antenna phase
             h5parm.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 
