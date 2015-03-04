@@ -111,6 +111,7 @@ if __name__=='__main__':
                    "INTERP": operations.interp,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
+                   "PLOTTECSCREEN": operations.plottecscreen,
                    "RESET": operations.reset,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
