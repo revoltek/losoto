@@ -270,6 +270,7 @@ def run( step, parset, H ):
 
     plotType = parset.getString('.'.join(["LoSoTo.Steps", step, "PlotType"]), '1d' )
     axesToPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
+    # TODO: make this more flexible
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
@@ -281,6 +282,7 @@ def run( step, parset, H ):
     # the axis to plot on a different page - new plot - new image name  e.g. combine with axesToPlot amp vs time for all freq or amp vs freq for all time#
     axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxes"]), '' )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
+    # TODO: add log='XYZ' to set which axes to put in Log
     log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), False )
 
     plotType = plotType.lower()
@@ -289,7 +291,6 @@ def run( step, parset, H ):
         for soltab in openSoltabs( H, soltabs ):
 
             logging.info("Plotting soltab: "+soltab._v_name)
-
             sf = solFetcher(soltab)
 
             # axis selection
