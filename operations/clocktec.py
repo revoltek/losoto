@@ -67,8 +67,11 @@ def run( step, parset, H ):
 
             logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
 
-            if len(coord['ant']) < 10:
-                logging.error('Clock/TEC separation needs at least 10 antennas selected.')
+            if len(coord['ant']) < 2:
+                logging.error('Clock/TEC separation needs at least 2 antennas selected.')
+                return 1
+           if len(coord['freqs']) < 10:
+                logging.error('Clock/TEC separation needs at least 10 frequency channels, preferably distributed over a wide range')
                 return 1
 
             freqs=coord['freq']
