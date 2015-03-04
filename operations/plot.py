@@ -273,13 +273,13 @@ def run( step, parset, H ):
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
-    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxes"]), 'ant' )
+    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxis"]), 'ant' )
     # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
-    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxes"]), 'pol' )
+    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), 'pol' )
     # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot #
-    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxes"]), '' )
+    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxis"]), '' )
     # the axis to plot on a different page - new plot - new image name  e.g. combine with axesToPlot amp vs time for all freq or amp vs freq for all time#
-    axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxes"]), 'freq' )
+    axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxis"]), 'freq' )
     plotflagged = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFLagged"]), False )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), False )
