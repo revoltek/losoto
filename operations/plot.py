@@ -274,13 +274,14 @@ def run( step, parset, H ):
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
-    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxes"]), 'ant' )
+    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxis"]), 'ant' )
     # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
-    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxes"]), 'pol' )
+    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), 'pol' )
     # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot #
-    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxes"]), 'freq' )
+    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxis"]), '' )
     # the axis to plot on a different page - new plot - new image name  e.g. combine with axesToPlot amp vs time for all freq or amp vs freq for all time#
-    axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxes"]), '' )
+    axisOnPage = parset.getString('.'.join(["LoSoTo.Steps", step, "PageAxis"]), 'freq' )
+    plotflagged = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFLagged"]), False )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     # TODO: add log='XYZ' to set which axes to put in Log
     log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), False )
@@ -423,8 +424,8 @@ def run( step, parset, H ):
             logging.info('Nplots: ' +str(Nplots))
             logging.info('X Axis: %s (%i)' %(axesToPlot[0], len(xAxes)))
             logging.info('In Table: %s (%i)' %(axisInTable, len(tableAxes)))
-            logging.info('In colour: %s (%i)' %(axisInCol, len(colAxes)))
-            logging.info('In shades: %s (%i)' %(axisInShade, len(shadeAxes)))
+            logging.info('In Colour: %s (%i)' %(axisInCol, len(colAxes)))
+            logging.info('In Shades: %s (%i)' %(axisInShade, len(shadeAxes)))
             logging.info('On Page: %s (%i)' %(axisOnPage, len(pageAxes)))
             
             colours = ['b','g','r','y']
@@ -437,8 +438,14 @@ def run( step, parset, H ):
             #for axi in range(len(pageAxes)):
                 #print sh.getValues(pageAxes[axi])
             
+            if  len(xAxes) > 1000:
+                fmt = ','
+            else:
+                fmt = '.'
+            
             col='k'
             shade = 1
+            
             
             pages = True
             # if there is no pageAxes - we must still make a single plot
@@ -476,6 +483,22 @@ def run( step, parset, H ):
                     xvals = coord[axesToPlot[0]]
                     if axesToPlot[0] == 'ant':
                         xvals = np.arange(len(xvals))
+                    elif axesToPlot[0] == 'time':  # plot times in hours from start
+                        if len(xvals) > 3600:
+                            xvals = (xvals-xvals[0])/3600.  # hrs
+                            xlabelunit = '[hr]'
+                        elif len(xvals) > 60:
+                            xvals = (xvals-xvals[0])/60.   # mins
+                            xlabelunit = '[min]'
+                        else:
+                            xvals = (xvals-xvals[0])  # sec
+                            xlabelunit = '[s]'
+                        axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
+                    elif axesToPlot[0] == 'freq':  # plot freq in Mhz
+                        xvals = xvals/1e6
+                        xlabelunit = '[MHz]'
+                        axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
+                            
 
                     #title = ''
                     for axis in coord:
@@ -504,9 +527,10 @@ def run( step, parset, H ):
                     else:
                         #print shade
                         #print axsgrid[axi], axi, col
-                        p = axsgrid[axi].plot(xvals, vals, color=col, marker='.', ls='none', alpha=shade)
+                        p = axsgrid[axi].plot(xvals, vals, color=col, marker=fmt, ls='none', alpha=shade)
                         #p = ax.plot(xvals[range(300)], vals[range(300)], 'ko') # DEBUG
-                    p = axsgrid[axi].plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], color='r', marker='.', ls='none', alpha=shade) # plot flagged points
+                    if plotflagged:
+                        p = axsgrid[axi].plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], color='r', marker=fmt, ls='none', alpha=shade) # plot flagged points
                     #print vals
                     #p = ax.plot(xvals[range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #DEBUG
                     logging.debug("Plotting "+plotprefix+": "+title+' ('+ str(axi)+') '+' ('+ col+') ')
