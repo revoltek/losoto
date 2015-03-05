@@ -26,7 +26,7 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
 
     # 1D or 2D array in form X, [Y]
-    axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), '' )
+    axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
     axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxis"]), '' )
@@ -57,11 +57,19 @@ def run( step, parset, H ):
                 logging.error('Axis \"'+axis+'\" not found.')
                 return 1
 
-        if len(axisInPlot) != 1:
+        if len(axisInPlot) ==2 :
             3D = True
-            if len(axisInPlot) != 2:
-                logging.error('Axes must be a len 2 or 3 array.')
-                return 1
+            # not color/shade possible in 3D
+            axisInCol == []
+            axisInShade == []
+        elif len(axisInPlot) != 1:
+            3D = False
+            logging.error('Axes must be a len 1 or 2 array.')
+            return 1
+
+        if len(set(axisInTable+axesInPlot+axisInCol+axisInShade)) != len(axisInTable+axesInPlot+axisInCol+axisInShade):
+            logging.error('Axis defined multiple times.')
+            return 1
 
         # all axes that are not iterated by anything else
         axesInFile = sf.getAxesNames()
@@ -95,9 +103,9 @@ def run( step, parset, H ):
             for vals, coord, selection in sf.getValuesIter(returnAxes=axisInCol+axisInShade+axesInPlot):
 
                 # set log scales if activated
-                if 'X' in log: ax.set_xscale('log')
-                if 'Y' in log: ax.set_yscale('log')
-                if 3D and 'Z' in log: ax.set_zscale('log')
+                if 'X' in log: axa.set_xscale('log')
+                if 'Y' in log: axa.set_yscale('log')
+                if 3D and 'Z' in log: axa.set_zscale('log')
 
                 # set tile
                 title = ''
@@ -106,7 +114,7 @@ def run( step, parset, H ):
                     title += axis+':'+str(coord[axis])+' '
                 title = title[:-1] # remove last ' '
 
-                # axes label
+                # axes label and values
                 xvals = coord[axesInPlot[0]]
                 axa[Nr-1][0].set_xlabel(axesToPlot[0])
                 if 3D:
@@ -116,10 +124,11 @@ def run( step, parset, H ):
                 else:
                     axa[Nr-1][0].set_ylabel(sf.getType())
                 
-                # if plotting vs antenna - convert to number
+                # if plotting antenna - convert to number
                 if axesToPlot[0] == 'ant':
                     xvals = np.arange(len(xvals))
-                elif axesToPlot[0] == 'time':  # plot times in hours from start
+                # if plotting time - convert in h/min/s
+                elif axesToPlot[0] == 'time':
                     if len(xvals) > 3600:
                         xvals = (xvals-xvals[0])/3600.  # hrs
                         xlabelunit = '[hr]'
@@ -130,14 +139,16 @@ def run( step, parset, H ):
                         xvals = (xvals-xvals[0])  # sec
                         xlabelunit = '[s]'
                     axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
-                elif axesToPlot[0] == 'freq':  # plot freq in Mhz
-                    xvals = xvals/1.e6
+                # if plotting freq convert in MHz
+                elif axesToPlot[0] == 'freq': 
+                    xvals = xvals/1.e6 # MHz
                     xlabelunit = '[MHz]'
                     axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
 
+                # same as above but for y-axis
                 if 3D and xesToPlot[1] == 'ant':
                     yvals = np.arange(len(yvals))
-                elif 3D and axesToPlot[1] == 'time':  # plot times in hours from start
+                elif 3D and axesToPlot[1] == 'time':
                     if len(xvals) > 3600:
                         yvals = (yvals-yvals[0])/3600.  # hrs
                         ylabelunit = '[hr]'
@@ -148,13 +159,13 @@ def run( step, parset, H ):
                         yvals = (yvals-yvals[0])  # sec
                         ylabelunit = '[s]'
                     axa[Nr-1][0].set_ylabel(axesToPlot[1]+' '+ylabelunit)
-                elif axesToPlot[0] == 'freq':  # plot freq in Mhz
+                elif axesToPlot[0] == 'freq':  # Mhz
                     yvals = yvals/1.e6
                     xlabelunit = '[MHz]'
                     axa[Nr-1][0].set_ylabel(axesToPlot[1]+' '+ylabelunit)
 
-                # set colors
-                colors = cycle(['r', 'g', 'b', 'c', 'm', 'y', 'k'])
+                # set colors (red reserved for flags)
+                colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
 
                 sf.selection = selection
                 # cycle on colors
@@ -180,8 +191,8 @@ def run( step, parset, H ):
                         # finally cycle on lines
                         for vals, weight, coord, selection in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
 
-                        # unwrap if required TODO: check names
-                        if (sf.getType() == 'phase' or sf.getType() == 'commonscalarphase') and dounwrap: vals = unwrap(vals)
+                        # unwrap if required
+                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap: vals = unwrap(vals)
             
                         # plotting
                         if 3D:
@@ -192,10 +203,10 @@ def run( step, parset, H ):
                             plt.colorbar()
                         else:
                             if sf.getType() == 'amplitude':
-                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k-')
+                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k-', color=color)
                             else:
-                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k.')
-                            p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k.', color=color)
+                            if plotflagged: p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                             if not (minZ == 0 and maxZ == 0):
                                 plt.ylim(ymin=minZ, ymax=maxZ)
 
@@ -206,55 +217,5 @@ def run( step, parset, H ):
                 logging.error('Error saving file, wrong path?')
                 return 1
             plt.close(fig)
-
-
-                #title = ''
-                for axis in coord:
-                    if axis in axesToPlot: continue
-                    #title += str(coord[axis])+'_'
-                    
-                    #print str(coord[axis])
-                    if coord[axis] in tableAxes: 
-                        axi = np.where(tableAxes==coord[axis])[0][0]
-                        #print axi, tableAxes[axi], coord[axis]
-                        title = str(coord[axis])
-                        
-                    if coord[axis] in colAxes: 
-                        col = colours[np.where(colAxes==coord[axis])[0][0]]
-                        #print col, np.where(colAxes==coord[axis])[0][0]
-                    if coord[axis] in shadeAxes: 
-                        shade = shades[np.where(shadeAxes==coord[axis])[0][0]]
-                    
-                ax = axsgrid[axi]
-                axsgrid[axi].set_title(title)
-                if not (minZ == 0 and maxZ == 0):
-                    axsgrid[axi].set_ylim(ymin=minZ, ymax=maxZ)
-                if sf.getType() == 'amplitude':
-                    p = axsgrid[axi].plot(xvals, vals, color=col, ls='-', alpha=shade)
-                else:
-                    #print shade
-                    #print axsgrid[axi], axi, col
-                    p = axsgrid[axi].plot(xvals, vals, color=col, marker=fmt, ls='none', alpha=shade)
-                    #p = ax.plot(xvals[range(300)], vals[range(300)], 'ko') # DEBUG
-                if plotflagged:
-                    p = axsgrid[axi].plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], color='r', marker=fmt, ls='none', alpha=shade) # plot flagged points
-                #print vals
-                #p = ax.plot(xvals[range(300)][np.where(weight[range(300)]==0)], vals[range(300)][np.where(weight[range(300)]==0)], 'ro') #DEBUG
-                logging.debug("Plotting "+plotprefix+": "+title+' ('+ str(axi)+') '+' ('+ col+') ')
-                
-                axi += 1
-                
-                y1,y2 = axsgrid[axi].get_ylim()
-                axsgrid[axi].set_ylim(min(vals.min(),y1), max(vals.max(),y2))
-                axsgrid[axi].set_xlim(xvals.min(), xvals.max())
-                
-            try:
-                plt.savefig(plotprefix+'.png',dpi=100)
-            except:
-                logging.error('Error saving file, wrong path?')
-                
-            plt.close(figgrid)
-            #logging.info("Saving "+prefix+title+'.png')
-            logging.info("Saving "+plotprefix+'.png')
 
     return 0
