@@ -13,7 +13,7 @@ def run( step, parset, H ):
 
     import os
     import numpy as np
-    from itertools import cycle
+    from itertools import cycle, chain
     from h5parm import solFetcher, solHandler
     # avoids error if re-setting "agg" a second run of plot
     if not 'matplotlib' in sys.modules:
@@ -29,14 +29,14 @@ def run( step, parset, H ):
     axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
-    axisInTable = parset.getString('.'.join(["LoSoTo.Steps", step, "TableAxis"]), '' )
+    axisInTable = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "TableAxis"]), [] )
     # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
-    axisInCol = parset.getString('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), '' )
+    axisInCol = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), [] )
     # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot #
-    axisInShade = parset.getString('.'.join(["LoSoTo.Steps", step, "ShadeAxis"]), '' )
+    axisInShade = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ShadeAxis"]), [] )
     # log='XYZ' to set which axes to put in Log
     log = parset.getString('.'.join(["LoSoTo.Steps", step, "Log"]), "" )
-    plotflagged = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFLagged"]), False )
+    plotflagged = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlagged"]), False )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
@@ -57,18 +57,22 @@ def run( step, parset, H ):
                 logging.error('Axis \"'+axis+'\" not found.')
                 return 1
 
-        if len(axisInPlot) ==2 :
-            3D = True
+        cmesh = False
+        if len(axesInPlot) == 2:
+            cmesh = True
             # not color/shade possible in 3D
             axisInCol == []
             axisInShade == []
-        elif len(axisInPlot) != 1:
-            3D = False
+        elif len(axesInPlot) != 1:
             logging.error('Axes must be a len 1 or 2 array.')
             return 1
 
         if len(set(axisInTable+axesInPlot+axisInCol+axisInShade)) != len(axisInTable+axesInPlot+axisInCol+axisInShade):
             logging.error('Axis defined multiple times.')
+            return 1
+
+        if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisInShade) > 1:
+            logging.error('Too many AxisInTable/AxisInCol/AxisInShade, they must be at most one each.')
             return 1
 
         # all axes that are not iterated by anything else
@@ -77,8 +81,8 @@ def run( step, parset, H ):
             axesInFile.remove(axis)
  
         # set subplots scheme
-        if axisInTable != '':
-            Nplots = sf.getAxisLen(axisInTable)
+        if axisInTable != []:
+            Nplots = sf.getAxisLen(axisInTable[0])
         else:
             Nplots = 1
         Nr = int(np.ceil(np.sqrt(Nplots)))
@@ -94,18 +98,72 @@ def run( step, parset, H ):
             for axis in axesInFile:
                 filename += axis+''+str(coord[axis])+'_'
             filename = filename[:-1] # remove last _
+            print "Filename", filename
 
             # create multiplot
             figgrid, axa = plt.subplots(Nr, Nc, figsize=(16,12), sharex=True, sharey=True)
+            figgrid.subplots_adjust(hspace=0, wspace=0)
+            axaiter = chain.from_iterable(axa)
 
-            sf.selection = selection
+            # axis vals (they are always the same, regulat arrays)
+            xvals = coord[axesInPlot[0]]
+            # if plotting antenna - convert to number
+            if axesInPlot[0] == 'ant':
+                xvals = np.arange(len(xvals))
+            
+            # if plotting time - convert in h/min/s
+            xlabelunit=''
+            if axesInPlot[0] == 'time':
+                if len(xvals) > 3600:
+                    xvals = (xvals-xvals[0])/3600.  # hrs
+                    xlabelunit = ' [hr]'
+                elif len(xvals) > 60:
+                    xvals = (xvals-xvals[0])/60.   # mins
+                    xlabelunit = ' [min]'
+                else:
+                    xvals = (xvals-xvals[0])  # sec
+                    xlabelunit = ' [s]'
+            # if plotting freq convert in MHz
+            elif axesInPlot[0] == 'freq': 
+                xvals = xvals/1.e6 # MHz
+                xlabelunit = ' [MHz]'
+
+            if cmesh:
+                # axis vals (they are always the same, regulat arrays)
+                yvals = coord[axesInPlot[1]]
+                # same as above but for y-axis
+                if cmesh and axesInPlot[1] == 'ant':
+                    yvals = np.arange(len(yvals))
+
+                ylabelunit=''
+                if axesInPlot[1] == 'time':
+                    if len(xvals) > 3600:
+                        yvals = (yvals-yvals[0])/3600.  # hrs
+                        ylabelunit = ' [hr]'
+                    elif len(xvals) > 60:
+                        yvals = (yvals-yvals[0])/60.   # mins
+                        ylabelunit = ' [min]'
+                    else:
+                        yvals = (yvals-yvals[0])  # sec
+                        ylabelunit = ' [s]'
+                elif axesInPlot[0] == 'freq':  # Mhz
+                    yvals = yvals/1.e6
+                    ylabelunit = ' [MHz]'
+
+            # axes label 
+            [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[-1,:]]
+            if cmesh:
+                [ax.set_ylabel(axesInPlot[1]+ylabelunit) for ax in axa[:,0]]
+            else:
+                [ax.set_ylabel(sf.getType()) for ax in axa[:,0]]
+
+            sf2 = solFetcher(soltab)
+            sf2.selection = selection
             # cycle on tables
-            for vals, coord, selection in sf.getValuesIter(returnAxes=axisInCol+axisInShade+axesInPlot):
+            for vals, coord, selection in sf2.getValuesIter(returnAxes=axisInCol+axisInShade+axesInPlot):
 
-                # set log scales if activated
-                if 'X' in log: axa.set_xscale('log')
-                if 'Y' in log: axa.set_yscale('log')
-                if 3D and 'Z' in log: axa.set_zscale('log')
+                # this axa
+                ax = next(axaiter)
 
                 # set tile
                 title = ''
@@ -113,106 +171,60 @@ def run( step, parset, H ):
                     if axis in axesInPlot+axisInCol+axisInShade: continue
                     title += axis+':'+str(coord[axis])+' '
                 title = title[:-1] # remove last ' '
-
-                # axes label and values
-                xvals = coord[axesInPlot[0]]
-                axa[Nr-1][0].set_xlabel(axesToPlot[0])
-                if 3D:
-                    yvals = coord[axesInPlot[1]]
-                    axa[Nr-1][0].set_ylabel(axesToPlot[1])
-                    axa[Nr-1][0].set_zlabel(sf.getType())
-                else:
-                    axa[Nr-1][0].set_ylabel(sf.getType())
-                
-                # if plotting antenna - convert to number
-                if axesToPlot[0] == 'ant':
-                    xvals = np.arange(len(xvals))
-                # if plotting time - convert in h/min/s
-                elif axesToPlot[0] == 'time':
-                    if len(xvals) > 3600:
-                        xvals = (xvals-xvals[0])/3600.  # hrs
-                        xlabelunit = '[hr]'
-                    elif len(xvals) > 60:
-                        xvals = (xvals-xvals[0])/60.   # mins
-                        xlabelunit = '[min]'
-                    else:
-                        xvals = (xvals-xvals[0])  # sec
-                        xlabelunit = '[s]'
-                    axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
-                # if plotting freq convert in MHz
-                elif axesToPlot[0] == 'freq': 
-                    xvals = xvals/1.e6 # MHz
-                    xlabelunit = '[MHz]'
-                    axa[Nr-1][0].set_xlabel(axesToPlot[0]+' '+xlabelunit)
-
-                # same as above but for y-axis
-                if 3D and xesToPlot[1] == 'ant':
-                    yvals = np.arange(len(yvals))
-                elif 3D and axesToPlot[1] == 'time':
-                    if len(xvals) > 3600:
-                        yvals = (yvals-yvals[0])/3600.  # hrs
-                        ylabelunit = '[hr]'
-                    elif len(xvals) > 60:
-                        yvals = (yvals-yvals[0])/60.   # mins
-                        ylabelunit = '[min]'
-                    else:
-                        yvals = (yvals-yvals[0])  # sec
-                        ylabelunit = '[s]'
-                    axa[Nr-1][0].set_ylabel(axesToPlot[1]+' '+ylabelunit)
-                elif axesToPlot[0] == 'freq':  # Mhz
-                    yvals = yvals/1.e6
-                    xlabelunit = '[MHz]'
-                    axa[Nr-1][0].set_ylabel(axesToPlot[1]+' '+ylabelunit)
+                ax.text(.5, .9, title, horizontalalignment='center',fontsize=8,transform=ax.transAxes)
+               
+                # set log scales if activated
+                if 'X' in log: ax.set_xscale('log')
+                if 'Y' in log: ax.set_yscale('log')
 
                 # set colors (red reserved for flags)
                 colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
 
-                sf.selection = selection
+                sf3 = solFetcher(soltab)
+                sf3.selection = selection
                 # cycle on colors
-                for vals, coord, selection in sf.getValuesIter(returnAxes=axisInShade+axesInPlot):
+                for vals, coord, selection in sf3.getValuesIter(returnAxes=axisInShade+axesInPlot):
 
                     # set color
                     color = next(colors)
 
                     # set shades
-                    if axisInShade != '':
-                        shades = cycle(np.arange(0.1,1,0.9/sf.getAxesLen(axisInShade)))
-                    else
+                    if axisInShade != []:
+                        shades = cycle(np.arange(0.1,1,0.9/sf.getAxisLen(axisInShade[0])))
+                    else:
                         shades = cycle([1])
 
-                    sf.selection = selection
+                    sf4 = solFetcher(soltab)
+                    sf4.selection = selection
                     # cycle on shades
-                    for vals, coord, selection in sf.getValuesIter(returnAxes=axesInPlot):
+                    for vals, weight, coord, selection in sf4.getValuesIter(returnAxes=axesInPlot, weight=True):
 
                         # set shade
                         shade = next(shades)
 
-                        sf.selection = selection
-                        # finally cycle on lines
-                        for vals, weight, coord, selection in sf.getValuesIter(returnAxes=axesToPlot, weight=True):
-
                         # unwrap if required
-                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap: vals = unwrap(vals)
-            
+                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
+                            vals = unwrap(vals)
+        
                         # plotting
-                        if 3D:
-                            if log: plt.pcolormesh(xvals, yvals , np.log10(vals))
-                            else: plt.pcolormesh(xvals, yvals, vals)
+                        if cmesh:
+                            if log: ax.pcolormesh(xvals, yvals , np.log10(vals))
+                            else: ax.pcolormesh(xvals, yvals, vals)
                             if not (minZ == 0 and maxZ == 0):
-                                plt.zlim(zmin=minZ, zmax=maxZ)
-                            plt.colorbar()
+                                ax.zlim(zmin=minZ, zmax=maxZ)
+                            plt.colorbar(label=sf.getType())
                         else:
                             if sf.getType() == 'amplitude':
-                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k-', color=color)
+                                ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k-', color=color)
                             else:
-                                p = ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k.', color=color)
-                            if plotflagged: p = ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                                ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'k.', color=color)
+                            if plotflagged: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                             if not (minZ == 0 and maxZ == 0):
                                 plt.ylim(ymin=minZ, ymax=maxZ)
 
-            logging.info("Saving "+prefix+title+'.png')
+            logging.info("Saving "+prefix+filename+'.png')
             try:
-                plt.savefig(prefix+title+'.png')
+                plt.savefig(prefix+title+'.png', bbox_inches='tight')
             except:
                 logging.error('Error saving file, wrong path?')
                 return 1
