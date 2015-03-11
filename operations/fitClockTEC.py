@@ -4,7 +4,7 @@ import sys
 import logging
 from lofar.expion import baselinefitting  as fitting
 
-
+#from pylab import *
 
 def ClockTECfunc(xarray,par):
     delay=np.array([par[1]*1e-9]).flatten() #in ns, array has dimension 1, even if scalar
@@ -162,7 +162,8 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                  par = getInitPar(datatmp,dTECArray, dClockArray,freq,ClockTECfunc)
                  sol[ist,:]=par[:nparms]
                  #logging.info("par "+str(par[:nparms]))  
-        #wrapflags=np.ones((nSt,nF))     
+        #wrapflags=np.ones((nSt,nF))
+        #doplot=False
         for nr_iter in range(2):
             estimate=ClockTECfuncAllStations(freq,sol.T).reshape((nSt,nF)).T
             wraps=np.ma.around(np.divide(estimate-data[itm],2*np.pi))
@@ -170,11 +171,35 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
             
 
             wrapjumps=data[itm,1:]+2*np.pi*wraps[1:]-data[itm,:-1]-2*np.pi*wraps[:-1]
-            jumps=np.int32(np.logical_and(np.absolute(wrapjumps[1:-1])>1.5*(freq[1:]-freq[:-1])[1:-1][:,np.newaxis]*np.pi/freqstep,np.logical_and(np.absolute(wrapjumps[2:])<0.5*np.pi,np.absolute(wrapjumps[:-2])<0.5*np.pi)))
+            #jumps=np.int32(np.logical_and(np.absolute(wrapjumps[1:-1])>1.5*(freq[1:]-freq[:-1])[1:-1][:,np.newaxis]*np.pi/freqstep,
+            #                              np.logical_and(np.absolute(wrapjumps[2:])<0.5*np.pi
+            #                                             ,np.absolute(wrapjumps[:-2])<0.5*np.pi)))
+            jumps=np.int32(np.logical_and(np.absolute(wrapjumps[1:-1])>1.5*np.pi,
+                                          np.logical_and(np.absolute(wrapjumps[2:])<0.5*np.pi
+                                                         ,np.absolute(wrapjumps[:-2])<0.5*np.pi)))
             jumps*=np.sign(wrapjumps[1:-1])
             jumps=np.cumsum(jumps,axis=0)
+#            if np.sum(np.absolute(jumps))>0 or doplot==True:
+#                subplot(2,1,1)
+#                for ist in range(nSt):
+#                    if np.sum(np.absolute(jumps[:,ist]))>0:
+#                        plot(data[itm,:,ist]+2*np.pi*wraps[:,ist])
+#                        plot(jumps[:,ist])
+#                        plot(wrapjumps[1:-1,ist],'ko')
+#                        plot(wrapjumps[2:,ist],'ro')
+#                        plot(wrapjumps[:-2,ist],'bo')
+#                        break
+#                doplot=True
             wraps[2:-1]-=jumps
             wraps[-1]-=jumps[-1]
+#            if doplot:
+#                for ist in range(nSt):
+#                    if np.sum(np.absolute(jumps[:,ist]))>0:
+#                        subplot(2,1,2)
+#                        plot(data[itm,:,ist]+2*np.pi*wraps[:,ist])
+#                        title("iter "+str(nr_iter)+" "+str(ist))
+#                        break
+#                show()
             data[itm,:]=np.add(2*np.pi*wraps,data[itm])            
             data[itm,:]+=np.around(np.average(estimate-data[itm],axis=0)/(2*np.pi))[np.newaxis]*2*np.pi
 
@@ -185,7 +210,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
             for ist in range(nSt):
                 
                 if data[itm,:,ist][wrapflags[:,ist]].count()/float(nF)<0.5:
-                    logging.info("too many data points flagged t=%d st=%d flags=%d"%(itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
+                    logging.info("too many data points flagged t=%d st=%d flags=%d wrappedflags=%d"%(itm,ist,data[itm,:,ist].count(),data[itm,:,ist][wrapflags[:,ist]].count()) + str(sol[ist]))
                     sol[ist]=[-10.,-10.]
                     continue
                 #print "checking",ist,A.shape,wrapflags.shape,data[itm].shape
