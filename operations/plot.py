@@ -25,7 +25,7 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
 
-    # 1D or 2D array in form X, [Y]
+    # 1- or 2-element array in form X, [Y]
     axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
@@ -224,7 +224,7 @@ def run( step, parset, H ):
 
             logging.info("Saving "+prefix+filename+'.png')
             try:
-                plt.savefig(prefix+title+'.png', bbox_inches='tight')
+                plt.savefig(prefix+filename+'.png', bbox_inches='tight')
             except:
                 logging.error('Error saving file, wrong path?')
                 return 1
