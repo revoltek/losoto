@@ -67,6 +67,16 @@ LoSoTo.Steps.norm.NormVal = 1.
 LoSoTo.Steps.norm.NormAxes = [time,ant]
 
 LoSoTo.Steps.plot.Operation = PLOT
+LoSoTo.Steps.plot.Axes = [] # 1- or 2-element array which says the coordinates to plot (2 for 3D plots)
+LoSoTo.Steps.plot.MinMax = [0,0] # min max value for the independent variable (0 means automatic)
+LoSoTo.Steps.plot.TableAxis = [] # the axis to plot on a page - e.g. ant to get all antenna's on one file
+LoSoTo.Steps.plot.ColorAxis = [] # the axis to plot in different colours - e.g. pol to get correlations with different colors
+LoSoTo.Steps.plot.ShadeAxis = [] # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot
+LoSoTo.Steps.plot.Log = "" # log='XYZ' to set which axes to put in Log
+LoSoTo.Steps.plot.PlotFlag = False
+LoSoTo.Steps.plot.Unwrap = False
+LoSoTo.Steps.plot.Prefix = ''
+
 LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
 LoSoTo.Steps.plot.Axes = []
 LoSoTo.Steps.plot.MinMax = [0,0]
