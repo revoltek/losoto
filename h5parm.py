@@ -778,13 +778,14 @@ class solFetcher(solHandler):
             #return None
 
 
-    def getValues(self, retAxesVals = True, weight = False):
+    def getValues(self, retAxesVals = True, weight = False, reference = None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
         Keyword arguments:
         retAxisVals -- if true returns also the axes vals as a dict of:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         weight -- if true store in the weights instead that in the vals (default: False)
+        reference -- in case of phase solutions, reference to this station name
         Return:
         A numpy ndarrey (values or weights depending on parameters)
         If selected, returns also the axes values
@@ -820,6 +821,26 @@ class solFetcher(solHandler):
                 elif type(sel) is slice: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
             dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
 
+        if reference != None:
+            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation':
+                logging.error('Reference possible only for phase, scalarphase and rotation solution tables. Ignore referencing.')
+            elif not 'ant' in self.getAxesNames():
+                logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
+            elif not reference in self.getAxisValues('ant', ignoreSelection = True):
+                logging.error('Cannot find antenna '+reference+'. Ignore referencing.')
+            else:
+                selection_stored = np.copy(self.selection)
+                antAxis = self.getAxesNames().index('ant')
+                self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection = True)).index(reference)]
+                dataValsRef = self.getValues(retAxesVals = False, reference = None)
+                self.selection = selection_stored
+                dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
+                # Convert to range [-2*pi, 2*pi].
+                dataVals = np.fmod(dataVals, 2.0 * np.pi)
+                # Convert to range [-pi, pi]
+                dataVals[dataVals < -np.pi] += 2.0 * np.pi
+                dataVals[dataVals > np.pi] -= 2.0 * np.pi
+
         if not retAxesVals:
             return dataVals
 
@@ -830,7 +851,7 @@ class solFetcher(solHandler):
         return dataVals, axisVals
 
 
-    def getValuesIter(self, returnAxes = [], weight = False):
+    def getValuesIter(self, returnAxes = [], weight = False, reference = None):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
@@ -838,6 +859,7 @@ class solFetcher(solHandler):
         Note that all the data are fetched in memory before returning them one at a time. This is quick.
         Keyword arguments:
         returnAxes -- axes of the returned array, all others will be cycled
+
         weight -- if true return also the weights (default: False)
         Return:
         1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
@@ -846,8 +868,8 @@ class solFetcher(solHandler):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         4) a selection which should be used to write this data back using a solWriter
         """
-        if weight: weigthVals = self.getValues(retAxesVals = False, weight = True)
-        dataVals = self.getValues(retAxesVals = False, weight = False)
+        if weight: weigthVals = self.getValues(retAxesVals = False, weight = True, reference = None)
+        dataVals = self.getValues(retAxesVals = False, weight = False, reference = reference)
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]

@@ -38,7 +38,10 @@ def run( step, parset, H ):
     log = parset.getString('.'.join(["LoSoTo.Steps", step, "Log"]), "" )
     plotflag = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlag"]), False )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
+    ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+
+    if ref == '': ref = None
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -101,6 +104,7 @@ def run( step, parset, H ):
 
             # create multiplot
             figgrid, axa = plt.subplots(Nc, Nr, figsize=(Nc*4,Nr*3), sharex=True, sharey=True)
+            if Nplots == 1: axa = np.array([axa])
             figgrid.subplots_adjust(hspace=0, wspace=0)
             axaiter = chain.from_iterable(axa)
 
@@ -212,7 +216,7 @@ def run( step, parset, H ):
                     sf4 = solFetcher(soltab)
                     sf4.selection = selection
                     # cycle on shades
-                    for vals, weight, coord, selection in sf4.getValuesIter(returnAxes=axesInPlot, weight=True):
+                    for vals, weight, coord, selection in sf4.getValuesIter(returnAxes=axesInPlot, weight=True, reference=ref):
 
                         # set shade
                         shade = next(shades)
