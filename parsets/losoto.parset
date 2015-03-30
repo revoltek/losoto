@@ -75,6 +75,7 @@ LoSoTo.Steps.plot.ShadeAxis = [] # the axis to plot is different shades (alpha) 
 LoSoTo.Steps.plot.Log = "" # log='XYZ' to set which axes to put in Log
 LoSoTo.Steps.plot.PlotFlag = False
 LoSoTo.Steps.plot.Unwrap = False
+LoSoTo.Steps.plot.Reference = '' # antenna name for referencing phases
 LoSoTo.Steps.plot.Prefix = ''
 
 LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
