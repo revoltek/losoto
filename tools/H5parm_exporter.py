@@ -441,14 +441,10 @@ if __name__=='__main__':
                     else:
                         sf = cachedSolTabs[solTab._v_title]
 
-                    #sffreqs = sf.freq
                     freqs = data[solEntry]['freqs']
-                    #print freqs, sffreqs
-                    #freq_list = [freq for freq in freqs if freq in sffreqs]
-                    #print freq_list
-                    #if len(freq_list) == 0:
-                    #    freq_list = None
-                    sf.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
+                    times = data[solEntry]['times']
+                    sf.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                        time={'min':np.min(times), 'max':np.max(times)})
 
                     # If needed, convert Amp and Phase to Real and Imag
                     if parm == 'Real':
@@ -458,7 +454,8 @@ if __name__=='__main__':
                             cachedSolTabs[solTabList[0]._v_title] = sf_phase
                         else:
                             sf_phase = cachedSolTabs[solTabList[0]._v_title]
-                        sf_phase.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
+                        sf_phase.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                            time={'min':np.min(times), 'max':np.max(times)})
                         val_amp = sf.getValues()[0]
                         val_phase = sf_phase.getValues()[0]
                         val = val_amp * np.cos(val_phase)
@@ -469,7 +466,8 @@ if __name__=='__main__':
                             cachedSolTabs[solTabList[0]._v_title] = sf_amp
                         else:
                             sf_amp = cachedSolTabs[solTabList[0]._v_title]
-                        sf_amp.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist())
+                        sf_amp.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                            time={'min':np.min(times), 'max':np.max(times)})
                         val_phase = sf.getValues()[0]
                         val_amp = sf_amp.getValues()[0]
                         val = val_amp * np.sin(val_phase)
