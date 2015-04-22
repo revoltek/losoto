@@ -234,8 +234,9 @@ def run( step, parset, H ):
                             # if user gives axes names in "wrong" order adapat the values
                             # pcolorfast do not check if x,y,val axes lenghts are coherent
                             if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
-                            if log: ax.pcolorfast(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
-                            else: ax.pcolorfast(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+                            if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
+                            else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+
                             #plt.colorbar(label=sf.getType())
                         else:
                             if sf.getType() == 'amplitude':

@@ -78,13 +78,6 @@ LoSoTo.Steps.plot.Unwrap = False
 LoSoTo.Steps.plot.Reference = '' # antenna name for referencing phases
 LoSoTo.Steps.plot.Prefix = ''
 
-LoSoTo.Steps.plot.PlotType = 1D # 1D, 2D, TECScreen
-LoSoTo.Steps.plot.Axes = []
-LoSoTo.Steps.plot.MinMax = [0,0]
-LoSoTo.Steps.plot.Prefix = ''
-LoSoTo.Steps.plot.Log = F # plot in log scale
-LoSoTo.Steps.plot.Unwrap = False # unwrap the selected data (1D only)
-
 LoSoTo.Steps.reset.Operation = RESET
 
 LoSoTo.Steps.reweight.Operation = REWEIGHT
