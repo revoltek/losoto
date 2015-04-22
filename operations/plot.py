@@ -236,6 +236,7 @@ def run( step, parset, H ):
                             if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
                             if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
                             else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+                            ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
 
                             #plt.colorbar(label=sf.getType())
                         else:
