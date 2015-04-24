@@ -77,6 +77,7 @@ LoSoTo.Steps.plot.PlotFlag = False
 LoSoTo.Steps.plot.Unwrap = False
 LoSoTo.Steps.plot.Reference = '' # antenna name for referencing phases
 LoSoTo.Steps.plot.Prefix = ''
+LoSoTo.Steps.plot.Add = [] # tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases
 
 LoSoTo.Steps.reset.Operation = RESET
 
