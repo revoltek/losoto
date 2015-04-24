@@ -141,6 +141,9 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     if "CommonRotationAngle" in solTypes:
         solTypes.remove('CommonRotationAngle')
         solTypes.append('*RotationAngle')
+    if "RotationMeasure" in solTypes:
+        solTypes.remove('RotationMeasure')
+        solTypes.append('*RotationMeasure')
     if "ScalarPhase" in solTypes:
         solTypes.remove('ScalarPhase')
         solTypes.append('*ScalarPhase')
@@ -246,6 +249,10 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         if solType == '*RotationAngle':
             np.putmask(weights, vals == 0., 0) # flag where val=0
             h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        if solType == '*RotationMeasure':
+            np.putmask(weights, vals == 0., 0) # flag where val=0
+            h5parm.makeSoltab(solset, 'rotationmeasure', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
             np.putmask(weights, vals == 0., 0)

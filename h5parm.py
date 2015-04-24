@@ -822,8 +822,8 @@ class solFetcher(solHandler):
             dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
 
         if reference != None:
-            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation':
-                logging.error('Reference possible only for phase, scalarphase and rotation solution tables. Ignore referencing.')
+            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock':
+                logging.error('Reference possible only for phase, scalarphase, clock, tec, and rotation solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
             elif not reference in self.getAxisValues('ant', ignoreSelection = True):

@@ -23,6 +23,19 @@ def run( step, parset, H ):
         mpl.use("Agg")
     import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
+    def normalize(phase):
+        """
+        Normalize phase to the range [-pi, pi].
+        """
+        # Convert to range [-2*pi, 2*pi].
+        out = np.fmod(phase, 2.0 * np.pi)
+        # Remove nans
+        np.putmask(out, out!=out, 0)
+        # Convert to range [-pi, pi]
+        out[out < -np.pi] += 2.0 * np.pi
+        out[out > np.pi] -= 2.0 * np.pi
+        return out
+
     soltabs = getParSoltabs( step, parset, H )
 
     # 1- or 2-element array in form X, [Y]
@@ -39,9 +52,11 @@ def run( step, parset, H ):
     plotflag = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlag"]), False )
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
+    tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
     if ref == '': ref = None
+    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -220,6 +235,29 @@ def run( step, parset, H ):
 
                         # set shade
                         shade = next(shades)
+
+                        # add tables if required (e.g. phase/tec)
+                        for sfAdd in sfsAdd:
+                            newCoord = {}
+                            for axisName in coord.keys():
+                                if axisName in sfAdd.getAxesNames(): newCoord[axisName] = coord[axisName]
+                            sfAdd.setSelection(**newCoord)
+                            valsAdd = np.squeeze(sfAdd.getValues(retAxesVals=False, weight=False, reference=ref))
+                            if sfAdd.getType() == 'clock':
+                                valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
+                            elif sfAdd.getType() == 'tec':
+                                valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
+                            else:
+                                logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
+                                continue
+                            if valsAdd.shape != vals.shape:
+                                logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
+                                return 1
+                            vals += valsAdd
+
+                        # normalize
+                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase'):
+                            vals = normalize(vals)
 
                         # unwrap if required
                         if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
