@@ -16,10 +16,10 @@ Contents:
 * __parsets/__: some examples parsets
 * __tools/__: contains some tools, mostly to convert back and forward from parmdb to h5parm
 
-To run it on CEP1:
+To run it on CEP2/3:
 * A copy of the code is in ~fdg/scripts/losoto/
 * Source the tool/lofarinit.csh file which is shipped with the code.
-* Prepare a paset starting from the parset/losoto.parset
+* Prepare a parset starting from the parset/losoto.parset
 * check the helps of the scripts in tools/ and of losoto.py
 * in case of problems write to fdg@hs.uni-hamburg.de
 

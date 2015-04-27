@@ -32,12 +32,12 @@
 \section[LoSoTo: LOFAR Solution Tool]{\losoto: LOFAR Solution Tool\footnote{This section is maintained by Francesco de Gasperin ({\tt fdg@hs.uni-hamburg.de}).}}
 \label{losoto}
 
-The LOFAR Solution Tool (\losoto{}) is a Python package which handles LOFAR solutions in a variety of ways. The data files used by \losoto{} are not in the standard parmdb format used by BBS. \losoto{} uses instead an innovative data file, called H5parm, which is based on the HDF5 standard\footnote{\url{http://www.hdfgroup.org/HDF5/}}.
+The LOFAR Solution Tool (\losoto{}) is a Python package which handles LOFAR solutions in a variety of ways. The data files used by \losoto{} are not in the standard parmdb format used by BBS/NDPPP (e.g. the ``instrument'' table). \losoto{} uses instead an innovative data file, called H5parm, which is based on the HDF5 standard\footnote{\url{http://www.hdfgroup.org/HDF5/}}.
 \\
 \\
 \textbf{WARNING: \losoto{} is still in a beta version! Please report bugs to fdg@hs.uni-hamburg.de and drafferty@hs.uni-hamburg.de. \losoto{} will be soon integrated in the LOFAR environment but up to that moment to use it on cep3 users have to:}
 \begin{verbatim}
- source /cep3home/fdg/scripts/losoto/tools/lofarinit.[c]sh
+ source /home/fdg/scripts/losoto/tools/lofarinit.[c]sh
 \end{verbatim}
 
 %-----------------------------------------------------------
@@ -260,8 +260,9 @@ These are the operations that \losoto{} can perform:
 
 \begin{figure}
 \centering
-\includegraphics[width=.5\columnwidth]{RS508LBA.pdf}
-\caption{Example of phase solutions after the FLAG operation. Red points are flagged. Image made with the PLOT operation.}\label{fig:flag}
+\includegraphics[width=.48\columnwidth]{solph.png}
+\includegraphics[width=.48\columnwidth]{solamp.png}
+\caption{Example of phase (left and amplitude (right) solutions after the FLAG operation. Image made with the PLOT operation. White pixels are flagged data, every plot is an antenna, X-axis is time and Y-axis is frequency.}\label{fig:flag}
 \end{figure}
 
 Beside these operations which require activation through the \losoto{} parset (see Sec.~\ref{losoto:parset}), one can call \texttt{losoto.py} with the ``-i'' option and passing an H5parm as argument to obtain some information on it. Information on a specific subset of solsets can be obtained with ``-i -f solset\_name(s)''. If ``-i'' is combined with ``-v'' (verbose), \losoto{} will take a bit more time and outputs also the percentage of flagged data and the values of all axes will be written in a file. Using the ``-d'' options instead one can delete a chosen soltab (e.g. ``losoto.py -d sol000/phase000 file.h5'').
