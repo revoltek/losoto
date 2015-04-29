@@ -155,13 +155,15 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     # every soltype creates a different solution-table
     for solType in solTypes:
 
+        # skip missing solTypes (not all parmdbs have e.g. TEC)
         if len(pdb.getNames(solType+':*')) == 0: continue
 
         pols = set(); dirs = set(); ants = set();
         freqs = set(); times = set(); ptype = set()
 
         logging.info('Reading '+solType+'.')
-        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames(solType+':*'))).start()
+
+        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)).start()
         ipbar = 0
 
         for instrumentdbFile in sorted(instrumentdbFiles):
@@ -184,7 +186,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 freqs |= set(data[solEntry]['freqs'])
                 times |= set(data[solEntry]['times'])
                 pbar.update(ipbar)
-                ipbar += 1
+            ipbar += 1
 
         pbar.finish()
 
@@ -195,7 +197,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         weights = np.zeros(shape)
 
         logging.info('Filling table.')
-        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)*len(pdb.getNames(solType+':*'))).start()
+        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)).start()
         ipbar = 0
 
         for instrumentdbFile in instrumentdbFiles:
@@ -241,7 +243,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 vals[tuple(coords)][np.ix_(freqCoord,timeCoord)] = val.T
                 weights[tuple(coords)][np.ix_(freqCoord,timeCoord)] = 1
                 pbar.update(ipbar)
-                ipbar += 1
+            ipbar += 1
 
         vals = np.nan_to_num(vals) # replace nans with 0 (flagged later)
 
