@@ -4,7 +4,7 @@ LoSoTo: LOFAR solutions tool
 Authors:
 * Francesco de Gasperin
 * David Rafferty
-* Marting Hardcastle
+* Martin Hardcastle
 * Maaijke Mevius
 * Bas van der Tol
 * Jose Sabater Montes
@@ -24,7 +24,7 @@ To run it on CEP2/3:
 * in case of problems write to fdg@hs.uni-hamburg.de
 
 Flag:
-LoSoTo has an internl flag system encoded in the weigth column. Weigths are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs in the H5parm_exporter.py
+LoSoTo has an internl flag system encoded in the weight column. Weights are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs in the H5parm_exporter.py
 
 Documentation:
 Documentation extracted from the LOFAR cookbook is present in the doc directory
