@@ -16,8 +16,8 @@ import time
 import atexit
 import tables
 import logging
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 from losoto.h5parm import h5parm
 import lofar.parameterset
 

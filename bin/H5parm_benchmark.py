@@ -11,8 +11,8 @@ import sys, os, time
 import numpy as np
 import logging
 import lofar.parmdb
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 from losoto.h5parm import h5parm, solFetcher, solWriter
 
 # Options

@@ -12,8 +12,8 @@ import numpy as np
 import logging
 import pyrap.tables as pt
 import lofar.parmdb
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 import losoto.h5parm
 
 if __name__=='__main__':

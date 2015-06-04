@@ -16,8 +16,8 @@ import sys, os, re
 import glob
 import logging
 import lofar.parameterset
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 
 def splitgds(gdsFile, wd='', id='part'):
     """Split gds file in multiple files
