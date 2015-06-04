@@ -7,14 +7,14 @@
 # Implemented by Martin Hardcastle based on clip/flag code
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 
 logging.debug('Loading ABS module.')
 
 def run( step, parset, H ):
 
     import numpy as np
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
 

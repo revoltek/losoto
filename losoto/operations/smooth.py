@@ -5,7 +5,7 @@
 # WEIGHH: not ready
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 
 logging.debug('Loading SMOOTH module.')
 
@@ -13,7 +13,7 @@ def run( step, parset, H ):
 
     import scipy.ndimage.filters
     import numpy as np
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
 

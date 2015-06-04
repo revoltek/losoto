@@ -5,7 +5,7 @@
 # WEIGHT: compliant
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 import numpy as np
 
 logging.debug('Loading FLAGEXTEND module.')
@@ -70,7 +70,7 @@ class multiThread(multiprocessing.Process):
             
 def run( step, parset, H ):
 
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
 

@@ -16,9 +16,9 @@ import time
 import atexit
 import tables
 import logging
-import _version
-import _logging
-from h5parm import h5parm
+import losoto._version
+import losoto._logging
+from losoto.h5parm import h5parm
 import lofar.parameterset
 
 def my_close_open_files(verbose):

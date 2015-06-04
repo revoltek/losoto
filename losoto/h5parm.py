@@ -7,7 +7,7 @@ import os, sys, re
 import numpy as np
 import tables
 import logging
-import _version
+import ._version
 
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:
