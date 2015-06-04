@@ -47,7 +47,7 @@ setup(
     tests_require=['pytest'],
     install_requires=['numpy','cython','numexpr>=2.0','tables>=3.0'],
     #scripts = ['say_hello.py'],
-    scripts = ['bin/losoto.py', 'bin/H5parm_benchmark.py',
+    scripts = ['bin/losoto', 'bin/H5parm_benchmark.py',
                'bin/H5parm_exporter.py', 'bin/H5parm_importer.py',
                'bin/H5parm_merge.py', 'bin/parmdb_collector.py',],
     packages=['losoto','losoto.operations'],
