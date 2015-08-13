@@ -5,7 +5,7 @@
 # WEIGHT: not ready
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 
 logging.debug('Loading INTERP module.')
 
@@ -16,7 +16,7 @@ def run( step, parset, H ):
     import itertools
     import scipy.interpolate
     import numpy as np
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
 
     soltabs = getParSoltabs( step, parset, H )
     solTypes = getParSolTypes( step, parset, H )

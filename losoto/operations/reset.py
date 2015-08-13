@@ -5,14 +5,14 @@
 # and all other selected solution types to 0
 # WEIGHT: flag compliant, no need for weight
 
-from operations_lib import *
+from losoto.operations_lib import *
 import logging
 
 logging.debug('Loading RESET module.')
 
 def run( step, parset, H ):
 
-   from h5parm import solWriter
+   from losoto.h5parm import solWriter
 
    soltabs = getParSoltabs( step, parset, H )
 

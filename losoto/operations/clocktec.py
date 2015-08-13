@@ -4,8 +4,8 @@
 # This is an example operation for LoSoTo
 
 import logging
-from operations_lib import *
-from fitClockTEC import doFit
+from losoto.operations_lib import *
+from .fitClockTEC import doFit
 logging.debug('Loading CLOCKTEC module.')
 
 def run( step, parset, H ):
@@ -19,7 +19,7 @@ def run( step, parset, H ):
 
     """
     import numpy as np
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
 
     # get involved solsets using local step values or global values or all
     soltabs = getParSoltabs( step, parset, H )

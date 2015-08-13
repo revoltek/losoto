@@ -5,7 +5,7 @@
 # WEIGHT: flag-only compliant
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 
 logging.debug('Loading PLOT module.')
 
@@ -14,7 +14,7 @@ def run( step, parset, H ):
     import os
     import numpy as np
     from itertools import cycle, chain
-    from h5parm import solFetcher, solHandler
+    from losoto.h5parm import solFetcher, solHandler
     # avoids error if re-setting "agg" a second run of plot
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl

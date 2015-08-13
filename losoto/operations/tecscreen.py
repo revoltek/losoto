@@ -4,7 +4,7 @@
 # This is the TEC-screen operation for LoSoTo
 
 import logging
-from operations_lib import *
+from losoto.operations_lib import *
 
 logging.debug('Loading TECSCREEN module.')
 
@@ -242,7 +242,7 @@ def run( step, parset, H ):
     """
     import numpy as np
     import re
-    from h5parm import solFetcher, solWriter
+    from losoto.h5parm import solFetcher, solWriter
     # Switch to the Agg backend to prevent problems with pylab imports when
     # DISPLAY env. variable is not set
     import os

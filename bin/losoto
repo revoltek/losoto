@@ -16,9 +16,9 @@ import time
 import atexit
 import tables
 import logging
-import _version
-import _logging
-from h5parm import h5parm
+from losoto import _version
+from losoto import _logging
+from losoto.h5parm import h5parm
 import lofar.parameterset
 
 def my_close_open_files(verbose):
@@ -101,7 +101,7 @@ if __name__=='__main__':
     steps = parset.getStringVector( "LoSoTo.Steps", [] )
 
     # Possible operations, linked to relative function
-    import operations
+    import losoto.operations as operations
     operations = { 
                    "ABS": operations.abs,
                    "CLIP": operations.clip,

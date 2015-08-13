@@ -5,7 +5,7 @@
 
 import sys
 import logging
-from h5parm import solFetcher
+from losoto.h5parm import solFetcher
 
 
 def getParSolsets( step, parset, H ):

@@ -14,8 +14,8 @@ import progressbar
 import logging
 import pyrap.tables as pt
 import lofar.parmdb
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 from losoto.h5parm import h5parm, solWriter, solFetcher
 
 
@@ -269,7 +269,7 @@ if __name__=='__main__':
     # Options
     import optparse
     opt = optparse.OptionParser(usage='%prog <H5parm filename> <input globaldb/SB filename>\n'+
-        _author, version='%prog '+losoto._version.__version__)
+        _author, version='%prog '+_version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE!',
         action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Name of solution set to export '
@@ -292,7 +292,7 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: losoto._logging.setLevel("debug")
+    if options.verbose: _logging.setLevel("debug")
 
     # Check input H5parm file
     h5parmFile = args[0]

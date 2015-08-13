@@ -16,8 +16,8 @@ import sys, os, re
 import glob
 import logging
 import lofar.parameterset
-import losoto._version
-import losoto._logging
+from losoto import _version
+from losoto import _logging
 
 def splitgds(gdsFile, wd='', id='part'):
     """Split gds file in multiple files
@@ -54,7 +54,7 @@ if __name__=='__main__':
     # Options
     import optparse
     opt = optparse.OptionParser(usage='%prog [-v] [-o] [-d gds] [-g output globaldb] \n'\
-            +_author, version='%prog '+losoto._version.__version__)
+            +_author, version='%prog '+_version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE! (default=False)', action='store_true', default=False)
     opt.add_option('-o', '--overwrite', help='Overwrite an existing globaldb (default=False)', action='store_true', default=False)
     opt.add_option('-m', '--mss', help='Regular expression to locate the MSs', type='string', default='')
@@ -67,7 +67,7 @@ if __name__=='__main__':
     if len(args) != 0:
         opt.print_help()
         sys.exit()
-    if options.verbose: losoto._logging.setLevel('debug')
+    if options.verbose: _logging.setLevel('debug')
 
     overwrite = options.overwrite
 
