@@ -18,14 +18,14 @@ from losoto.h5parm import h5parm, solFetcher, solWriter
 # Options
 import optparse
 opt = optparse.OptionParser(usage='%prog -p H5parm [-s solset] -g parmdb [-n 100]\n'\
-                +_author, version='%prog '+losoto._version.__version__)
+                +_author, version='%prog '+_version.__version__)
 opt.add_option('-p', '--h5parm', help='H5parm name', type='string', default='')
 opt.add_option('-g', '--parmdb', help='Parmdb name', type='string', default='')
 opt.add_option('-s', '--solset', help='Solution-set name (default=sol000)', type='string', default='sol000')
 opt.add_option('-n', '--numiter', help='Number of iterations (default=100)', type=int, default=100)
 (options, args) = opt.parse_args()
 
-losoto._logging.setLevel('debug')
+_logging.setLevel('debug')
 
 n = options.numiter
 

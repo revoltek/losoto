@@ -20,7 +20,7 @@ if __name__=='__main__':
     # Options
     import optparse
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm:solset> <H5parm:solset> \n'\
-                            +_author, version='%prog '+losoto._version.__version__)
+                            +_author, version='%prog '+_version.__version__)
     opt.add_option('-v', '--verbose', help='Go VERBOSE! (default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
 
@@ -28,7 +28,7 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: losoto._logging.setLevel("debug")
+    if options.verbose: _logging.setLevel("debug")
 
     h5parmFrom = args[0]
     h5parmTo = args[1]

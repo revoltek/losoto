@@ -4,10 +4,10 @@ LoSoTo: LOFAR solutions tool
 Authors:
 * Francesco de Gasperin
 * David Rafferty
-* Martin Hardcastle
-* Maaijke Mevius
-* Bas van der Tol
 * Jose Sabater Montes
+* Maaijke Mevius
+* Martin Hardcastle
+* Bas van der Tol
 
 Contents:
 * __doc/__: documentation
@@ -16,12 +16,13 @@ Contents:
 * __parsets/__: some examples parsets
 * __tools/__: contains some tools, mostly to convert back and forward from parmdb to h5parm
 
-To run it on CEP2/3:
-* A copy of the code is in ~fdg/scripts/losoto/
-* Source the tool/lofarinit.csh file which is shipped with the code.
+Install:
+* Get LoSoTo from https://github.com/revoltek/losoto 
+* Install losoto by simply: python setup.py install --prefix=~/mydir/
+* Alternatively: pip install --allow-external --upgrade --user https://github.com/revoltek/losoto/archive/module.zip 
+* In cep3 use the copy of the code in ~fdg/scripts/losoto/ (source the tool/lofarinit.[c]sh file which is shipped with the code)
 * Prepare a parset starting from the parset/losoto.parset
-* check the helps of the scripts in tools/ and of losoto.py
-* in case of problems write to fdg@hs.uni-hamburg.de
+* in case of problems write to Francesco de Gasperin: astro@voo.it
 
 Flag:
 LoSoTo has an internl flag system encoded in the weight column. Weights are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs in the H5parm_exporter.py
