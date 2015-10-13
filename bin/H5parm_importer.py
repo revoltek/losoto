@@ -13,7 +13,7 @@ It handles Gain/DirectionalGain/RotationAngle/
 """
 # Authors:
 # Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de)"
+_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
 
 import sys, os, glob
 import socket
