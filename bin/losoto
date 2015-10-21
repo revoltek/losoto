@@ -10,9 +10,7 @@
 # Bas van der Tol
 _author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de)"
 
-import sys
-import os
-import time
+import os, sys, time
 import atexit
 import tables
 import logging
