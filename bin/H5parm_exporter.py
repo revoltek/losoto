@@ -363,7 +363,10 @@ if __name__=='__main__':
         sys.exit(1)
     pdbSolTypes = solTypes[:]
     for solType in pdbSolTypes:
-        solTabList = getSoltabFromSolType(solType, solTabs)
+        solTabList = getSoltabFromSolType(solType, solTabs, 'ampl')
+        if solTabList is None:
+            # Search for type phase solutions if no ampl ones where found
+            solTabList = getSoltabFromSolType(solType, solTabs, 'phase')
         if solTabList is None:
             logging.warning("Solution type {0} not found in solution set {1}. Skipping.".format(solType, solsetName))
             solTypes.remove(solType)
