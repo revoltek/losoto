@@ -33,7 +33,7 @@ def ClockTECfuncAllStations(xarray,par):
 def getInitClock(data,freq):
     nF=freq.shape[0]
     avgdata=np.ma.sum(np.cos(data)+1.j*np.sin(data),axis=0).swapaxes(0,-2)
-    avgdata=np.arctan2(np.imag(avgdata),np.real(avgdata))
+    avgdata=np.ma.arctan2(np.imag(avgdata),np.real(avgdata))
     nSt=avgdata.shape[0]
     npol=avgdata.shape[2]
     for ist in range(nSt):
@@ -83,7 +83,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
     freqstep=np.average(freq[1:]-freq[:-1])
     nSt=ph.shape[2]
     data=ph
-    logging.info("fitting masked data "+str(ph.count(axis=0)))
+    #logging.info("fitting masked data "+str(ph.count(axis=0)))
     tecarray=np.zeros((nT,nSt),dtype=np.float32)
     clockarray=np.zeros((nT,nSt),dtype=np.float32)
     if nparms>2:
@@ -200,25 +200,25 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
 #                        title("iter "+str(nr_iter)+" "+str(ist))
 #                        break
 #                show()
-            data[itm,:]=np.add(2*np.pi*wraps,data[itm])            
-            data[itm,:]+=np.around(np.average(estimate-data[itm],axis=0)/(2*np.pi))[np.newaxis]*2*np.pi
+            data[itm,:]=np.ma.add(2*np.pi*wraps,data[itm])            
+            data[itm,:]+=np.ma.around(np.ma.average(estimate-data[itm],axis=0)/(2*np.pi))[np.newaxis]*2*np.pi
 
-            #logging.info("fitting masked data itm:%d "%itm + str(data[itm,:].count(axis=0)))
-            wrapflags=np.absolute(estimate-data[itm,:])<(4./(2*(nr_iter+1)))*np.pi
-            #logging.info("flagging dubious wraps" + str(np.sum(np.logical_not(wrapflags),axis=0)))
-            #logging.info(str(itm)+":"+str(data[itm,:,-1])+" estimate: "+str(estimate[:,-1])+" "+str(data[itm,:,-1][wrapflags[:,-1]].count())+" "+str(sol[-1]))
+            wrapflags=np.ma.absolute(estimate-data[itm,:])<(4./(2*(nr_iter+1)))*np.pi
             for ist in range(nSt):
                 
                 if data[itm,:,ist][wrapflags[:,ist]].count()/float(nF)<0.5:
-                    logging.info("too many data points flagged t=%d st=%d flags=%d wrappedflags=%d"%(itm,ist,data[itm,:,ist].count(),data[itm,:,ist][wrapflags[:,ist]].count()) + str(sol[ist]))
+                    #logging.info("too many data points flagged t=%d st=%d flags=%d wrappedflags=%d"%(itm,ist,data[itm,:,ist].count(),data[itm,:,ist][wrapflags[:,ist]].count()) + str(sol[ist])+" "+str(nr_iter)+" "+str(np.ma.absolute(estimate-data[itm,:])[:ist]))
                     sol[ist]=[-10.,-10.]
                     continue
                 #print "checking",ist,A.shape,wrapflags.shape,data[itm].shape
-                B=A[wrapflags[:,ist]]
-                sol[ist]=np.ma.dot(np.linalg.inv(np.dot(B.T,B)),np.ma.dot(B.T,data[itm,:,ist][wrapflags[:,ist]])).T
+                #B=A[wrapflags[:,ist]]
+                #sol[ist]=np.ma.dot(np.linalg.inv(np.dot(B.T,B)),np.ma.dot(B.T,data[itm,:,ist][wrapflags[:,ist]])).T
+                B=np.ma.array(A[wrapflags[:,ist]],mask=np.concatenate((data[itm,:,ist][wrapflags[:,ist]].mask[:,np.newaxis],data[itm,:,ist][wrapflags[:,ist]].mask[:,np.newaxis]),axis=1))
+                sol[ist]=np.ma.dot(np.linalg.inv(np.ma.dot(B.T,B)),np.ma.dot(B.T,data[itm,:,ist][wrapflags[:,ist]])).T
                 #remove jumps in delay
                 #if not 'CS' in stations[ist]:
-                if initprevsol[ist] and np.abs((sol[ist,1]-prevsol[ist,1])/steps[1])>0.5:
+                if initprevsol[ist] and np.abs((sol[ist,1]-prevsol[ist,1])/steps[1])>0.5 and ('LBA' in stations[ist] or np.abs((sol[ist,0]-prevsol[ist,0])/steps[0])>0.5):
+                    #logging.info("removing jumps %f %f %f"%(sol[ist,1],prevsol[ist,1],steps[1])+" "+str('LBA' in stations[ist])+" "+stations[ist]+str(sol[ist])+" "+str(itm))
                     sol[ist,:]-=np.round((sol[ist,1]-prevsol[ist,1])/steps[1])*steps
         residual = data[itm] - np.dot(A, sol.T)
         tmpresid = residual - residual[:, 0][:,np.newaxis]
@@ -342,17 +342,17 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
 
     #get phases from reference stations
     refdata=np.ma.sum(np.cos(data[:,:,refstIdx,:])+1j*(np.sin(data[:,:,refstIdx,:])),axis=2)
-    refdata=np.arctan2(np.imag(refdata),np.real(refdata))
+    refdata=np.ma.arctan2(np.imag(refdata),np.real(refdata))
     #unwrap around mean
     mymean=np.ma.average(refdata,axis=0)
-    refdata=np.remainder(refdata-mymean[np.newaxis]+np.pi,2*np.pi)+mymean[np.newaxis]-np.pi
+    refdata=np.ma.remainder(refdata-mymean[np.newaxis]+np.pi,2*np.pi)+mymean[np.newaxis]-np.pi
     data-=refdata[:,:,np.newaxis]
     #flag bad channels
     indices=np.arange(nF)
     if flagBadChannels:
         freqselect=np.ones((nF,),dtype=np.bool)
         for nr_iter in range(2):
-            rms=np.std(np.std(refdata,axis=0),axis=1)
+            rms=np.ma.std(np.ma.std(refdata,axis=0),axis=1)
             freqselect=rms<flagcut*np.average(rms)
             logging.info("iter %d: flagging %d channels"%(nr_iter,np.sum(np.logical_not(freqselect))))
             freqs=freqs[freqselect]
@@ -380,9 +380,9 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
     # combine polarizationsif requested
     if combine_pol:
         if  npol==2:
-            cdata=np.cos(data)+1j*np.sin(data)
+            cdata=np.ma.cos(data)+1j*np.ma.sin(data)
             data=np.ma.sum(cdata,axis=3).reshape((nT,nF,nSt,1))
-            data=np.arctan2(np.imag(data),np.real(data)) #np.angle doesnot yet return masked array!!
+            data=np.ma.arctan2(np.imag(data),np.real(data)) #np.angle doesnot yet return masked array!!
             npol=1
     # guess clock, remove from data
     if (not 'LBA' in stations[0]) and len(initSol)<1:
