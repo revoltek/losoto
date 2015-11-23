@@ -802,7 +802,7 @@ class solFetcher(solHandler):
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
         # Conversely, one can apply how many slices he wants.
         # Single values/contigous values are converted in slices in h5parm.
-        # This try/except implements a workaround for this limitation. One the pytables will be updated, the except can be removed.
+        # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         try:
             dataVals = dataVals[tuple(self.selection)]
         except:
@@ -835,11 +835,12 @@ class solFetcher(solHandler):
                 dataValsRef = self.getValues(retAxesVals = False, reference = None)
                 self.selection = selection_stored
                 dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                # Convert to range [-2*pi, 2*pi].
-                dataVals = np.fmod(dataVals, 2.0 * np.pi)
-                # Convert to range [-pi, pi]
-                dataVals[dataVals < -np.pi] += 2.0 * np.pi
-                dataVals[dataVals > np.pi] -= 2.0 * np.pi
+                if not self.getType() != 'tec' and not self.getType() != 'clock':
+                    # Convert to range [-2*pi, 2*pi].
+                    dataVals = np.fmod(dataVals, 2.0 * np.pi)
+                    # Convert to range [-pi, pi]
+                    dataVals[dataVals < -np.pi] += 2.0 * np.pi
+                    dataVals[dataVals > np.pi] -= 2.0 * np.pi
 
         if not retAxesVals:
             return dataVals

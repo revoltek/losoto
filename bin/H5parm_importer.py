@@ -9,7 +9,7 @@ It can also load a dictionary from a json or pickle file with the keys
 instrumentdb (array with file names), antenna, field and skydb containing the 
 corresponding file names.
 It handles Gain/DirectionalGain/RotationAngle/
-           /CommonRotationAngle/CommonScalarPhase solution types.
+           Clock/TEC/CommonRotationAngle/CommonScalarPhase solution types.
 """
 # Authors:
 # Francesco de Gasperin

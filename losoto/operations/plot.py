@@ -56,7 +56,7 @@ def run( step, parset, H ):
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
     if ref == '': ref = None
-    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
+    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs( H, tablesToAdd ) ]
 
     for soltab in openSoltabs( H, soltabs ):
 
