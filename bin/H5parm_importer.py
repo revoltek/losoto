@@ -50,15 +50,24 @@ def parmdbToAxes(solEntry):
     elif thisSolType == 'RotationMeasure':
         thisSolType, ant, dir = solEntry.split(':')
 
-    # For TEC assuming [TEC:ant]
+    # For TEC assuming [TEC:ant or TEC:pol:ant]
     elif thisSolType == 'TEC':
-        thisSolType, ant = solEntry.split(':')
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, pol, ant = solEntry.split(':')
+            pol1 = pol
+            pol2 = pol
         dir = 'pointing'
 
-    # For Clock assuming [Clock:ant]
+    # For Clock assuming [Clock:ant or Clock:pol:ant]
     elif thisSolType == 'Clock':
-        thisSolType, ant = solEntry.split(':')
-        dir = 'pointing'
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, pol, ant = solEntry.split(':')
+            pol1 = pol
+            pol2 = pol
 
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
@@ -262,12 +271,20 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
             np.putmask(weights, vals == 0., 0)
-            h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
+            if len(pols) == 0:
+                h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+            else:
+                h5parm.makeSoltab(solset, 'clock', axesNames=['pol','ant','freq','time'], \
+                    axesVals=[pol,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'TEC':
             np.putmask(weights, vals == 0., 0)
-            h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+            if len(pols) == 0:
+                h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+            else:
+                h5parm.makeSoltab(solset, 'tec', axesNames=['pol','dir','ant','freq','time'], \
+                    axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             np.putmask(vals, vals == 0., 1) # nans end up into 1s (as BBS output, flagged next line)
             np.putmask(weights, vals == 1., 0) # flag where val=1
@@ -465,8 +482,3 @@ if __name__=='__main__':
     # Call the method that creates the h5parm file
     create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                   h5parmFile, complevel, solsetName, globaldbFile=globaldbFile)
-
-
-    
-    
-
