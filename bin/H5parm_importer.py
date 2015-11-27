@@ -271,6 +271,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
             np.putmask(weights, vals == 0., 0)
+            # clock may be diag or scalar
             if len(pols) == 0:
                 h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
@@ -279,6 +280,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                     axesVals=[pol,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'TEC':
             np.putmask(weights, vals == 0., 0)
+            # tec may be diag or scalar
             if len(pols) == 0:
                 h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
