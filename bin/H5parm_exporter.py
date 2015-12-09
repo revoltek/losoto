@@ -139,10 +139,18 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                         solTabList.append(st)
                     elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
                         solTabList.append(st)
+                    elif solType == 'Clock' and st._v_title == 'clock':
+                        solTabList.append(st)
+                    elif solType == 'TEC' and st._v_title == 'tec':
+                        solTabList.append(st)
             else:
                 if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
                     solTabList.append(st)
                 elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
+                    solTabList.append(st)
+                elif solType == 'Clock' and st._v_title == 'clock':
+                    solTabList.append(st)
+                elif solType == 'TEC' and st._v_title == 'tec':
                     solTabList.append(st)
 
     if len(solTabList) == 0:
