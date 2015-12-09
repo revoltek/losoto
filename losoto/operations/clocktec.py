@@ -85,32 +85,45 @@ def run( step, parset, H ):
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
 
-            # if pol are combined here we duplicate the output and save same values in XX and YY
             if combinePol:
-                #print "clock",clock.shape
-                #print "vals",vals.shape
-                clock = np.tile(clock,(1,1,2))
-                tec = np.tile(tec,(1,1,2))
-                offset = np.tile(offset,(1,2))
-                weights = np.tile(weights,(1,1,2))
+                tf_st = H.makeSoltab(solsetname, 'tec',
+                                 axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                 vals=tec,
+                                 weights=weights)
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                tf_st = H.makeSoltab(solsetname, 'clock',
+                                 axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                 vals=clock*1e-9,
+                                 weights=weights)
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                tf_st = H.makeSoltab(solsetname, 'phase_offset',
+                                 axesNames=['ant'], axesVals=[newstations],
+                                 vals=offset,
+                                 weights=np.ones_like(offset))
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
 
-            tf_st = H.makeSoltab(solsetname, 'tec',
+
+            else:
+                tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=tec,
                                  weights=weights)
-            sw = solWriter(tf_st)
-            sw.addHistory('CREATE (by CLOCKTECFIT operation)')
-            tf_st = H.makeSoltab(solsetname, 'clock',
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                tf_st = H.makeSoltab(solsetname, 'clock',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
                                  vals=clock*1e-9,
                                  weights=weights)
-            sw = solWriter(tf_st)
-            sw.addHistory('CREATE (by CLOCKTECFIT operation)')
-            tf_st = H.makeSoltab(solsetname, 'phase_offset',
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                tf_st = H.makeSoltab(solsetname, 'phase_offset',
                                  axesNames=['ant','pol'], axesVals=[newstations, ['XX','YY']],
                                  vals=offset,
                                  weights=np.ones_like(offset))
-            sw = solWriter(tf_st)
-            sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                sw = solWriter(tf_st)
+                sw.addHistory('CREATE (by CLOCKTECFIT operation)')
 
     return 0
