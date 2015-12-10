@@ -24,11 +24,16 @@ def run( step, parset, H ):
     tw = solWriter(outTable)
     outVals, outCoord = tw.getValues()
 
+    if tr.getType() =! tw.getType():
+        logging.error('In and Out tables have incompatible types: '+tr.getType()+' and '+tw.getType()+'.')
+        return 1
+
     shapeDiff = tuple(np.array(outVals.shape)/np.array(inVals.shape))
 
     inValsNew = np.kron(inVals, np.ones(shapeDiff))
     if inValsNew.shape != outVals.shape:
         logging.error("Incompatible shapes for copying solutions. The outTable axes can be a multiple of the inTable axis dimension.")
+        return 1
 
     # writing on the output table
     tw.setValues(inValsNew)

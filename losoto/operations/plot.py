@@ -251,10 +251,21 @@ def run( step, parset, H ):
                             else:
                                 logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
                                 continue
-                            #TODO: clock/tec may have a single pol!
+
+                            # If clock/tec are single pol then duplicate it (TODO)
+                            # There still a problem with commonscalarphase and pol-dependant clock/tec
+                            #but there's not easy way to combine them
+                            print valsAdd.shape, vals.shape
+                            if not 'pol' in sfAdd.getAxesNames() and 'pol' in sf.getAxesNames():
+                                # find pol axis positions
+                                polAxisPos = sf.getAxesNames().key_idx('pol')
+                                # create a new axes for the table to add and duplicate the values
+                                valsAdd = np.addaxes(valsAdd, polAxisPos)
+
                             if valsAdd.shape != vals.shape:
                                 logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
                                 return 1
+
                             vals += valsAdd
 
                         # normalize

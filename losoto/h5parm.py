@@ -478,7 +478,7 @@ class solHandler( object ):
 
         if not isinstance( table, tables.Group ):
             logging.error("Object must be initialized with a pyTables Table object.")
-            return None
+            sys.exit(1)
 
         self.t = table
         self.selection = {}
