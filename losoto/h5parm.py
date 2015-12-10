@@ -784,7 +784,7 @@ class solFetcher(solHandler):
         Keyword arguments:
         retAxisVals -- if true returns also the axes vals as a dict of:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
-        weight -- if true store in the weights instead that in the vals (default: False)
+        weight -- if true get the weights instead that the vals (default: False)
         reference -- in case of phase solutions, reference to this station name
         Return:
         A numpy ndarrey (values or weights depending on parameters)

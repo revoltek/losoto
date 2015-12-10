@@ -293,7 +293,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
-            np.putmask(weights, vals == 0., 0) # TODO: NDPPP bug which put at 0 the reference antenna phase should be solved
+            np.putmask(weights, vals == 0., 0) # falg where val=0
             h5parm.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 

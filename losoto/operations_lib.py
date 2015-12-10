@@ -61,6 +61,8 @@ def getParSoltabs( step, parset, H ):
     * local step value
     * global value
     * default = all
+
+    This is what one wants to call to find out the tables the user wants to operate on
     """
 
     # local val

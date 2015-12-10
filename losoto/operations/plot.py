@@ -56,7 +56,7 @@ def run( step, parset, H ):
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
     if ref == '': ref = None
-    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs( H, tablesToAdd ) ]
+    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -96,6 +96,7 @@ def run( step, parset, H ):
         # all axes that are not iterated by anything else
         axesInFile = sf.getAxesNames()
         for axis in axisInTable+axesInPlot+axisInCol+axisInShade:
+            print axis
             axesInFile.remove(axis)
  
         # set subplots scheme
@@ -250,6 +251,7 @@ def run( step, parset, H ):
                             else:
                                 logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
                                 continue
+                            #TODO: clock/tec may have a single pol!
                             if valsAdd.shape != vals.shape:
                                 logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
                                 return 1
