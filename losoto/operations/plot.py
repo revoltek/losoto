@@ -96,7 +96,6 @@ def run( step, parset, H ):
         # all axes that are not iterated by anything else
         axesInFile = sf.getAxesNames()
         for axis in axisInTable+axesInPlot+axisInCol+axisInShade:
-            print axis
             axesInFile.remove(axis)
  
         # set subplots scheme
@@ -241,7 +240,11 @@ def run( step, parset, H ):
                         for sfAdd in sfsAdd:
                             newCoord = {}
                             for axisName in coord.keys():
-                                if axisName in sfAdd.getAxesNames(): newCoord[axisName] = coord[axisName]
+                                if axisName in sfs.getAxesNames():
+                                    if coord[axisName] is list:
+                                        newCoord[axisName] = coord[axisName]
+                                    else:
+                                        newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
                             sfAdd.setSelection(**newCoord)
                             valsAdd = np.squeeze(sfAdd.getValues(retAxesVals=False, weight=False, reference=ref))
                             if sfAdd.getType() == 'clock':

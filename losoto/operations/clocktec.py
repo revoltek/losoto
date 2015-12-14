@@ -88,20 +88,20 @@ def run( step, parset, H ):
             if combinePol:
                 tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant'], axesVals=[times, newstations],
-                                 vals=tec,
-                                 weights=weights)
+                                 vals=tec[:,:,0],
+                                 weights=weights[:,:,0])
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'clock',
                                  axesNames=['time', 'ant'], axesVals=[times, newstations],
-                                 vals=clock*1e-9,
-                                 weights=weights)
+                                 vals=clock[:,:,0]*1e-9,
+                                 weights=weights[:,:,0])
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'phase_offset',
                                  axesNames=['ant'], axesVals=[newstations],
-                                 vals=offset,
-                                 weights=np.ones_like(offset))
+                                 vals=offset[:,0],
+                                 weights=np.ones_like(offset[:,0]))
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
 

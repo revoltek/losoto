@@ -36,6 +36,9 @@ LoSoTo.Steps.clocktec.Chi2cut = 30000.
 LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
 LoSoTo.Steps.clocktec.FitOffset = False
 
+LoSoTo.Steps.duplicate.InTable = sol000/clock000 # complete solset/solt
+LoSoTo.Steps.duplicate.OutTable = sol000/clock_bkp000 # complete solset/soltab or ''
+
 # PARALLEL
 LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axis = time # axis along which to smooth/find outlier (e.g. 'time')
@@ -82,6 +85,9 @@ LoSoTo.Steps.plot.Add = [] # tables to "add" (e.g. 'sol000/tec000'), it works on
 
 LoSoTo.Steps.reset.Operation = RESET
 
+LoSoTo.Steps.residuals.Operation = RESIDUALS
+LoSoTo.Steps.residuals.Sub = [sol000/tec000,sol000/clock000] # tables to subtract (only clock and tec from a phase table)
+
 LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 LoSoTo.Steps.reweight.FlagBad = False # re-flag bad values
@@ -89,7 +95,7 @@ LoSoTo.Steps.reweight.FlagBad = False # re-flag bad values
 LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
 LoSoTo.Steps.smooth.FWHM = [10, 5]
 LoSoTo.Steps.smooth.Axes = [freq, time]
-LoSoTo.Steps.smooth.Mode = runningmedian # or mean or median (these two values set all the solutions to the mean/median)
+LoSoTo.Steps.smooth.Mode = runningmedian # runningmedian or mean or median (these two values set all the solutions to the mean/median)
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now

@@ -30,12 +30,12 @@ def run( step, parset, H ):
         outSolsetName = outTable.split('/')[0]
         outTableName = outTable.split('/')[1]
 
-    sf = solFetcher(inTable)
+    ss, st = inTable.split('/')
+    sf = solFetcher(H.getSoltab(ss, st))
 
-    import h5parm
-    t = h5parm.makeSoltab(solset = outSolsetName, soltype = sf.getSolType(), soltab = outTableName, axesNames=sf.getAxesNames(), \
+    t = H.makeSoltab(solset = outSolsetName, soltype = sf.getType(), soltab = outTableName, axesNames=sf.getAxesNames(), \
         axesVals=[sf.getAxisValues(axisName) for axisName in sf.getAxesNames()], \
-        vals=sf.getValues(), weights=sf.getValues(weight = True), parmdbType=', '.join(list(ptype)))
+        vals=sf.getValues(retAxesVals = False), weights=sf.getValues(weight = True, retAxesVals = False), parmdbType=sf.t._v_attrs['parmdb_type'])
 
     sw = solWriter(t)
     sw.addHistory('DUPLICATE (from table %s)' % (inTable))

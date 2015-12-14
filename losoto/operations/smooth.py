@@ -25,6 +25,9 @@ def run( step, parset, H ):
         logging.error("Axes and FWHM lenghts must be equal.")
         return 1
 
+    if FWHM != [] and mode != "runningmedian":
+        logging.warning("FWHM makes sense only with runningmedian mode, ignoring it.")
+
     for soltab in openSoltabs( H, soltabs ):
 
         logging.info("Smoothing soltab: "+soltab._v_name)

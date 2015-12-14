@@ -162,7 +162,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
     logging.info('Collecting phase solutions...')
     pbar = progressbar.ProgressBar(maxval=len(source_names)).start()
     for i, source1 in enumerate(source_names):
-        for k in range(N_freqs):
+        for k in xrange(N_freqs):
             if m[i, k]:
                 solset_name = str(solset_array_dir_dep[i, k])
                 soltab = H.getSoltab(solset=solset_name, soltab=soln_type_dirdep+'000')
@@ -180,9 +180,9 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
 
                 for l, station in enumerate(station_names):
                     if soln_type_dirdep == 'scalarphase':
-                        sf_dir_dep.setSelection(ant=station, dir=source1)
+                        sf_dir_dep.setSelection(ant=[station], dir=[source1])
                     else:
-                        sf_dir_dep.setSelection(ant=station, pol='XX', dir=source1)
+                        sf_dir_dep.setSelection(ant=[station], pol=['XX'], dir=[source1])
                     values_dir_dep = sf_dir_dep.getValues()
                     v1_phase = np.array(values_dir_dep[0]).squeeze()
                     times_dir_dep = values_dir_dep[1]['time']
@@ -192,9 +192,9 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
 
                     if sf_dir_indep is not None:
                         if soln_type_dirindep == 'scalarphase':
-                            sf_dir_indep.setSelection(ant=station)
+                            sf_dir_indep.setSelection(ant=[station])
                         else:
-                            sf_dir_indep.setSelection(ant=station, pol='XX')
+                            sf_dir_indep.setSelection(ant=[station], pol=['XX'])
                         values_dir_indep = sf_dir_indep.getValues()
                         v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                         times_dir_indep = values_dir_indep[1]['time']
@@ -212,7 +212,7 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
                     if soln_type_dirdep == 'scalarphase':
                         phases1[i, l, k, :] = v1_phase
                     else:
-                        sf_dir_dep.setSelection(ant=station, pol='YY', dir=source1)
+                        sf_dir_dep.setSelection(ant=[station], pol=['YY'], dir=[source1])
                         values_dir_dep = sf_dir_dep.getValues()
                         v1_phase = np.array(values_dir_dep[0]).squeeze()
                         times_dir_dep = values_dir_dep[1]['time']
@@ -222,9 +222,9 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
 
                         if sf_dir_indep is not None:
                             if soln_type_dirindep == 'scalarphase':
-                                sf_dir_indep.setSelection(ant=station)
+                                sf_dir_indep.setSelection(ant=[station])
                             else:
-                                sf_dir_indep.setSelection(ant=station, pol='YY')
+                                sf_dir_indep.setSelection(ant=[station], pol=['YY'])
                             values_dir_indep = sf_dir_indep.getValues()
                             v1_dir_indep = np.array(values_dir_indep[0]).squeeze()
                             times_dir_indep = values_dir_indep[1]['time']
@@ -364,8 +364,8 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     N_stations = phases.shape[1]
     N_times = phases.shape[3]
     N_pairs = 0
-    for i in range(N_sources):
-        for j in range(i):
+    for i in xrange(N_sources):
+        for j in xrange(i):
             subband_selection = find(mask[i, :] * mask[j, :])
             if len(subband_selection) < nband_min:
                 continue
@@ -381,8 +381,8 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     ipbar = 0
     logging.info('Fitting TEC values...')
     pbar = progressbar.ProgressBar(maxval=N_pairs*N_times).start()
-    for i in range(N_sources):
-        for j in range(i):
+    for i in xrange(N_sources):
+        for j in xrange(i):
             subband_selection = find(mask[i, :] * mask[j, :])
             if len(subband_selection) < nband_min:
                 continue
@@ -401,7 +401,7 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
             else:
                 p_0 = (init_sols[i, 0, :] - init_sols[j, 0, :])[newaxis, :]
 
-            for t_idx in range(N_times):
+            for t_idx in xrange(N_times):
                 x = p[:, :, t_idx].copy()
                 f = flags_source_pair[:, :, t_idx].copy()
                 if not propagate:
@@ -496,7 +496,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
     D = np.sqrt(np.sum(D**2, axis=2))
 
     station_selection1 = station_selection
-    stations_to_add = np.array([i for i in range(len(station_names))
+    stations_to_add = np.array([i for i in xrange(len(station_names))
         if i not in station_selection1 and station_names[i] not in
         excluded_stations])
     if len(stations_to_add) == 0:
@@ -557,7 +557,7 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
                 constant_parms = np.zeros((1, N_stations_selected1), dtype = np.bool)
                 sols = np.zeros((N_times, N_stations_selected1), dtype = np.float)
                 p_0_best = None
-                for t_idx in range(N_times):
+                for t_idx in xrange(N_times):
                     if np.mod(t_idx, t_step) == 0:
                         min_e = np.Inf
                         if p_0_best is not None and not search_full_tec_range:
@@ -627,10 +627,10 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
 
                 ### Remove outliers
                 logging.debug('  Searching for outliers...')
-                for kk in range(10):
+                for kk in xrange(10):
                     s = sols[:, -1].copy()
                     selection = np.zeros(len(s), np.bool)
-                    for t_idx in range(len(s)):
+                    for t_idx in xrange(len(s)):
                         start_idx = np.max([t_idx-10, 0])
                         end_idx = np.min([t_idx+10, len(s)])
                         selection[t_idx] = np.sum(abs(s[start_idx:end_idx] -
@@ -774,7 +774,7 @@ def run( step, parset, H ):
         dist_cut_m/1000.0, station_names[station_selection]))
 
     station_selection_orig = station_selection
-    for iter in range(niter):
+    for iter in xrange(niter):
         # Loop over groups of nearby pierce points to identify bad stations and
         # remove them from the station_selection.
         nsig = 2.5 # number of sigma for cut
@@ -799,7 +799,7 @@ def run( step, parset, H ):
             up = up / norm(up)
             T = np.concatenate([east[:, np.newaxis], north[:, np.newaxis]], axis=1)
             pp1 = np.dot(pp, T).reshape((len(source_names), len(station_selection), 2))
-            for i in range(len(source_names)):
+            for i in xrange(len(source_names)):
                 x_median = np.median(pp1[i, :, 0]) / 1000.0
                 y_median = np.median(pp1[i, :, 1]) / 1000.0
                 dist = np.sqrt( (pp1[i, :, 0] / 1000.0 - x_median)**2 +
@@ -816,7 +816,7 @@ def run( step, parset, H ):
                 r_median = np.median(r[i, :, within_radius], axis=1)
                 r_tot_meddiff = np.zeros(len(station_selection[within_radius]),
                     dtype=float)
-                for j in range(len(station_selection[within_radius])):
+                for j in xrange(len(station_selection[within_radius])):
                     r_tot_meddiff[j] = np.sum(np.abs(r[i, :, within_radius[j]] - r_median[j]))
             if abort_iter:
                 break

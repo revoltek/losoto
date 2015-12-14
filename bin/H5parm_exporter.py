@@ -464,7 +464,7 @@ if __name__=='__main__':
 
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
-                    sf.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                    sf.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
                         time={'min':np.min(times), 'max':np.max(times)})
 
                     # If needed, convert Amp and Phase to Real and Imag
@@ -475,7 +475,7 @@ if __name__=='__main__':
                             cachedSolTabs[solTabList[0]._v_title] = sf_phase
                         else:
                             sf_phase = cachedSolTabs[solTabList[0]._v_title]
-                        sf_phase.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                        sf_phase.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
                             time={'min':np.min(times), 'max':np.max(times)})
                         val_amp = sf.getValues()[0]
                         val_phase = sf_phase.getValues()[0]
@@ -487,7 +487,7 @@ if __name__=='__main__':
                             cachedSolTabs[solTabList[0]._v_title] = sf_amp
                         else:
                             sf_amp = cachedSolTabs[solTabList[0]._v_title]
-                        sf_amp.setSelection(ant=ant, pol=pol, dir=dir, freq=freqs.tolist(),
+                        sf_amp.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
                             time={'min':np.min(times), 'max':np.max(times)})
                         val_phase = sf.getValues()[0]
                         val_amp = sf_amp.getValues()[0]

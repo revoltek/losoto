@@ -8,6 +8,7 @@ import numpy as np
 import tables
 import logging
 import _version
+import itertools
 
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:
@@ -471,7 +472,7 @@ class solHandler( object ):
     def __init__(self, table, useCache = False, **args):
         """
         Keyword arguments:
-        table -- table object
+        table -- table object or solset/soltab string
         useCache -- cache all data in memory
         **args -- used to create a selection
         """
@@ -541,12 +542,16 @@ class solHandler( object ):
                 # convert to correct data type (from parset everything is a str)
                 selVal = np.array(selVal, dtype=self.getAxisType(axis))
 
-                self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
+                if len (selVal) == 1:
+                    # speedup in the common case of a single value
+                    self.selection[idx] = [self.getAxisValues(axis).tolist().index(selVal)]
+                else:
+                    self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
                 # quick check for mispelled values
-                for selValCheck in selVal:
-                    if not selValCheck in self.getAxisValues(axis, ignoreSelection=True):
-                        logging.warning('Values '+str(selValCheck)+' not found for axis '+axis+'. Ignored.')
+                #for selValCheck in selVal:
+                #    if not selValCheck in self.getAxisValues(axis, ignoreSelection=True):
+                #        logging.warning('Values '+str(selValCheck)+' not found for axis '+axis+'. Ignored.')
 
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
@@ -733,7 +738,6 @@ class solWriter(solHandler):
             # create a subSelection also for the "vals" array
             subSelectionForVals = [slice(None) for i in xrange(len(subSelection))]
             # cycle across lists and save data index by index
-            import itertools
             for selectionListValsIter in itertools.product(*[self.selection[selectionListIdx] for selectionListIdx in selectionListsIdx[1:]]):
                 for i, selectionListIdx in enumerate(selectionListsIdx[1:]):
                     # this is the sub selection which has a slice for every slice and a single value for every list
@@ -746,7 +750,9 @@ class solWriter(solHandler):
         """
         Copy cached values into the table
         """
-        if not self.useCache: logging.error("Flushing non cached data.")
+        if not self.useCache:
+            logging.error("Flushing non cached data.")
+            sys.exit(1)
         logging.info("Writing results...")
         self.t.weight[:] = self.cacheWeight
         self.t.val[:] = self.cacheVal

@@ -86,7 +86,7 @@ def run( step, parset, H ):
 
     # start processes for multi-thread
     logging.debug('Spowning %i threads...' % ncpu)
-    for i in range(ncpu):
+    for i in xrange(ncpu):
         t = multiThread(inQueue, outQueue)
         t.start()
 
@@ -115,7 +115,7 @@ def run( step, parset, H ):
             inQueue.put([weights, coord, axesToExt, selection, percent, size, cycles])
 
         # add poison pills to kill processes
-        for i in range(ncpu):
+        for i in xrange(ncpu):
             inQueue.put(None)
 
         # wait for all jobs to finish
@@ -125,7 +125,7 @@ def run( step, parset, H ):
         # NOTE: do not use queue.empty() check which is unreliable
         # https://docs.python.org/2/library/multiprocessing.html
         logging.info('Writing solutions')
-        for i in range(runs):
+        for i in xrange(runs):
             q = outQueue.get()
             w,sel = q
             sw.selection = sel

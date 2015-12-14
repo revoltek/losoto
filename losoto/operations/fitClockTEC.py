@@ -36,8 +36,8 @@ def getInitClock(data,freq):
     avgdata=np.ma.arctan2(np.imag(avgdata),np.real(avgdata))
     nSt=avgdata.shape[0]
     npol=avgdata.shape[2]
-    for ist in range(nSt):
-        for pol in range(npol):
+    for ist in xrange(nSt):
+        for pol in xrange(npol):
             mymask=avgdata[ist,:,pol].mask
             if not hasattr(mymask,'__len__'):
                 mymask=np.ones(avgdata[ist,:,pol].shape,dtype=bool)*mymask
@@ -102,14 +102,14 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
     nrFail=np.zeros(nSt,dtype=int)
     sol=np.zeros((nSt,nparms),dtype=np.float)
     prevsol=np.copy(sol)
-    for itm in range(nT):
+    for itm in xrange(nT):
         
-        if itm%100==0 and itm>0:
-            sys.stdout.write(str(itm)+'... '+str(sol[-1,0]-sol[0,0])+' '+str(sol[-1,1]-sol[0,1])+' '+str(sol[-1,-1]-sol[0,-1])+' ')
-            sys.stdout.flush()
+        #if itm%100==0 and itm>0:
+            #sys.stdout.write(str(itm)+'... '+str(sol[-1,0]-sol[0,0])+' '+str(sol[-1,1]-sol[0,1])+' '+str(sol[-1,-1]-sol[0,-1])+' ')
+            #sys.stdout.flush()
 
         if itm==0 or not succes:
-         for ist in range(nSt):
+         for ist in xrange(nSt):
              if itm==0 or not initprevsol[ist]:
                 if hasattr(initSol,'__len__') and len(initSol)>ist:
                     iTEC1=initSol[ist,0]
@@ -164,7 +164,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
                  #logging.info("par "+str(par[:nparms]))  
         #wrapflags=np.ones((nSt,nF))
         #doplot=False
-        for nr_iter in range(2):
+        for nr_iter in xrange(2):
             estimate=ClockTECfuncAllStations(freq,sol.T).reshape((nSt,nF)).T
             wraps=np.ma.around(np.divide(estimate-data[itm],2*np.pi))
             
@@ -204,7 +204,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
             data[itm,:]+=np.ma.around(np.ma.average(estimate-data[itm],axis=0)/(2*np.pi))[np.newaxis]*2*np.pi
 
             wrapflags=np.ma.absolute(estimate-data[itm,:])<(4./(2*(nr_iter+1)))*np.pi
-            for ist in range(nSt):
+            for ist in xrange(nSt):
                 
                 if data[itm,:,ist][wrapflags[:,ist]].count()/float(nF)<0.5:
                     #logging.info("too many data points flagged t=%d st=%d flags=%d wrappedflags=%d"%(itm,ist,data[itm,:,ist].count(),data[itm,:,ist][wrapflags[:,ist]].count()) + str(sol[ist])+" "+str(nr_iter)+" "+str(np.ma.absolute(estimate-data[itm,:])[:ist]))
@@ -230,7 +230,7 @@ def getClockTECFit(ph,freq,stations,initSol=[],returnResiduals=True,chi2cut=1e8 
             
         chi2select=np.logical_or(np.array(chi2>chi2cut),sol[:,0]<-5)
         if np.any(chi2select):
-            logging.info("high chi2 of fit, itm: %d %d "%(itm,np.sum(chi2select)) + str(sol[chi2select])+"stations:" + str(np.arange(nSt)[chi2select])+" chi2 "+str(chi2[chi2select]))
+            logging.debug("high chi2 of fit, itm: %d %d "%(itm,np.sum(chi2select)) + str(sol[chi2select])+"stations:" + str(np.arange(nSt)[chi2select])+" chi2 "+str(chi2[chi2select]))
             succes=False
             nrFail[chi2select]+=1
             nrFail[~chi2select]=0
@@ -300,7 +300,7 @@ def correctWraps(tecarray,residualarray,freq,pos):
     lons=np.degrees(np.arctan2(pos[:,1],pos[:,0]))
     lons-=lons[0]
     lonlat=np.concatenate((lons,lats)).reshape((2,)+lons.shape)
-    for nr_iter in range(2):
+    for nr_iter in xrange(2):
         TEC=tecarray-tecarray[:,[0]]+steps[0]*(np.round(wraps)-np.round(wraps[0]))
         TEC=np.ma.array(TEC,mask=flags)
         slope=np.ma.dot(np.linalg.inv(np.dot(lonlat,lonlat.T)),np.ma.dot(lonlat,TEC.T))
@@ -351,7 +351,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
     indices=np.arange(nF)
     if flagBadChannels:
         freqselect=np.ones((nF,),dtype=np.bool)
-        for nr_iter in range(2):
+        for nr_iter in xrange(2):
             rms=np.ma.std(np.ma.std(refdata,axis=0),axis=1)
             freqselect=rms<flagcut*np.average(rms)
             logging.info("iter %d: flagging %d channels"%(nr_iter,np.sum(np.logical_not(freqselect))))
@@ -404,7 +404,7 @@ def doFit(phases,mask,freqs,stations,station_positions,axes,refstIdx='superterp'
     tec=np.zeros((nT,nSt,npol),dtype=np.float32)
     if doFitoffset:
         fitoffset=np.zeros((nT,nSt,npol),dtype=np.float32)
-    for pol in range(npol):
+    for pol in xrange(npol):
         #get a good guesss without offset
         #logging.info("sending masked data "+str(data[:,:,:,pol].count()))
         initialchi2cut=chi2cut

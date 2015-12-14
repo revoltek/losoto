@@ -24,7 +24,7 @@ def run( step, parset, H ):
     tw = solWriter(outTable)
     outVals, outCoord = tw.getValues()
 
-    if tr.getType() =! tw.getType():
+    if tr.getType() != tw.getType():
         logging.error('In and Out tables have incompatible types: '+tr.getType()+' and '+tw.getType()+'.')
         return 1
 
