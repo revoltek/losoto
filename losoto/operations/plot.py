@@ -107,9 +107,11 @@ def run( step, parset, H ):
         Nc = int(np.ceil(np.float(Nplots)/Nr))
 
         # cycle on files
+        fig = plt.figure()
         for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axisInShade+axesInPlot):
             
-            fig = plt.figure()
+            # clear figure
+            plt.clf()
 
             # set filename
             filename = ''
@@ -310,6 +312,5 @@ def run( step, parset, H ):
             except:
                 logging.error('Error saving file, wrong path?')
                 return 1
-            plt.close(fig)
 
     return 0
