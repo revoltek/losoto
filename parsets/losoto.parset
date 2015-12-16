@@ -36,6 +36,9 @@ LoSoTo.Steps.clocktec.Chi2cut = 30000.
 LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
 LoSoTo.Steps.clocktec.FitOffset = False
 
+LoSoTo.Steps.clocktec2.Operation = CLOCKTEC2
+LoSoTo.Steps.clocktec2.RefAnt = ''
+
 LoSoTo.Steps.duplicate.InTable = sol000/clock000 # complete solset/solt
 LoSoTo.Steps.duplicate.OutTable = sol000/clock_bkp000 # complete solset/soltab or ''
 
