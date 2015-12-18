@@ -538,11 +538,12 @@ class solHandler( object ):
 
             # single val/list -> exact matching
             else:
+                if type(selVal) is np.array or type(selVal) is np.ndarray: selVal = selVal.tolist()
                 if not type(selVal) is list: selVal = [selVal]
                 # convert to correct data type (from parset everything is a str)
                 selVal = np.array(selVal, dtype=self.getAxisType(axis))
 
-                if len (selVal) == 1:
+                if len(selVal) == 1:
                     # speedup in the common case of a single value
                     self.selection[idx] = [self.getAxisValues(axis).tolist().index(selVal)]
                 else:
@@ -635,9 +636,9 @@ class solHandler( object ):
 
         axisIdx = self.getAxesNames().index(axis)
         if ignoreSelection:
-            return np.copy(self.getAxis(axis)[:])
+            return self.getAxis(axis)[:]
         else:
-            return np.copy(self.getAxis(axis)[self.selection[axisIdx]])
+            return self.getAxis(axis)[:][self.selection[axisIdx]]
 
 
     def addHistory(self, entry=""):

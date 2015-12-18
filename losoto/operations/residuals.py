@@ -35,8 +35,8 @@ def run( step, parset, H ):
         for soltabToSub in soltabsToSub:
             ss, st = soltabToSub.split('/')
             sfs = solFetcher(H.getSoltab(ss, st), useCache = False)
-            if sfs.getType() != 'tec' and sfs.getType() != 'clock':
-                logging.warning(soltabToSub+' is not of type clock/tec and cannot be subtracted, ignore.')
+            if sfs.getType() != 'tec' and sfs.getType() != 'clock' and sfs.getType() != 'rm':
+                logging.warning(soltabToSub+' is not of type clock/tec/rm and cannot be subtracted, ignore.')
                 continue
             sfss.append( sfs )
             logging.info('Subtracting table: '+soltabToSub)
@@ -63,6 +63,14 @@ def run( step, parset, H ):
 
                 elif sfs.getType() == 'tec':
                     vals -= -8.44797245e9 * valsSub / coord['freq']
+
+                elif sfs.getType() == 'rm':
+                    wav = 2.99792458e8/coord['freq']
+                    ph = wav * wav * valsSub
+                    if coord['pol'] == 'XX':
+                        vals -= ph
+                    elif coord['pol'] == 'YY':
+                        vals += ph
 
                 # flag data that are contaminated by flagged clock/tec data
                 weights[np.where(weightsSub == 0)] == 0

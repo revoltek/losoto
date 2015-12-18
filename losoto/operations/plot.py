@@ -55,6 +55,10 @@ def run( step, parset, H ):
     tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
+    if not os.path.exists(os.path.dirname(prefix)):
+        logging.debug('Creating '+os.path.dirname(prefix)+'.')
+        os.makedirs(os.path.dirname(prefix))
+
     if ref == '': ref = None
     sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
 
