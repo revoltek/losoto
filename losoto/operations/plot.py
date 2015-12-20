@@ -55,7 +55,7 @@ def run( step, parset, H ):
     tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
-    if not os.path.exists(os.path.dirname(prefix)):
+    if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
         os.makedirs(os.path.dirname(prefix))
 
@@ -300,10 +300,8 @@ def run( step, parset, H ):
 
                             #plt.colorbar(label=sf.getType())
                         else:
-                            if sf.getType() == 'amplitude':
-                                ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color)
-                            else:
-                                ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color)
+                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color)
+                            #ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], '-', color=color)
                             if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
                             if minZ != 0:
                                 plt.ylim(ymin=minZ)

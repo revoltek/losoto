@@ -13,6 +13,8 @@ outQueue = multiprocessing.Queue()
 
 c = 2.99792458e8
 
+#def fit_dFR(phases_rr, phases_ll, weights_rr, weights_ll, freq):
+
 class multiThread(multiprocessing.Process):
     """
     This class is a working thread which load parameters from a queue and
@@ -89,8 +91,7 @@ class multiThread(multiprocessing.Process):
         import scipy.optimize
     
         # NOTE THE *2 to use rr+ll instead of 0.5*(rr+ll)
-        par3complex = lambda p, freq, y: abs(np.cos((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq)) - np.cos(y)) + abs(np.sin((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq)) - np.sin(y))
-#        par3complex = lambda p, freq, y: abs(np.cos((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.cos(y)) + abs(np.sin((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.sin(y))
+        par3complex = lambda p, freq, y: abs(np.cos((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.cos(y)) + abs(np.sin((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.sin(y))
         rmwavcomplex = lambda RM, wav, y: abs(np.cos(2.*RM[0]*wav*wav)  - np.cos(y)) + abs(np.sin(2.*RM[0]*wav*wav)  - np.sin(y))
 
         times = np.copy(coord['time'])
@@ -107,21 +108,21 @@ class multiThread(multiprocessing.Process):
             # apply flags
             idx       = np.where(np.logical_and(weights[0,:,t] != 0., weights[1,:,t] != 0.))
             freq      = np.copy(coord['freq'])[idx]
-            phase_rr = phases[0,:,t][idx]
-            phase_ll = phases[1,:,t][idx]
+            phases_rr = phases[0,:,t][idx]
+            phases_ll = phases[1,:,t][idx]
             #logging.debug('Number of filtered out data points: '+str(len(weights_rr) - len(idx[0])))
         
             if len(freq) < 10:
                 logging.warning('No valid data found for clock/tec.')
                 continue
         
-            phase       = (phase_rr + phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-            phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+            phase       = (phases_rr + phases_ll)      # not divide by 2 otherwise jump problem, then later fix this
+            phase_diff  = (phases_rr - phases_ll)      # not divide by 2 otherwise jump problem, then later fix this
             wav = c/freq
     
             weight = 0
             cycle = 0
-            for refine in [1]:#[1,1,2,3,4]:
+            for refine in [1,1,2,3,4]:
 
                 fitguess = self.initGuess(fitguess, coord['ant'], freq, phase, refine)
         
@@ -129,18 +130,16 @@ class multiThread(multiprocessing.Process):
                 freq = freq.astype(np.float64)
                 phase = phase.astype(np.float64)
               
-                #fitresult, success = scipy.optimize.leastsq(par3complex, [fitguess[0], fitguess[1], 0.0], args=(freq, phase), maxfev=10000)
-                fitresult, success = scipy.optimize.leastsq(par3complex, [fitguess[0], fitguess[1]], args=(freq, phase), maxfev=10000)
+                fitresult, success = scipy.optimize.leastsq(par3complex, [fitguess[0], fitguess[1], 0.0], args=(freq, phase), maxfev=10000)
+
+#               print ant
+#               print 'guess', fitguess, fitrmguess
+#               print fitresult, fitresultrm_wav
     
                 # CHECK RESIDUALS
-                phase_total = (2.*np.pi*2.*fitresult[1]*freq) + (-8.44797245e9*(2.*fitresult[0])/freq)
-                #phase_total = (2.*np.pi*2.*fitresult[1]*freq) + (-8.44797245e9*(2.*fitresult[0])/freq) + fitresult[2]
+                phase_total = (2.*np.pi*2.*fitresult[1]*freq) + (-8.44797245e9*(2.*fitresult[0])/freq) + fitresult[2]
                 residual = np.mean(abs(np.mod(phase-phase_total+np.pi,2.*np.pi)-np.pi))
-
-                print coord['ant'], fitresult
-                #print 'guess', fitguess, fitrmguess
-                #print "t:", t, "cycle:", cycle, "residual:", residual
-
+#                print "t:", t, "cycle:", cycle, "residual:", residual
                 if residual < 0.5:
                     fitguess = fitresult
                     weight = 1
@@ -153,7 +152,6 @@ class multiThread(multiprocessing.Process):
                 # Debug plot
                 doplot = False
                 if doplot:
-                    print "Plotting"
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('font',size =8 )
@@ -166,18 +164,15 @@ class multiThread(multiprocessing.Process):
                     ax = fig.add_subplot(110)
 
                     plotrm          = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi)  -1.0*np.pi # notice the factor of 2
-                    #fitfuncfastplot = lambda p, freq: np.mod((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + (p[2]) + 1.0*np.pi, 2.*np.pi) - np.pi 
-                    fitfuncfastplot = lambda p, freq: np.mod((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + 1.0*np.pi, 2.*np.pi) - np.pi 
+                    fitfuncfastplot = lambda p, freq: np.mod((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + (p[2]) + 1.0*np.pi, 2.*np.pi) - np.pi 
 
                     ax.plot(freq, np.mod(phase + np.pi, 2.*np.pi) - np.pi, 'or' )
-                    ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                    ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
                     ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
     
                     TEC   = np.mod((-8.44797245e9*(2.*fitresult[0])/freq)+np.pi, 2*np.pi) - np.pi   # notice factor of 2 because rr+ll
                     Clock = np.mod((2.*np.pi*2.*fitresult[1]*freq )+np.pi, 2*np.pi) - np.pi   # notice factor of 2 because rr+ll
         
-                    phase_total = (2.*np.pi*2.*fitresult[1]*freq)+(-8.44797245e9*(2.*fitresult[0])/freq)#+fitresult[2]
+                    phase_total = (2.*np.pi*2.*fitresult[1]*freq)+(-8.44797245e9*(2.*fitresult[0])/freq)+fitresult[2]
                     residual    = np.mod(phase-phase_total+np.pi,2.*np.pi)-np.pi
                     ax.plot(freq, residual, '.', color='yellow')
         
@@ -196,9 +191,7 @@ class multiThread(multiprocessing.Process):
                     ax.set_ylabel('phase')
                     ax.set_ylim(ymin=-np.pi, ymax=np.pi)
     
-                    logging.warning('Save pic: '+str(t)+'_'+str(cycle)+'_'+coord['ant']+'.png')
                     plt.savefig(str(t)+'_'+str(cycle)+'_'+coord['ant']+'.png', bbox_inches='tight')
-                    del fig
 
                 cycle += 1
           
@@ -207,7 +200,7 @@ class multiThread(multiprocessing.Process):
 
             fittec[t] = fitresult[0]
             fitclock[t] = fitresult[1]
-            fitoffset[t] = 0 #fitresult[2]
+            fitoffset[t] = fitresult[2]
             fitrm[t] = fitresultrm_wav
             fitweights[t] = weight
 
