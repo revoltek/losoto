@@ -124,7 +124,7 @@ def run( step, parset, H ):
             filename = filename[:-1] # remove last _
 
             # create multiplot
-            figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+5*Nc,8+4*Nr), sharex=True, sharey=True)
+            figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
             if Nplots == 1: axa = np.array([axa])
             figgrid.subplots_adjust(hspace=0, wspace=0)
             axaiter = chain.from_iterable(axa)

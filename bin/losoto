@@ -106,6 +106,7 @@ if __name__=='__main__':
                    "CLOCKTEC": operations.clocktec,
                    "CLOCKTEC2": operations.clocktec2,
                    "DUPLICATE": operations.duplicate,
+                   "FARADAY": operations.faraday,
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
                    "INTERP": operations.interp,
