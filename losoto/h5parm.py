@@ -482,6 +482,13 @@ class solHandler( object ):
             sys.exit(1)
 
         self.t = table
+        # set axes names once to speed up calls
+        self.axesNames = table.val.attrs['AXES'].split(',')
+        # set axes values once to speed up calls (a bit of memory usage though)
+        self.axes = {}
+        for axis in self.getAxesNames():
+            self.axes[axis] = table._f_get_child(axis)
+
         self.selection = {}
         self.setSelection(**args)
 
@@ -579,7 +586,9 @@ class solHandler( object ):
         Return a list with all the axis names in the correct order for
         slicing the getValuesGrid() reurned matrix.
         """
-        return self.t.val.attrs['AXES'].split(',')
+
+        #return self.t.val.attrs['AXES'].split(',') # slower
+        return self.axesNames[:]
 
 
     def getAxis(self, axis = None):
@@ -588,10 +597,11 @@ class solHandler( object ):
         Keyword arguments:
         axis -- the name of the axis to be returned
         """
-        if not axis in self.getAxesNames():
+        try:
+            return self.axes[axis]
+        except:
             logging.error("Cannot find "+axis+", it doesn't exist.")
             return None
-        return self.t._f_get_child(axis)
 
 
     def getAxisLen(self, axis = None, ignoreSelection = False):
@@ -601,13 +611,7 @@ class solHandler( object ):
         axis -- the name of the axis to be returned
         ignoreSelection -- if True returns the axis lenght without any selection active
         """
-        if not axis in self.getAxesNames():
-            logging.error("Cannot find "+axis+", it doesn't exist.")
-            return None
-        if ignoreSelection:
-            return self.t._f_get_child(axis).nrows
-        else:
-            return len(self.getAxisValues(axis))
+        return len(self.getAxisValues(axis, ignoreSelection = ignoreSelection))
 
 
     def getAxisType(self, axis = None):
@@ -616,29 +620,29 @@ class solHandler( object ):
         Keyword arguments:
         axis -- the name of the axis whose type is returned
         """
-        if not axis in self.getAxesNames():
-            logging.error("Cannot find "+axis+", it doesn't exist.")
+        try:
+            return self.t._f_get_child(axis).dtype
+        except:
+            logging.error('Axis \"'+axis+'\" not found.')
             return None
-        return self.t._f_get_child(axis).dtype
 
 
     def getAxisValues(self, axis='', ignoreSelection = False):
         """
-        Return a list of all the possible values present along a specific axis (no duplicates)
+        Return a copy of all the possible values present along a specific axis (no duplicates)
         Keyword arguments:
         axis -- the axis name
         ignoreSelection -- if True returns the axis values without any selection active
         """
-
-        if axis not in self.getAxesNames():
+        try:
+            if ignoreSelection:
+                return self.getAxis(axis)[:]
+            else:
+                axisIdx = self.getAxesNames().index(axis)
+                return self.getAxis(axis)[self.selection[axisIdx]]
+        except:
             logging.error('Axis \"'+axis+'\" not found.')
             return None
-
-        axisIdx = self.getAxesNames().index(axis)
-        if ignoreSelection:
-            return self.getAxis(axis)[:]
-        else:
-            return self.getAxis(axis)[:][self.selection[axisIdx]]
 
 
     def addHistory(self, entry=""):
@@ -829,6 +833,7 @@ class solFetcher(solHandler):
             dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
 
         if reference != None:
+            # TODO: flag when reference is flagged?
             if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock':
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, and rotation solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():

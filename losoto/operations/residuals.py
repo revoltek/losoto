@@ -24,7 +24,7 @@ def run( step, parset, H ):
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab._v_name)
 
-        sf = solFetcher(soltab, useCache = False)
+        sf = solFetcher(soltab)
         sw = solWriter(soltab, useCache = True)
 
         if sf.getType() != 'phase':
@@ -34,27 +34,26 @@ def run( step, parset, H ):
         sfss = [] # sol fetcher to sub tables
         for soltabToSub in soltabsToSub:
             ss, st = soltabToSub.split('/')
-            sfs = solFetcher(H.getSoltab(ss, st), useCache = False)
-            if sfs.getType() != 'tec' and sfs.getType() != 'clock' and sfs.getType() != 'rm':
+            sfs = solFetcher(H.getSoltab(ss, st))
+            if sfs.getType() != 'tec' and sfs.getType() != 'clock' and sfs.getType() != 'rotationmeasure':
                 logging.warning(soltabToSub+' is not of type clock/tec/rm and cannot be subtracted, ignore.')
                 continue
             sfss.append( sfs )
             logging.info('Subtracting table: '+soltabToSub)
 
+            # a major speed up if tables are assumed with same axes, check that (should be the case in almost any case)
+            for axisName in sfs.getAxesNames():
+                assert all(sfs.getAxisValues(axisName) == sf.getAxisValues(axisName))
+        
         # the only return axes is freq, slower but better code
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes='freq', weight = True):
 
             for sfs in sfss:
 
-                # restrict to phase coordinates
-                newCoord = {}
-                for axisName in coord.keys():
-                    if axisName in sfs.getAxesNames():
-                        if coord[axisName] is list:
-                            newCoord[axisName] = coord[axisName]
-                        else:
-                            newCoord[axisName] = [coord[axisName]] # slightly faster
-                sfs.setSelection(**newCoord)
+                # restrict to have the same coordinates of phases
+                for i, axisName in enumerate(sfs.getAxesNames()):
+                    sfs.selection[i] = selection[sf.getAxesNames().index(axisName)]
+
                 valsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=False))
                 weightsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=True))
 
@@ -64,7 +63,7 @@ def run( step, parset, H ):
                 elif sfs.getType() == 'tec':
                     vals -= -8.44797245e9 * valsSub / coord['freq']
 
-                elif sfs.getType() == 'rm':
+                elif sfs.getType() == 'rotationmeasure':
                     wav = 2.99792458e8/coord['freq']
                     ph = wav * wav * valsSub
                     if coord['pol'] == 'XX':
@@ -78,7 +77,7 @@ def run( step, parset, H ):
             sw.selection = selection
             sw.setValues(vals)
             sw.setValues(weights, weight = True)
-
+            
         sw.addHistory('RESIDUALS by subtracting tables '+' '.join(soltabsToSub))
         sw.flush()
         del sf
