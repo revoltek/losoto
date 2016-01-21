@@ -242,17 +242,25 @@ def getClockTECFit(
         if np.any(chi2select):
             logging.debug('high chi2 of fit, itm: %d %d ' % (itm, np.sum(chi2select)) + str(sol[chi2select]) + 'stations:' + str(np.arange(nSt)[chi2select]) + ' chi2 ' + str(chi2[chi2select]))
             succes = False
+            nrFail[chi2select] += 1
+            nrFail[~chi2select] = 0
+            prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chiselect][prevsol[~chi2select] == 0]  # compensate missing prevsol at first rounds
+            prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 previous solution
             initprevsol[~chi2select] = True # once is True it never becomes False
         else:
+            # prevsol=np.copy(sol)
+            prevsol[prevsol == 0] = sol[prevsol == 0]  # compensate missing prevsol at first rounds
+            prevsol = 0.5 * prevsol + 0.5 * np.copy(sol)
             succes = True
+            initprevsol = np.ones(nSt, dtype=bool)
+            nrFail = np.zeros(sol.shape[0], dtype=int)
 
-        logging.debug(str(initprevsol))
-        nrFail[chi2select] += 1
-        nrFail[~chi2select] = 0
+#        nrFail[chi2select] += 1
+#        nrFail[~chi2select] = 0
         # compensate missing prevsol at first rounds
-        prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chi2select][prevsol[~chi2select] == 0]
+#        prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chi2select][prevsol[~chi2select] == 0]
 #        prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 * previous solution
-        prevsol[~chi2select] = sol[~chi2select] + sol[~chi2select] - prevsol[~chi2select]  # init solution using the extrapolated value (linear regression assuming x2-x1 == 1)
+#        prevsol[~chi2select] = sol[~chi2select] + sol[~chi2select] - prevsol[~chi2select]  # init solution using the extrapolated value (linear regression assuming x2-x1 == 1)
         tecarray[itm] = sol[:, 0]
         clockarray[itm] = sol[:, 1]
     if returnResiduals:
@@ -496,5 +504,3 @@ def doFit(
     if not 'LBA' in stations[0] and len(initSol) < 1:
         clock[:, RSstations + otherstations] += initclock[1][np.newaxis, :, :]
     return (clock, tec, offset, stations)
-
-
