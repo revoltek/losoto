@@ -244,7 +244,7 @@ def getClockTECFit(
             succes = False
             nrFail[chi2select] += 1
             nrFail[~chi2select] = 0
-            prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chiselect][prevsol[~chi2select] == 0]  # compensate missing prevsol at first rounds
+            prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chi2select][prevsol[~chi2select] == 0]  # compensate missing prevsol at first rounds
             prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 previous solution
             initprevsol[~chi2select] = True # once is True it never becomes False
         else:
