@@ -360,7 +360,6 @@ def doFit(
     removePhaseWraps=True,
     combine_pol=False,
     initSol=[],
-    initoffsets=[],
     ):
     # make sure order of axes is as expected
     stidx = axes.index('ant')
@@ -443,9 +442,6 @@ def doFit(
         # logging.info("clock correction" + str(np.remainder(freqs*initclock[1][-1]*-1e-9*2*np.pi+np.pi,2*np.pi)-np.pi))
         # logging.info("data after init clock" + str(np.remainder(data[nT/2,:,-1]+np.pi,2*np.pi)-np.pi))
     offset = np.zeros((nSt, npol), dtype=np.float32)
-    if len(initoffsets) > 0:
-        offset = initoffsets
-        data[:, :, :, :] += offset[:][np.newaxis, np.newaxis]
     # initialize arrays
     clock = np.zeros((nT, nSt, npol), dtype=np.float32)
     tec = np.zeros((nT, nSt, npol), dtype=np.float32)
@@ -473,10 +469,9 @@ def doFit(
         if removePhaseWraps:
             logging.info('wraps: ' + str(wraps))
         logging.info('offsets: ' + str(offset[:, pol]))
-        # remove completely initialoffset?
-        if len(initoffsets) > 0:
-            offset[:, pol] -= initoffsets[:, pol]
-        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis]
+
+        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis] # remove this to test no offset
+
         # remove fitoffset
         if removePhaseWraps:
             initsol = np.zeros((nSt, 2), dtype=np.float32)
