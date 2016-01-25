@@ -92,7 +92,7 @@ def getClockTECFit(
     returnResiduals=True,
     chi2cut=1e8,
     ):
-    stepFraction = 0.2  # step fraction of a 2pi step for brutforce
+    stepFraction = 0.1  # step fraction of a 2pi step for brutforce
     # TODO: add a nonlinear fit after the first guess to arrive to the bottom of the local minima
     nT = ph.shape[0]
     nF = freq.shape[0]
