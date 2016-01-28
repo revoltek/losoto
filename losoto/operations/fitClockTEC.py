@@ -141,8 +141,8 @@ def getClockTECFit(
                             if 'RS' in stations[ist]:
                                 iD1 = -250
                                 iD2 = 250
-                                iTEC1 = -2
-                                iTEC2 = 2
+                                iTEC1 = -1
+                                iTEC2 = 1
                             else:
                                 # large TEC variation for EU stations
                                 iD1 = -250
@@ -151,8 +151,8 @@ def getClockTECFit(
                                 iTEC2 = 5
                             if 'LBA' in stations[ist]:
                                 # no init clock possible due to large TEC effect
-                                iD1 = -500
-                                iD2 = 500
+                                iD1 = -400
+                                iD2 = 400
 
                     logging.info('First %f %f %f %f %f %f ' % (
                         iTEC1,
@@ -248,10 +248,9 @@ def getClockTECFit(
             prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 previous solution
             initprevsol[~chi2select] = True # once is True it never becomes False
         else:
-            # prevsol=np.copy(sol)
+            succes = True
             prevsol[prevsol == 0] = sol[prevsol == 0]  # compensate missing prevsol at first rounds
             prevsol = 0.5 * prevsol + 0.5 * np.copy(sol)
-            succes = True
             initprevsol = np.ones(nSt, dtype=bool)
             nrFail = np.zeros(sol.shape[0], dtype=int)
 
@@ -470,7 +469,7 @@ def doFit(
             logging.info('wraps: ' + str(wraps))
         logging.info('offsets: ' + str(offset[:, pol]))
 
-        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis] # remove this to test no offset
+        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis]
 
         # remove fitoffset
         if removePhaseWraps:
