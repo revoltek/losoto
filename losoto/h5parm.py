@@ -816,6 +816,7 @@ class solFetcher(solHandler):
         # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         try:
             dataVals = dataVals[tuple(self.selection)]
+            print self.selection
         except:
             logging.debug('Optimizing selection reading '+str(self.selection))
             # for performances is important to minimize the fetched data
