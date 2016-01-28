@@ -53,6 +53,7 @@ def run( step, parset, H ):
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
     tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
+    makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
 
     if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
@@ -112,6 +113,7 @@ def run( step, parset, H ):
 
         # cycle on files
         fig = plt.figure()
+		if makeMovies: pngs = [] # store png filenames
         for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axisInShade+axesInPlot):
             
             # clear figure
@@ -300,9 +302,9 @@ def run( step, parset, H ):
 
                             #plt.colorbar(label=sf.getType())
                         else:
-                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color)
+                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], '.', color=color)
                             #ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], '-', color=color)
-                            if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'ro') # plot flagged points
+                            if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'r.') # plot flagged points
                             if minZ != 0:
                                 plt.ylim(ymin=minZ)
                             if maxZ != 0:
@@ -312,8 +314,28 @@ def run( step, parset, H ):
             try:
                 if axisInTable != []: plt.savefig(prefix+filename+'.png', bbox_inches='tight')
                 else: plt.savefig(prefix+filename+'.png')
+				if makeMovie: pngs.append(prefix+filename+'.png')
             except:
                 logging.error('Error saving file, wrong path?')
                 return 1
+
+            if makeMovie:
+				def long_substr(strings):
+					"""
+					Find longest common substring
+					"""
+				    substr = ''
+				    if len(data) > 1 and len(data[0]) > 0:
+				        for i in range(len(data[0])):
+				            for j in range(len(data[0])-i+1):
+				                if j > len(substr) and all(data[0][i:i+j] in x for x in data):
+                				    substr = data[0][i:i+j]
+				    return substr
+				movieName = long_substr(pngs)
+				logging.info('Making movie: '+movieName)
+        		ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
+            		"mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps=20 -nosound -o "+movieName+".mpg mf://"+','.join(pngs)+"  > mencoder.log 2>&1"
+        		os.system(ss)
+				for png in pngs: os.system('rm '+png)
 
     return 0
