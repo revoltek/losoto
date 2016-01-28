@@ -38,6 +38,10 @@ class multiThread(multiprocessing.Process):
             self.inQueue.task_done()
 
 
+    def initGuessMin(self, dTECrange, dclockrange, phase):
+        pass
+        
+
     def initGuess(self, fitguess, ant, freq, phase, refine=1):
         import numpy as np
 
@@ -84,14 +88,13 @@ class multiThread(multiprocessing.Process):
         return [dTECs[idx], dclocks[idx]]
  
 
-    def fit_dTEC_dclock_dFR(self, phases, weights, coord):
+    def fit_dTEC_dclock(self, phases, weights, coord):
         import numpy as np
         import scipy.optimize
     
         # NOTE THE *2 to use rr+ll instead of 0.5*(rr+ll)
         par3complex = lambda p, freq, y: abs(np.cos((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq)) - np.cos(y)) + abs(np.sin((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq)) - np.sin(y))
 #        par3complex = lambda p, freq, y: abs(np.cos((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.cos(y)) + abs(np.sin((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + p[2]) - np.sin(y))
-        rmwavcomplex = lambda RM, wav, y: abs(np.cos(2.*RM[0]*wav*wav)  - np.cos(y)) + abs(np.sin(2.*RM[0]*wav*wav)  - np.sin(y))
 
         times = np.copy(coord['time'])
         fittec = np.zeros(len(times))
@@ -101,7 +104,6 @@ class multiThread(multiprocessing.Process):
         fitweights = np.ones(len(times))
     
         fitguess = None
-        fitrmguess = 0 # good guess
         for t, time in enumerate(times):
 
             # apply flags
@@ -116,8 +118,6 @@ class multiThread(multiprocessing.Process):
                 continue
         
             phase       = (phase_rr + phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-            phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-            wav = c/freq
     
             weight = 0
             cycle = 0
@@ -165,14 +165,11 @@ class multiThread(multiprocessing.Process):
                     fig.subplots_adjust(wspace=0)
                     ax = fig.add_subplot(110)
 
-                    plotrm          = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi)  -1.0*np.pi # notice the factor of 2
-                    #fitfuncfastplot = lambda p, freq: np.mod((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + (p[2]) + 1.0*np.pi, 2.*np.pi) - np.pi 
                     fitfuncfastplot = lambda p, freq: np.mod((4.*np.pi*p[1]*freq) - (2.*8.44797245e9*p[0]/freq) + 1.0*np.pi, 2.*np.pi) - np.pi 
 
                     ax.plot(freq, np.mod(phase + np.pi, 2.*np.pi) - np.pi, 'or' )
-                    ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                    ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
-                    ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
+                    ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, '.b' )
+                    ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, '.g' )
     
                     TEC   = np.mod((-8.44797245e9*(2.*fitresult[0])/freq)+np.pi, 2*np.pi) - np.pi   # notice factor of 2 because rr+ll
                     Clock = np.mod((2.*np.pi*2.*fitresult[1]*freq )+np.pi, 2*np.pi) - np.pi   # notice factor of 2 because rr+ll
@@ -188,7 +185,6 @@ class multiThread(multiprocessing.Process):
                     bigfreqaxis    = bigfreqaxis*1e4
             
                     ax.plot(bigfreqaxis, fitfuncfastplot(fitresult, bigfreqaxis[:]), "r-")        
-                    ax.plot(bigfreqaxis, plotrm(fitresultrm_wav, c/bigfreqaxis[:]), "-", color='purple')
             
                     ax.plot(freq, Clock, ',g') 
                     ax.plot(freq, TEC, ',b') 
@@ -202,17 +198,13 @@ class multiThread(multiprocessing.Process):
 
                 cycle += 1
           
-            # rm is easy, go straight
-            fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
-
             fittec[t] = fitresult[0]
             fitclock[t] = fitresult[1]
             fitoffset[t] = 0 #fitresult[2]
-            fitrm[t] = fitresultrm_wav
             fitweights[t] = weight
 
        # return clock, tec, offset, rm
-        self.outQueue.put([fittec, fitclock, fitoffset, fitrm, fitweights, coord])
+        self.outQueue.put([fittec, fitclock, fitoffset, fitweights, coord])
 
 def run( step, parset, H ):
     """
@@ -273,12 +265,6 @@ def run( step, parset, H ):
                                  weights=np.ones((len(ants),len(times))))
         sw2 = solWriter(st)
         sw2.addHistory('Created by CLOCKTEC2 operation.')
-        st = H.makeSoltab(solsetname, 'rm',
-                                 axesNames=['ant','time'], axesVals=[ants, times],
-                                 vals=np.zeros((len(ants),len(times))),
-                                 weights=np.ones((len(ants),len(times))))
-        sw3 = solWriter(st)
-        sw3.addHistory('Created by CLOCKTEC2 operation.')
             
         import time
         proc=0
@@ -307,17 +293,14 @@ def run( step, parset, H ):
         names = sf.getAxesNames()
         for i in xrange(proc):
             q = outQueue.get()
-            tec, clock, offset, rm, weight, coord = q
+            tec, clock, offset, weight, coord = q
     
             # remove pol from selection
             sw1.setSelection(ant=coord['ant'], time=coord['time'])
             sw2.setSelection(ant=coord['ant'], time=coord['time'])
-            sw3.setSelection(ant=coord['ant'], time=coord['time'])
             sw1.setValues( np.expand_dims(tec, axis=1) )
             sw2.setValues( np.expand_dims(clock, axis=1) )
-            sw3.setValues( np.expand_dims(rm, axis=1) )
             sw1.setValues( np.expand_dims(weight, axis=1), weight=True )
             sw2.setValues( np.expand_dims(weight, axis=1), weight=True )
-            sw3.setValues( np.expand_dims(weight, axis=1), weight=True )
 
     return 0

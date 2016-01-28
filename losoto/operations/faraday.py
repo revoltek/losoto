@@ -87,7 +87,7 @@ def run( step, parset, H ):
     
                     fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
                     # fractional residual
-                    residual = np.mean(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi))
+                    residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi) - np.pi))
 
 #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
 
@@ -115,7 +115,7 @@ def run( step, parset, H ):
                         ax = fig.add_subplot(110)
 
                         # plot rm fit
-                        plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi)  -1.0*np.pi # notice the factor of 2
+                        plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
                         ax.plot(freq, plotrm(fitresultrm_wav, c/freq[:]), "-", color='purple')
 
                         ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
@@ -139,5 +139,5 @@ def run( step, parset, H ):
             sw.setSelection(ant=coord['ant'], time=coord['time'])
             sw.setValues( np.expand_dims(fitrm, axis=1) )
             sw.setValues( np.expand_dims(fitweights, axis=1), weight=True )
-
+            
     return 0

@@ -123,8 +123,7 @@ def getClockTECFit(
 
         if itm == 0 or not succes:
             for ist in xrange(nSt):
-
-             # very first step
+                # very first step
                 if itm == 0 or not initprevsol[ist]:
                     if hasattr(initSol, '__len__') and len(initSol) > ist:
                         iTEC1 = initSol[ist, 0]
@@ -133,7 +132,7 @@ def getClockTECFit(
                         iD2 = initSol[ist, 1] + stepDelay
                     else:
                         if 'CS' in stations[ist]:
-                    #  TODO: here it assumes that ref station is a core station
+                            #  TODO: here it assumes that ref station is a core station
                             iTEC1 = -0.2
                             iTEC2 = 0.2
                             iD1 = -20
@@ -145,13 +144,13 @@ def getClockTECFit(
                                 iTEC1 = -2
                                 iTEC2 = 2
                             else:
-                           # large TEC variation for EU stations
+                                # large TEC variation for EU stations
                                 iD1 = -250
                                 iD2 = 250
                                 iTEC1 = -5
                                 iTEC2 = 5
                             if 'LBA' in stations[ist]:
-                         # no init clock possible due to large TEC effect
+                                # no init clock possible due to large TEC effect
                                 iD1 = -500
                                 iD2 = 500
 
@@ -164,8 +163,7 @@ def getClockTECFit(
                         stepDelay,
                         ))
                 else:
-
-             # further steps with non success
+                    # further steps with non success
                     sol[ist, :] = prevsol[ist, :]
                     iTEC1 = prevsol[ist, 0] - min(1.5, stepdTEC * int(nrFail[ist] / 1))  # /stepFraction
                     iTEC2 = prevsol[ist, 0] + min(1.5, stepdTEC * (int(nrFail[ist] / 1) + 1))  # /stepFraction
@@ -177,13 +175,12 @@ def getClockTECFit(
                         iD2 = prevsol[ist, 1] + stepDelay
 
                 # logging.info("Failure %d : %f %f %f %f %f %f %d "%(ist,iTEC1,iTEC2,stepdTEC,iD1,iD2,stepDelay,nrFail)+str(prevsol[ist]))
-
                 dTECArray = np.arange(iTEC1, iTEC2, stepdTEC)
                 dClockArray = np.arange(iD1, iD2, stepDelay)
                 datatmp = ph[itm, :, ist]
-             # logging.info("getting init par for station %d"%ist)
+                # logging.info("getting init par for station %d"%ist)
                 if datatmp.count() / float(nF) > 0.7:
-                 # do brutforce and update data
+                    # do brutforce and update data
                     par = getInitPar(datatmp, dTECArray, dClockArray, freq, ClockTECfunc)
                     sol[ist, :] = par[:2]
 
@@ -245,16 +242,25 @@ def getClockTECFit(
         if np.any(chi2select):
             logging.debug('high chi2 of fit, itm: %d %d ' % (itm, np.sum(chi2select)) + str(sol[chi2select]) + 'stations:' + str(np.arange(nSt)[chi2select]) + ' chi2 ' + str(chi2[chi2select]))
             succes = False
+            nrFail[chi2select] += 1
+            nrFail[~chi2select] = 0
+            prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chi2select][prevsol[~chi2select] == 0]  # compensate missing prevsol at first rounds
+            prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 previous solution
+            initprevsol[~chi2select] = True # once is True it never becomes False
         else:
+            # prevsol=np.copy(sol)
+            prevsol[prevsol == 0] = sol[prevsol == 0]  # compensate missing prevsol at first rounds
+            prevsol = 0.5 * prevsol + 0.5 * np.copy(sol)
             succes = True
+            initprevsol = np.ones(nSt, dtype=bool)
+            nrFail = np.zeros(sol.shape[0], dtype=int)
 
-        initprevsol = ~chi2select
-        nrFail[chi2select] += 1
-        nrFail[~chi2select] = 0
+#        nrFail[chi2select] += 1
+#        nrFail[~chi2select] = 0
         # compensate missing prevsol at first rounds
-        prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chiselect][prevsol[~chi2select] == 0]
+#        prevsol[~chi2select][prevsol[~chi2select] == 0] = sol[~chi2select][prevsol[~chi2select] == 0]
 #        prevsol[~chi2select] = 0.5 * prevsol[~chi2select] + 0.5 * sol[~chi2select]  # init solution to 0.5 * this solution + 0.5 * previous solution
-        prevsol[~chi2select] = sol[~chi2select] + sol[~chi2select] - prevsol[~chi2select]  # init solution using the extrapolated value (linear regression assuming x2-x1 == 1)
+#        prevsol[~chi2select] = sol[~chi2select] + sol[~chi2select] - prevsol[~chi2select]  # init solution using the extrapolated value (linear regression assuming x2-x1 == 1)
         tecarray[itm] = sol[:, 0]
         clockarray[itm] = sol[:, 1]
     if returnResiduals:
@@ -354,7 +360,6 @@ def doFit(
     removePhaseWraps=True,
     combine_pol=False,
     initSol=[],
-    initoffsets=[],
     ):
     # make sure order of axes is as expected
     stidx = axes.index('ant')
@@ -437,9 +442,6 @@ def doFit(
         # logging.info("clock correction" + str(np.remainder(freqs*initclock[1][-1]*-1e-9*2*np.pi+np.pi,2*np.pi)-np.pi))
         # logging.info("data after init clock" + str(np.remainder(data[nT/2,:,-1]+np.pi,2*np.pi)-np.pi))
     offset = np.zeros((nSt, npol), dtype=np.float32)
-    if len(initoffsets) > 0:
-        offset = initoffsets
-        data[:, :, :, :] += offset[:][np.newaxis, np.newaxis]
     # initialize arrays
     clock = np.zeros((nT, nSt, npol), dtype=np.float32)
     tec = np.zeros((nT, nSt, npol), dtype=np.float32)
@@ -467,10 +469,9 @@ def doFit(
         if removePhaseWraps:
             logging.info('wraps: ' + str(wraps))
         logging.info('offsets: ' + str(offset[:, pol]))
-        # remove completely initialoffset?
-        if len(initoffsets) > 0:
-            offset[:, pol] -= initoffsets[:, pol]
-        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis]
+
+        data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis] # remove this to test no offset
+
         # remove fitoffset
         if removePhaseWraps:
             initsol = np.zeros((nSt, 2), dtype=np.float32)
@@ -498,5 +499,3 @@ def doFit(
     if not 'LBA' in stations[0] and len(initSol) < 1:
         clock[:, RSstations + otherstations] += initclock[1][np.newaxis, :, :]
     return (clock, tec, offset, stations)
-
-
