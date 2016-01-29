@@ -7,7 +7,40 @@
 import logging
 from losoto.operations_lib import *
 
+import multiprocessing
+inQueue = multiprocessing.JoinableQueue()
+
 logging.debug('Loading PLOT module.')
+
+class multiThread(multiprocessing.Process):
+    """
+    This class is a working thread which load parameters from a queue and
+    run the flagging on a chunk of data
+    """
+
+    def __init__(self, inQueue, outQueue):
+        multiprocessing.Process.__init__(self)
+        self.inQueue = inQueue
+        self.outQueue = outQueue
+
+    def run(self):
+
+        while True:
+            parms = self.inQueue.get()
+
+            # poison pill
+            if parms is None:
+                self.inQueue.task_done()
+                break
+
+            self.flag(*parms)
+            self.inQueue.task_done()
+	
+	def plot(self, fig, filename, axisInTable):
+    	logging.info("Saving "+filename+'.png')
+        if axisInTable: plt.savefig(filename+'.png', bbox_inches='tight')
+        else: plt.savefig(filename+'.png')
+
 
 def run( step, parset, H ):
 
@@ -55,6 +88,7 @@ def run( step, parset, H ):
     tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
     makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
 
     if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
@@ -306,17 +340,23 @@ def run( step, parset, H ):
                             if maxZ != 0:
                                 plt.ylim(ymax=maxZ)
 
-            logging.info("Saving "+prefix+filename+'.png')
-            try:
-                if axisInTable != []: plt.savefig(prefix+filename+'.png', bbox_inches='tight')
-                else: plt.savefig(prefix+filename+'.png')
-                if makeMovie: pngs.append(prefix+filename+'.png')
-            except:
-                logging.error('Error saving file, wrong path?')
-                return 1
+            inQueue.put([fig, prefix+filename, axisInTable != []])
+            if makeMovie: pngs.append(prefix+filename+'.png')
 
+			if inQueue.qsize() > ncpu:
+				# poison pill
+        		for i in xrange(ncpu):
+            		inQueue.put(None)
+				inQueue.join()
             # clear figure
-            plt.close()
+            plt.close('all')
+
+		# finish the remnants
+		# poison pill
+        for i in xrange(ncpu):
+            inQueue.put(None)
+		inQueue.join()
+        plt.close('all')
 
         if makeMovie:
             def long_substr(strings):
