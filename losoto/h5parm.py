@@ -188,28 +188,37 @@ class h5parm( object ):
         # create axes
         assert len(axesNames) == len(axesVals)
         dim = []
-        newChunkShape = []
+
         for i, axisName in enumerate(axesNames):
             axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
                     obj=axesVals[i], chunkshape=[len(axesVals[i])])
             axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
+            
+# Let pytables decide
+#        newChunkShape = []
         
         # Put time/freq on max lenght for better performances
-            if chunkShape == None:
-                if axisName == 'time' or axisName == 'freq':
-                    newChunkShape.append(len(axesVals[i])) 
-                else:
-                    newChunkShape.append(1) 
-        if chunkShape == None: chunkShape = newChunkShape
+#            if chunkShape == None:
+#                if axisName == 'time':
+#                    newChunkShape.append(100) 
+#                elif axisName == 'freq':
+#                    newChunkShape.append(10) 
+#                else:
+#                    newChunkShape.append(1) 
+#        if chunkShape == None: chunkShape = newChunkShape
+#        logging.debug('Chunk shape: '+str(chunkShape))
 
         # check if the axes were in the proper order
         assert dim == list(vals.shape)
         assert dim == list(weights.shape)
 
         # create the val/weight Carrays
-        val = self.H.create_carray('/'+solsetName+'/'+soltabName, 'val', obj=vals, chunkshape=chunkShape)
-        weight = self.H.create_carray('/'+solsetName+'/'+soltabName, 'weight', obj=weights, chunkshape=chunkShape)
+        #val = self.H.create_carray('/'+solsetName+'/'+soltabName, 'val', obj=vals, chunkshape=None)
+        #weight = self.H.create_carray('/'+solsetName+'/'+soltabName, 'weight', obj=weights, atom=tables.Float16Atom(), chunkshape=None)
+        # array do not have compression but are much faster
+        val = self.H.create_array('/'+solsetName+'/'+soltabName, 'val', obj=vals)
+        weight = self.H.create_array('/'+solsetName+'/'+soltabName, 'weight', obj=weights, atom=tables.Float16Atom())
         val.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
         weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
@@ -816,7 +825,6 @@ class solFetcher(solHandler):
         # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         try:
             dataVals = dataVals[tuple(self.selection)]
-            print self.selection
         except:
             logging.debug('Optimizing selection reading '+str(self.selection))
             # for performances is important to minimize the fetched data

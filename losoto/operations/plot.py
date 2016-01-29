@@ -112,13 +112,9 @@ def run( step, parset, H ):
         Nc = int(np.ceil(np.float(Nplots)/Nr))
 
         # cycle on files
-        fig = plt.figure()
         if makeMovie: pngs = [] # store png filenames
         for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axisInShade+axesInPlot):
             
-            # clear figure
-            plt.clf()
-
             # set filename
             filename = ''
             for axis in axesInFile:
@@ -318,6 +314,9 @@ def run( step, parset, H ):
             except:
                 logging.error('Error saving file, wrong path?')
                 return 1
+
+            # clear figure
+            plt.close()
 
         if makeMovie:
             def long_substr(strings):
