@@ -298,9 +298,9 @@ def run( step, parset, H ):
 
                             #plt.colorbar(label=sf.getType())
                         else:
-                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], '.', color=color)
+                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
                             #ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], '-', color=color)
-                            if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'r.') # plot flagged points
+                            if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'rx', markersize=3) # plot flagged points
                             if minZ != 0:
                                 plt.ylim(ymin=minZ)
                             if maxZ != 0:
