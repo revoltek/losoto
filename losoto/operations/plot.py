@@ -36,6 +36,9 @@ def run( step, parset, H ):
         out[out > np.pi] -= 2.0 * np.pi
         return out
 
+    def plotmulti(fig, filename):
+        fig.savefig(filename)
+
     soltabs = getParSoltabs( step, parset, H )
 
     # 1- or 2-element array in form X, [Y]
@@ -306,17 +309,14 @@ def run( step, parset, H ):
                             if maxZ != 0:
                                 plt.ylim(ymax=maxZ)
 
+            pool.map(plotmulti, zip(figs,)
             logging.info("Saving "+prefix+filename+'.png')
-            try:
-                if axisInTable != []: plt.savefig(prefix+filename+'.png', bbox_inches='tight')
-                else: plt.savefig(prefix+filename+'.png')
-                if makeMovie: pngs.append(prefix+filename+'.png')
-            except:
-                logging.error('Error saving file, wrong path?')
-                return 1
+            if axisInTable != []: plt.savefig(prefix+filename+'.png', bbox_inches='tight')
+            else: plt.savefig(prefix+filename+'.png')
+            if makeMovie: pngs.append(prefix+filename+'.png')
 
-            # clear figure
-            plt.close()
+            # clear all figures
+            plt.close('all')
 
         if makeMovie:
             def long_substr(strings):
@@ -335,7 +335,7 @@ def run( step, parset, H ):
             # make every movie last a minute, min one second per slide
             fps = np.ceil(len(pngs)/60.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
-                    "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps=1 -nosound -o "+movieName+".mpg mf://"+','.join(pngs)+"  > mencoder.log 2>&1"
+                    "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName+".mpg mf://"+','.join(pngs)+"  > mencoder.log 2>&1"
             os.system(ss)
             for png in pngs: os.system('rm '+png)
 
