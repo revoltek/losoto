@@ -35,7 +35,75 @@ class multiThread(multiprocessing.Process):
             self.plot(*parms)
             self.inQueue.task_done()
     
-    def plot(self, fig, filename, axisInTable):
+    def plot(self, Nplots, cmesh, axesInPlot, xlabelunit, ylabelunit, filename, titles, log, dataCube, minZ, maxZ):
+        # avoids error if re-setting "agg" a second run of plot
+        if not 'matplotlib' in sys.modules:
+            import matplotlib as mpl
+            mpl.rc('font',size =8 )
+            mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+            mpl.use("Agg")
+        import matplotlib.pyplot as plt # after setting "Agg" to speed up
+
+        Nr = int(np.ceil(np.sqrt(Nplots)))
+        Nc = int(np.ceil(np.float(Nplots)/Nr))
+        figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
+        if Nplots == 1: axa = np.array([axa])
+        figgrid.subplots_adjust(hspace=0, wspace=0)
+        axaiter = chain.from_iterable(axa)
+
+        # axes label 
+        if len(axa.shape) == 1: # only one row 
+            [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[:]]
+            if cmesh:
+                axa[0].set_ylabel(axesInPlot[1]+ylabelunit)
+            else:
+                axa[0].set_ylabel(sf.getType())
+        else:
+            [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[-1,:]]
+            if cmesh:
+                [ax.set_ylabel(axesInPlot[1]+ylabelunit) for ax in axa[:,0]]
+            else:
+                [ax.set_ylabel(sf.getType()) for ax in axa[:,0]]
+
+        for Ntab, ax in enumerate(axa):
+            
+            ax.text(.5, .9, titles[Ntab], horizontalalignment='center',fontsize=8,transform=ax.transAxes)
+           
+            # set log scales if activated
+            if 'X' in log: ax.set_xscale('log')
+            if 'Y' in log: ax.set_yscale('log')
+
+            # set colors (red reserved for flags)
+            colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
+
+            for Ncol, data in enumerate(dataCube[Ntab])
+
+                # set color
+                color = next(colors)
+                vals = dataCube[Ncol]
+
+                # plotting
+                if cmesh:
+                    if minZ == 0: minZ = None
+                    if maxZ == 0: maxZ = None
+                    if plotflag:
+                        vals = np.ma.masked_array(vals, mask=(weight == 0))
+                    # if user gives axes names in "wrong" order adapat the values
+                    # pcolorfast do not check if x,y,val axes lenghts are coherent
+                    if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
+                    if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
+                    else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+                    ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
+
+                    #plt.colorbar(label=sf.getType())
+                else:
+                    ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
+                    if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'rx', markersize=3) # plot flagged points
+                    if minZ != 0:
+                        plt.ylim(ymin=minZ)
+                    if maxZ != 0:
+                        plt.ylim(ymax=maxZ)
+
         logging.info("Saving "+filename+'.png')
         if axisInTable: fig.savefig(filename+'.png', bbox_inches='tight')
         else: fig.savefig(filename+'.png')
@@ -47,13 +115,6 @@ def run( step, parset, H ):
     import numpy as np
     from itertools import cycle, chain
     from losoto.h5parm import solFetcher, solHandler
-    # avoids error if re-setting "agg" a second run of plot
-    if not 'matplotlib' in sys.modules:
-        import matplotlib as mpl
-        mpl.rc('font',size =8 )
-        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-        mpl.use("Agg")
-    import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
     def normalize(phase):
         """
@@ -68,9 +129,6 @@ def run( step, parset, H ):
         out[out > np.pi] -= 2.0 * np.pi
         return out
 
-    def plotmulti(fig, filename):
-        fig.savefig(filename)
-
     soltabs = getParSoltabs( step, parset, H )
 
     # 1- or 2-element array in form X, [Y]
@@ -80,8 +138,6 @@ def run( step, parset, H ):
     axisInTable = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "TableAxis"]), [] )
     # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
     axisInCol = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), [] )
-    # the axis to plot is different shades (alpha) - e.g. freq for a small range to compare subband to subband solutions on one plot #
-    axisInShade = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ShadeAxis"]), [] )
     # log='XYZ' to set which axes to put in Log
     log = parset.getString('.'.join(["LoSoTo.Steps", step, "Log"]), "" )
     plotflag = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlag"]), False )
@@ -125,24 +181,23 @@ def run( step, parset, H ):
         cmesh = False
         if len(axesInPlot) == 2:
             cmesh = True
-            # not color/shade possible in 3D
+            # not color possible in 3D
             axisInCol = []
-            axisInShade = []
         elif len(axesInPlot) != 1:
             logging.error('Axes must be a len 1 or 2 array.')
             return 1
 
-        if len(set(axisInTable+axesInPlot+axisInCol+axisInShade)) != len(axisInTable+axesInPlot+axisInCol+axisInShade):
+        if len(set(axisInTable+axesInPlot+axisInCol)) != len(axisInTable+axesInPlot+axisInCol):
             logging.error('Axis defined multiple times.')
             return 1
 
-        if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisInShade) > 1:
-            logging.error('Too many AxisInTable/AxisInCol/AxisInShade, they must be at most one each.')
+        if len(axisInTable) > 1 or len(axisInCol) > 1:
+            logging.error('Too many AxisInTable/AxisInCol, they must be at most one each.')
             return 1
 
         # all axes that are not iterated by anything else
         axesInFile = sf.getAxesNames()
-        for axis in axisInTable+axesInPlot+axisInCol+axisInShade:
+        for axis in axisInTable+axesInPlot+axisInCol:
             axesInFile.remove(axis)
  
         # set subplots scheme
@@ -150,24 +205,16 @@ def run( step, parset, H ):
             Nplots = sf.getAxisLen(axisInTable[0])
         else:
             Nplots = 1
-        Nr = int(np.ceil(np.sqrt(Nplots)))
-        Nc = int(np.ceil(np.float(Nplots)/Nr))
 
         # cycle on files
         if makeMovie: pngs = [] # store png filenames
-        for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axisInShade+axesInPlot):
+        for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axesInPlot):
             
             # set filename
             filename = ''
             for axis in axesInFile:
                 filename += axis+str(coord[axis])+'_'
             filename = filename[:-1] # remove last _
-
-            # create multiplot
-            figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
-            if Nplots == 1: axa = np.array([axa])
-            figgrid.subplots_adjust(hspace=0, wspace=0)
-            axaiter = chain.from_iterable(axa)
 
             # axis vals (they are always the same, regulat arrays)
             xvals = coord[axesInPlot[0]]
@@ -193,7 +240,7 @@ def run( step, parset, H ):
                 xlabelunit = ' [MHz]'
 
             if cmesh:
-                # axis vals (they are always the same, regulat arrays)
+                # axis vals (they are always the same, regular arrays)
                 yvals = coord[axesInPlot[1]]
                 # same as above but for y-axis
                 if axesInPlot[1] == 'ant':
@@ -218,154 +265,79 @@ def run( step, parset, H ):
                     yvals = yvals/1.e6
                     ylabelunit = ' [MHz]'
 
-            # axes label 
-            if len(axa.shape) == 1: # only one row 
-                [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[:]]
-                if cmesh:
-                    axa[0].set_ylabel(axesInPlot[1]+ylabelunit)
-                else:
-                    axa[0].set_ylabel(sf.getType())
-                ax_i = 0
-            else:
-                [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[-1,:]]
-                if cmesh:
-                    [ax.set_ylabel(axesInPlot[1]+ylabelunit) for ax in axa[:,0]]
-                else:
-                    [ax.set_ylabel(sf.getType()) for ax in axa[:,0]]
-
             sf2 = solFetcher(soltab)
             sf2.selection = selection
             # cycle on tables
-            for vals, coord, selection in sf2.getValuesIter(returnAxes=axisInCol+axisInShade+axesInPlot):
-
-                # this axa
-                if len(axa.shape) == 1: # only one row
-                    ax = axa[ax_i]
-                    ax_i+=1
-                else:
-                    ax = next(axaiter)
+            titles = []
+            dataCube = []
+            for Ntab, vals, coord, selection in enumerate(sf2.getValuesIter(returnAxes=axisInCol+axesInPlot)):
 
                 # set tile
-                title = ''
+                titles[Ntab] = ''
                 for axis in coord:
-                    if axis in axesInFile+axesInPlot+axisInCol+axisInShade: continue
-                    title += axis+':'+str(coord[axis])+' '
-                title = title[:-1] # remove last ' '
-                ax.text(.5, .9, title, horizontalalignment='center',fontsize=8,transform=ax.transAxes)
-               
-                # set log scales if activated
-                if 'X' in log: ax.set_xscale('log')
-                if 'Y' in log: ax.set_yscale('log')
-
-                # set colors (red reserved for flags)
-                colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
+                    if axis in axesInFile+axesInPlot+axisInCol: continue
+                    titles[Ntab] += axis+':'+str(coord[axis])+' '
+                titles[Ntab] = title[:-1] # remove last ' '
 
                 sf3 = solFetcher(soltab)
                 sf3.selection = selection
                 # cycle on colors
-                for vals, coord, selection in sf3.getValuesIter(returnAxes=axisInShade+axesInPlot):
+                dataCube.append = []
+                for Ncol, vals, coord, selection in enumerate(sf3.getValuesIter(returnAxes=axesInPlot)):
 
-                    # set color
-                    color = next(colors)
-
-                    # set shades
-                    if axisInShade != []:
-                        shades = cycle(np.arange(0.1,1,0.9/sf.getAxisLen(axisInShade[0])))
-                    else:
-                        shades = cycle([1])
-
-                    sf4 = solFetcher(soltab)
-                    sf4.selection = selection
-                    # cycle on shades
-                    for vals, weight, coord, selection in sf4.getValuesIter(returnAxes=axesInPlot, weight=True, reference=ref):
-
-                        # set shade
-                        shade = next(shades)
-
-                        # add tables if required (e.g. phase/tec)
-                        for sfAdd in sfsAdd:
-                            newCoord = {}
-                            for axisName in coord.keys():
-                                if axisName in sfs.getAxesNames():
-                                    if coord[axisName] is list:
-                                        newCoord[axisName] = coord[axisName]
-                                    else:
-                                        newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
-                            sfAdd.setSelection(**newCoord)
-                            valsAdd = np.squeeze(sfAdd.getValues(retAxesVals=False, weight=False, reference=ref))
-                            if sfAdd.getType() == 'clock':
-                                valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
-                            elif sfAdd.getType() == 'tec':
-                                valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
-                            else:
-                                logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
-                                continue
-
-                            # If clock/tec are single pol then duplicate it (TODO)
-                            # There still a problem with commonscalarphase and pol-dependant clock/tec
-                            #but there's not easy way to combine them
-                            print valsAdd.shape, vals.shape
-                            if not 'pol' in sfAdd.getAxesNames() and 'pol' in sf.getAxesNames():
-                                # find pol axis positions
-                                polAxisPos = sf.getAxesNames().key_idx('pol')
-                                # create a new axes for the table to add and duplicate the values
-                                valsAdd = np.addaxes(valsAdd, polAxisPos)
-
-                            if valsAdd.shape != vals.shape:
-                                logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
-                                return 1
-
-                            vals += valsAdd
-
-                        # normalize
-                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase'):
-                            vals = normalize(vals)
-
-                        # unwrap if required
-                        if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
-                            vals = unwrap(vals)
-        
-                        # plotting
-                        if cmesh:
-                            if minZ == 0: minZ = None
-                            if maxZ == 0: maxZ = None
-                            if plotflag:
-                                vals = np.ma.masked_array(vals, mask=(weight == 0))
-                            # if user gives axes names in "wrong" order adapat the values
-                            # pcolorfast do not check if x,y,val axes lenghts are coherent
-                            if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
-                            if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
-                            else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
-                            ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
-
-                            #plt.colorbar(label=sf.getType())
+                    # add tables if required (e.g. phase/tec)
+                    for sfAdd in sfsAdd:
+                        newCoord = {}
+                        for axisName in coord.keys():
+                            if axisName in sfs.getAxesNames():
+                                if coord[axisName] is list:
+                                    newCoord[axisName] = coord[axisName]
+                                else:
+                                    newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
+                        sfAdd.setSelection(**newCoord)
+                        valsAdd = np.squeeze(sfAdd.getValues(retAxesVals=False, weight=False, reference=ref))
+                        if sfAdd.getType() == 'clock':
+                            valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
+                        elif sfAdd.getType() == 'tec':
+                            valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
                         else:
-                            ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
-                            if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'rx', markersize=3) # plot flagged points
-                            if minZ != 0:
-                                plt.ylim(ymin=minZ)
-                            if maxZ != 0:
-                                plt.ylim(ymax=maxZ)
+                            logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
+                            continue
 
-            logging.debug('add image in queue '+filename)
-            inQueue.put([figgrid, prefix+filename, axisInTable != []])
+                        # If clock/tec are single pol then duplicate it (TODO)
+                        # There still a problem with commonscalarphase and pol-dependant clock/tec
+                        #but there's not easy way to combine them
+                        print valsAdd.shape, vals.shape
+                        if not 'pol' in sfAdd.getAxesNames() and 'pol' in sf.getAxesNames():
+                            # find pol axis positions
+                            polAxisPos = sf.getAxesNames().key_idx('pol')
+                            # create a new axes for the table to add and duplicate the values
+                            valsAdd = np.addaxes(valsAdd, polAxisPos)
+
+                        if valsAdd.shape != vals.shape:
+                            logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
+                            return 1
+
+                        vals += valsAdd
+
+                    # normalize
+                    if (sf.getType() == 'phase' or sf.getType() == 'scalarphase'):
+                        vals = normalize(vals)
+
+                    # unwrap if required
+                    if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
+                        vals = unwrap(vals)
+
+                    dataCube[Ntab][Ncol] = vals
+    
+            inQueue.put(self, Nplots, cmesh, axesInPlot, xlabelunit, ylabelunit, prefix+filename, titles, log, dataCube, minZ, maxZ)
             if makeMovie: pngs.append(prefix+filename+'.png')
 
-            if inQueue.qsize() > ncpu:
-                logging.debug('parallel plotting started!')
-                # poison pill
-                for i in xrange(ncpu):
-                    inQueue.put(None)
-                inQueue.join()
-            # clear figure
-            plt.close('all')
-
-        # finish the remnants
         # poison pill
         for i in xrange(ncpu):
             inQueue.put(None)
+        # finish queue
         inQueue.join()
-        plt.close('all')
 
         if makeMovie:
             def long_substr(strings):
