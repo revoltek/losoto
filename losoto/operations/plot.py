@@ -35,7 +35,9 @@ class multiThread(multiprocessing.Process):
             self.plot(*parms)
             self.inQueue.task_done()
     
-    def plot(self, Nplots, cmesh, axesInPlot, xlabelunit, ylabelunit, filename, titles, log, dataCube, minZ, maxZ):
+    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag):
+        from itertools import cycle, chain
+        import numpy as np
         # avoids error if re-setting "agg" a second run of plot
         if not 'matplotlib' in sys.modules:
             import matplotlib as mpl
@@ -57,15 +59,15 @@ class multiThread(multiprocessing.Process):
             if cmesh:
                 axa[0].set_ylabel(axesInPlot[1]+ylabelunit)
             else:
-                axa[0].set_ylabel(sf.getType())
+                axa[0].set_ylabel(datatype)
         else:
             [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[-1,:]]
             if cmesh:
                 [ax.set_ylabel(axesInPlot[1]+ylabelunit) for ax in axa[:,0]]
             else:
-                [ax.set_ylabel(sf.getType()) for ax in axa[:,0]]
+                [ax.set_ylabel(datatype) for ax in axa[:,0]]
 
-        for Ntab, ax in enumerate(axa):
+        for Ntab, ax in enumerate(axa.flatten()):
             
             ax.text(.5, .9, titles[Ntab], horizontalalignment='center',fontsize=8,transform=ax.transAxes)
            
@@ -76,11 +78,12 @@ class multiThread(multiprocessing.Process):
             # set colors (red reserved for flags)
             colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
 
-            for Ncol, data in enumerate(dataCube[Ntab])
+            for Ncol, data in enumerate(dataCube[Ntab]):
 
                 # set color
                 color = next(colors)
-                vals = dataCube[Ncol]
+                vals = dataCube[Ntab][Ncol]
+                weight = weightCube[Ntab][Ncol]
 
                 # plotting
                 if cmesh:
@@ -90,7 +93,7 @@ class multiThread(multiprocessing.Process):
                         vals = np.ma.masked_array(vals, mask=(weight == 0))
                     # if user gives axes names in "wrong" order adapat the values
                     # pcolorfast do not check if x,y,val axes lenghts are coherent
-                    if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
+#                    if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
                     if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
                     else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
                     ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
@@ -105,15 +108,15 @@ class multiThread(multiprocessing.Process):
                         plt.ylim(ymax=maxZ)
 
         logging.info("Saving "+filename+'.png')
-        if axisInTable: fig.savefig(filename+'.png', bbox_inches='tight')
-        else: fig.savefig(filename+'.png')
+        if axisInTable != []: plt.savefig(filename+'.png', bbox_inches='tight')
+        else: plt.savefig(filename+'.png')
+        plt.close()
 
 
 def run( step, parset, H ):
 
     import os
     import numpy as np
-    from itertools import cycle, chain
     from losoto.h5parm import solFetcher, solHandler
 
     def normalize(phase):
@@ -205,6 +208,8 @@ def run( step, parset, H ):
             Nplots = sf.getAxisLen(axisInTable[0])
         else:
             Nplots = 1
+            
+        datatype = sf.getType()
 
         # cycle on files
         if makeMovie: pngs = [] # store png filenames
@@ -264,26 +269,34 @@ def run( step, parset, H ):
                 elif axesInPlot[1] == 'freq':  # Mhz
                     yvals = yvals/1.e6
                     ylabelunit = ' [MHz]'
+            else: 
+                yvals = None
+                ylabelunit = None
 
             sf2 = solFetcher(soltab)
             sf2.selection = selection
             # cycle on tables
             titles = []
             dataCube = []
-            for Ntab, vals, coord, selection in enumerate(sf2.getValuesIter(returnAxes=axisInCol+axesInPlot)):
+            weightCube = []
+            for Ntab, (vals, coord, selection) in enumerate(sf2.getValuesIter(returnAxes=axisInCol+axesInPlot)):
+                dataCube.append([])
+                weightCube.append([])
 
                 # set tile
-                titles[Ntab] = ''
+                titles.append('')
                 for axis in coord:
                     if axis in axesInFile+axesInPlot+axisInCol: continue
                     titles[Ntab] += axis+':'+str(coord[axis])+' '
-                titles[Ntab] = title[:-1] # remove last ' '
+                titles[Ntab] = titles[Ntab][:-1] # remove last ' '
 
                 sf3 = solFetcher(soltab)
                 sf3.selection = selection
                 # cycle on colors
-                dataCube.append = []
-                for Ncol, vals, coord, selection in enumerate(sf3.getValuesIter(returnAxes=axesInPlot)):
+
+                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axesInPlot, weight=True)):
+                    dataCube[Ntab].append([])
+                    weightCube[Ntab].append([])
 
                     # add tables if required (e.g. phase/tec)
                     for sfAdd in sfsAdd:
@@ -329,8 +342,9 @@ def run( step, parset, H ):
                         vals = unwrap(vals)
 
                     dataCube[Ntab][Ncol] = vals
+                    weightCube[Ntab][Ncol] = weight
     
-            inQueue.put(self, Nplots, cmesh, axesInPlot, xlabelunit, ylabelunit, prefix+filename, titles, log, dataCube, minZ, maxZ)
+            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         # poison pill
