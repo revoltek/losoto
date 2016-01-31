@@ -21,7 +21,7 @@ def run( step, parset, H ):
     FWHM = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FWHM"]), [] )
     mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), "runningmedian" )
 
-    if len(axesToSmooth) != len(FWHM):
+    if mode == "runningmedian" and len(axesToSmooth) != len(FWHM):
         logging.error("Axes and FWHM lenghts must be equal.")
         return 1
 

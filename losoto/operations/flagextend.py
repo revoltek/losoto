@@ -95,7 +95,7 @@ def run( step, parset, H ):
         logging.info("Extending flag on soltab: "+soltab._v_name)
 
         sf = solFetcher(soltab)
-        sw = solWriter(soltab, useCache=False) # remember to flush!
+        sw = solWriter(soltab)
 
         # axis selection
         userSel = {}
@@ -112,7 +112,8 @@ def run( step, parset, H ):
         runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
             runs += 1
-            inQueue.put([weights, coord, axesToExt, selection, percent, size, cycles])
+            # convert to float64 or numpy.ndimage complains
+            inQueue.put([weights.astype(np.float64), coord, axesToExt, selection, percent, size, cycles])
 
         # add poison pills to kill processes
         for i in xrange(ncpu):
@@ -129,9 +130,7 @@ def run( step, parset, H ):
             q = outQueue.get()
             w,sel = q
             sw.selection = sel
-            sw.setValues(w, weight=True)
-
-        #sw.flush()
+            sw.setValues(w.astype(np.float16), weight=True) # convert back to np.float16
 
         sw.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))
     return 0

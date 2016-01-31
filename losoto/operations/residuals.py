@@ -9,7 +9,7 @@
 import logging
 from losoto.operations_lib import *
 
-logging.debug('Loading RESIDUAL module.')
+logging.debug('Loading RESIDUALS module.')
 
 def run( step, parset, H ):
     """
@@ -25,18 +25,14 @@ def run( step, parset, H ):
         logging.info("--> Working on soltab: "+soltab._v_name)
 
         sf = solFetcher(soltab)
-        sw = solWriter(soltab, useCache = True)
-
-        if sf.getType() != 'phase':
-            logging.warning(soltab._v_name+' is not of type phase, ignore.')
-            continue
+        sw = solWriter(soltab) #, useCache = True) TODO
 
         sfss = [] # sol fetcher to sub tables
         for soltabToSub in soltabsToSub:
             ss, st = soltabToSub.split('/')
             sfs = solFetcher(H.getSoltab(ss, st))
-            if sfs.getType() != 'tec' and sfs.getType() != 'clock' and sfs.getType() != 'rotationmeasure':
-                logging.warning(soltabToSub+' is not of type clock/tec/rm and cannot be subtracted, ignore.')
+            if sf.getType() != 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure'):
+                logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
                 continue
             sfss.append( sfs )
             logging.info('Subtracting table: '+soltabToSub)
@@ -45,41 +41,49 @@ def run( step, parset, H ):
             for axisName in sfs.getAxesNames():
                 assert all(sfs.getAxisValues(axisName) == sf.getAxisValues(axisName))
         
-        # the only return axes is freq, slower but better code
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes='freq', weight = True):
+        if sf.getType() == 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure'):
+            # the only return axes is freq, slower but better code
+            for vals, weights, coord, selection in sf.getValuesIter(returnAxes='freq', weight = True):
 
-            for sfs in sfss:
+                for sfs in sfss:
 
-                # restrict to have the same coordinates of phases
-                for i, axisName in enumerate(sfs.getAxesNames()):
-                    sfs.selection[i] = selection[sf.getAxesNames().index(axisName)]
+                    # restrict to have the same coordinates of phases
+                    for i, axisName in enumerate(sfs.getAxesNames()):
+                        sfs.selection[i] = selection[sf.getAxesNames().index(axisName)]
 
-                valsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=False))
-                weightsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=True))
+                    valsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=False))
+                    weightsSub = np.squeeze(sfs.getValues(retAxesVals=False, weight=True))
 
-                if sfs.getType() == 'clock':
-                    vals -= 2. * np.pi * valsSub * coord['freq']
+                    if sfs.getType() == 'clock':
+                        vals -= 2. * np.pi * valsSub * coord['freq']
 
-                elif sfs.getType() == 'tec':
-                    vals -= -8.44797245e9 * valsSub / coord['freq']
+                    elif sfs.getType() == 'tec':
+                        vals -= -8.44797245e9 * valsSub / coord['freq']
 
-                elif sfs.getType() == 'rotationmeasure':
-                    wav = 2.99792458e8/coord['freq']
-                    ph = wav * wav * valsSub
-                    if coord['pol'] == 'XX':
-                        vals -= ph
-                    elif coord['pol'] == 'YY':
-                        vals += ph
+                    elif sfs.getType() == 'rotationmeasure':
+                        wav = 2.99792458e8/coord['freq']
+                        ph = wav * wav * valsSub
+                        if coord['pol'] == 'XX':
+                            vals -= ph
+                        elif coord['pol'] == 'YY':
+                            vals += ph
+                    else:
+                        vals -= valsSub
 
-                # flag data that are contaminated by flagged clock/tec data
-                weights[np.where(weightsSub == 0)] == 0
+                    # flag data that are contaminated by flagged clock/tec data
+                    weights[np.where(weightsSub == 0)] = 0
 
-            sw.selection = selection
-            sw.setValues(vals)
-            sw.setValues(weights, weight = True)
+                sw.selection = selection
+                sw.setValues(vals)
+                sw.setValues(weights, weight = True)
+        else:
+                sw.setValues(sf.getValues(retAxesVals=False)-sfs.getValues(retAxesVals=False))
+                weight = sf.getValues(retAxesVals=False, weight=True)
+                weight[sfs.getValues(retAxesVals=False, weight=True) == 0] = 0
+                sw.setValues(weight, weight = True)
             
         sw.addHistory('RESIDUALS by subtracting tables '+' '.join(soltabsToSub))
-        sw.flush()
+        #sw.flush()
         del sf
         del sw
         

@@ -742,7 +742,7 @@ class solWriter(solHandler):
         # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         try:
             # the float check allows quick reset of large arrays to a single value
-            if type(vals) is float or type(vals) is np.float64: dataVals[tuple(self.selection)] = vals
+            if isinstance(vals, (np.floating, float)): dataVals[tuple(self.selection)] = vals
             # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
             else: dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
         except:
