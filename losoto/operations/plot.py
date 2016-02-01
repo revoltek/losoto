@@ -152,7 +152,7 @@ def run( step, parset, H ):
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
 
     if makeMovie: 
-        prefix = prefix+'__tmp'
+        prefix = prefix+'__tmp__'
 
     if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
@@ -323,7 +323,6 @@ def run( step, parset, H ):
                         # If clock/tec are single pol then duplicate it (TODO)
                         # There still a problem with commonscalarphase and pol-dependant clock/tec
                         #but there's not easy way to combine them
-                        print valsAdd.shape, vals.shape
                         if not 'pol' in sfAdd.getAxesNames() and 'pol' in sf.getAxesNames():
                             # find pol axis positions
                             polAxisPos = sf.getAxesNames().key_idx('pol')
@@ -375,7 +374,6 @@ def run( step, parset, H ):
             fps = np.ceil(len(pngs)/10.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                     "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
-            print ss
             os.system(ss)
             for png in pngs: os.system('rm '+png)
 
