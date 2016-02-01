@@ -192,8 +192,7 @@ def getClockTECFit(
             # find 2pi jumps in unwrapped data (versus frequency)
             wrapjumps = data[itm, 1:] + 2 * np.pi * wraps[1:] - data[itm, :-1] - 2 * np.pi * wraps[:-1]
             jumps = np.int32(np.logical_and(np.absolute(wrapjumps[1:-1]) > 1.5 * np.pi, np.logical_and(np.absolute(wrapjumps[2:]) < 0.5 * np.pi, np.absolute(wrapjumps[:-2]) < 0.5 * np.pi)))
-            print type(jumps), type(jumps[0])
-            jumps *= np.sign(wrapjumps[1:-1])
+            jumps *= np.sign(wrapjumps[1:-1]).astype(jumps.dtype)
             # jumps should be subtracted cummulative
             jumps = np.cumsum(jumps, axis=0)
             wraps[2:-1] -= jumps
