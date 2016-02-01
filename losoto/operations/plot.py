@@ -151,6 +151,9 @@ def run( step, parset, H ):
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
 
+    if makeMovie: 
+        prefix = prefix+'__tmp'
+
     if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
         os.makedirs(os.path.dirname(prefix))
