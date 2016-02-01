@@ -138,8 +138,9 @@ def getParAxis( step, parset, H, axisName ):
     # minmax - local
     if axisVals == '' or axisVals == []:
         axisVals = parset.getDoubleVector( stepOptName+'.minmax', [] )
+        if len(axisVals) == 2: axisVals.append(1) # assume no step if not given
         if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1]} 
+            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
 
     # global
     if axisVals == '' or axisVals == []:
@@ -151,8 +152,9 @@ def getParAxis( step, parset, H, axisName ):
     # minmax - global
     if axisVals == '' or axisVals == []:
         axisVals = parset.getDoubleVector( "LoSoTo."+axisName.lower()+'.minmax', [] )
+        if len(axisVals) == 2: axisVals.append(1)
         if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1]} 
+            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
 
     # default val
     if axisVals == '' or axisVals == []:

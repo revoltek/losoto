@@ -190,8 +190,9 @@ class h5parm( object ):
         dim = []
 
         for i, axisName in enumerate(axesNames):
-            axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
-                    obj=axesVals[i], chunkshape=[len(axesVals[i])])
+            #axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
+            #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
+            axis = self.H.create_array('/'+solsetName+'/'+soltabName, axisName, obj=axesVals[i])
             axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
             
@@ -511,7 +512,7 @@ class solHandler( object ):
         """
         set a default selection criteria.
         Keyword arguments:
-        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345'}.
+        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
         """
         # create an initial selection which selects all values
         # any selection will modify only the slice relative to that axis
@@ -551,6 +552,9 @@ class solHandler( object ):
                 else:
                     logging.error("Selection with a dict must have 'min' and/or 'max' entry. Use all available values.")
                     continue
+                if 'step' in selVal:
+                    type(self.selection[idx]) == slice # to add a step we need a slice
+                    self.selection[idx] = slice(self.selection[idx].start, self.selection[idx].stop, selVal['step'])
 
             # single val/list -> exact matching
             else:
