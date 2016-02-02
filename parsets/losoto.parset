@@ -90,6 +90,7 @@ LoSoTo.Steps.reset.Operation = RESET
 
 LoSoTo.Steps.residuals.Operation = RESIDUALS
 LoSoTo.Steps.residuals.Sub = [sol000/tec000,sol000/clock000] # tables to subtract (only clock and tec from a phase table)
+LoSoTo.Steps.residuals.Ratio = False # return the ratio instead of subtracting
 
 LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values

@@ -20,12 +20,13 @@ def run( step, parset, H ):
 
     soltabs = getParSoltabs( step, parset, H )
     soltabsToSub = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Sub"]), [] )
+    ratio = parset.getBool('.'.join(["LoSoTo.Steps", step, "Ratio"]), False )
 
     for soltab in openSoltabs( H, soltabs ):
         logging.info("--> Working on soltab: "+soltab._v_name)
 
         sf = solFetcher(soltab)
-        sw = solWriter(soltab) #, useCache = True) TODO
+        sw = solWriter(soltab, useCache = True)
 
         sfss = [] # sol fetcher to sub tables
         for soltabToSub in soltabsToSub:
@@ -77,13 +78,14 @@ def run( step, parset, H ):
                 sw.setValues(vals)
                 sw.setValues(weights, weight = True)
         else:
-                sw.setValues(sf.getValues(retAxesVals=False)-sfs.getValues(retAxesVals=False))
+                if ratio: sw.setValues(sf.getValues(retAxesVals=False)/sfs.getValues(retAxesVals=False))
+                else: sw.setValues(sf.getValues(retAxesVals=False)-sfs.getValues(retAxesVals=False))
                 weight = sf.getValues(retAxesVals=False, weight=True)
                 weight[sfs.getValues(retAxesVals=False, weight=True) == 0] = 0
                 sw.setValues(weight, weight = True)
             
         sw.addHistory('RESIDUALS by subtracting tables '+' '.join(soltabsToSub))
-        #sw.flush()
+        sw.flush()
         del sf
         del sw
         

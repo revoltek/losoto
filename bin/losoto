@@ -138,7 +138,7 @@ if __name__=='__main__':
            logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
         else:
            logging.info("Step \'" + step + "\' completed successfully.")
-        logging.debug("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - start), (time.clock() - startcpu) ))
+        logging.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - start), (time.clock() - startcpu) ))
 
     del H
     logging.info("Time for all steps: %i s (cpu: %i s)." % ( ( time.time() - globalstart), (time.clock() - globalstartcpu) ))

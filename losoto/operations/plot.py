@@ -297,7 +297,7 @@ def run( step, parset, H ):
                 sf3.selection = selection
                 # cycle on colors
 
-                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axesInPlot, weight=True)):
+                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axesInPlot, weight=True, reference=ref)):
                     dataCube[Ntab].append([])
                     weightCube[Ntab].append([])
 
