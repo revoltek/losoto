@@ -81,7 +81,7 @@ def run( step, parset, H ):
             axes=[i for i in names if i in returnAxes]
             clock,tec,offset,newstations=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
                   flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps)
-            weights=tec>-5
+            weights=(tec>-5)
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
 

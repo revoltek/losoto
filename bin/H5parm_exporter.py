@@ -10,10 +10,10 @@ _author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de), David Rafferty (draffe
 import sys, os, glob, re, time
 import numpy as np
 import shutil
-import progressbar
 import logging
 import pyrap.tables as pt
 import lofar.parmdb
+import losoto.progressbar as progressbar
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm, solWriter, solFetcher

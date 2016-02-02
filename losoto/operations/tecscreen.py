@@ -22,7 +22,7 @@ def calculate_piercepoints(station_positions, source_positions, times, height = 
     """
     import pyrap.measures
     import numpy as np
-    import progressbar
+    import losoto.progressbar as progressbar
 
     logging.info('Calculating screen pierce-point locations and airmass values...')
     N_sources = source_positions.shape[0]
@@ -166,7 +166,7 @@ def fit_screen_to_tec(station_names, source_names, pp, airmass, rr, times,
     """
     import numpy as np
     from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
-    import progressbar
+    import losoto.progressbar as progressbar
 
     logging.info('Fitting screens to TEC values...')
     N_stations = len(station_names)
