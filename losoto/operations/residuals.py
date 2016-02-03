@@ -78,7 +78,7 @@ def run( step, parset, H ):
                 sw.setValues(vals)
                 sw.setValues(weights, weight = True)
         else:
-                if ratio: sw.setValues(sf.getValues(retAxesVals=False)/sfs.getValues(retAxesVals=False))
+                if ratio: sw.setValues((sf.getValues(retAxesVals=False)-sfs.getValues(retAxesVals=False))/sfs.getValues(retAxesVals=False))
                 else: sw.setValues(sf.getValues(retAxesVals=False)-sfs.getValues(retAxesVals=False))
                 weight = sf.getValues(retAxesVals=False, weight=True)
                 weight[sfs.getValues(retAxesVals=False, weight=True) == 0] = 0
