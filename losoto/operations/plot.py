@@ -67,9 +67,10 @@ class multiThread(multiprocessing.Process):
             else:
                 [ax.set_ylabel(datatype) for ax in axa[:,0]]
 
-        for Ntab, ax in enumerate(axa.flatten()):
-            
-            ax.text(.5, .9, titles[Ntab], horizontalalignment='center',fontsize=8,transform=ax.transAxes)
+        for Ntab, title in enumerate(titles):
+           
+            ax = axa.flatten()[Ntab]
+            ax.text(.5, .9, title, horizontalalignment='center',fontsize=8,transform=ax.transAxes)
            
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')

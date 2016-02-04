@@ -61,6 +61,10 @@ def run( step, parset, H ):
             
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference = refAnt):
 
+            if len(coord['freq']) < 10:
+                logging.error('Faraday rotation estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
+                return 1
+
             fitrm = np.zeros(len(times))
             fitweights = np.ones(len(times))
             fitrmguess = 0 # good guess

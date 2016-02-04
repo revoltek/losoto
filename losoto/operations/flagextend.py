@@ -40,7 +40,7 @@ class multiThread(multiprocessing.Process):
 
     def flag(self, weights, coord, axesToExt, selection, percent=90, size=11, cycles=3):
         """
-        Reject outliers using a running median
+        Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
         percent = percent of surrounding flagged point to extend the flag
         
