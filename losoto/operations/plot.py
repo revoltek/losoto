@@ -35,7 +35,7 @@ class multiThread(multiprocessing.Process):
             self.plot(*parms)
             self.inQueue.task_done()
     
-    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag):
+    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie):
         from itertools import cycle, chain
         import numpy as np
         # avoids error if re-setting "agg" a second run of plot
@@ -48,7 +48,8 @@ class multiThread(multiprocessing.Process):
 
         Nr = int(np.ceil(np.sqrt(Nplots)))
         Nc = int(np.ceil(np.float(Nplots)/Nr))
-        figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
+        if makeMovie: figgrid, axa = plt.subplots(Nc, Nr, figsize=(5+2*Nc,4+1*Nr), sharex=True, sharey=True)
+        else: figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
         if Nplots == 1: axa = np.array([axa])
         figgrid.subplots_adjust(hspace=0, wspace=0)
         axaiter = chain.from_iterable(axa)
@@ -347,7 +348,7 @@ def run( step, parset, H ):
                     dataCube[Ntab][Ncol] = vals
                     weightCube[Ntab][Ncol] = weight
     
-            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag])
+            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         # poison pill
@@ -368,14 +369,15 @@ def run( step, parset, H ):
                             if j > len(substr) and all(strings[0][i:i+j] in x for x in strings):
                                 substr = strings[0][i:i+j]
                 return substr
-            movieName = long_substr(pngs)
+            movieName = long_substr(pngs).replace('__tmp__','')
             assert movieName != '' # need a common prefix, use prefix keyword in case
             logging.info('Making movie: '+movieName)
             # make every movie last 10 sec, min one second per slide
-            fps = np.ceil(len(pngs)/10.)
+            fps = np.ceil(len(pngs)/20.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                     "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
-            os.system(ss)
-            for png in pngs: os.system('rm '+png)
+            print ss
+            #os.system(ss)
+            #for png in pngs: os.system('rm '+png)
 
     return 0
