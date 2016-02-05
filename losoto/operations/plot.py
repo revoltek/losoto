@@ -93,12 +93,12 @@ class multiThread(multiprocessing.Process):
                     if maxZ == 0: maxZ = None
                     if plotflag:
                         vals = np.ma.masked_array(vals, mask=(weight == 0))
-                    # if user gives axes names in "wrong" order adapat the values
-                    # pcolorfast do not check if x,y,val axes lenghts are coherent
-#                    if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
+                    # stratch the imshow output to fill the plot size
+                    bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
-                    else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
-                    ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
+                    #else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+                    else: ax.imshow(vals, interpolation="nearest", cmap=plt.cm.rainbow, extent=[0,vals.shape[0],0,vals.shape[1]], aspect=float(vals.shape[0]*bbox.height)/float(vals.shape[1]*bbox.width))
+                    #ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
 
                     #plt.colorbar(label=sf.getType())
                 else:

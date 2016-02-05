@@ -139,7 +139,7 @@ if __name__=='__main__':
         else:
            logging.info("Step \'" + step + "\' completed successfully.")
         logging.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - start), (time.clock() - startcpu) ))
-
+        gc.collect()
     del H
     logging.info("Time for all steps: %i s (cpu: %i s)." % ( ( time.time() - globalstart), (time.clock() - globalstartcpu) ))
     logging.info("Done.")
