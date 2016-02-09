@@ -95,11 +95,10 @@ class multiThread(multiprocessing.Process):
                         vals = np.ma.masked_array(vals, mask=(weight == 0))
                     # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
-                    if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
+                    aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
+                    if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     #else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
-                    else: ax.imshow(vals, interpolation="nearest", cmap=plt.cm.rainbow, extent=[0,vals.shape[0],0,vals.shape[1]], aspect=float(vals.shape[0]*bbox.height)/float(vals.shape[1]*bbox.width))
-                    #ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
-
+                    else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     #plt.colorbar(label=sf.getType())
                 else:
                     ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
