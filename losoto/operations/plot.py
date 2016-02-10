@@ -35,7 +35,8 @@ class multiThread(multiprocessing.Process):
             self.plot(*parms)
             self.inQueue.task_done()
     
-    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie):
+
+    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie):
         import os, pickle
         from itertools import cycle, chain
         import numpy as np
@@ -92,14 +93,11 @@ class multiThread(multiprocessing.Process):
                 # set color
                 color = next(colors)
                 vals = dataCube[Ntab][Ncol]
-                weight = weightCube[Ntab][Ncol]
 
                 # plotting
                 if cmesh:
                     if minZ == 0: minZ = None
                     if maxZ == 0: maxZ = None
-                    if plotflag:
-                        vals = np.ma.masked_array(vals, mask=(weight == 0))
                     # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
@@ -108,8 +106,8 @@ class multiThread(multiprocessing.Process):
                     else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     #plt.colorbar(label=sf.getType())
                 else:
-                    ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
-                    if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'rx', markersize=3) # plot flagged points
+                    ax.plot(xvals[~vals.mask], vals[~vals.mask], 'o', color=color, markersize=3)
+                    if plotflag: ax.plot(xvals[vals.mask], vals[vals.mask], 'rx', markersize=3) # plot flagged points
                     if minZ != 0:
                         plt.ylim(ymin=minZ)
                     if maxZ != 0:
@@ -354,13 +352,15 @@ def run( step, parset, H ):
                     dataCube[Ntab][Ncol] = vals.astype(np.float16) # make data smaller to use less memory
                     weightCube[Ntab][Ncol] = weight
     
+            dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
             # if dataCube too large (> 500 MB) write down on a pickle
             if np.array(dataCube).nbytes > 1024*1024*500: 
                 logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/1024*1024)+' MB.')
                 pfile = str(random.randint(0,1e9))+'.pickle'
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile
-            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie])
+
+            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         # poison pill
