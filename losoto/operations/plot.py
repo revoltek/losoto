@@ -36,6 +36,7 @@ class multiThread(multiprocessing.Process):
             self.inQueue.task_done()
     
     def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie):
+        import os, pickle
         from itertools import cycle, chain
         import numpy as np
         # avoids error if re-setting "agg" a second run of plot
@@ -45,6 +46,12 @@ class multiThread(multiprocessing.Process):
             mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
+
+        if type(dataCube) is str:
+            logging.debug('getting data')
+            dataCube_p = pickle.load(open(dataCube, "rb"))
+            os.system('rm '+dataCube)
+            dataCube = dataCube_p
 
         Nr = int(np.ceil(np.sqrt(Nplots)))
         Nc = int(np.ceil(np.float(Nplots)/Nr))
@@ -116,7 +123,7 @@ class multiThread(multiprocessing.Process):
 
 def run( step, parset, H ):
 
-    import os
+    import os, pickle, random
     import numpy as np
     from losoto.h5parm import solFetcher, solHandler
 
@@ -344,9 +351,15 @@ def run( step, parset, H ):
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
 
-                    dataCube[Ntab][Ncol] = vals
+                    dataCube[Ntab][Ncol] = vals.astype(np.float16) # make data smaller to use less memory
                     weightCube[Ntab][Ncol] = weight
     
+            # if dataCube too large (> 500 MB) write down on a pickle
+            if np.array(dataCube).nbytes > 1024*1024*500: 
+                logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/1024*1024)+' MB.')
+                pfile = str(random.randint(0,1e9))+'.pickle'
+                pickle.dump(dataCube, open(pfile, 'wb'))
+                dataCube = pfile
             inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 

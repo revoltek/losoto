@@ -47,10 +47,11 @@ class h5parm( object ):
         self.fileName = h5parmFile
 
 
-    def __del__(self):
+    def close(self):
         """
         Flush and close the open table
         """
+        logging.debug('Closing table.')
         self.H.close()
 
 

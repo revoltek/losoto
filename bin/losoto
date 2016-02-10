@@ -69,17 +69,18 @@ if __name__=='__main__':
         logging.critical('Missing H5parm file.')
         sys.exit(1)
 
-    # Open the H5parm
-    H = h5parm(h5parmFile, readonly=False)
-
     if options.i:
+        H = h5parm(h5parmFile, readonly=True)
         # List h5parm information if desired
         print(H.printInfo(options.filter, verbouse=options.v))
+        del H
         sys.exit(0)
     elif options.delete != None:
+        H = h5parm(h5parmFile, readonly=False)
         # Delete the soltab and exit
         solset, soltab = options.delete.split('/')
         H.delSoltab(solset, soltab)
+        del H
         sys.exit(0)
     else:
         try: parsetFile = args[1]
@@ -100,7 +101,7 @@ if __name__=='__main__':
 
     # Possible operations, linked to relative function
     import losoto.operations as operations
-    operations = { 
+    ops = { 
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
@@ -124,22 +125,27 @@ if __name__=='__main__':
     }
 
     globalstart = time.time()
-    globalstartcpu = time.clock()
     for step in steps:
-        operation = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
-        if not operation in operations:
-            logging.error('Unkown operation: '+operation)
+        op = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
+        H = h5parm(h5parmFile, readonly=False)
+        if not op in ops:
+            logging.error('Unkown operation: '+op)
             continue
-        logging.info("--> Starting \'" + step + "\' step (operation: " + operation + ").")
-        start = time.time()
-        startcpu = time.clock()
-        returncode = operations[ operation ].run( step, parset, H )
-        if returncode != 0:
-           logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
-        else:
-           logging.info("Step \'" + step + "\' completed successfully.")
-        logging.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - start), (time.clock() - startcpu) ))
+        with operations.timer(logging, step, op) as t:
+            returncode = ops[ op ].run( step, parset, H )
+            if returncode != 0:
+               logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
+            else:
+               logging.info("Step \'" + step + "\' completed successfully.")
+        H.close()
         gc.collect()
-    del H
-    logging.info("Time for all steps: %i s (cpu: %i s)." % ( ( time.time() - globalstart), (time.clock() - globalstartcpu) ))
+        #def namestr(obj, namespace):
+        #    return [name for name in namespace if namespace[name] is obj]
+        #referrers = gc.get_referrers(H)
+        #for referrer in referrers:
+        #    print namestr(referrer, globals())
+        #    print namestr(referrer, locals())
+        #print gc.garbage
+
+    logging.info("Time for all steps: %i s." % ( time.time() - globalstart ))
     logging.info("Done.")
