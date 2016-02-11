@@ -64,6 +64,8 @@ def run( step, parset, H ):
 
         sw.flush()
         sw.addHistory('SMOOTH (over %s with mode = %s)' % (axesToSmooth, mode))
+        del sf
+        del sw
     return 0
 
 

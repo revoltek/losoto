@@ -83,7 +83,8 @@ def run( step, parset, H ):
                         logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx[0])))
         
                     if len(freq) < 10:
-                        logging.warning('No valid data found for clock/tec.')
+                        fitweights[t] = 0
+                        logging.warning('No valid data found for Faraday fitting.')
                         continue
         
                     phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
@@ -143,5 +144,8 @@ def run( step, parset, H ):
             sw.setSelection(ant=coord['ant'], time=coord['time'])
             sw.setValues( np.expand_dims(fitrm, axis=1) )
             sw.setValues( np.expand_dims(fitweights, axis=1), weight=True )
-            
+
+        del st
+        del sw        
+        del sf
     return 0

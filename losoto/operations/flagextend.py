@@ -133,4 +133,6 @@ def run( step, parset, H ):
             sw.setValues(w.astype(np.float16), weight=True) # convert back to np.float16
 
         sw.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))
+        del sf
+        del sw
     return 0

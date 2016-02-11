@@ -35,7 +35,9 @@ class multiThread(multiprocessing.Process):
             self.plot(*parms)
             self.inQueue.task_done()
     
-    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie):
+
+    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie):
+        import os, pickle
         from itertools import cycle, chain
         import numpy as np
         # avoids error if re-setting "agg" a second run of plot
@@ -45,6 +47,12 @@ class multiThread(multiprocessing.Process):
             mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
+
+        if type(dataCube) is str:
+            logging.debug('getting data')
+            dataCube_p = pickle.load(open(dataCube, "rb"))
+            os.system('rm '+dataCube)
+            dataCube = dataCube_p
 
         Nr = int(np.ceil(np.sqrt(Nplots)))
         Nc = int(np.ceil(np.float(Nplots)/Nr))
@@ -85,25 +93,21 @@ class multiThread(multiprocessing.Process):
                 # set color
                 color = next(colors)
                 vals = dataCube[Ntab][Ncol]
-                weight = weightCube[Ntab][Ncol]
 
                 # plotting
                 if cmesh:
                     if minZ == 0: minZ = None
                     if maxZ == 0: maxZ = None
-                    if plotflag:
-                        vals = np.ma.masked_array(vals, mask=(weight == 0))
-                    # if user gives axes names in "wrong" order adapat the values
-                    # pcolorfast do not check if x,y,val axes lenghts are coherent
-#                    if sf4.getAxesNames().index(axesInPlot[0]) < sf4.getAxesNames().index(axesInPlot[1]): vals = vals.T
-                    if log: ax.pcolormesh(xvals, yvals , np.log10(vals), vmin=minZ, vmax=maxZ)
-                    else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
-                    ax.axis([xvals.min(), xvals.max(), yvals.min(), yvals.max()])
-
+                    # stratch the imshow output to fill the plot size
+                    bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
+                    aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
+                    if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
+                    #else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
+                    else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     #plt.colorbar(label=sf.getType())
                 else:
-                    ax.plot(xvals[np.where(weight!=0)], vals[np.where(weight!=0)], 'o', color=color, markersize=3)
-                    if plotflag: ax.plot(xvals[np.where(weight==0)], vals[np.where(weight==0)], 'rx', markersize=3) # plot flagged points
+                    ax.plot(xvals[~vals.mask], vals[~vals.mask], 'o', color=color, markersize=3)
+                    if plotflag: ax.plot(xvals[vals.mask], vals[vals.mask], 'rx', markersize=3) # plot flagged points
                     if minZ != 0:
                         plt.ylim(ymin=minZ)
                     if maxZ != 0:
@@ -117,7 +121,7 @@ class multiThread(multiprocessing.Process):
 
 def run( step, parset, H ):
 
-    import os
+    import os, pickle, random
     import numpy as np
     from losoto.h5parm import solFetcher, solHandler
 
@@ -345,10 +349,18 @@ def run( step, parset, H ):
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
 
-                    dataCube[Ntab][Ncol] = vals
+                    dataCube[Ntab][Ncol] = vals.astype(np.float16) # make data smaller to use less memory
                     weightCube[Ntab][Ncol] = weight
     
-            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, weightCube, minZ, maxZ, plotflag, makeMovie])
+            dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
+            # if dataCube too large (> 500 MB) write down on a pickle
+            if np.array(dataCube).nbytes > 1024*1024*500: 
+                logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/1024*1024)+' MB.')
+                pfile = str(random.randint(0,1e9))+'.pickle'
+                pickle.dump(dataCube, open(pfile, 'wb'))
+                dataCube = pfile
+
+            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         # poison pill
@@ -376,8 +388,7 @@ def run( step, parset, H ):
             fps = np.ceil(len(pngs)/20.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                     "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
-            print ss
-            #os.system(ss)
-            #for png in pngs: os.system('rm '+png)
+            os.system(ss)
+            for png in pngs: os.system('rm '+png)
 
     return 0
