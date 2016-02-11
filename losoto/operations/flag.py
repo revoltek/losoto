@@ -300,6 +300,7 @@ def run( step, parset, H ):
                 sw.setValues((~f).astype(float), weight=True)
 
         sw.flush()
-
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
+        del sw
+        del sf
     return 0
