@@ -53,7 +53,8 @@ class multiThread(multiprocessing.Process):
             dataCube_p = pickle.load(open(dataCube, "rb"))
             os.system('rm '+dataCube)
             dataCube = dataCube_p
-
+        
+        autominZ = None; automaxZ = None
         Nr = int(np.ceil(np.sqrt(Nplots)))
         Nc = int(np.ceil(np.float(Nplots)/Nr))
         if makeMovie: figgrid, axa = plt.subplots(Nc, Nr, figsize=(5+2*Nc,4+1*Nr), sharex=True, sharey=True)
@@ -102,16 +103,34 @@ class multiThread(multiprocessing.Process):
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
-                    #else: ax.pcolormesh(xvals, yvals, vals, vmin=minZ, vmax=maxZ)
                     else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
-                    #plt.colorbar(label=sf.getType())
                 else:
-                    ax.plot(xvals[~vals.mask], vals[~vals.mask], 'o', color=color, markersize=3)
-                    if plotflag: ax.plot(xvals[vals.mask], vals[vals.mask], 'rx', markersize=3) # plot flagged points
-                    if minZ != 0:
-                        plt.ylim(ymin=minZ)
-                    if maxZ != 0:
-                        plt.ylim(ymax=maxZ)
+                    ax.plot(xvals, vals, 'o', color=color, markersize=3) # flagged data are automatically masked
+                    if plotflag: 
+                        ax.plot(xvals[vals.mask], vals.data[vals.mask], 'ro', markersize=3) # plot flagged points
+                    plt.xlim(xmin=min(xvals), xmax=max(xvals))
+
+                    # find proper min max as the automatic setting is shit
+                    if np.all(vals.mask) == False:
+                        if autominZ == None:
+                            autominZ = vals.min(fill_value=np.inf)
+                        elif autominZ > vals.min(fill_value=np.inf): 
+                            autominZ = vals.min(fill_value=np.inf)
+
+                        if automaxZ == None:
+                            automaxZ = vals.max(fill_value=-np.inf)
+                        elif automaxZ < vals.max(fill_value=-np.inf):
+                            automaxZ = vals.max(fill_value=-np.inf)
+
+        if not cmesh: 
+            if minZ != None:
+                plt.ylim(ymin=minZ)
+            else:
+                plt.ylim(ymin=autominZ)
+            if maxZ != None:
+                plt.ylim(ymax=maxZ)
+            else:
+                plt.ylim(ymax=automaxZ)
 
         logging.info("Saving "+filename+'.png')
         if axisInTable != []: plt.savefig(filename+'.png', bbox_inches='tight')
@@ -143,6 +162,8 @@ def run( step, parset, H ):
     # 1- or 2-element array in form X, [Y]
     axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
+    if minZ == 0: minZ = None
+    if maxZ == 0: maxZ = None
     # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
     axisInTable = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "TableAxis"]), [] )
     # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
@@ -349,13 +370,11 @@ def run( step, parset, H ):
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
 
-                    dataCube[Ntab][Ncol] = vals.astype(np.float16) # make data smaller to use less memory
-                    weightCube[Ntab][Ncol] = weight
-    
-            dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
+                    dataCube[Ntab][Ncol] = np.ma.masked_array(vals.astype(np.float16), mask=(weight == 0))
+
             # if dataCube too large (> 500 MB) write down on a pickle
             if np.array(dataCube).nbytes > 1024*1024*500: 
-                logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/1024*1024)+' MB.')
+                logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/(1024*1024))+' MB.')
                 pfile = str(random.randint(0,1e9))+'.pickle'
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile

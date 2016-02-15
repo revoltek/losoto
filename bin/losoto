@@ -139,13 +139,14 @@ if __name__=='__main__':
                logging.info("Step \'" + step + "\' completed successfully.")
         H.close()
         gc.collect()
-        #def namestr(obj, namespace):
-        #    return [name for name in namespace if namespace[name] is obj]
-        #referrers = gc.get_referrers(H)
-        #for referrer in referrers:
-        #    print namestr(referrer, globals())
-        #    print namestr(referrer, locals())
-        #print gc.garbage
+        # Memory debug
+        def namestr(obj, namespace):
+            return [name for name in namespace if namespace[name] is obj]
+        referrers = gc.get_referrers(H)
+        for referrer in referrers:
+            print namestr(referrer, globals())
+            print namestr(referrer, locals())
+        print gc.garbage
 
     logging.info("Time for all steps: %i s." % ( time.time() - globalstart ))
     logging.info("Done.")

@@ -303,4 +303,7 @@ def run( step, parset, H ):
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
         del sw
         del sf
+        del soltab
+
+        logging.debug('active children:'+str(multiprocessing.active_children()))
     return 0

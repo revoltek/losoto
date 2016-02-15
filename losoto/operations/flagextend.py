@@ -54,18 +54,18 @@ class multiThread(multiprocessing.Process):
                 return 0
 
         import scipy.ndimage
-        newWeights = np.copy(weights)
+        initialPercent = 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)
         for cycle in xrange(cycles):
-            flag = scipy.ndimage.filters.generic_filter(newWeights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
-            newWeights[ np.where( flag == 1 ) ] = 0
+            flag = scipy.ndimage.filters.generic_filter(weights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
+            weights[ np.where( flag == 1 ) ] = 0
             # no new flags
-            if cycle != 0 and np.count_nonzero(flag) == np.count_nonzero(oldFlag): break
-            oldFlag = np.copy(flag)
+            if cycle != 0 and np.count_nonzero(flag) == oldFlagCount: break
+            oldFlagCount = np.count_nonzero(flag)
 
         logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
-            % (removeKeys(coord, axesToExt), 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights), 100.*(np.size(newWeights)-np.count_nonzero(newWeights))/np.size(newWeights)))
+            % (removeKeys(coord, axesToExt), initialPercent, 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)))
 
-        self.outQueue.put([newWeights, selection])
+        self.outQueue.put([weights, selection])
         
             
 def run( step, parset, H ):
