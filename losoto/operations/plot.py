@@ -370,7 +370,7 @@ def run( step, parset, H ):
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
 
-            dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
+                    dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
 
             # if dataCube too large (> 500 MB) write down on a pickle
             if np.array(dataCube).nbytes > 1024*1024*500: 
