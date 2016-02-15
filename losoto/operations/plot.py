@@ -343,7 +343,6 @@ def run( step, parset, H ):
 
                     dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
     
-            print np.array(dataCube).shape
             inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
