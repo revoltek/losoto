@@ -370,17 +370,8 @@ def run( step, parset, H ):
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
 
-<<<<<<< HEAD
-                    dataCube[Ntab][Ncol] = np.ma.masked_array(vals.astype(np.float16), mask=(weight == 0))
-
-=======
-                    dataCube[Ntab][Ncol] = vals.astype(np.float16) # make data smaller to use less memory
-                    weightCube[Ntab][Ncol] = weight
-    
-<<<<<<< HEAD
-=======
             dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
->>>>>>> 6adecd076bc99de5154ef30ba4d537732947d584
+
             # if dataCube too large (> 500 MB) write down on a pickle
             if np.array(dataCube).nbytes > 1024*1024*500: 
                 logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/(1024*1024))+' MB.')
@@ -388,7 +379,6 @@ def run( step, parset, H ):
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile
 
->>>>>>> 25c5244a9c17f28aae9103b85e01e584350ef158
             inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
