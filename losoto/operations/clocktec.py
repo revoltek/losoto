@@ -30,6 +30,8 @@ def run( step, parset, H ):
     combinePol = parset.getBool('.'.join(["LoSoTo.Steps", step, "CombinePol"]), False )
     #fitOffset = parset.getBool('.'.join(["LoSoTo.Steps", step, "FitOffset"]), False )
     removePhaseWraps=parset.getBool('.'.join(["LoSoTo.Steps", step, "RemovePhaseWraps"]), True )
+    fit3rdorder=parset.getBool('.'.join(["LoSoTo.Steps", step, "Fit3rdOrder"]), False )
+    circular=parset.getBool('.'.join(["LoSoTo.Steps", step, "Circular"]), False )
     # do something on every soltab (use the openSoltab LoSoTo function)
     #for soltab in openSoltabs( H, soltabs ):
     for soltabname in soltabs:
@@ -65,8 +67,7 @@ def run( step, parset, H ):
         returnAxes=['ant','freq','pol','time']
         for vals, flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
-            logging.debug('Flags '+str(np.sum(flags))+' '+str(vals.shape))
-
+ 
             if len(coord['ant']) < 2:
                 logging.error('Clock/TEC separation needs at least 2 antennas selected.')
                 return 1
@@ -79,12 +80,18 @@ def run( step, parset, H ):
             times=coord['time']
 
             axes=[i for i in names if i in returnAxes]
-            clock,tec,offset,newstations=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
-                  flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps)
-            weights=(tec>-5)
+            result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
+                             flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps,fit3rdorder=fit3rdorder,circular=circular)
+            #result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
+            #      flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps)
+            if fit3rdorder:
+                clock,tec,offset,newstations,tec3rd=result
+            else:
+                clock,tec,offset,newstations=result
+            weights=tec>-5
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
-
+            weights=np.float16(weights)
             if combinePol:
                 tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant'], axesVals=[times, newstations],
@@ -101,9 +108,15 @@ def run( step, parset, H ):
                 tf_st = H.makeSoltab(solsetname, 'phase_offset',
                                  axesNames=['ant'], axesVals=[newstations],
                                  vals=offset[:,0],
-                                 weights=np.ones_like(offset[:,0]))
+                                 weights=np.ones_like(offset[:,0],dtype=np.float16))
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                if fit3rdorder:
+                    tf_st = H.makeSoltab(solsetname, 'tec3rd',
+                                         axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                         vals=tec3rd[:,:,0],
+                                         weights=weights[:,:,0])
+                    sw = solWriter(tf_st)
 
 
             else:
@@ -122,8 +135,14 @@ def run( step, parset, H ):
                 tf_st = H.makeSoltab(solsetname, 'phase_offset',
                                  axesNames=['ant','pol'], axesVals=[newstations, ['XX','YY']],
                                  vals=offset,
-                                 weights=np.ones_like(offset))
+                                 weights=np.ones_like(offset,dtype=np.float16))
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
+                if fit3rdorder:
+                    tf_st = H.makeSoltab(solsetname, 'tec3rd',
+                                         axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
+                                         vals=tec3rd,
+                                         weights=weights)
+                    sw = solWriter(tf_st)
 
     return 0
