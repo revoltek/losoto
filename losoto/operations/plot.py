@@ -400,14 +400,15 @@ def run( step, parset, H ):
                             if j > len(substr) and all(strings[0][i:i+j] in x for x in strings):
                                 substr = strings[0][i:i+j]
                 return substr
-            movieName = long_substr(pngs).replace('__tmp__','')
+            movieName = long_substr(pngs)
             assert movieName != '' # need a common prefix, use prefix keyword in case
             logging.info('Making movie: '+movieName)
-            # make every movie last 10 sec, min one second per slide
+            # make every movie last 20 sec, min one second per slide
             fps = np.ceil(len(pngs)/20.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
-                    "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
+                    "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
             os.system(ss)
+            #print ss
             for png in pngs: os.system('rm '+png)
 
     return 0
