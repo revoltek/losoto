@@ -61,6 +61,9 @@ def run( step, parset, H ):
                     elif sfs.getType() == 'tec':
                         vals -= -8.44797245e9 * valsSub / coord['freq']
 
+                    elif sfs.getType() == 'tec3rd':
+                        vals -= - 1.e21 * valsSub / np.pow(coord['freq'],3)
+
                     elif sfs.getType() == 'rotationmeasure':
                         wav = 2.99792458e8/coord['freq']
                         ph = wav * wav * valsSub

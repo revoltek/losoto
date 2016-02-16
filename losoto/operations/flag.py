@@ -10,35 +10,7 @@ import numpy as np
 
 logging.debug('Loading FLAG module.')
 
-import multiprocessing
-inQueue = multiprocessing.JoinableQueue()
-outQueue = multiprocessing.Queue()
-
-class multiThread(multiprocessing.Process):
-    """
-    This class is a working thread which load parameters from a queue and
-    run the flagging on a chunk of data
-    """
-
-    def __init__(self, inQueue, outQueue):
-        multiprocessing.Process.__init__(self)
-        self.inQueue = inQueue
-        self.outQueue = outQueue
-
-    def run(self):
-
-        while True:
-            parms = self.inQueue.get()
-
-            # poison pill
-            if parms is None:
-                self.inQueue.task_done()
-                break
-
-            self.flag(*parms)
-            self.inQueue.task_done()
-
-    def flag(self, vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection):
+def flag(vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection, outQueue):
 
         def smooth(data, times, window = 60., order = 1, max_gap = 5.*60. ):
             """
@@ -187,7 +159,7 @@ class multiThread(multiprocessing.Process):
         # check if everything flagged
         if np.count_nonzero(weights) == 0:
             logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axisToFlag)))
-            self.outQueue.put([vals, np.ones(shape=weights.shape, dtype=np.bool), selection])
+            outQueue.put([vals, np.ones(shape=weights.shape, dtype=np.bool), selection])
             return
 
         if preflagzeros:
@@ -218,7 +190,7 @@ class multiThread(multiprocessing.Process):
             logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
                 % (removeKeys(coord, axisToFlag), 100.*(len(weights)-np.count_nonzero(weights))/len(weights), 100.*sum(flags)/len(flags), rms))
 
-        self.outQueue.put([vals, flags, selection])
+        outQueue.put([vals, flags, selection])
         
             
 def run( step, parset, H ):
@@ -247,10 +219,7 @@ def run( step, parset, H ):
         return 1
 
     # start processes for multi-thread
-    logging.debug('Spowning %i threads...' % ncpu)
-    for i in xrange(ncpu):
-        t = multiThread(inQueue, outQueue)
-        t.start()
+    mpm = multiprocManager(ncpu, flag)
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -275,21 +244,11 @@ def run( step, parset, H ):
         runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axisToFlag, weight=True):
             runs += 1
-            inQueue.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection])
+            mpm.put([vals, weights, coord, solType, preflagzeros, maxCycles, maxRms, maxRmsNoise, window, order, maxGap, replace, axisToFlag, selection])
 
-        # add poison pills to kill processes
-        for i in xrange(ncpu):
-            inQueue.put(None)
-
-        # wait for all jobs to finish
-        inQueue.join()
+        mpm.wait()
         
-        # writing back the solutions
-        # NOTE: do not use queue.empty() check which is unreliable
-        # https://docs.python.org/2/library/multiprocessing.html
-        for i in xrange(runs):
-            q = outQueue.get()
-            v,f,sel = q
+        for v,f,sel in mpm.get():
             sw.selection = sel
             if replace:
                 # rewrite solutions (flagged values are overwritten)
@@ -298,12 +257,11 @@ def run( step, parset, H ):
                 # convert boolean flag to 01 float array (0->flagged)
                 # TODO: in this operation weight != 0,1 are lost
                 sw.setValues((~f).astype(float), weight=True)
-
+        
         sw.flush()
         sw.addHistory('FLAG (over %s with %s sigma cut)' % (axisToFlag, maxRms))
         del sw
         del sf
         del soltab
 
-        logging.debug('active children:'+str(multiprocessing.active_children()))
     return 0

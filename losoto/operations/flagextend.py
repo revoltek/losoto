@@ -10,35 +10,7 @@ import numpy as np
 
 logging.debug('Loading FLAGEXTEND module.')
 
-import multiprocessing
-inQueue = multiprocessing.JoinableQueue()
-outQueue = multiprocessing.Queue()
-
-class multiThread(multiprocessing.Process):
-    """
-    This class is a working thread which load parameters from a queue and
-    run the flagging on a chunk of data
-    """
-
-    def __init__(self, inQueue, outQueue):
-        multiprocessing.Process.__init__(self)
-        self.inQueue = inQueue
-        self.outQueue = outQueue
-
-    def run(self):
-
-        while True:
-            parms = self.inQueue.get()
-
-            # poison pill
-            if parms is None:
-                self.inQueue.task_done()
-                break
-
-            self.flag(*parms)
-            self.inQueue.task_done()
-
-    def flag(self, weights, coord, axesToExt, selection, percent=90, size=11, cycles=3):
+def flag(weights, coord, axesToExt, selection, percent=90, size=11, cycles=3, outQueue=None):
         """
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
@@ -65,7 +37,7 @@ class multiThread(multiprocessing.Process):
         logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
             % (removeKeys(coord, axesToExt), initialPercent, 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)))
 
-        self.outQueue.put([weights, selection])
+        outQueue.put([weights, selection])
         
             
 def run( step, parset, H ):
@@ -85,10 +57,7 @@ def run( step, parset, H ):
         return 1
 
     # start processes for multi-thread
-    logging.debug('Spowning %i threads...' % ncpu)
-    for i in xrange(ncpu):
-        t = multiThread(inQueue, outQueue)
-        t.start()
+    mpm = multiprocManager(ncpu, flag)
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -113,22 +82,12 @@ def run( step, parset, H ):
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
             runs += 1
             # convert to float64 or numpy.ndimage complains
-            inQueue.put([weights.astype(np.float64), coord, axesToExt, selection, percent, size, cycles])
+            mpm.put([weights.astype(np.float64), coord, axesToExt, selection, percent, size, cycles])
 
-        # add poison pills to kill processes
-        for i in xrange(ncpu):
-            inQueue.put(None)
+        mpm.wait()
 
-        # wait for all jobs to finish
-        inQueue.join()
-        
-        # writing back the solutions
-        # NOTE: do not use queue.empty() check which is unreliable
-        # https://docs.python.org/2/library/multiprocessing.html
         logging.info('Writing solutions')
-        for i in xrange(runs):
-            q = outQueue.get()
-            w,sel = q
+        for w,sel in mpm.get():
             sw.selection = sel
             sw.setValues(w.astype(np.float16), weight=True) # convert back to np.float16
 

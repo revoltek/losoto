@@ -7,36 +7,9 @@
 import logging
 from losoto.operations_lib import *
 
-import multiprocessing
-inQueue = multiprocessing.JoinableQueue()
-
 logging.debug('Loading PLOT module.')
 
-class multiThread(multiprocessing.Process):
-    """
-    This class is a working thread which load parameters from a queue and
-    run the flagging on a chunk of data
-    """
-
-    def __init__(self, inQueue):
-        multiprocessing.Process.__init__(self)
-        self.inQueue = inQueue
-
-    def run(self):
-
-        while True:
-            parms = self.inQueue.get()
-
-            # poison pill
-            if parms is None:
-                self.inQueue.task_done()
-                break
-
-            self.plot(*parms)
-            self.inQueue.task_done()
-    
-
-    def plot(self, Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie):
+def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, outQueue):
         import os, pickle
         from itertools import cycle, chain
         import numpy as np
@@ -189,10 +162,7 @@ def run( step, parset, H ):
     sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
 
     # start processes for multi-thread
-    logging.debug('Spowning %i threads...' % ncpu)
-    for i in xrange(ncpu):
-        t = multiThread(inQueue)
-        t.start()
+    mpm = multiprocManager(ncpu, plot)
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -379,14 +349,10 @@ def run( step, parset, H ):
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile
 
-            inQueue.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
+            mpm.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
-        # poison pill
-        for i in xrange(ncpu):
-            inQueue.put(None)
-        # finish queue
-        inQueue.join()
+        mpm.wait()
 
         if makeMovie:
             def long_substr(strings):
