@@ -25,8 +25,8 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
 
     flagBadChannels = parset.getBool('.'.join(["LoSoTo.Steps", step, "FlagBadChannels"]), True )
-    flagCut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FlagCut"]), 1.5 )
-    chi2cut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Chi2cut"]), 30000. )
+    flagCut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FlagCut"]), 5. )
+    chi2cut = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Chi2cut"]), 3000. )
     combinePol = parset.getBool('.'.join(["LoSoTo.Steps", step, "CombinePol"]), False )
     #fitOffset = parset.getBool('.'.join(["LoSoTo.Steps", step, "FitOffset"]), False )
     removePhaseWraps=parset.getBool('.'.join(["LoSoTo.Steps", step, "RemovePhaseWraps"]), True )

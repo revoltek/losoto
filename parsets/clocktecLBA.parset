@@ -32,5 +32,5 @@ LoSoTo.Steps.clocktec.FlagCut = 5
 LoSoTo.Steps.clocktec.Chi2cut = 3000. # chi2value to decide if a solution is propagated to the next timeslot
 LoSoTo.Steps.clocktec.CombinePol = True # find a combined polarization solution
 LoSoTo.Steps.clocktec.RemovePhaseWraps = True # Use spatial correlation to remove2piphase wraps in solution
-LoSoTo.Steps.clocktec.Fit3rdOrder=False    # Fit for 1/nu^3 term, necessary for low <40Mhz frequencies. Fit is less stable however
-#LoSoTo.Steps.clocktec.Circular=True   # If you have Circular data and combinePol=T, phases of both polarizations added but not averaged.
+#LoSoTo.Steps.clocktec.Fit3rdOrder=True    # Fit for 1/nu^3 term, necessary for low <40Mhz frequencies. Fit is less stable however
+LoSoTo.Steps.clocktec.Circular=True   # If you have Circular data and combinePol=T, phases of both polarizations added but not averaged.
