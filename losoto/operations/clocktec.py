@@ -82,38 +82,37 @@ def run( step, parset, H ):
             axes=[i for i in names if i in returnAxes]
             result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
                              flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps,fit3rdorder=fit3rdorder,circular=circular)
-            #result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
-            #      flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps)
             if fit3rdorder:
-                clock,tec,offset,newstations,tec3rd=result
+                clock,tec,offset,tec3rd=result
             else:
-                clock,tec,offset,newstations=result
+                clock,tec,offset=result
             weights=tec>-5
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
             weights=np.float16(weights)
+            print tec3rd.shape, weights.shape, len(stations)
             if combinePol:
                 tf_st = H.makeSoltab(solsetname, 'tec',
-                                 axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                 axesNames=['time', 'ant'], axesVals=[times, stations],
                                  vals=tec[:,:,0],
                                  weights=weights[:,:,0])
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'clock',
-                                 axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                 axesNames=['time', 'ant'], axesVals=[times, stations],
                                  vals=clock[:,:,0]*1e-9,
                                  weights=weights[:,:,0])
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'phase_offset',
-                                 axesNames=['ant'], axesVals=[newstations],
+                                 axesNames=['ant'], axesVals=[stations],
                                  vals=offset[:,0],
                                  weights=np.ones_like(offset[:,0],dtype=np.float16))
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 if fit3rdorder:
                     tf_st = H.makeSoltab(solsetname, 'tec3rd',
-                                         axesNames=['time', 'ant'], axesVals=[times, newstations],
+                                         axesNames=['time', 'ant'], axesVals=[times, stations],
                                          vals=tec3rd[:,:,0],
                                          weights=weights[:,:,0])
                     sw = solWriter(tf_st)
@@ -121,26 +120,26 @@ def run( step, parset, H ):
 
             else:
                 tf_st = H.makeSoltab(solsetname, 'tec',
-                                 axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
+                                 axesNames=['time', 'ant','pol'], axesVals=[times, stations, ['XX','YY']],
                                  vals=tec,
                                  weights=weights)
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'clock',
-                                 axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
+                                 axesNames=['time', 'ant','pol'], axesVals=[times, stations, ['XX','YY']],
                                  vals=clock*1e-9,
                                  weights=weights)
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 tf_st = H.makeSoltab(solsetname, 'phase_offset',
-                                 axesNames=['ant','pol'], axesVals=[newstations, ['XX','YY']],
+                                 axesNames=['ant','pol'], axesVals=[stations, ['XX','YY']],
                                  vals=offset,
                                  weights=np.ones_like(offset,dtype=np.float16))
                 sw = solWriter(tf_st)
                 sw.addHistory('CREATE (by CLOCKTECFIT operation)')
                 if fit3rdorder:
                     tf_st = H.makeSoltab(solsetname, 'tec3rd',
-                                         axesNames=['time', 'ant','pol'], axesVals=[times, newstations, ['XX','YY']],
+                                         axesNames=['time', 'ant','pol'], axesVals=[times, stations, ['XX','YY']],
                                          vals=tec3rd,
                                          weights=weights)
                     sw = solWriter(tf_st)

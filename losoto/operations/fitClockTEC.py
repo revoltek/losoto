@@ -263,17 +263,17 @@ def getClockTECFit(
                     # do brutforce and update data, unwrp pdata,update flags
                     if itm%100==0:
                     #if itm<500:
-                        logging.debug("getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
+                        logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
                     par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec,nrClock=ndt,nrthird=n3rd,initsol=sol[ist,:])
                     sol[ist, :] = par[:]
                 if itm%100==0:
                 #if itm<500:
-                    logging.debug("getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
+                    logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
         for ist in xrange(nSt):
             #now do the real fitting
             datatmpist=datatmp[:,ist]
             if datatmpist.count() / float(nF) < 0.5:
-                logging.debug("too many data points flagged t=%d st=%d flags=%d"%(itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
+                logging.debug("Too many data points flagged t=%d st=%d flags=%d"%(itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
                 sol[ist] = [-10.,]*sol.shape[1]
                 continue
             fitdata=np.dot(sol[ist],A.T)
@@ -304,7 +304,8 @@ def getClockTECFit(
         chi2select = np.logical_or(np.array(chi2 > chi2cut), sol[:, 0] < -5) # select bad points
         chi2select = np.logical_or(chi2select,initprevsol*np.sum(np.abs((sol-prevsol)/steps),axis=-1)>(0.3*sol.shape[1]*(1+nrFail))) #also discard data where there is a "half" jump for any parameter wrst the previous solution (if previous solution exists). Multiply with number of fails, since after a large number of fails there is no clear match with the previous solution expected anyway...
         if np.any(chi2select):
-            logging.debug('high chi2 of fit, itm: %d %d ' % (itm, np.sum(chi2select)) + str(sol[chi2select]) + 'prevsol'+str(prevsol[chi2select])+'stations:' + str(np.arange(nSt)[chi2select]) + ' chi2 ' + str(chi2[chi2select]))
+            #logging.debug('high chi2 of fit, itm: %d %d ' % (itm, np.sum(chi2select)) + str(sol[chi2select]) + 'prevsol'+str(prevsol[chi2select])+'stations:' + str(np.arange(nSt)[chi2select]) + ' chi2 ' + str(chi2[chi2select]))
+            logging.debug('High chi2 of fit, itm: %d %d ' % (itm, np.sum(chi2select)) + 'stations:' + str(np.arange(nSt)[chi2select]))
             succes = False
             nrFail[chi2select] += 1
             nrFail[~chi2select] = 0
@@ -348,7 +349,7 @@ def getPhaseWrapBase(freqs):
 
 
 def getResidualPhaseWraps(avgResiduals, freqs):
-    flags = avgResiduals[:, 10] == 0.
+    flags = np.average(avgResiduals.mask,axis=1)>0.5
     nSt = avgResiduals.shape[1]
     nF = freqs.shape[0]
     wraps = np.zeros((nSt, ), dtype=np.float)
@@ -372,7 +373,7 @@ def correctWrapsFromResiduals(residualarray,flags,freq):
     (wraps, steps) = getResidualPhaseWraps(avgResiduals, freq)  # fitting of the wraps from the time-avg residuals
     # step[0] is the step in TEC corresponding to 1 phase wrap and step[1] is in ns (clock)
     wraps = np.round(wraps - wraps[0])  # reference to station 0
-    logging.debug('wraps from residuals: ' + str(wraps))
+    logging.debug('Wraps from residuals: ' + str(wraps))
     return (wraps, steps)
 
 
@@ -407,9 +408,9 @@ def correctWraps(
         # calculate offset per station wrt time-averaged TEC screen
         offsets = -1 * np.ma.average(TEC[chi2select] - np.ma.dot(slope.T, lonlat)[chi2select], axis=0) * 2. * np.pi / steps[0]
         remainingwraps = np.round(offsets / (2 * np.pi))  # -np.round(wraps[stationIndices])
-        logging.debug('offsets: ' + str(offsets))
-        logging.debug('avgTEC: ' + str(np.ma.average(TEC[chi2select], axis=0)))
-        logging.debug('remaining: ' + str(remainingwraps))
+        logging.debug('Offsets: ' + str(offsets))
+        logging.debug('AvgTEC: ' + str(np.ma.average(TEC[chi2select], axis=0)))
+        logging.debug('Remaining: ' + str(remainingwraps))
         wraps += remainingwraps
         # TODO: remove also the offset before the second cycle
         if np.sum(np.absolute(remainingwraps)) == 0:
@@ -476,13 +477,13 @@ def doFit(
         for nr_iter in xrange(2):
             rms = np.ma.std(np.ma.std(refdata, axis=0), axis=1)
             freqselect = rms < flagcut * np.average(rms)
-            logging.debug('iter %d: flagging %d channels' % (nr_iter, np.sum(np.logical_not(freqselect))))
+            logging.debug('Iter %d: flagging %d channels' % (nr_iter, np.sum(np.logical_not(freqselect))))
             #freqs = freqs[freqselect]
             #data = data[:, freqselect]
             mymask=np.ma.logical_or(mymask,~freqselect)
             #refdata = refdata[:, freqselect]
             refdata.mask=np.ma.logical_or(refdata.mask,mymask[np.newaxis,:,np.newaxis])
-            logging.debug('flagging: ' + str(indices[np.logical_not(freqselect)]))
+            logging.debug('Flagging: ' + str(indices[np.logical_not(freqselect)]))
             #indices = indices[freqselect]
         mask=data.mask
         data.mask=np.logical_or(mask,mymask[np.newaxis,:,np.newaxis,np.newaxis])
@@ -492,13 +493,14 @@ def doFit(
     logging.debug('%d selected stations: ' % len(selectstations) + str(selectstations))
     stationIndices = np.array([idxst in selectstations for idxst in stations])
     data = data[:, :, stationIndices]
+    stations_old = stations[:] # keep a copy for putting flagged stations back at the end
     stations = stations[stationIndices]
 
     station_positions = station_positions[stationIndices]
     RSstations = [i for (i, j) in enumerate(stations) if 'RS' in j]
     CSstations = [i for (i, j) in enumerate(stations) if 'CS' in j]
     otherstations = [i for (i, j) in enumerate(stations) if not 'RS' in j and not 'CS' in j]
-    logging.debug('station indices: ' + str(stationIndices) + ' RS ' + str(RSstations))
+    logging.debug('Station indices: ' + str(stationIndices) + ' RS ' + str(RSstations))
     nSt = data.shape[2]
     # combine polarizationsif requested - needed in HBA
     if combine_pol:
@@ -514,7 +516,7 @@ def doFit(
     # not in LBA because TEC dominant
     if not 'LBA' in stations[0] and len(initSol) < 1:
         initclock = getInitClock(data[nT / 2:nT / 2 + 100][:, :, RSstations + otherstations], freqs)  # only on a few timestamps
-        logging.debug('initial clocks: ' + str(initclock[1]))
+        logging.debug('Initial clocks: ' + str(initclock[1]))
         # init CS clocks to 0
         # logging.debug("data before init clock" + str(data[nT/2,:,-1]))
         data[:, :, RSstations + otherstations] = data[:, :, RSstations + otherstations] - freqs[np.newaxis, :, np.newaxis, np.newaxis] * initclock[1][np.newaxis, np.newaxis, :] * 1e-9 * 2 * np.pi
@@ -564,11 +566,11 @@ def doFit(
         else:
             #always correct for wraps based on average residuals
             wraps, steps = correctWrapsFromResiduals(residualarray, tecarray<-5,freqs)
-        logging.debug('residual iter 1, pol %d: ' % pol + str(residualarray[0, 0]))
-        logging.debug('tec iter 1, pol %d: ' % pol + str(tecarray[0]))
-        logging.debug('clock iter 1, pol %d: ' % pol + str(clockarray[0]))
-        logging.debug('wraps: ' + str(wraps))
-        logging.debug('offsets: ' + str(offset[:, pol]))
+        logging.debug('Residual iter 1, pol %d: ' % pol + str(residualarray[0, 0]))
+        logging.debug('TEC iter 1, pol %d: ' % pol + str(tecarray[0]))
+        logging.debug('Clock iter 1, pol %d: ' % pol + str(clockarray[0]))
+        logging.debug('Wraps: ' + str(wraps))
+        logging.debug('Offsets: ' + str(offset[:, pol]))
         # remove completely initialoffset?
         if len(initoffsets) > 0:
             offset[:, pol] -= initoffsets[:, pol]
@@ -578,8 +580,8 @@ def doFit(
             initsol = np.zeros((nSt, 2), dtype=np.float32)
             initsol[:, 0] = tecarray[0, :] + wraps * steps[0]
             initsol[:, 1] = clockarray[0, :] + wraps * steps[1]
-            logging.debug('initsol tec, pol %d: ' % pol + str(initsol[:, 0]))
-            logging.debug('initsol clock, pol %d: ' % pol + str(initsol[:, 1]))
+            logging.debug('Initsol TEC, pol %d: ' % pol + str(initsol[:, 0]))
+            logging.debug('Initsol clock, pol %d: ' % pol + str(initsol[:, 1]))
             tecarray = 0
             clockarray = 0
             residualarray = 0
@@ -609,13 +611,24 @@ def doFit(
             clock[:, :, pol] = clockarray[:, :]+ wraps * steps[1]
             if fit3rdorder:
               tec3rd[:, :, pol]  = tec3rdarray[:, :]+ wraps * steps[2]
-        logging.debug('tec iter 2, pol %d: ' % pol + str(tec[0, :, pol]))
-        logging.debug('clock iter 2, pol %d: ' % pol + str(clock[0, :, pol]))
+        logging.debug('TEC iter 2, pol %d: ' % pol + str(tec[0, :, pol]))
+        logging.debug('Clock iter 2, pol %d: ' % pol + str(clock[0, :, pol]))
     if not 'LBA' in stations[0] and len(initSol) < 1:
         clock[:, RSstations + otherstations] += initclock[1][np.newaxis, :, :]
     if combine_pol and circular:
         clock/=2;tec/=2;offset/=2
+
+    # put flagged stations back
+    for idx, wasUsed in enumerate(stationIndices):
+        if not wasUsed:
+            logging.debug('Adding completely flagged station '+str(idx))
+            clock = np.insert(clock,idx,0,axis=1) # [time:ant:pol]
+            tec = np.insert(tec,idx,-5,axis=1) # [time:ant:pol]
+            offset = np.insert(offset,idx,0,axis=0) # [ant:pol]
+            if fit3rdorder: tec3rd = np.insert(tec3rd,idx,0,axis=1) # [time:ant:pol]
+
+#    station = station_old
     if fit3rdorder:
-        return (clock, tec, offset, stations,tec3rd)
+        return (clock, tec, offset, tec3rd)
     else:
-        return (clock, tec, offset, stations)
+        return (clock, tec, offset)

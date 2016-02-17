@@ -32,7 +32,7 @@ def run( step, parset, H ):
         for soltabToSub in soltabsToSub:
             ss, st = soltabToSub.split('/')
             sfs = solFetcher(H.getSoltab(ss, st))
-            if sf.getType() != 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure'):
+            if sf.getType() != 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure' or sfs.getType() == 'tec3rd'):
                 logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
                 continue
             sfss.append( sfs )
@@ -42,7 +42,7 @@ def run( step, parset, H ):
             for axisName in sfs.getAxesNames():
                 assert all(sfs.getAxisValues(axisName) == sf.getAxisValues(axisName))
         
-        if sf.getType() == 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure'):
+        if sf.getType() == 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure' or sfs.getType() == 'tec3rd' ):
             # the only return axes is freq, slower but better code
             for vals, weights, coord, selection in sf.getValuesIter(returnAxes='freq', weight = True):
 
@@ -62,7 +62,7 @@ def run( step, parset, H ):
                         vals -= -8.44797245e9 * valsSub / coord['freq']
 
                     elif sfs.getType() == 'tec3rd':
-                        vals -= - 1.e21 * valsSub / np.pow(coord['freq'],3)
+                        vals -= - 1.e21 * valsSub / np.power(coord['freq'],3)
 
                     elif sfs.getType() == 'rotationmeasure':
                         wav = 2.99792458e8/coord['freq']

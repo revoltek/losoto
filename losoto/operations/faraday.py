@@ -84,7 +84,7 @@ def run( step, parset, H ):
         
                     if len(freq) < 10:
                         fitweights[t] = 0
-                        logging.warning('No valid data found for Faraday fitting.')
+                        logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant'])
                         continue
         
                     phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this

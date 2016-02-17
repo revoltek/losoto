@@ -22,7 +22,7 @@ def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabe
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
         if type(dataCube) is str:
-            logging.debug('getting data')
+            logging.debug('Getting pickled data.')
             dataCube_p = pickle.load(open(dataCube, "rb"))
             os.system('rm '+dataCube)
             dataCube = dataCube_p
