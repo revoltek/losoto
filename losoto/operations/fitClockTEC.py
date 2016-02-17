@@ -65,6 +65,7 @@ def getInitClock(data, freq):
     A[:, 1] = freq * 2 * np.pi * 1e-9
     return np.ma.dot(np.linalg.inv(np.dot(A.T, A)), np.ma.dot(A.T, avgdata).swapaxes(0, -2))
 
+
 def unwrapPhases(phases,fitdata=None,maskrange=15):
     '''unwrap phases, remove jumps and get best match with fitdata'''
     mymask=phases.mask
@@ -123,7 +124,6 @@ def unwrapPhases(phases,fitdata=None,maskrange=15):
     return phases
 
 
-
 def getInitPar(
     data,
     freqs, 
@@ -180,8 +180,6 @@ def getInitPar(
         par=bigdata[idx]
         fitdata=np.dot(par,A.T)
         data=unwrapPhases(data,fitdata)
-      
-
     return par,data
 
 
@@ -216,7 +214,6 @@ def getClockTECFit(
     initprevsol=np.zeros(nSt,dtype=bool)
     nrFail=np.zeros(nSt,dtype=int)
     sol = np.zeros((nSt, 2+fit3rdorder), dtype=np.float)
-    #
     prevsol = np.zeros_like(sol)
     n3rd=0
     for itm in xrange(nT):
@@ -290,9 +287,9 @@ def getClockTECFit(
             A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
             sol[ist] = np.ma.dot(np.linalg.inv(np.ma.dot(A2.T, A2)), np.ma.dot(A2.T, datatmpist)).T
             if initprevsol[ist] and np.abs((sol[ist,1]-prevsol[ist,1])/steps[1])>0.5 and (np.abs((sol[ist,1]-prevsol[ist,1])/steps[1])>0.75 or np.abs(np.sum((sol[ist]-prevsol[ist])/steps,axis=-1))>0.5*A2.shape[0]):
-                logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
+                #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
                 sol[ist,:]-=np.round((sol[ist,1]-prevsol[ist,1])/steps[1])*steps
-                logging.debug("removed jumps, par for station %d "%ist+str(sol[ist])+str(prevsol[ist]))
+                #logging.debug("removed jumps, par for station %d "%ist+str(sol[ist])+str(prevsol[ist]))
             if itm%100==0:
             #if itm<500:
                 logging.debug("par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
@@ -336,8 +333,6 @@ def getClockTECFit(
     return (tecarray, clockarray)
           
 
-
-
 def getPhaseWrapBase(freqs):
     """
     freqs: frequency grid of the data
@@ -380,6 +375,7 @@ def correctWrapsFromResiduals(residualarray,flags,freq):
     wraps = np.round(wraps - wraps[0])  # reference to station 0
     logging.debug('wraps from residuals: ' + str(wraps))
     return (wraps, steps)
+
 
 def correctWraps(
     tecarray,
@@ -430,7 +426,6 @@ def doFit(
     station_positions,
     axes,
     refstIdx='superterp',
-    stationSelect='BA',
     flagBadChannels=True,
     flagcut=1.5,
     chi2cut=30000.,
@@ -492,22 +487,20 @@ def doFit(
             #indices = indices[freqselect]
         mask=data.mask
         data.mask=np.logical_or(mask,mymask[np.newaxis,:,np.newaxis,np.newaxis])
-    # select stations - can be removed
-    if isinstance(stationSelect, str):
-        selectstations = [st for st in stations if stationSelect in st]
-    else:
-        selectstations = list(stations[stationSelect])
+
+    # Remove completely flagged stations
+    selectstations = [st for stationIndices, st in enumerate(stations) if data[:, :, stationIndices].mask.all() != True]
     logging.debug('%d selected stations: ' % len(selectstations) + str(selectstations))
     stationIndices = np.array([idxst in selectstations for idxst in stations])
     data = data[:, :, stationIndices]
     stations = stations[stationIndices]
+
     station_positions = station_positions[stationIndices]
     RSstations = [i for (i, j) in enumerate(stations) if 'RS' in j]
     CSstations = [i for (i, j) in enumerate(stations) if 'CS' in j]
     otherstations = [i for (i, j) in enumerate(stations) if not 'RS' in j and not 'CS' in j]
     logging.debug('station indices: ' + str(stationIndices) + ' RS ' + str(RSstations))
     nSt = data.shape[2]
-    logging.info('%d selected stations: ' % nSt + str(stations))
     # combine polarizationsif requested - needed in HBA
     if combine_pol:
         if npol == 2 and not circular:
