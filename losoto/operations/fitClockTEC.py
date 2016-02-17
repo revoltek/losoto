@@ -192,7 +192,8 @@ def getClockTECFit(
     initSol=[],
     returnResiduals=True,
     chi2cut=1e8,
-    fit3rdorder=False
+    fit3rdorder=False,
+    double_search_space=False
     ):
     nT = ph.shape[0]
     nF = freq.shape[0]
@@ -267,7 +268,7 @@ def getClockTECFit(
                     if itm%100==0:
                     #if itm<500:
                         logging.debug("getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
-                    par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec,nrClock=ndt,nrthird=n3rd,initsol=sol[ist,:])
+                    par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[ist,:])
                     sol[ist, :] = par[:]
                 if itm%100==0:
                 #if itm<500:
@@ -353,7 +354,7 @@ def getPhaseWrapBase(freqs):
 
 
 def getResidualPhaseWraps(avgResiduals, freqs):
-    flags = avgResiduals[:, 10] == 0.
+    flags = np.average(avgResiduals.mask,axis=1)>0.5
     nSt = avgResiduals.shape[1]
     nF = freqs.shape[0]
     wraps = np.zeros((nSt, ), dtype=np.float)
@@ -552,7 +553,8 @@ def doFit(
                 initSol=initSol,
                 returnResiduals=True,
                 fit3rdorder=True,
-                chi2cut=initialchi2cut
+                chi2cut=initialchi2cut,
+                double_search_space=circular and combine_pol
                 )
         else:
             (tecarray, clockarray, residualarray) = getClockTECFit(
@@ -562,7 +564,8 @@ def doFit(
                 initSol=initSol,
                 returnResiduals=True,
                 fit3rdorder=False,
-                chi2cut=initialchi2cut
+                chi2cut=initialchi2cut,
+                double_search_space=circular and combine_pol
                 )
         if removePhaseWraps:
             # correctfrist times only,try to make init correct ?
@@ -600,6 +603,7 @@ def doFit(
                     returnResiduals=False,
                     fit3rdorder=True,
                     chi2cut=chi2cut,
+                    double_search_space=circular and combine_pol
                     )
             else:
                 (tec[:, :, pol], clock[:, :, pol]) = getClockTECFit(
@@ -610,6 +614,7 @@ def doFit(
                     returnResiduals=False,
                     fit3rdorder=False,
                     chi2cut=chi2cut,
+                    double_search_space=circular and combine_pol
                     )
         else:
             tec[:, :, pol] = tecarray[:, :]+ wraps * steps[0]
