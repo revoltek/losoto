@@ -451,9 +451,8 @@ class h5parm( object ):
                                 elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
                                 else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
                         info += "\nSolution table '%s' (type: %s): %s\n" % (soltab_name, sf.getType(), ", ".join(axis_str_list))
-                        if verbouse:
-                            weights = sf.getValues(weight = True, retAxesVals = False)
-                            info += 'Flagged data %.3f%%\n' % (100.*len(np.where(weights==0)[0])/len(weights.flat))
+                        weights = sf.getValues(weight = True, retAxesVals = False)
+                        info += 'Flagged data %.3f%%\n' % (100.*len(np.where(weights==0)[0])/len(weights.flat))
                         history = sf.getHistory()
                         if history != "":
                             info += "\n" + 4*" " + "History:\n" + 4*" "
