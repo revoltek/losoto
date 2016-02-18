@@ -64,13 +64,13 @@ def run( step, parset, H ):
             # first find the median and standard deviation
             goodVals = vals[np.where(weights > 0)]
             if len(goodVals) > 0:
-                valmedian = np.median(goodVals)
+                valmedian = np.median(np.log10(goodVals))
             else:
                 valmedian = 0
             clipvalue = valmedian * clipLevel
-            np.putmask(weights, vals > clipvalue, 0)
-            clipvalue = valmedian / clipLevel
-            np.putmask(weights, vals < clipvalue, 0)
+            np.putmask(weights, np.abs(np.log10(vals)) > clipvalue, 0)
+            #clipvalue = valmedian / clipLevel
+            #np.putmask(weights, vals < clipvalue, 0)
         
             after_count+=(len(weights)-np.count_nonzero(weights))
 
