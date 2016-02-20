@@ -3,7 +3,7 @@ import os, time, glob
 __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py") if not f.endswith('__init__.py')]
 for x in __all__: __import__(x, locals(), globals())
 
-class timer():
+class timer(object):
     """
     context manager used to time the operations
     """
