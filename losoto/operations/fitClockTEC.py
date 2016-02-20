@@ -130,7 +130,7 @@ def getInitPar(
     nrTEC=40,
     nrClock=40,
     nrthird=0,
-    initsol=[]
+    initsol=tuple()
     ):
     if nrthird>0:
         A=np.ma.zeros((freqs.shape[0],3),dtype=np.float64)
