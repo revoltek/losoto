@@ -524,7 +524,7 @@ def doFit(
         # logging.debug("clock correction" + str(np.remainder(freqs*initclock[1][-1]*-1e-9*2*np.pi+np.pi,2*np.pi)-np.pi))
         # logging.debug("data after init clock" + str(np.remainder(data[nT/2,:,-1]+np.pi,2*np.pi)-np.pi))
     offset = np.zeros((nSt, npol), dtype=np.float32)
-    if len(initoffsets) > 0:
+    if initoffsets: # Check if initoffsets is not empty
         offset = initoffsets
         data[:, :, :, :] += offset[:][np.newaxis, np.newaxis]
     # initialize arrays
@@ -575,7 +575,7 @@ def doFit(
         logging.debug('Wraps: ' + str(wraps))
         logging.debug('Offsets: ' + str(offset[:, pol]))
         # remove completely initialoffset?
-        if len(initoffsets) > 0:
+        if initoffsets: # Check if initoffsets is not empty
             offset[:, pol] -= initoffsets[:, pol]
         data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis]
         # remove fitoffset

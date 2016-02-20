@@ -84,7 +84,9 @@ def flag(vals, weights, coord, solType, order, preflagzeros, maxCycles, maxRms, 
         
         return: an array of data dimensions with flags
         """
-        if len(data) == 0: return []
+        # Check if data is empty
+        if not data: 
+            return []
         # loop over solution times
         rmses = np.zeros(shape=data.shape, dtype=np.float)
         for i, time in enumerate(times):
