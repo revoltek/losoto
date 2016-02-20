@@ -85,22 +85,22 @@ def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabe
 
                     # find proper min max as the automatic setting is shit
                     if np.all(vals.mask) == False:
-                        if autominZ == None:
+                        if autominZ is None:
                             autominZ = vals.min(fill_value=np.inf)
                         elif autominZ > vals.min(fill_value=np.inf): 
                             autominZ = vals.min(fill_value=np.inf)
 
-                        if automaxZ == None:
+                        if automaxZ is None:
                             automaxZ = vals.max(fill_value=-np.inf)
                         elif automaxZ < vals.max(fill_value=-np.inf):
                             automaxZ = vals.max(fill_value=-np.inf)
 
         if not cmesh: 
-            if minZ != None:
+            if minZ is not None:
                 plt.ylim(ymin=minZ)
             else:
                 plt.ylim(ymin=autominZ)
-            if maxZ != None:
+            if maxZ is not None:
                 plt.ylim(ymax=maxZ)
             else:
                 plt.ylim(ymax=automaxZ)

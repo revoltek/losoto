@@ -70,7 +70,7 @@ def unwrapPhases(phases,fitdata=None,maskrange=15):
     '''unwrap phases, remove jumps and get best match with fitdata'''
     mymask=phases.mask
     for nriter in range(2):
-        if not fitdata is None and fitdata.shape==phases.shape:
+        if fitdata is not None and fitdata.shape == phases.shape:
             wraps=np.ma.round((phases-fitdata)/(2*np.pi))
             phases-=wraps*2*np.pi
             unmasked=np.copy(np.array(phases))
