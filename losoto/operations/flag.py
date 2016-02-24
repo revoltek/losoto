@@ -12,8 +12,8 @@ from scipy.ndimage import generic_filter
 
 logging.debug('Loading FLAG module.')
 
-def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
-#def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
+#def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
+def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
 
     def polyfit(x=None, y=None, z=None, w=None, order=None):
         """Two-dimensional polynomial fit.
@@ -251,8 +251,8 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
             % (removeKeys(coord, axisToFlag), initPercentFlag, percentFlagged(weights), rms))
 
-#    outQueue.put([vals, flags, selection])
-    return vals, weights, selection
+    outQueue.put([vals, flags, selection])
+#    return vals, weights, selection
         
             
 def run( step, parset, H ):
@@ -284,7 +284,7 @@ def run( step, parset, H ):
 
 
     # start processes for multi-thread
-#    mpm = multiprocManager(ncpu, flag)
+    mpm = multiprocManager(ncpu, flag)
 
     for soltab in openSoltabs( H, soltabs ):
 
@@ -313,12 +313,12 @@ def run( step, parset, H ):
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True):
-            #mpm.put([vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection])
-            v, w, sel = flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection)
+            mpm.put([vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection])
+            #v, w, sel = flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection)
 
-#        mpm.wait()
+        mpm.wait()
         
-#        for v, w, sel in mpm.get():
+        for v, w, sel in mpm.get():
             sw.selection = sel
             if replace:
                 # rewrite solutions (flagged values are overwritten)
