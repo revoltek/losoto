@@ -156,7 +156,7 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
             #s[ s ] = ~flag_noisy # new refined selection
             #vals_detrend = vals[ s ] - vals_smoothed[ ~flag_noisy ] # keep only vals satisfying s and g
 
-            # median calc
+            # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
             rms =  1.4826 * np.median( np.abs(vals_detrend[(weights != 0)]) )
     
             # rejection  
