@@ -49,7 +49,7 @@ class h5parm( object ):
 
     def close(self):
         """
-        Flush and close the open table
+        Close the open table
         """
         logging.debug('Closing table.')
         self.H.close()

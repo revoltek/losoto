@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a smoothing function
-# WEIGHH: not ready
+# WEIGHH: flag ready
 
 import logging
 from losoto.operations_lib import *
@@ -47,14 +47,15 @@ def run( step, parset, H ):
                 del FWHM[i]
                 logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
-        for vals, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth):
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth, weight=True):
 
             if mode == 'runningmedian':
+                logging.warning('Flagged data are still taken into account!')
                 valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
             elif mode == 'median':
-                valsnew = np.median(vals)
+                valsnew = np.median( vals[(weights!=0)] )
             elif mode == 'mean':
-                valsnew = np.mean(vals)
+                valsnew = np.mean( vals[(weights!=0)] )
             else:
                 logging.error('Mode must be: runningmedian, median or mean')
                 return 1

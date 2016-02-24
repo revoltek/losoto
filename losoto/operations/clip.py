@@ -20,6 +20,7 @@ def run( step, parset, H ):
 
     axesToClip = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
     clipLevel = parset.getFloat('.'.join(["LoSoTo.Steps", step, "ClipLevel"]), 0. )
+    log = parset.getBool('.'.join(["LoSoTo.Steps", step, "Log"]), True )
     
     if len(axesToClip) < 1:
         logging.error("Please specify axes to clip.")
@@ -60,17 +61,18 @@ def run( step, parset, H ):
             total+=len(vals)
             before_count+=(len(weights)-np.count_nonzero(weights))
 
-            # clipping
             # first find the median and standard deviation
-            goodVals = vals[np.where(weights > 0)]
-            if len(goodVals) > 0:
-                valmedian = np.median(np.log10(goodVals))
-            else:
+            if (weights == 0).all():
                 valmedian = 0
-            clipvalue = valmedian * clipLevel
-            np.putmask(weights, np.abs(np.log10(vals)) > clipvalue, 0)
-            #clipvalue = valmedian / clipLevel
-            #np.putmask(weights, vals < clipvalue, 0)
+            else:
+                if log:
+                    valmedian = np.median(np.log10(vals[(weights != 0)]))
+                    rms = np.std(np.log10(vals[(weights != 0)]))
+                    np.putmask(weights, np.abs(np.log10(vals)-valmedian) > rms * clipLevel, 0)
+                else:
+                    valmedian = np.median(vals[(weights != 0)])
+                    rms = np.std(vals[(weights != 0)])
+                    np.putmask(weights, np.abs(vals-valmedian) > rms * clipLevel, 0)
         
             after_count+=(len(weights)-np.count_nonzero(weights))
 

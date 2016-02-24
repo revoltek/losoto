@@ -28,6 +28,7 @@ LoSoTo.Steps.abs.Operation = ABS
 LoSoTo.Steps.clip.Operation = CLIP
 LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
+LoSoTo.Steps.clip.Log = True # clip is done in log space
 
 LoSoTo.Steps.clocktec.Operation = CLOCKTEC
 LoSoTo.Steps.clocktec.FlagBadChannels = True # detect and remove bad channel before fitting
@@ -42,15 +43,13 @@ LoSoTo.Steps.duplicate.OutTable = sol000/clock_bkp000 # complete solset/soltab o
 
 # PARALLEL
 LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Axis = time # axis along which to smooth/find outlier (e.g. 'time')
+LoSoTo.Steps.flag.Axes = time # axes along which to smooth/find outlier (e.g. 'time' or [time, freq]), max 2 values
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
 LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
-LoSoTo.Steps.flag.MaxRmsNoise = 5. # rms to clip noise data region
-LoSoTo.Steps.flag.Window = 100 # window to remove trends (in units of axis) (time:100, freq:10e6)
-LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal (amp: 1, ph: 2)
-LoSoTo.Steps.flag.MaxGap = 300 # maximum gaps allowed before fitting 2 trends (in unit of axis) (time:500, freq=10e6)
+LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If smooth=True these are the window of the running median.
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
+LoSoTo.Steps.flag.Smooth = False # if True smooth with running median instead of fitting a polynomia
 
 # PARALLEL
 LoSoTo.Steps.flagextend.Operation = FLAGEXTEND
