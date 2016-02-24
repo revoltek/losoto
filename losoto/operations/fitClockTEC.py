@@ -70,7 +70,7 @@ def unwrapPhases(phases,fitdata=None,maskrange=15):
     '''unwrap phases, remove jumps and get best match with fitdata'''
     mymask=phases.mask
     for nriter in range(2):
-        if not fitdata is None and fitdata.shape==phases.shape:
+        if fitdata is not None and fitdata.shape == phases.shape:
             wraps=np.ma.round((phases-fitdata)/(2*np.pi))
             phases-=wraps*2*np.pi
             unmasked=np.copy(np.array(phases))
@@ -130,7 +130,7 @@ def getInitPar(
     nrTEC=40,
     nrClock=40,
     nrthird=0,
-    initsol=[]
+    initsol=tuple()
     ):
     if nrthird>0:
         A=np.ma.zeros((freqs.shape[0],3),dtype=np.float64)
@@ -524,7 +524,7 @@ def doFit(
         # logging.debug("clock correction" + str(np.remainder(freqs*initclock[1][-1]*-1e-9*2*np.pi+np.pi,2*np.pi)-np.pi))
         # logging.debug("data after init clock" + str(np.remainder(data[nT/2,:,-1]+np.pi,2*np.pi)-np.pi))
     offset = np.zeros((nSt, npol), dtype=np.float32)
-    if len(initoffsets) > 0:
+    if initoffsets: # Check if initoffsets is not empty
         offset = initoffsets
         data[:, :, :, :] += offset[:][np.newaxis, np.newaxis]
     # initialize arrays
@@ -575,7 +575,7 @@ def doFit(
         logging.debug('Wraps: ' + str(wraps))
         logging.debug('Offsets: ' + str(offset[:, pol]))
         # remove completely initialoffset?
-        if len(initoffsets) > 0:
+        if initoffsets: # Check if initoffsets is not empty
             offset[:, pol] -= initoffsets[:, pol]
         data[:, :, :, pol] += offset[:, pol][np.newaxis, np.newaxis]
         # remove fitoffset
