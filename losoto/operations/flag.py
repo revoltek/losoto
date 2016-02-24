@@ -251,7 +251,7 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
             % (removeKeys(coord, axisToFlag), initPercentFlag, percentFlagged(weights), rms))
 
-    outQueue.put([vals, flags, selection])
+    outQueue.put([vals, weights, selection])
 #    return vals, weights, selection
         
             
