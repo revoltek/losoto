@@ -245,11 +245,12 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
     else:
         weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, smooth, maxCycles, maxRms, replace)
     
+    clean_coord = {key: coord[key] for key in coord if key not in axesToFlag}
     if percentFlagged(weights) == initPercentFlag:
-        logging.debug('Percentage of data flagged/replaced (%s): %.3f -> None' % (removeKeys(coord, axisToFlag), initPercentFlag))
+        logging.debug('Percentage of data flagged/replaced (%s): %.3f -> None' % (clean_coord, initPercentFlag))
     else: 
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
-            % (removeKeys(coord, axisToFlag), initPercentFlag, percentFlagged(weights), rms))
+            % (clean_coord, initPercentFlag, percentFlagged(weights), rms))
 
     outQueue.put([vals, weights, selection])
 #    return vals, weights, selection
