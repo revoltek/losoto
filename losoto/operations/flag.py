@@ -186,20 +186,20 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
         #sys.exit(1)
 
         # plot 2d
-        import matplotlib.pyplot as plt
-        plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        plt.colorbar()
-        plt.savefig('test2d.png')
-        plt.clf()
+        #import matplotlib.pyplot as plt
+        #plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+        #plt.colorbar()
+        #plt.savefig('test2d.png')
+        #plt.clf()
         #plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        plt.colorbar()
-        plt.savefig('test2d-smooth.png')
-        plt.clf()
-        plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
-        plt.colorbar()
-        plt.savefig('test2d-detrend.png')
-        sys.exit(1)
+        #plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+        #plt.colorbar()
+        #plt.savefig('test2d-smooth.png')
+        #plt.clf()
+        #plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
+        #plt.colorbar()
+        #plt.savefig('test2d-detrend.png')
+        #sys.exit(1)
 
         return weights, vals, rms
 
