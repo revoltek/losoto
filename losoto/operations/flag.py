@@ -9,11 +9,12 @@ from losoto.operations_lib import *
 import numpy as np
 import itertools
 from scipy.ndimage import generic_filter
+import scipy.interpolate
 
 logging.debug('Loading FLAG module.')
 
-#def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
-def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
+#def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
+def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
 
     def polyfit(x=None, y=None, z=None, w=None, order=None):
         """Two-dimensional polynomial fit.
@@ -45,7 +46,6 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
             vander = polynomial.polyvander2d(x, y, order)
             vander = vander.reshape((-1,vander.shape[-1]))
             z = z.reshape((vander.shape[0],))
-            print z.shape, x.shape, y.shape
             m = np.linalg.lstsq(vander, z)[0]
             order = np.asarray(order)
             m = m.reshape(order+1) # matrix of coefficents
@@ -88,7 +88,7 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
 # 
 #        return flags
     
-    def outlier_rej(vals, weights, axes, order=5, smooth=False, max_ncycles = 3, max_rms = 3., replace = False):
+    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles = 3, max_rms = 3., replace = False):
         """
         Reject outliers using a running median
         val = the array (avg must be 0)
@@ -135,12 +135,12 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
                 rms == 0.
                 break
 
-            if smooth:
+            if mode == 'smooth':
                     vals_smooth = np.copy(vals)
                     np.putmask(vals_smooth, weights==0, np.nan)
                     vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
                     vals_detrend = vals - vals_smooth
-            else:
+            elif mode == 'poly':
                 # get polynomia and values
                 if len(axes) == 1: 
                     fit_sol = polyfit(axes[0], z=vals, w=weights, order=order)
@@ -148,6 +148,15 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
                 elif len(axes) == 2: 
                     fit_sol = polyfit(axes[0], axes[1], z=vals, w=weights, order=order)
                     vals_detrend = vals - polyval(axes[0], axes[1], m=fit_sol)
+            elif mode == 'spline':
+                # get spline
+                if len(axes) == 1: 
+                    spline = scipy.interpolate.UnivariateSpline(axes[0], y=vals, w=weights, k=order)
+                    vals_detrend = vals - spline(axes[0])
+                elif len(axes) == 2: 
+                    x, y = np.meshgrid(axes[0], axes[1], indexing='ij')
+                    spline = scipy.interpolate.SmoothBivariateSpline(x, y, z=vals.flatten(), w=weights, kx=order[0], ky=order[1])
+                    vals_detrend = vals - spline(axes[0], axes[1])
 
             # remove noisy regions of data
             #flag_noisy = clean_noisy(vals_detrend, time[ s ], window, max_rms_noise)
@@ -231,19 +240,19 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
     if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
         re = 1. * np.cos(vals)
         im = 1. * np.sin(vals)
-        weights_re, re, rms_re = outlier_rej(re, weights, flagCoord, order, smooth, maxCycles, maxRms, replace)
-        weights_im, im, rms_im = outlier_rej(im, weights, flagCoord, order, smooth, maxCycles, maxRms, replace)
+        weights_re, re, rms_re = outlier_rej(re, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
+        weights_im, im, rms_im = outlier_rej(im, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
         vals = np.arctan2(im, re)
         np.putmask(weights, weights_re == 0, 0)
         np.putmask(weights, weights_im == 0, 0)
         rms = np.sqrt(rms_re**2 + rms_im**2)
 
     elif solType == 'amplitude':
-        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, smooth, maxCycles, maxRms, replace)
+        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, replace)
         vals == 10**vals
 
     else:
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, smooth, maxCycles, maxRms, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
     
     clean_coord = {key: coord[key] for key in coord if key not in axesToFlag}
     if percentFlagged(weights) == initPercentFlag:
@@ -269,7 +278,7 @@ def run( step, parset, H ):
     order = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Order"]), 3 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
-    smooth = parset.getBool('.'.join(["LoSoTo.Steps", step, "Smooth"]), False )
+    mode = parset.getBool('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
 
     if axesToFlag == []:
@@ -283,6 +292,10 @@ def run( step, parset, H ):
     if len(order) == 1: order = order[0]
     elif len(order) == 2: order = tuple(order)
 
+    mode = mode.lower()
+    if mode != 'smooth' or mode != 'poly' or mode != 'spline':
+        logging.error('Mode must be smooth, poly or spline')
+        return 1
 
     # start processes for multi-thread
     mpm = multiprocManager(ncpu, flag)
@@ -314,8 +327,8 @@ def run( step, parset, H ):
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True):
-            mpm.put([vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection])
-            #v, w, sel = flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection)
+            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection])
+            #v, w, sel = flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection)
 
         mpm.wait()
         
