@@ -212,9 +212,9 @@ def flag(vals, weights, coord, solType, order, smooth, preflagzeros, maxCycles, 
     # check if everything flagged
     if (weights == 0).all() == True:
         logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axesToFlag)))
-        return vals, weights, selection
-#        outQueue.put([vals, weights, selection])
-#        return
+#        return vals, weights, selection
+        outQueue.put([vals, weights, selection])
+        return
 
     if preflagzeros:
         if solType == 'amplitude': weights[np.where(vals == 1)] = 0
