@@ -46,10 +46,10 @@ LoSoTo.Steps.flag.Operation = FLAG
 LoSoTo.Steps.flag.Axes = time # axes along which to smooth/find outlier (e.g. 'time' or [time, freq]), max 2 values
 LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
 LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
-LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If smooth=True these are the window of the running median.
+LoSoTo.Steps.flag.Order = 1  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median.
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
-LoSoTo.Steps.flag.Smooth = False # if True smooth with running median instead of fitting a polynomia
+LoSoTo.Steps.flag.Mode = smooth # smooth (running median)/poly/spline
 
 # PARALLEL
 LoSoTo.Steps.flagextend.Operation = FLAGEXTEND

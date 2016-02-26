@@ -155,7 +155,12 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
                     vals_detrend = vals - spline(axes[0])
                 elif len(axes) == 2: 
                     x, y = np.meshgrid(axes[0], axes[1], indexing='ij')
-                    spline = scipy.interpolate.SmoothBivariateSpline(x, y, z=vals.flatten(), w=weights, kx=order[0], ky=order[1])
+                    # spline doesn't like w=0
+                    z = vals[(weights != 0)].flatten()
+                    x = x[(weights != 0)].flatten()
+                    y = y[(weights != 0)].flatten()
+                    w = weights[(weights != 0)].flatten()
+                    spline = scipy.interpolate.SmoothBivariateSpline(x, y, z, w, kx=order[0], ky=order[1])
                     vals_detrend = vals - spline(axes[0], axes[1])
 
             # remove noisy regions of data
@@ -187,28 +192,35 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
             weights = orig_weights
 
         # plot 1d
-        #import matplotlib.pyplot as plt
-        #plt.plot(axes[0], vals, 'k.')
-        #plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
-        #plt.plot(axes[0], vals_smooth, 'r-')
-        #plt.savefig('test.png')
-        #sys.exit(1)
+        plot = False
+        if plot:
+            #import matplotlib as mpl
+            #mpl.use("Agg")
+            #import matplotlib.pyplot as plt
+            #plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
+            #vals_smooth = spline(axes[0])
+            #plt.plot(axes[0], vals_smooth, 'r-')
+            #plt.savefig('test.png')
+            #sys.exit(1)
 
-        # plot 2d
-        #import matplotlib.pyplot as plt
-        #plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        #plt.colorbar()
-        #plt.savefig('test2d.png')
-        #plt.clf()
-        #plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        #plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-        #plt.colorbar()
-        #plt.savefig('test2d-smooth.png')
-        #plt.clf()
-        #plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
-        #plt.colorbar()
-        #plt.savefig('test2d-detrend.png')
-        #sys.exit(1)
+            # plot 2d
+            import matplotlib as mpl
+            mpl.use("Agg")
+            import matplotlib.pyplot as plt
+            plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            plt.colorbar()
+            plt.savefig('test2d.png')
+            plt.clf()
+            #plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            #plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            plt.imshow(spline(axes[0],axes[1]).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            plt.colorbar()
+            plt.savefig('test2d-smooth.png')
+            plt.clf()
+            plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
+            plt.colorbar()
+            plt.savefig('test2d-detrend.png')
+            sys.exit(1)
 
         return weights, vals, rms
 
@@ -278,7 +290,7 @@ def run( step, parset, H ):
     order = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Order"]), 3 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
-    mode = parset.getBool('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
+    mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
 
     if axesToFlag == []:
@@ -293,7 +305,7 @@ def run( step, parset, H ):
     elif len(order) == 2: order = tuple(order)
 
     mode = mode.lower()
-    if mode != 'smooth' or mode != 'poly' or mode != 'spline':
+    if mode != 'smooth' and mode != 'poly' and mode != 'spline':
         logging.error('Mode must be smooth, poly or spline')
         return 1
 
@@ -319,9 +331,10 @@ def run( step, parset, H ):
                 return 1
 
         # reorder axesToFlag as axes in the table
-        axesToFlag = [axisToFlag for (coord, axisToFlag) in zip(sf.getAxesNames(),axesToFlag)]
+        axesToFlag_orig = axesToFlag
+        axesToFlag = [coord for coord in sf.getAxesNames() if coord in axesToFlag]
         if type(order) is int: order = [order]
-        order = [order for (coord, order) in zip(sf.getAxesNames(),order)]
+        if axesToFlag_orig != axesToFlag: order = order[::-1] # reverse order if we changed axesToFlag
 
         solType = sf.getType()
 

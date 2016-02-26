@@ -32,6 +32,8 @@ def run( step, parset, H ):
     removePhaseWraps=parset.getBool('.'.join(["LoSoTo.Steps", step, "RemovePhaseWraps"]), True )
     fit3rdorder=parset.getBool('.'.join(["LoSoTo.Steps", step, "Fit3rdOrder"]), False )
     circular=parset.getBool('.'.join(["LoSoTo.Steps", step, "Circular"]), False )
+    reverse=parset.getBool('.'.join(["LoSoTo.Steps", step, "Reverse"]), False )
+
     # do something on every soltab (use the openSoltab LoSoTo function)
     #for soltab in openSoltabs( H, soltabs ):
     for soltabname in soltabs:
@@ -53,8 +55,6 @@ def run( step, parset, H ):
             userSel[axis] = getParAxis( step, parset, H, axis )
         t.setSelection(**userSel)
 
-        names=t.getAxesNames()
-
         # Collect station properties
         station_dict = H.getAnt(solsetname)
         stations = t.getAxisValues('ant')
@@ -67,7 +67,6 @@ def run( step, parset, H ):
         returnAxes=['ant','freq','pol','time']
         for vals, flags, coord, selection in t.getValuesIter(returnAxes=returnAxes,weight=True):
 
- 
             if len(coord['ant']) < 2:
                 logging.error('Clock/TEC separation needs at least 2 antennas selected.')
                 return 1
@@ -79,18 +78,33 @@ def run( step, parset, H ):
             stations=coord['ant']
             times=coord['time']
 
-            axes=[i for i in names if i in returnAxes]
+            # get axes index
+            axes=[i for i in t.getAxesNames() if i in returnAxes]
+
+            # reverse time axes
+            if reverse: 
+                vals = np.swapaxes(np.swapaxes(vals, 0, axes.index('time'))[::-1], 0, axes.index('time'))
+                flags = np.swapaxes(np.swapaxes(flags, 0, axes.index('time'))[::-1], 0, axes.index('time'))
+
             result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
                              flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps,fit3rdorder=fit3rdorder,circular=circular)
             if fit3rdorder:
                 clock,tec,offset,tec3rd=result
+                if reverse: 
+                    clock = clock[::-1,:]
+                    tec = tec[::-1,:]
+                    tec3rd = tec3rd[::-1,:]
             else:
                 clock,tec,offset=result
+                if reverse: 
+                    clock = clock[::-1,:]
+                    tec = tec[::-1,:]
+
             weights=tec>-5
             tec[np.logical_not(weights)]=0
             clock[np.logical_not(weights)]=0
             weights=np.float16(weights)
-            print tec3rd.shape, weights.shape, len(stations)
+
             if combinePol:
                 tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant'], axesVals=[times, stations],
@@ -116,8 +130,6 @@ def run( step, parset, H ):
                                          vals=tec3rd[:,:,0],
                                          weights=weights[:,:,0])
                     sw = solWriter(tf_st)
-
-
             else:
                 tf_st = H.makeSoltab(solsetname, 'tec',
                                  axesNames=['time', 'ant','pol'], axesVals=[times, stations, ['XX','YY']],
@@ -143,5 +155,4 @@ def run( step, parset, H ):
                                          vals=tec3rd,
                                          weights=weights)
                     sw = solWriter(tf_st)
-
     return 0
