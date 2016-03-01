@@ -75,7 +75,7 @@ def run( step, parset, H ):
                         vals -= valsSub
 
                     # flag data that are contaminated by flagged clock/tec data
-                    weights[np.where(weightsSub == 0)] = 0
+                    if weightsSub == 0: weights[:] = 0
 
                 sw.selection = selection
                 sw.setValues(vals)

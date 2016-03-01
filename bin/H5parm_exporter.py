@@ -452,7 +452,7 @@ if __name__=='__main__':
                         continue
                     if len(solTabList) > 1:
                         logging.warning('More than one solution table found in H5parm '
-                            'matching parmdb entry "'+solType+'". Taking the first match.')
+                                'matching parmdb entry "'+solType+'". Taking the first match: '+str(solTabList[0])+'.')
                     solTab = solTabList[0]
 
                     # search in the cache for open soltab
@@ -464,8 +464,13 @@ if __name__=='__main__':
 
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
-                    sf.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
-                        time={'min':np.min(times), 'max':np.max(times)})
+                    parms = {}
+                    if 'ant' in sf.getAxesNames(): parms['ant'] = [ant]
+                    if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
+                    if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
+                    if 'freq' in sf.getAxesNames(): parms['freq'] = freqs.tolist()
+                    if 'time' in sf.getAxesNames(): parms['time'] = {'min':np.min(times), 'max':np.max(times)}
+                    sf.setSelection(**parms)
 
                     # If needed, convert Amp and Phase to Real and Imag
                     if parm == 'Real':
@@ -497,6 +502,16 @@ if __name__=='__main__':
 
                     # Apply flags
                     weights = sf.getValues(weight=True)[0]
+
+                    # etienne part; if it is borken, curse his name
+                    # check whether this is clock or tec; if so, reshape properly 
+                    if solType == "Clock" or solType == "TEC":
+                        # find freq-dimensionality 
+                        nfreq = freqs.shape[0]
+                        # reshape such that all freq arrays are filled properly
+                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
+                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
+
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
                     if parm == 'Real':

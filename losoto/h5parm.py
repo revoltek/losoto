@@ -420,47 +420,47 @@ class h5parm( object ):
             for ant1, ant2, ant3, ant4 in grouper(4, antennas):
                 info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
 
-            soltabs = self.getSoltabs(solset=solset_name)
-            if len(soltabs) == 0:
-                info += "\nNo tables\n"
-            else:
-                # For each table, print length of each axis and history of
-                # operations applied to the table.
-                if verbouse:
-                    logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
-                    f = file(self.fileName+'-axes_values.txt','w')
-                for soltab_name in soltabs.keys():
-                    try:
+            # For each table, print length of each axis and history of
+            # operations applied to the table.
+            if verbouse:
+                logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
+                f = file(self.fileName+'-axes_values.txt','w')
+            for soltab_name, soltab in self.getSoltabs(solset=solset_name).iteritems():
+                try:
+                    if verbouse: 
+                        f.write("### "+soltab_name+"\n")
+                    logging.debug('Fetching info for '+soltab_name+'.')
+                    sf = solFetcher(soltab)
+                    axisNames = sf.getAxesNames()
+                    #print self.getSoltabs(solset=solset_name)
+                    axis_str_list = []
+                    for axisName in axisNames:
+                        nslots = sf.getAxisLen(axisName)
+                        if nslots > 1:
+                            pls = "s"
+                        else:
+                            pls = ""
+                        axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
                         if verbouse: 
-                            f.write("### "+soltab_name+"\n")
-                        sf = solFetcher(soltabs[soltab_name])
-                        axisNames = sf.getAxesNames()
-                        axis_str_list = []
-                        for axisName in axisNames:
-                            nslots = sf.getAxisLen(axisName)
-                            if nslots > 1:
-                                pls = "s"
-                            else:
-                                pls = ""
-                            axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                            if verbouse: 
-                                f.write(axisName+": ")
-                                vals = sf.getAxisValues(axisName)
-                                # ugly hardcoded workaround to print all the important decimal values for time/freq
-                                if axisName == 'freq': f.write(" ".join(["{0:.8f}".format(v) for v in vals])+"\n\n")
-                                elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
-                                else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
-                        info += "\nSolution table '%s' (type: %s): %s\n" % (soltab_name, sf.getType(), ", ".join(axis_str_list))
-                        weights = sf.getValues(weight = True, retAxesVals = False)
-                        info += 'Flagged data %.3f%%\n' % (100.*len(np.where(weights==0)[0])/len(weights.flat))
-                        history = sf.getHistory()
-                        if history != "":
-                            info += "\n" + 4*" " + "History:\n" + 4*" "
-                            joinstr =  "\n" + 4*" "
-                            info += joinstr.join(wrap(history)) + "\n"
-                    except tables.exceptions.NoSuchNodeError:
-                        info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
-                if verbouse:
+                            f.write(axisName+": ")
+                            vals = sf.getAxisValues(axisName)
+                            # ugly hardcoded workaround to print all the important decimal values for time/freq
+                            if axisName == 'freq': f.write(" ".join(["{0:.8f}".format(v) for v in vals])+"\n\n")
+                            elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
+                            else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
+                    info += "\nSolution table '%s' (type: %s): %s\n" % (soltab_name, sf.getType(), ", ".join(axis_str_list))
+                    weights = sf.getValues(weight = True, retAxesVals = False)
+                    info += 'Flagged data %.3f%%\n' % (100.*np.sum(weights==0)/len(weights.flat))
+                    history = sf.getHistory()
+                    if history != "":
+                        info += "\n" + 4*" " + "History:\n" + 4*" "
+                        joinstr =  "\n" + 4*" "
+                        info += joinstr.join(wrap(history)) + "\n"
+                    del sf
+                except tables.exceptions.NoSuchNodeError:
+                    info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
+
+            if verbouse:
                     f.close()
         return info
 
@@ -519,7 +519,7 @@ class solHandler( object ):
 
         for axis, selVal in args.iteritems():
             # if None continue and keep all the values
-            if selVal == None: continue
+            if selVal is None: continue
 
             if not axis in self.getAxesNames():
                 logging.error("Cannot select on axis "+axis+", it doesn't exist. Ignored.")

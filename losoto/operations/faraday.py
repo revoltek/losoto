@@ -75,12 +75,13 @@ def run( step, parset, H ):
                 for t, time in enumerate(times):
 
                     # apply flags
-                    idx       = np.where(np.logical_and(weights[0,:,t] != 0., weights[1,:,t] != 0.))
+                    #idx       = np.where(np.logical_and(weights[0,:,t] != 0., weights[1,:,t] != 0.))
+                    idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
                     freq      = np.copy(coord['freq'])[idx]
                     phase_rr = vals[0,:,t][idx]
                     phase_ll = vals[1,:,t][idx]
-                    if (len(weights[0,:,t]) - len(idx[0]))/len(weights[0,:,t]) > 1/4.:
-                        logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx[0])))
+                    if (len(weights[0,:,t]) - len(idx))/len(weights[0,:,t]) > 1/4.:
+                        logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
         
                     if len(freq) < 10:
                         fitweights[t] = 0

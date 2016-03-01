@@ -262,14 +262,12 @@ def getClockTECFit(
                 datatmpist = datatmp[:, ist]
                 if datatmpist.count() / float(nF) > 0.5:
                     # do brutforce and update data, unwrp pdata,update flags
-                    if itm%100==0:
-                    #if itm<500:
-                        logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
+                    #if itm%100==0:
+                    #    logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
                     par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[ist,:])
                     sol[ist, :] = par[:]
-                if itm%100==0:
-                #if itm<500:
-                    logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
+                #if itm%100==0:
+                #    logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
         for ist in xrange(nSt):
             #now do the real fitting
             datatmpist=datatmp[:,ist]
@@ -279,9 +277,8 @@ def getClockTECFit(
                 continue
             fitdata=np.dot(sol[ist],A.T)
             datatmpist=unwrapPhases(datatmpist,fitdata)
-            if itm%100==0:
-            #if itm<500:
-                logging.debug(" init par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
+            #if itm%100==0:
+            #    logging.debug(" init par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
             mymask=datatmpist.mask
             maskedfreq=np.ma.array(freq,mask=mymask)
             A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
@@ -290,9 +287,8 @@ def getClockTECFit(
                 #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
                 sol[ist,:]-=np.round((sol[ist,1]-prevsol[ist,1])/steps[1])*steps
                 #logging.debug("removed jumps, par for station %d "%ist+str(sol[ist])+str(prevsol[ist]))
-            if itm%100==0:
-            #if itm<500:
-                logging.debug("par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
+            #if itm%100==0:
+            #    logging.debug("par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
          # calculate chi2 per station
         residual = data[itm] - np.dot(A, sol.T)
         tmpresid = residual - residual[:, 0][:, np.newaxis]  # residuals relative to station 0

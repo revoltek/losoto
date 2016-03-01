@@ -118,6 +118,7 @@ if __name__=='__main__':
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
+                   "SMOOTHCLOCK": operations.smoothclock,
                    "TECFIT": operations.tecfit,
                    "TECSCREEN": operations.tecscreen,
                    # example operation

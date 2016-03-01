@@ -16,6 +16,20 @@ logging.debug('Loading FLAG module.')
 #def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
 def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
 
+    def normalize(phase):
+        """
+        Normalize phase to the range [-pi, pi].
+        """
+        # Convert to range [-2*pi, 2*pi].
+        out = np.fmod(phase, 2.0 * np.pi)
+        # Remove nans
+        np.putmask(out, out!=out, 0)
+        # Convert to range [-pi, pi]
+        out[out < -np.pi] += 2.0 * np.pi
+        out[out > np.pi] -= 2.0 * np.pi
+        return out
+
+
     def polyfit(x=None, y=None, z=None, w=None, order=None):
         """Two-dimensional polynomial fit.
     
@@ -238,7 +252,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
         return
 
     if preflagzeros:
-        if solType == 'amplitude': weights[np.where(vals == 1)] = 0
+        if solType == 'amplitude': np.putmask(weights, vals == 1, 0)
         else: np.putmask(weights, vals == 0, 0)
 
     flagCoord = []
@@ -250,14 +264,12 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
     # if phase, then convert to real/imag, run the flagger on those, and convert back to pahses
     # best way to avoid unwrapping
     if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
-        re = 1. * np.cos(vals)
-        im = 1. * np.sin(vals)
-        weights_re, re, rms_re = outlier_rej(re, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
-        weights_im, im, rms_im = outlier_rej(im, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
-        vals = np.arctan2(im, re)
-        np.putmask(weights, weights_re == 0, 0)
-        np.putmask(weights, weights_im == 0, 0)
-        rms = np.sqrt(rms_re**2 + rms_im**2)
+        # remove mean of vals
+        mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
+        logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
+        vals = normalize(vals - mean)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
+        vals = normalize(vals + mean)
 
     elif solType == 'amplitude':
         weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, replace)
