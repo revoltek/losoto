@@ -20,10 +20,10 @@ if os.path.isfile('test.h5'): os.system('rm test.h5')
 logging.info("Create a new H5parm")
 H5 = h5parm('test.h5', readonly=False)
 logging.info("Close H5parm")
-del H5
+H5.close()
 logging.info("Open in read-only mode")
 H5 = h5parm('test.h5', readonly=True)
-del H5
+H5.close()
 
 # solsets
 print "###########################################"
