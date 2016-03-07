@@ -1,0 +1,135 @@
+# Validation of LoSoTo parset
+# to run with losoto.py -v examples/validation.h5 parsets/validation.parset
+
+LoSoTo.Steps = [plot0,abs,plot1,clip,plot2,interp,plot3,interp2,plot3b,norm,plot4,smooth,plot5,reset,plot6]
+LoSoTo.Solset = [sol000]
+LoSoTo.Soltab = [sol000/amplitude000,sol000/phase000]
+LoSoTo.SolType = []
+LoSoTo.ant = []
+LoSoTo.pol = [XX, YY]
+LoSoTo.dir = []
+
+# initial plotting
+LoSoTo.Steps.plot1.Operation = PLOT
+LoSoTo.Steps.plot1.PlotType = 1D
+LoSoTo.Steps.plot1.Axes = [time]
+LoSoTo.Steps.plot1.Prefix = init_
+LoSoTo.Steps.plot1.ant = [CS001LBA]
+LoSoTo.Steps.plot1.pol = [XX]
+LoSoTo.Steps.plot1.Soltab = [sol000/amplitude000]
+
+# make the abs of all amplitudes
+LoSoTo.Steps.abs.Operation = ABS
+
+# plotting
+LoSoTo.Steps.plot1.Operation = PLOT
+LoSoTo.Steps.plot1.PlotType = 1D
+LoSoTo.Steps.plot1.Axes = [time]
+LoSoTo.Steps.plot1.Prefix = abs_
+LoSoTo.Steps.plot1.ant = [CS001LBA]
+LoSoTo.Steps.plot1.pol = [XX]
+LoSoTo.Steps.plot1.Soltab = [sol000/amplitude000]
+
+# clip above a 3 sigma
+LoSoTo.Steps.clip.Operation = CLIP
+LoSoTo.Steps.clip.ClipLevel = 3
+LoSoTo.Steps.clip.Axes = [time]
+LoSoTo.Steps.clip.Soltab = [sol000/amplitude000]
+
+# plotting
+LoSoTo.Steps.plot2.Operation = PLOT
+LoSoTo.Steps.plot2.PlotType = 1D
+LoSoTo.Steps.plot2.Axes = [time]
+LoSoTo.Steps.plot2.Prefix = clip_
+LoSoTo.Steps.plot2.ant = [CS001LBA]
+LoSoTo.Steps.plot2.pol = [XX]
+LoSoTo.Steps.plot2.Soltab = [sol000/amplitude000]
+
+# calculate interpolated solutions
+LoSoTo.Steps.interp.Operation = INTERP
+LoSoTo.Steps.interp.CalSoltab = cal/amplitude000
+LoSoTo.Steps.interp.CalDir = 3C196
+LoSoTo.Steps.interp.InterpAxes = [time, freq]
+LoSoTo.Steps.interp.InterpMethod = linear
+LoSoTo.Steps.interp.Rescale = False
+LoSoTo.Steps.interp.MedAxis = time
+
+# plotting
+LoSoTo.Steps.plot3.Operation = PLOT
+LoSoTo.Steps.plot3.PlotType = 1D
+LoSoTo.Steps.plot3.Axes = [time]
+LoSoTo.Steps.plot3.Prefix = interp_
+LoSoTo.Steps.plot3.ant = [CS001LBA]
+LoSoTo.Steps.plot3.pol = [XX]
+LoSoTo.Steps.plot3.Soltab = [sol000/amplitude000]
+
+# calculate rescaling only in time
+LoSoTo.Steps.interp2.Operation = INTERP
+LoSoTo.Steps.interp2.CalSoltab = cal/amplitude000
+LoSoTo.Steps.interp2.CalDir = 3C196 # use a specific dir instead that the same of the tgt
+LoSoTo.Steps.interp2.InterpAxes = [time, freq]
+LoSoTo.Steps.interp2.InterpMethod = linear # nearest, linear, cubic
+LoSoTo.Steps.interp2.Rescale = True
+LoSoTo.Steps.interp2.MedAxis = time # rescale the median of this axis
+
+# plotting
+LoSoTo.Steps.plot3b.Operation = PLOT
+LoSoTo.Steps.plot3b.PlotType = 1D
+LoSoTo.Steps.plot3b.Axes = [time]
+LoSoTo.Steps.plot3b.Prefix = interp-res_
+LoSoTo.Steps.plot3b.ant = [CS001LBA]
+LoSoTo.Steps.plot3b.pol = [XX]
+LoSoTo.Steps.plot3b.Soltab = [sol000/amplitude000]
+
+# normalize values to 1
+LoSoTo.Steps.norm.Operation = NORM
+LoSoTo.Steps.norm.NormVal = 1.
+LoSoTo.Steps.norm.NormAxis = time
+
+# plotting
+LoSoTo.Steps.plot4.Operation = PLOT
+LoSoTo.Steps.plot4.PlotType = 1D
+LoSoTo.Steps.plot4.Axes = [time]
+LoSoTo.Steps.plot4.Prefix = norm_
+LoSoTo.Steps.plot4.ant = [CS001LBA]
+LoSoTo.Steps.plot4.pol = [XX]
+LoSoTo.Steps.plot4.Soltab = [sol000/amplitude000]
+
+# smooth in time/freq
+LoSoTo.Steps.smooth.Operation = SMOOTH
+LoSoTo.Steps.smooth.FWHM = [10, 5]
+LoSoTo.Steps.smooth.Axes = [freq, time]
+
+# plotting
+LoSoTo.Steps.plot5.Operation = PLOT
+LoSoTo.Steps.plot5.PlotType = 1D
+LoSoTo.Steps.plot5.Axes = [time]
+LoSoTo.Steps.plot5.Prefix = smooth_
+LoSoTo.Steps.plot5.ant = [CS001LBA]
+LoSoTo.Steps.plot5.pol = [XX]
+LoSoTo.Steps.plot5.Soltab = [sol000/amplitude000]
+
+# reset solutions
+LoSoTo.Steps.reset.Operation = RESET
+LoSoTo.Steps.reset.Weight = False # True to reset Weights to 1
+
+# plotting
+LoSoTo.Steps.plot6.Operation = PLOT
+LoSoTo.Steps.plot6.PlotType = 1D
+LoSoTo.Steps.plot6.Axes = [time]
+LoSoTo.Steps.plot6.Prefix = reset_
+LoSoTo.Steps.plot6.ant = [CS001LBA]
+LoSoTo.Steps.plot6.pol = [XX]
+LoSoTo.Steps.plot6.Soltab = [sol000/amplitude000]
+
+#####################################################################################33
+LoSoTo.Steps.tecfit.Operation = TECFIT
+LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
+LoSoTo.Steps.tecfit.MinBands = 4
+LoSoTo.Steps.tecfit.MaxStations = 26 # Limit to MaxStations number of stations closest to core
+LoSoTo.Steps.tecfit.OutSoltab = ion000/tec000
+
+LoSoTo.Steps.tecscreen.Operation = TECSCREEN
+LoSoTo.Steps.tecscreen.Height = 200e3
+LoSoTo.Steps.tecscreen.Order = 15
+LoSoTo.Steps.tecscreen.OutSoltab = [ion000/tecscreen000]
