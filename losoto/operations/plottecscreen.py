@@ -39,7 +39,10 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     import numpy as np
     import os
     from operations.tecscreen import calc_piercepoint
-    import losoto.progressbar as progressbar
+    try:
+        import progressbar
+    except ImportError:
+        import losoto.progressbar as progressbar
 
     root_dir = os.path.dirname(prefix)
     if root_dir == '':
