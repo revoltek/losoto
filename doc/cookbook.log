@@ -1,24 +1,24 @@
-This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015/dev/Debian) (preloaded format=xelatex 2015.1.21)  21 OCT 2015 12:27
+This is XeTeX, Version 3.14159265-2.6-0.99992 (TeX Live 2015/Debian) (preloaded format=xelatex 2016.3.16)  23 MAR 2016 17:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **cookbook.tex
 (./cookbook.tex
-LaTeX2e <2014/05/01>
-Babel <3.9l> and hyphenation patterns for 2 languages loaded.
+LaTeX2e <2016/02/01>
+Babel <3.9n> and hyphenation patterns for 2 languages loaded.
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo
 File: size10.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
 )
-\c@part=\count80
-\c@section=\count81
-\c@subsection=\count82
-\c@subsubsection=\count83
-\c@paragraph=\count84
-\c@subparagraph=\count85
-\c@figure=\count86
-\c@table=\count87
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
 \abovecaptionskip=\skip41
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
@@ -100,22 +100,22 @@ LaTeX Font Info:    Overwriting symbol font `largesymbolsA' in version `bold'
 LaTeX Info: Redefining \not on input line 1043.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
-Package: graphicx 2014/04/25 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
 
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
-Package: keyval 2014/05/08 v1.15 key=value parser (DPC)
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
 \KV@toks@=\toks14
 )
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
-Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+Package: graphics 2016/01/03 v1.0q Standard LaTeX Graphics (DPC,SPQR)
 
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/trig.sty
-Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
 )
 (/usr/share/texlive/texmf-dist/tex/latex/latexconfig/graphics.cfg
 File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
 )
-Package graphics Info: Driver file: pdftex.def on input line 91.
+Package graphics Info: Driver file: pdftex.def on input line 95.
 
 (/usr/share/texlive/texmf-dist/tex/latex/pdftex-def/pdftex.def
 File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
@@ -137,9 +137,7 @@ Type  H <return>  for immediate help.
                                                   
 l.424 }{}
          
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
+? 
 ))
 \Gin@req@height=\dimen103
 \Gin@req@width=\dimen104
@@ -206,13 +204,13 @@ Package: auxhook 2011/03/04 v1.3 Hooks for auxiliary files (HO)
 Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
 )
 \@linkdim=\dimen105
-\Hy@linkcounter=\count88
-\Hy@pagecounter=\count89
+\Hy@linkcounter=\count87
+\Hy@pagecounter=\count88
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2012/11/06 v6.83m Hyperref: PDFDocEncoding definition (HO)
 )
-\Hy@SavedSpaceFactor=\count90
+\Hy@SavedSpaceFactor=\count89
 
 (/usr/share/texlive/texmf-dist/tex/latex/latexconfig/hyperref.cfg
 File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
@@ -225,10 +223,10 @@ Package hyperref Info: Plain pages OFF on input line 4458.
 Package hyperref Info: Backreferencing OFF on input line 4463.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4688.
-\c@Hy@tempcnt=\count91
+\c@Hy@tempcnt=\count90
 LaTeX Info: Redefining \url on input line 5041.
 \XeTeXLinkMargin=\dimen106
-\Fld@menulength=\count92
+\Fld@menulength=\count91
 \Field@Width=\dimen107
 \Fld@charsize=\dimen108
 Package hyperref Info: Hyper figures OFF on input line 6295.
@@ -240,9 +238,9 @@ Package hyperref Info: Link coloring with OCG OFF on input line 6320.
 Package hyperref Info: PDF/A mode OFF on input line 6325.
 LaTeX Info: Redefining \ref on input line 6365.
 LaTeX Info: Redefining \pageref on input line 6369.
-\Hy@abspage=\count93
-\c@Item=\count94
-\c@Hfootnote=\count95
+\Hy@abspage=\count92
+\c@Item=\count93
+\c@Hfootnote=\count94
 )
 
 Package hyperref Message: Driver (autodetected): hxetex.
@@ -258,10 +256,10 @@ Package: stringenc 2011/12/02 v1.10 Convert strings between diff. encodings (HO
 )
 )
 \pdfm@box=\box26
-\c@Hy@AnnotLevel=\count96
-\HyField@AnnotCount=\count97
-\Fld@listcount=\count98
-\c@bookmark@seq@number=\count99
+\c@Hy@AnnotLevel=\count95
+\HyField@AnnotCount=\count96
+\Fld@listcount=\count97
+\c@bookmark@seq@number=\count98
 
 (/usr/share/texlive/texmf-dist/tex/latex/oberdiek/rerunfilecheck.sty
 Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
@@ -282,12 +280,16 @@ Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip44
 \bibsep=\skip45
 LaTeX Info: Redefining \cite on input line 694.
-\c@NAT@ctr=\count100
+\c@NAT@ctr=\count99
 )
 (/usr/share/texlive/texmf-dist/tex/latex/ctable/ctable.sty
-Package: ctable 2014/04/25 v1.29 ctable package for \ flexible typesetting of t
-able and figure floats using key/value directives
+Package: ctable 2015/10/17 v1.31 ctable package for flexible typesetting of tab
+le and figure floats using key/value directives
 
+(/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2015/08/02 v2.2a e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count100
+)
 (/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
 Package: xcolor 2007/01/21 v2.11 LaTeX color extensions (UK)
 
@@ -297,8 +299,8 @@ File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
 Package xcolor Info: Driver file: xetex.def on input line 225.
 
 (/usr/share/texlive/texmf-dist/tex/xelatex/xetex-def/xetex.def
-File: xetex.def 2014/07/25 v4.03 LaTeX color/graphics driver for XeTeX (RRM/JK)
-
+File: xetex.def 2015/09/11 v4.06 LaTeX color/graphics driver for XeTeX (TeX Liv
+e/RRM/JK)
 )
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1337.
 Package xcolor Info: Model `RGB' extended on input line 1353.
@@ -310,7 +312,7 @@ Package xcolor Info: Model `Gray' substituted by `gray' on input line 1359.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1360.
 )
 (/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty
-Package: xkeyval 2014/05/25 v2.7 package option processing (HA)
+Package: xkeyval 2014/12/03 v2.7a package option processing (HA)
 
 (/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
 (/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkvutils.tex
@@ -318,7 +320,7 @@ Package: xkeyval 2014/05/25 v2.7 package option processing (HA)
 \XKV@tempa@toks=\toks16
 )
 \XKV@depth=\count101
-File: xkeyval.tex 2014/05/25 v2.7 key=value parser (HA)
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
 ))
 (/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
 Package: array 2014/10/28 v2.4c Tabular extension package (FMi)
@@ -375,26 +377,26 @@ Package ctable Warning:
 (ctable)                Transparency disabled: pdfTeX is not running in PDF mod
 e .
 
-\@ctblframesep=\dimen129
-\@defaultctblframesep=\dimen130
-\@ctblframerule=\dimen131
-\@defaultctblframerule=\dimen132
-\@ctblwidth=\dimen133
-\@defaultctblwidth=\dimen134
-\@ctblcaptionskip=\dimen135
-\@defaultctblcaptionskip=\dimen136
-\@ctblmaxwidth=\dimen137
-\@defaultctblmaxwidth=\dimen138
-\@ctblmincapwidth=\dimen139
-\@defaultctblmincapwidth=\dimen140
-\@ctblfooterwidth=\dimen141
-\@defaultctblfooterwidth=\dimen142
-\@ctblw=\dimen143
-\@ctblfloatwidth=\dimen144
-\@ctbloldsep=\dimen145
-\@ctbloldrule=\dimen146
-\ctbl@t=\box28
-\@ctblcurftwidth=\dimen147
+\@CTframesep=\dimen129
+\@dfltCTframesep=\dimen130
+\@CTframerule=\dimen131
+\@dfltCTframerule=\dimen132
+\@CTwidth=\dimen133
+\@dfltCTwidth=\dimen134
+\@CTcaptionskip=\dimen135
+\@dfltCTcaptionskip=\dimen136
+\@CTmaxwidth=\dimen137
+\@dfltCTmaxwidth=\dimen138
+\@CTmincapwidth=\dimen139
+\@dfltCTmincapwidth=\dimen140
+\@CTfooterwidth=\dimen141
+\@dfltCTfooterwidth=\dimen142
+\@CTw=\dimen143
+\@CTfloatwidth=\dimen144
+\@CToldsep=\dimen145
+\@CToldrule=\dimen146
+\CT@t=\box28
+\@CTcurftwidth=\dimen147
 ) (/usr/share/texlive/texmf-dist/tex/latex/multirow/multirow.sty
 \bigstrutjot=\dimen148
 )
@@ -402,11 +404,11 @@ e .
 Package: subfig 2005/06/28 ver: 1.3 subfig package
 
 (/usr/share/texlive/texmf-dist/tex/latex/caption/caption.sty
-Package: caption 2013/05/02 v3.3-89 Customizing captions (AR)
+Package: caption 2016/02/21 v3.3-144 Customizing captions (AR)
 
 (/usr/share/texlive/texmf-dist/tex/latex/caption/caption3.sty
-Package: caption3 2013/05/02 v1.6-88 caption3 kernel (AR)
-Package caption3 Info: TeX engine: e-TeX on input line 57.
+Package: caption3 2016/02/04 v1.7-139 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 67.
 \captionmargin=\dimen149
 \captionmargin@=\dimen150
 \captionwidth=\dimen151
@@ -521,30 +523,30 @@ Package caption Info: subfig package v1.3 is loaded.
 Package caption Info: longtable package is loaded.
 
 (/usr/share/texlive/texmf-dist/tex/latex/caption/ltcaption.sty
-Package: ltcaption 2013/02/03 v1.3-62 longtable captions (AR)
+Package: ltcaption 2013/06/09 v1.4-94 longtable captions (AR)
 )
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    Try loading font information for U+txmia on input line 29.
+LaTeX Font Info:    Try loading font information for U+txmia on input line 28.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/utxmia.fd
 File: utxmia.fd 2000/12/15 v3.1
 )
-LaTeX Font Info:    Try loading font information for U+txsya on input line 29.
+LaTeX Font Info:    Try loading font information for U+txsya on input line 28.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/utxsya.fd
 File: utxsya.fd 2000/12/15 v3.1
 )
-LaTeX Font Info:    Try loading font information for U+txsyb on input line 29.
+LaTeX Font Info:    Try loading font information for U+txsyb on input line 28.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/utxsyb.fd
 File: utxsyb.fd 2000/12/15 v3.1
 )
-LaTeX Font Info:    Try loading font information for U+txsyc on input line 29.
+LaTeX Font Info:    Try loading font information for U+txsyc on input line 28.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/utxsyc.fd
 File: utxsyc.fd 2000/12/15 v3.1
 )
-LaTeX Font Info:    Try loading font information for OT1+txtt on input line 29.
+LaTeX Font Info:    Try loading font information for OT1+txtt on input line 28.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/ot1txtt.fd
@@ -554,12 +556,12 @@ File: ot1txtt.fd 2000/12/15 v3.1
 File: se-ascii-print.def 2011/12/02 v1.10 stringenc: Printable ASCII characters
 
 )
-Underfull \hbox (badness 10000) in paragraph at lines 32--36
+Underfull \hbox (badness 10000) in paragraph at lines 31--35
 
  []
 
 
-Overfull \hbox (10.35503pt too wide) in paragraph at lines 32--36
+Overfull \hbox (10.35503pt too wide) in paragraph at lines 31--35
 \OT1/txr/bx/n/10 WARNING: LoSoTo is still in a beta ver-sion! Please re-port bu
 gs to fdg@hs.uni-hamburg.de and drafferty@hs.uni-
  []
@@ -567,90 +569,57 @@ gs to fdg@hs.uni-hamburg.de and drafferty@hs.uni-
 [1
 
 ] [2]
-Overfull \hbox (23.74358pt too wide) in paragraph at lines 181--181
+Overfull \hbox (23.74358pt too wide) in paragraph at lines 180--180
 []\OT1/txtt/m/n/10 # this is the CArray with the solutions, note that its shape
  is the product of all axes shapes[] 
  []
 
 [3]
 LaTeX Font Info:    Font shape `OT1/txtt/bx/n' in size <10> not available
-(Font)              Font shape `OT1/txtt/b/n' tried instead on input line 227.
+(Font)              Font shape `OT1/txtt/b/n' tried instead on input line 226.
  [4]
 File: solph.png Graphic file (type QTm)
  <use  "solph.png" >
 File: solamp.png Graphic file (type QTm)
  <use  "solamp.png" > [5]
-Overfull \hbox (18.49359pt too wide) in paragraph at lines 310--310
+Overfull \hbox (18.49359pt too wide) in paragraph at lines 312--312
 []\OT1/txtt/m/n/10 Solution table 'amplitude000' (type: amplitude): 2 pols, 2 d
 irs, 36 ants, 5 freqs, 4314 times[] 
  []
 
 [6]
-Overfull \hbox (31.93504pt too wide) in paragraph at lines 389--407
+Overfull \hbox (31.93504pt too wide) in paragraph at lines 340--358
  [][] 
  []
 
-LaTeX Font Info:    Try loading font information for OMS+txr on input line 436.
+LaTeX Font Info:    Try loading font information for OMS+txr on input line 375.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/omstxr.fd
 File: omstxr.fd 2000/12/15 v3.1
 )
 LaTeX Font Info:    Font shape `OMS/txr/m/n' in size <10> not available
-(Font)              Font shape `OMS/txsy/m/n' tried instead on input line 436.
+(Font)              Font shape `OMS/txsy/m/n' tried instead on input line 375.
+ [7] [8]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 443.
+ [9]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 443.
 
-Overfull \hbox (45.04535pt too wide) in alignment at lines 412--439
- [] [] [] [] 
- []
-
-
-Underfull \vbox (badness 10000) detected at line 439
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 448--449
-[]|\OT1/txr/m/n/10 The cal-i-bra-tor so-lu-tion ta-ble (e.g.
- []
-
-
-Overfull \hbox (45.04535pt too wide) in alignment at lines 439--463
- [] [] [] [] 
- []
-
-[7]
-Underfull \hbox (badness 10000) in paragraph at lines 481--481
-[]|\OT1/txr/m/n/10 runningmedian \OMS/txsy/m/n/10 j
- []
-
-
-Overfull \hbox (45.04535pt too wide) in alignment at lines 463--487
- [] [] [] [] 
- []
-
-
-Overfull \hbox (45.04535pt too wide) in alignment at lines 487--495
- [] [] [] [] 
- []
-
-[8] [9]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 564.
- [10]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 564.
- (./cookbook.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 564.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 564.
+(./cookbook.aux)
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 443.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 443.
 
 
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 564.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 443.
  ) 
 Here is how much of TeX's memory you used:
- 11586 strings out of 495658
- 163919 string characters out of 6187904
- 245633 words of memory out of 5000000
- 14667 multiletter control sequences out of 15000+600000
+ 11925 strings out of 495579
+ 167534 string characters out of 6187322
+ 238555 words of memory out of 5000000
+ 15074 multiletter control sequences out of 15000+600000
  27055 words of font info for 82 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 61i,9n,96p,889b,445s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 61i,9n,96p,917b,445s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on cookbook.pdf (10 pages).
+Output written on cookbook.pdf (9 pages).
