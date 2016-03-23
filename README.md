@@ -29,6 +29,7 @@ LoSoTo has an internl flag system encoded in the weight column. Weights are not 
 
 Documentation:
 Documentation extracted from the LOFAR cookbook is present in the doc directory
+A detailed explanation of all the parameters for each operation is in: __parsets/losoto.parset__
 
 Used packages:
 * PyTables version:  3.2.2
