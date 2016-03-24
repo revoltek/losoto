@@ -154,7 +154,7 @@ def run( step, parset, H ):
     if makeMovie: 
         prefix = prefix+'__tmp__'
 
-    if os.path.exists(os.path.dirname(prefix)) != '' and not os.path.exists(os.path.dirname(prefix)):
+    if os.path.dirname(prefix) != '' and not os.path.exists(os.path.dirname(prefix)):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
         os.makedirs(os.path.dirname(prefix))
 
