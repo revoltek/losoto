@@ -70,13 +70,13 @@ def run( step, parset, H ):
             fitrmguess = 0 # good guess
 
             if 'RR' in coord['pol'] and 'LL' in coord['pol']:
-                coord_rr = coord['pol'].index('RR')
-                coord_ll = coord['pol'].index('LL')
+                coord_rr = np.where(coord['pol'] == 'RR')[0][0]
+                coord_ll = np.where(coord['pol'] == 'LL')[0][0]
             elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
                 logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
-                coord_rr = coord['pol'].index('XX')
-                coord_ll = coord['pol'].index('YY')
-            else
+                coord_rr = np.where(coord['pol'] == 'XX')[0][0]
+                coord_ll = np.where(coord['pol'] == 'YY')[0][0]
+            else:
                 logging.error("Cannot proceed with Faraday estimation with polarizations: "+str(coord['pol']))
                 return 1
 
@@ -86,11 +86,10 @@ def run( step, parset, H ):
                 for t, time in enumerate(times):
 
                     # apply flags
-                    #idx       = np.where(np.logical_and(weights[0,:,t] != 0., weights[1,:,t] != 0.))
                     idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
                     freq      = np.copy(coord['freq'])[idx]
-                    phase_rr = vals[coord_rr,:,t][idx]
-                    phase_ll = vals[coord_ll,:,t][idx]
+                    phase_rr  = vals[coord_rr,:,t][idx]
+                    phase_ll  = vals[coord_ll,:,t][idx]
 
                     if (len(weights[0,:,t]) - len(idx))/len(weights[0,:,t]) > 1/4.:
                         logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
