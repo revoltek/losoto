@@ -1,6 +1,0 @@
-git status
-git add FILENAME
-git commit -a
-git pull origin master
-git push origin master
-
