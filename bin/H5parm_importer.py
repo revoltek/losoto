@@ -21,11 +21,14 @@ import numpy as np
 import logging
 import pyrap.tables as pt
 import lofar.parmdb
-import losoto.progressbar as progressbar
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import solWriter
 from losoto.h5parm import h5parm as h5parm2
+try:
+    import progressbar
+except ImportError:
+    import losoto.progressbar as progressbar
 
 
 def parmdbToAxes(solEntry):

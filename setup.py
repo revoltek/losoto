@@ -50,7 +50,7 @@ setup(
     scripts = ['bin/losoto', 'bin/H5parm_benchmark.py',
                'bin/H5parm_exporter.py', 'bin/H5parm_importer.py',
                'bin/H5parm_merge.py', 'bin/parmdb_collector.py',],
-    packages=['losoto','losoto.operations'],
+    packages=['losoto','losoto.operations','losoto.progressbar'],
     test_suite='test',
     cmdclass = {'test': PyTest},
     )

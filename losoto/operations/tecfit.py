@@ -21,8 +21,11 @@ def collect_solutions(H, dirs=None, freq_tol=1e6, solsets=None):
     """
     import numpy as np
     from pylab import find
-    import losoto.progressbar as progressbar
     import re
+    try:
+        import progressbar
+    except ImportError:
+        import losoto.progressbar as progressbar
     logging.info("Scanning for solutions needed for TEC fitting...")
 
     # Determine axis lengths
@@ -353,7 +356,10 @@ def fit_tec_per_source_pair(phases, flags, mask, freqs, init_sols=None,
     from pylab import pinv, newaxis, find
     import numpy as np
     from lofar.expion import baselinefitting
-    import losoto.progressbar as progressbar
+    try:
+        import progressbar
+    except ImportError:
+        import losoto.progressbar as progressbar
 
     sols_list = []
     eq_list = []
@@ -473,7 +479,10 @@ def add_stations(station_selection, phases0, phases1, flags, mask,
     from pylab import pinv, newaxis, find, amin
     import numpy as np
     from lofar.expion import baselinefitting
-    import losoto.progressbar as progressbar
+    try:
+        import progressbar
+    except ImportError:
+        import losoto.progressbar as progressbar
 
     N_sources_selected = len(source_selection)
     N_stations_selected = len(station_selection)

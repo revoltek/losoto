@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{LoSoTo:\040LOFAR\040Solution\040Tool}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{H5parm}{section.1}% 2
+\BOOKMARK [3][-]{subsubsection.1.1.1}{HDF5\040format}{subsection.1.1}% 3
+\BOOKMARK [3][-]{subsubsection.1.1.2}{Characteristics\040of\040the\040H5parm}{subsection.1.1}% 4
+\BOOKMARK [3][-]{subsubsection.1.1.3}{Example\040of\040H5parm\040content}{subsection.1.1}% 5
+\BOOKMARK [3][-]{subsubsection.1.1.4}{H5parm\040benchmarks}{subsection.1.1}% 6
+\BOOKMARK [2][-]{subsection.1.2}{LoSoTo}{section.1}% 7
+\BOOKMARK [3][-]{subsubsection.1.2.1}{Tools}{subsection.1.2}% 8
+\BOOKMARK [3][-]{subsubsection.1.2.2}{Operations}{subsection.1.2}% 9
+\BOOKMARK [3][-]{subsubsection.1.2.3}{LoSoTo\040parset}{subsection.1.2}% 10
+\BOOKMARK [2][-]{subsection.1.3}{Usage}{section.1}% 11
+\BOOKMARK [2][-]{subsection.1.4}{Developing\040in\040LoSoTo}{section.1}% 12
+\BOOKMARK [2][-]{subsection.1.5}{Clock/TEC\040separation}{section.1}% 13
