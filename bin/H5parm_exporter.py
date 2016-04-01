@@ -65,6 +65,11 @@ def parmdbToAxes(solEntry):
             pol2 = pol
         dir = 'pointing'
 
+    # For RotationMeasure assuming [RotationMeasure:ant]
+    elif thisSolType == 'RotationMeasure':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
         thisSolType, pol1, pol2, parm, ant = solEntry.split(':')
@@ -143,6 +148,8 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                         solTabList.append(st)
                     elif solType == 'TEC' and st._v_title == 'tec':
                         solTabList.append(st)
+                    elif solType == 'RotationMeasure' and st._v_title == 'rotationmeasure':
+                        solTabList.append(st)
             else:
                 if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
                     solTabList.append(st)
@@ -151,6 +158,8 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                 elif solType == 'Clock' and st._v_title == 'clock':
                     solTabList.append(st)
                 elif solType == 'TEC' and st._v_title == 'tec':
+                    solTabList.append(st)
+                elif solType == 'RotationMeasure' and st._v_title == 'rotationmeasure':
                     solTabList.append(st)
 
     if len(solTabList) == 0:
@@ -505,7 +514,7 @@ if __name__=='__main__':
 
                     # etienne part; if it is borken, curse his name
                     # check whether this is clock or tec; if so, reshape properly 
-                    if solType == "Clock" or solType == "TEC":
+                    if solType == "Clock" or solType == "TEC" or solType == "RotationMeasure":
                         # find freq-dimensionality 
                         nfreq = freqs.shape[0]
                         # reshape such that all freq arrays are filled properly

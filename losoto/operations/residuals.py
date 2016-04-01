@@ -68,9 +68,9 @@ def run( step, parset, H ):
                         wav = 2.99792458e8/coord['freq']
                         ph = wav * wav * valsSub
                         if coord['pol'] == 'XX':
-                            vals -= ph
-                        elif coord['pol'] == 'YY':
                             vals += ph
+                        elif coord['pol'] == 'YY':
+                            vals -= ph
                     else:
                         vals -= valsSub
 

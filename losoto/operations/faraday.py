@@ -69,6 +69,17 @@ def run( step, parset, H ):
             fitweights = np.ones(len(times))
             fitrmguess = 0 # good guess
 
+            if 'RR' in coord['pol'] and 'LL' in coord['pol']:
+                coord_rr = coord['pol'].index('RR')
+                coord_ll = coord['pol'].index('LL')
+            elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
+                logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
+                coord_rr = coord['pol'].index('XX')
+                coord_ll = coord['pol'].index('YY')
+            else
+                logging.error("Cannot proceed with Faraday estimation with polarizations: "+str(coord['pol']))
+                return 1
+
             if not coord['ant'] == refAnt:
                 logging.debug('Working on ant: '+coord['ant']+'...')
 
@@ -78,8 +89,9 @@ def run( step, parset, H ):
                     #idx       = np.where(np.logical_and(weights[0,:,t] != 0., weights[1,:,t] != 0.))
                     idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
                     freq      = np.copy(coord['freq'])[idx]
-                    phase_rr = vals[0,:,t][idx]
-                    phase_ll = vals[1,:,t][idx]
+                    phase_rr = vals[coord_rr,:,t][idx]
+                    phase_ll = vals[coord_ll,:,t][idx]
+
                     if (len(weights[0,:,t]) - len(idx))/len(weights[0,:,t]) > 1/4.:
                         logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
         
@@ -88,7 +100,8 @@ def run( step, parset, H ):
                         logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant'])
                         continue
         
-                    phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+                    # LL-RR to be consistent with BBS/NDPPP
+                    phase_diff  = (phase_ll - phase_rr)      # not divide by 2 otherwise jump problem, then later fix this
                     wav = c/freq
     
                     fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
