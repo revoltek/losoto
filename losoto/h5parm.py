@@ -400,7 +400,10 @@ class h5parm( object ):
             return info
         solset_names = solsets.keys()
         solset_names.sort()
-
+        # delete axes value file if already present
+        if verbouse and os.path.exists(self.fileName+'-axes_values.txt'): 
+                logging.warning('Overwriting '+self.fileName+'-axes_values.txt')
+                os.system('rm '+self.fileName+'-axes_values.txt')
         # For each solution set, list solution tables, sources, and antennas
         for solset_name in solset_names:
             info += "\nSolution set '%s':\n" % solset_name
@@ -424,11 +427,11 @@ class h5parm( object ):
             # operations applied to the table.
             if verbouse:
                 logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
-                f = file(self.fileName+'-axes_values.txt','w')
+                f = file(self.fileName+'-axes_values.txt','a')
             for soltab_name, soltab in self.getSoltabs(solset=solset_name).iteritems():
                 try:
                     if verbouse: 
-                        f.write("### "+soltab_name+"\n")
+                        f.write("### /"+solset_name+"/"+soltab_name+"\n")
                     logging.debug('Fetching info for '+soltab_name+'.')
                     sf = solFetcher(soltab)
                     axisNames = sf.getAxesNames()
