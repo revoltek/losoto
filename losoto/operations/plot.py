@@ -9,7 +9,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading PLOT module.')
 
-def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, outQueue):
+def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, outQueue):
         import os, pickle
         from itertools import cycle, chain
         import numpy as np
@@ -77,6 +77,9 @@ def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabe
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
+                if antCoords != []:
+                    areas = 5 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 0-15 pt
+                    plt.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=3) # flagged data are automatically masked
                     if plotflag: 
@@ -147,6 +150,7 @@ def run( step, parset, H ):
     dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
     ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
     tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
+    makeAntPlot = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeAntPlot"]), False )
     makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
@@ -208,6 +212,18 @@ def run( step, parset, H ):
             Nplots = sf.getAxisLen(axisInTable[0])
         else:
             Nplots = 1
+
+        # prepare antennas coord in makeAntPlot case
+        if makeAntPlot:
+            if axesInPlot != ['ant']:
+                logging.error('If makeAntPlot is selected the "Axes" values must be "ant"')
+                return 1
+            antCoords = [[],[]]
+            for ant in sf.getAxisValues('ant'): # select only user-selected antenna in proper order
+                antCoords[0].append(H.getAnt(sf.getAddress().split('/')[0])[ant][0])
+                antCoords[1].append(H.getAnt(sf.getAddress().split('/')[0])[ant][1])
+        else:
+            antCoords = []
             
         datatype = sf.getType()
 
@@ -349,7 +365,7 @@ def run( step, parset, H ):
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile
 
-            mpm.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie])
+            mpm.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         mpm.wait()
@@ -370,7 +386,7 @@ def run( step, parset, H ):
             assert movieName != '' # need a common prefix, use prefix keyword in case
             logging.info('Making movie: '+movieName)
             # make every movie last 20 sec, min one second per slide
-            fps = np.ceil(len(pngs)/20.)
+            fps = np.ceil(len(pngs)/200.)
             ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                     "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
             os.system(ss)

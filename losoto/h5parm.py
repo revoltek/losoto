@@ -506,6 +506,14 @@ class solHandler( object ):
             self.cacheWeight = np.copy(self.t.weight)
             self.cacheVal = np.copy(self.t.val)
 
+
+    def getAddress(self):
+        """
+        return the solset/soltab address of self.t as a string
+        """
+        return self.t._v_pathname[1:]
+
+
     def setSelection(self, **args):
         """
         set a default selection criteria.

@@ -25,6 +25,9 @@ def run( step, parset, H ):
         logging.error("Axes and FWHM lenghts must be equal.")
         return 1
 
+    if mode == "runningmedian":
+        logging.warning('Flagged data are still taken into account!')
+
     if FWHM != [] and mode != "runningmedian":
         logging.warning("FWHM makes sense only with runningmedian mode, ignoring it.")
 
@@ -50,7 +53,6 @@ def run( step, parset, H ):
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth, weight=True):
 
             if mode == 'runningmedian':
-                logging.warning('Flagged data are still taken into account!')
                 valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
             elif mode == 'median':
                 valsnew = np.median( vals[(weights!=0)] )
