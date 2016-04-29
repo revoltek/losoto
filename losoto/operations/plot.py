@@ -37,7 +37,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         if figSize[0] == 0:
             if makeMovie: figSize[0]=5+2*Nc
             else: figSize[0]=10+3*Nc
-        elif figSize[1] == 0:
+        if figSize[1] == 0:
             if makeMovie: figSize[1]=4+1*Nr
             else: figSize[1]=8+2*Nr
         
