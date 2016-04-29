@@ -73,6 +73,8 @@ LoSoTo.Steps.norm.NormAxes = [time,ant]
 # PARALLEL
 LoSoTo.Steps.plot.Operation = PLOT
 LoSoTo.Steps.plot.Axes = [] # 1- or 2-element array which says the coordinates to plot (2 for 3D plots)
+LoSoTo.Steps.plot.Columns = 0 # Number of columns in a multi-table image, if 0 then it is automatically chosen
+LoSoTo.Steps.plot.FigSize = [0,0] # Size of the image [x,y], if one of the values is 0, then it is automatically chosen
 LoSoTo.Steps.plot.MinMax = [0,0] # min max value for the independent variable (0 means automatic)
 LoSoTo.Steps.plot.TableAxis = [] # the axis to plot on a page - e.g. ant to get all antenna's on one file
 LoSoTo.Steps.plot.ColorAxis = [] # the axis to plot in different colours - e.g. pol to get correlations with different colors

@@ -9,7 +9,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading PLOT module.')
 
-def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, outQueue):
+def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, outQueue):
         import os, pickle
         from itertools import cycle, chain
         import numpy as np
@@ -27,11 +27,22 @@ def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabe
             os.system('rm '+dataCube)
             dataCube = dataCube_p
         
-        autominZ = None; automaxZ = None
-        Nr = int(np.ceil(np.sqrt(Nplots)))
-        Nc = int(np.ceil(np.float(Nplots)/Nr))
-        if makeMovie: figgrid, axa = plt.subplots(Nc, Nr, figsize=(5+2*Nc,4+1*Nr), sharex=True, sharey=True)
-        else: figgrid, axa = plt.subplots(Nc, Nr, figsize=(10+3*Nc,8+2*Nr), sharex=True, sharey=True)
+        autominZ = None; automaxZ = None 
+
+        # if user-defined number of col use that
+        if NColFig != 0: Nc = NColFig
+        else: Nc = int(np.ceil(np.sqrt(Nplots)))
+        Nr = int(np.ceil(np.float(Nplots)/Nc))
+
+        if figSize[0] == 0:
+            if makeMovie: figSize[0]=5+2*Nc
+            else: figSize[0]=10+3*Nc
+        elif figSize[1] == 0:
+            if makeMovie: figSize[1]=4+1*Nr
+            else: figSize[1]=8+2*Nr
+        
+        figgrid, axa = plt.subplots(Nr, Nc, figsize=figSize, sharex=True, sharey=True)
+
         if Nplots == 1: axa = np.array([axa])
         figgrid.subplots_adjust(hspace=0, wspace=0)
         axaiter = chain.from_iterable(axa)
@@ -77,7 +88,8 @@ def plot(Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabe
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
                     else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
-                if antCoords != []:
+                # make an antenna plot
+                elif antCoords != []:
                     areas = 5 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 0-15 pt
                     plt.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
@@ -137,6 +149,8 @@ def run( step, parset, H ):
 
     # 1- or 2-element array in form X, [Y]
     axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
+    NColFig = parset.getInt('.'.join(["LoSoTo.Steps", step, "Columns"]), 0 )
+    figSize = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FigSize"]), [0,0] )
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     if minZ == 0: minZ = None
     if maxZ == 0: maxZ = None
@@ -365,7 +379,7 @@ def run( step, parset, H ):
                 pickle.dump(dataCube, open(pfile, 'wb'))
                 dataCube = pfile
 
-            mpm.put([Nplots, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
+            mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         mpm.wait()
