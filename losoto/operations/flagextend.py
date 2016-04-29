@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 # This operation for LoSoTo implement a extend flag procedure
+# It can work in multi dimensional space and for each datum check if the surrounding data are flagged to a certain %, then flag also that datum
+# The size of the surrounding footprint can be tuned
 # WEIGHT: compliant
 
 import logging
@@ -10,7 +12,7 @@ import numpy as np
 
 logging.debug('Loading FLAGEXTEND module.')
 
-def flag(weights, coord, axesToExt, selection, percent=90, size=11, cycles=3, outQueue=None):
+def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, outQueue=None):
         """
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
@@ -27,6 +29,13 @@ def flag(weights, coord, axesToExt, selection, percent=90, size=11, cycles=3, ou
 
         import scipy.ndimage
         initialPercent = 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)
+
+        # if size=0 then extend to all axis
+        print size
+        for i, s in enumerate(size):
+            if s == 0: size[i] = weights.shape[i]
+        print size
+
         for cycle in xrange(cycles):
             flag = scipy.ndimage.filters.generic_filter(weights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
             weights[ np.where( flag == 1 ) ] = 0
@@ -47,7 +56,7 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
 
     axesToExt = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), ['freq','time'] )
-    size = parset.getInt('.'.join(["LoSoTo.Steps", step, "Size"]), 11 )
+    size = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Size"]), [11,11] )
     percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 50 )
     cycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "Cycles"]), 3 )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
@@ -78,9 +87,7 @@ def run( step, parset, H ):
                 return 1
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-        runs = 0
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
-            runs += 1
             # convert to float64 or numpy.ndimage complains
             mpm.put([weights.astype(np.float64), coord, axesToExt, selection, percent, size, cycles])
 

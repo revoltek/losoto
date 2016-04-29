@@ -13,8 +13,8 @@ import scipy.interpolate
 
 logging.debug('Loading FLAG module.')
 
-#def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection):
-def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection, outQueue):
+#def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection):
+def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection, outQueue):
 
     def normalize(phase):
         """
@@ -102,7 +102,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
 # 
 #        return flags
     
-    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles = 3, max_rms = 3., replace = False):
+    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles=3, fix_rms=0, max_rms=3., replace=False):
         """
         Reject outliers using a running median
         val = the array (avg must be 0)
@@ -185,7 +185,10 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
             #vals_detrend = vals[ s ] - vals_smoothed[ ~flag_noisy ] # keep only vals satisfying s and g
 
             # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
-            rms =  1.4826 * np.median( np.abs(vals_detrend[(weights != 0)]) )
+            if fix_rms == 0:
+                rms =  1.4826 * np.median( np.abs(vals_detrend[(weights != 0)]) )
+            else:
+                rms = fix_rms
     
             # rejection  
             flags = abs(vals_detrend) > max_rms * rms
@@ -261,22 +264,21 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
 
     initPercentFlag = percentFlagged(weights)
 
-    # if phase, then convert to real/imag, run the flagger on those, and convert back to pahses
-    # best way to avoid unwrapping
+    # works in phase-space (assume no wraps), remove just the mean to prevent problems if the phase is constantly around +/-pi
     if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
         # remove mean of vals
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
         vals = normalize(vals - mean)
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
         vals = normalize(vals + mean)
 
     elif solType == 'amplitude':
-        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, replace)
+        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
         vals == 10**vals
 
     else:
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
     
     clean_coord = {key: coord[key] for key in coord if key not in axesToFlag}
     if percentFlagged(weights) == initPercentFlag:
@@ -299,6 +301,7 @@ def run( step, parset, H ):
     axesToFlag = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), 'time' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
+    fixRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FixRms"]), 0 )
     order = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Order"]), 3 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
@@ -352,8 +355,8 @@ def run( step, parset, H ):
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True):
-            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection])
-            #v, w, sel = flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, replace, axesToFlag, selection)
+            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection])
+            #v, w, sel = flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection)
 
         mpm.wait()
         
