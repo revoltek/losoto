@@ -20,9 +20,9 @@ def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, o
         
         return: flags array and final rms
         """
-        def extendFlag(weights, percent):
-            if float(sum(weights))/len(weights) < 1.-(percent/100.):
-                #print weights, float(sum(weights))/len(weights)
+        def extendFlag(flags, percent):
+            #flags = flags.astype(np.int)
+            if float(np.sum( flags ))/len(flags) > percent/100.:
                 return 1
             else:
                 return 0
@@ -31,13 +31,11 @@ def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, o
         initialPercent = 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)
 
         # if size=0 then extend to all axis
-        print size
         for i, s in enumerate(size):
             if s == 0: size[i] = weights.shape[i]
-        print size
 
         for cycle in xrange(cycles):
-            flag = scipy.ndimage.filters.generic_filter(weights, extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
+            flag = scipy.ndimage.filters.generic_filter((weights==0), extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
             weights[ np.where( flag == 1 ) ] = 0
             # no new flags
             if cycle != 0 and np.count_nonzero(flag) == oldFlagCount: break
@@ -88,15 +86,14 @@ def run( step, parset, H ):
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
-            # convert to float64 or numpy.ndimage complains
-            mpm.put([weights.astype(np.float64), coord, axesToExt, selection, percent, size, cycles])
+            mpm.put([weights, coord, axesToExt, selection, percent, size, cycles])
 
         mpm.wait()
 
         logging.info('Writing solutions')
         for w,sel in mpm.get():
             sw.selection = sel
-            sw.setValues(w.astype(np.float16), weight=True) # convert back to np.float16
+            sw.setValues(w, weight=True) # convert back to np.float16
 
         sw.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))
         del sf
