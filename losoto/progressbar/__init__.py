@@ -55,8 +55,8 @@ try:
 except ImportError:
     pass
 
-from progressbar.compat import *
-from progressbar.widgets import *
+from losoto.progressbar.compat import *
+from losoto.progressbar.widgets import *
 
 
 __author__ = 'Nilton Volpato'
