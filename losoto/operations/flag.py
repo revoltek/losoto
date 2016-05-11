@@ -306,7 +306,10 @@ def run( step, parset, H ):
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
     mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
+    ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
+
+    if ref == '': ref = None
 
     if axesToFlag == []:
         logging.error("Please specify axis to flag. It must be a single one.")
@@ -354,7 +357,7 @@ def run( step, parset, H ):
         solType = sf.getType()
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True):
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True, reference=ref):
             mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection])
             #v, w, sel = flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection)
 

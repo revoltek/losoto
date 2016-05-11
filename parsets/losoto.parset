@@ -56,7 +56,7 @@ LoSoTo.Steps.flag.Mode = smooth # smooth (running median)/poly/spline
 LoSoTo.Steps.flagextend.Operation = FLAGEXTEND
 LoSoTo.Steps.flagextend.Axes = ['freq','time'] # axes used to find close flags
 LoSoTo.Steps.flagextend.Percent = 90 # percent of flagged data around the point to flag it
-LoSoTo.Steps.flagextend.Size = [11,11] # size of the window (diameter, per axis), if 0 is given then the entire lenght of the axis is assumed
+LoSoTo.Steps.flagextend.Size = [11,11] # size of the window (diameter, per axis), if 0 is given then the entire lenght of the axis is assumed, must be a vector of same lenght of Axes
 LoSoTo.Steps.flagextend.Cycles = 3 # number of independent cycles of expansion
 
 LoSoTo.Steps.interp.Operation = INTERP
