@@ -45,7 +45,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         ],
     tests_require=['pytest'],
-    install_requires=['numpy','cython','numexpr>=2.0','tables>=3.0'],
+    install_requires=['numpy','cython','numexpr>=2.0','tables>=3.0','progressbar'],
     #scripts = ['say_hello.py'],
     scripts = ['bin/losoto', 'bin/H5parm_benchmark.py',
                'bin/H5parm_exporter.py', 'bin/H5parm_importer.py',
