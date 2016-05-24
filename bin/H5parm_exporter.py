@@ -298,7 +298,7 @@ def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
 if __name__=='__main__':
     # Options
     import optparse
-    opt = optparse.OptionParser(usage='%prog <H5parm filename> <input globaldb/SB filename>\n'+
+    opt = optparse.OptionParser(usage='%prog <H5parm filename> <output globaldb/SB filename>\n'+
         _author, version='%prog '+_version.__version__)
     opt.add_option('-v', '--verbose', help='Go VeRbOsE!',
         action='store_true', default=False)
@@ -481,7 +481,11 @@ if __name__=='__main__':
                     if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
                     if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
                     if 'freq' in sf.getAxesNames(): parms['freq'] = freqs.tolist()
-                    if 'time' in sf.getAxesNames(): parms['time'] = {'min':np.min(times), 'max':np.max(times)}
+                    # workaround for bbs and ndppp dealing differently with the last time slot when #timeslots%ntime != 0
+                    # NDPPP has all intervals the same
+                    # BBS has a maller interval in the last timeslot which is compensated here
+                    if times[-1] - times[-2] < times[-2] - times[-3]: times[-1] = times[-2] + (times[-2] - times[-3])
+                    if 'time' in sf.getAxesNames(): parms['time'] = {'min':np.min(times-0.1), 'max':np.max(times+0.1)}
                     sf.setSelection(**parms)
 
                     # If needed, convert Amp and Phase to Real and Imag
@@ -535,6 +539,13 @@ if __name__=='__main__':
                     np.putmask(val, flags, np.nan)
 
                     shape = data_out[solEntry]['values'].shape
+                    #print "shape"
+                    #print 'parmdb', shape
+                    #print 'h5parm', val.T.shape
+                    print "parmdb", times
+                    #for t in times: print '%.1f' % t
+                    print "h5parm", sf.time
+                    #for t in sf.time: print '%.1f' % t
                     try:
                         data_out[solEntry]['values'] = val.T.reshape(shape)
                     except ValueError, err:
@@ -562,9 +573,3 @@ if __name__=='__main__':
         pbar.finish()
 
     logging.info('Done.')
-
-
-
-
-
-

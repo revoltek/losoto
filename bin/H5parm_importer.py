@@ -257,7 +257,8 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 pbar.update(ipbar)
             ipbar += 1
 
-        vals = np.nan_to_num(vals) # replace nans with 0 (flagged later)
+        np.putmask(vals, ~np.isfinite(vals), 0) # put inf and nans to 0
+        #vals = np.nan_to_num(vals) # replace nans with 0 (flagged later)
 
         pbar.finish()
         if solType == '*RotationAngle':
@@ -291,7 +292,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 h5parm.makeSoltab(solset, 'tec', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
-            np.putmask(vals, vals == 0., 1) # nans end up into 1s (as BBS output, flagged next line)
+            np.putmask(vals, vals == 0, 1) # nans were put to 0 before, set them to 1
             np.putmask(weights, vals == 1., 0) # flag where val=1
             h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
