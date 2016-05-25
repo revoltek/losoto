@@ -43,6 +43,7 @@ def parmdbToAxes(solEntry):
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
         thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
 
     # For ScalarPhase assuming [ScalarPhase:ant:sou]
     elif thisSolType == 'ScalarPhase':
@@ -542,9 +543,9 @@ if __name__=='__main__':
                     #print "shape"
                     #print 'parmdb', shape
                     #print 'h5parm', val.T.shape
-                    print "parmdb", times
+                    #print "parmdb", times
                     #for t in times: print '%.1f' % t
-                    print "h5parm", sf.time
+                    #print "h5parm", sf.time
                     #for t in sf.time: print '%.1f' % t
                     try:
                         data_out[solEntry]['values'] = val.T.reshape(shape)

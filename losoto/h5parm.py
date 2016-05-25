@@ -578,7 +578,7 @@ class solHandler( object ):
                 else:
                     self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
-                # quick check for mispelled values
+                # check for mispelled values
                 #for selValCheck in selVal:
                 #    if not selValCheck in self.getAxisValues(axis, ignoreSelection=True):
                 #        logging.warning('Values '+str(selValCheck)+' not found for axis '+axis+'. Ignored.')
