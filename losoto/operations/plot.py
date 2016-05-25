@@ -332,8 +332,8 @@ def run( step, parset, H ):
                     for sfAdd in sfsAdd:
                         newCoord = {}
                         for axisName in coord.keys():
-                            if axisName in sfs.getAxesNames():
-                                if coord[axisName] is list:
+                            if axisName in sfAdd.getAxesNames():
+                                if type(coord[axisName]) is np.ndarray:
                                     newCoord[axisName] = coord[axisName]
                                 else:
                                     newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
