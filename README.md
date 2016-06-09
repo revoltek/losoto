@@ -35,9 +35,6 @@ Used packages:
 * PyTables version:  3.2.2
 * HDF5 version:      1.8.4
 * NumPy version:     1.9.0
-* Numexpr version:   2.1 (not using Intel's VML/MKL)
-* Blosc version:     1.2.3 (2013-05-17)
-* Cython version:    0.19.1
 * Python version:    2.6.5 (r265:79063, Apr 16 2010, 13:57:41) [GCC 4.4.3]
 * Platform:          linux2-x86_64
 * Byte-ordering:     little
