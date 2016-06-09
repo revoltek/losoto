@@ -45,8 +45,17 @@ def parmdbToAxes(solEntry):
         thisSolType, ant = solEntry.split(':')
         dir = 'pointing'
 
+    # For CommonScalarPhase assuming [CommonScalarPhase:ant]
+    elif thisSolType == 'CommonScalarAmplitude':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
     # For ScalarPhase assuming [ScalarPhase:ant:sou]
     elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
+
+    # For ScalarPhase assuming [ScalarPhase:ant:sou]
+    elif thisSolType == 'ScalarAmplitude':
         thisSolType, ant, dir = solEntry.split(':')
 
     # For TEC assuming [TEC:ant or TEC:pol:ant]
@@ -148,6 +157,8 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                         solTabList.append(st)
                     elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
                         solTabList.append(st)
+                    elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st._v_title == 'scalaramplitude':
+                        solTabList.append(st)
                     elif solType == 'Clock' and st._v_title == 'clock':
                         solTabList.append(st)
                     elif solType == 'TEC' and st._v_title == 'tec':
@@ -158,6 +169,8 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                 if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
                     solTabList.append(st)
                 elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
+                    solTabList.append(st)
+                elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st._v_title == 'scalaramplitude':
                     solTabList.append(st)
                 elif solType == 'Clock' and st._v_title == 'clock':
                     solTabList.append(st)
@@ -522,12 +535,14 @@ if __name__=='__main__':
 
                     # etienne part; if it is borken, curse his name
                     # check whether this is clock or tec; if so, reshape properly 
-                    if solType == "Clock" or solType == "TEC" or solType == "RotationMeasure":
-                        # find freq-dimensionality 
-                        nfreq = freqs.shape[0]
-                        # reshape such that all freq arrays are filled properly
-                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
-                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
+                    #if solType == "Clock" or solType == "TEC" or solType == "RotationMeasure":
+                    #    # find freq-dimensionality 
+                    #    nfreq = freqs.shape[0]
+                    #    print val.shape
+                    #    # reshape such that all freq arrays are filled properly
+                    #    val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
+                    #    print val.shape
+                    #    weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
 
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
@@ -542,7 +557,9 @@ if __name__=='__main__':
                     shape = data_out[solEntry]['values'].shape
                     #print "shape"
                     #print 'parmdb', shape
-                    #print 'h5parm', val.T.shape
+                    #print 'h5parm', val.shape
+                    #print sf.getAxesNames()
+                    #print sf.getType()
                     #print "parmdb", times
                     #for t in times: print '%.1f' % t
                     #print "h5parm", sf.time

@@ -9,7 +9,7 @@ It can also load a dictionary from a json or pickle file with the keys
 instrumentdb (array with file names), antenna, field and skydb containing the 
 corresponding file names.
 It handles Gain/DirectionalGain/RotationAngle/
-           Clock/TEC/CommonRotationAngle/CommonScalarPhase solution types.
+           Clock/TEC/CommonRotationAngle/CommonScalarPhase/CommonScalarAmpitude solution types.
 """
 # Authors:
 # Francesco de Gasperin
@@ -77,8 +77,17 @@ def parmdbToAxes(solEntry):
         thisSolType, ant = solEntry.split(':')
         dir = 'pointing'
 
+    # For CommonScalarPhase assuming [CommonScalarPhase:ant]
+    elif thisSolType == 'CommonScalarAmplitude':
+        thisSolType, ant = solEntry.split(':')
+        dir = 'pointing'
+
     # For ScalarPhase assuming [ScalarPhase:ant:sou]
     elif thisSolType == 'ScalarPhase':
+        thisSolType, ant, dir = solEntry.split(':')
+
+    # For ScalarPhase assuming [ScalarAmplitude:ant:sou]
+    elif thisSolType == 'ScalarAmplitude':
         thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
@@ -134,6 +143,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     # Gain <-> DirectionalGain
     # CommonRotationAngle <-> RotationAngle
     # CommonScalarPhase <-> ScalarPhase
+    # CommonScalarAmplitude <-> ScalarAmplitude
     # it also separate Real/Imag/Ampl/Phase into different solTypes
     if "Gain" in solTypes:
         solTypes.remove('Gain')
@@ -162,6 +172,9 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     if "CommonScalarPhase" in solTypes:
         solTypes.remove('CommonScalarPhase')
         solTypes.append('*ScalarPhase')
+    if "CommonScalarAmplitude" in solTypes:
+        solTypes.remove('CommonScalarAmplitude')
+        solTypes.append('*ScalarAmplitude')
     solTypes = list(set(solTypes))
 
     # every soltype creates a different solution-table
@@ -272,6 +285,10 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         elif solType == '*ScalarPhase':
             np.putmask(weights, vals == 0., 0)
             h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
+                    axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
+        elif solType == '*ScalarAmplitude':
+            np.putmask(weights, vals == 0., 0)
+            h5parm.makeSoltab(solset, 'scalaramplitude', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
             np.putmask(weights, vals == 0., 0)
