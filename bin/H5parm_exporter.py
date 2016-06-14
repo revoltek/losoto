@@ -80,7 +80,7 @@ def parmdbToAxes(solEntry):
 
     # For RotationMeasure assuming [RotationMeasure:ant]
     elif thisSolType == 'RotationMeasure':
-        thisSolType, ant = solEntry.split(':')
+        thisSolType, ant, dir = solEntry.split(':')
         dir = 'pointing'
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
