@@ -10,7 +10,7 @@ from losoto.operations_lib import *
 logging.debug('Loading PLOT module.')
 
 def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, outQueue):
-        import os, pickle
+        import os
         from itertools import cycle, chain
         import numpy as np
         # avoids error if re-setting "agg" a second run of plot
@@ -21,12 +21,6 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
-        if type(dataCube) is str:
-            logging.debug('Getting pickled data.')
-            dataCube_p = pickle.load(open(dataCube, "rb"))
-            os.system('rm '+dataCube)
-            dataCube = dataCube_p
-        
         autominZ = None; automaxZ = None 
 
         # if user-defined number of col use that
@@ -128,7 +122,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
 
 def run( step, parset, H ):
 
-    import os, pickle, random
+    import os, random
     import numpy as np
     from losoto.h5parm import solFetcher, solHandler
 
@@ -372,14 +366,12 @@ def run( step, parset, H ):
 
                     dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
 
-            # if dataCube too large (> 500 MB) write down on a pickle
+            # if dataCube too large (> 500 MB) do not go parallel
             if np.array(dataCube).nbytes > 1024*1024*500: 
-                logging.debug('Pickling data as they are '+str(np.array(dataCube).nbytes/(1024*1024))+' MB.')
-                pfile = str(random.randint(0,1e9))+'.pickle'
-                pickle.dump(dataCube, open(pfile, 'wb'))
-                dataCube = pfile
-
-            mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
+                logging.debug('Big plot, parallel not possible.')
+                plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, None)
+            else:
+                mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
             if makeMovie: pngs.append(prefix+filename+'.png')
 
         mpm.wait()
