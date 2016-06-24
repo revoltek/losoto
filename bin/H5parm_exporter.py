@@ -80,8 +80,11 @@ def parmdbToAxes(solEntry):
 
     # For RotationMeasure assuming [RotationMeasure:ant]
     elif thisSolType == 'RotationMeasure':
-        thisSolType, ant, dir = solEntry.split(':')
         dir = 'pointing'
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, ant, dir = solEntry.split(':')
 
     # For Gain assuming [Gain:pol1:pol2:parm:ant]
     elif thisSolType == 'Gain':
@@ -534,7 +537,8 @@ if __name__=='__main__':
                     weights = sf.getValues(weight=True)[0]
 
                     # etienne part; if it is borken, curse his name
-                    # check whether this is clock or tec; if so, reshape properly 
+                    # check whether this is clock or tec; if so, reshape properly to account for all freqs in the parmdb
+                    # anyway these tables are freq-indep
                     #if solType == "Clock" or solType == "TEC" or solType == "RotationMeasure":
                     #    # find freq-dimensionality 
                     #    nfreq = freqs.shape[0]

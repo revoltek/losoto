@@ -51,7 +51,11 @@ def parmdbToAxes(solEntry):
 
     # For RotationMeasure assuming [RotationMeasure:ant:sou]
     elif thisSolType == 'RotationMeasure':
-        thisSolType, ant, dir = solEntry.split(':')
+        dir = 'pointing'
+        try:
+            thisSolType, ant = solEntry.split(':')
+        except:
+            thisSolType, ant, dir = solEntry.split(':')
 
     # For TEC assuming [TEC:ant or TEC:pol:ant]
     elif thisSolType == 'TEC':
