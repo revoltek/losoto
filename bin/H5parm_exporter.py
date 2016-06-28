@@ -503,6 +503,7 @@ if __name__=='__main__':
                     # BBS has a maller interval in the last timeslot which is compensated here
                     if times[-1] - times[-2] < times[-2] - times[-3]: times[-1] = times[-2] + (times[-2] - times[-3])
                     if 'time' in sf.getAxesNames(): parms['time'] = {'min':np.min(times-0.1), 'max':np.max(times+0.1)}
+                    print sf.freq
                     sf.setSelection(**parms)
 
                     # If needed, convert Amp and Phase to Real and Imag
