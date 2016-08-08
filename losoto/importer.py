@@ -16,6 +16,7 @@ It handles Gain/DirectionalGain/RotationAngle/
 _author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
 
 import sys, os
+import socket
 import numpy as np
 import logging
 import pyrap.tables as pt
