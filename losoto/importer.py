@@ -116,7 +116,7 @@ def parmdbToAxes(solEntry):
 
 
 def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
-                  h5parmFile, complevel, solsetName, globaldbFile=None):
+                  h5parmFile, complevel, solsetName, globaldbFile=None, verbose=False):
     """
     Create the h5parm file.
     Input:
@@ -423,7 +423,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
             sw.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), "manual list"))
         else:
             sw.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), globaldbFile))
-    if options.verbose:
+    if verbose:
         logging.info(str(h5parm))
 
     del h5parm

@@ -101,4 +101,4 @@ if __name__=='__main__':
     
     # Call the method that creates the h5parm file
     create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
-                  h5parmFile, complevel, solsetName, globaldbFile=globaldbFile)
+                  h5parmFile, complevel, solsetName, globaldbFile=globaldbFile,verbose=options.verbose)
