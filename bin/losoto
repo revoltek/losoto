@@ -68,19 +68,22 @@ if __name__=='__main__':
     except:
         logging.critical('Missing H5parm file.')
         sys.exit(1)
+    if not tables.is_hdf5_file(h5parmFile):
+        logging.critical('File \"%s\" is not a valid HDF5-file!'%(h5parmFile))
+        sys.exit(1)
 
     if options.i:
         H = h5parm(h5parmFile, readonly=True)
         # List h5parm information if desired
         print(H.printInfo(options.filter, verbouse=options.v))
-        del H
+        H.close()
         sys.exit(0)
     elif options.delete != None:
         H = h5parm(h5parmFile, readonly=False)
         # Delete the soltab and exit
         solset, soltab = options.delete.split('/')
         H.delSoltab(solset, soltab)
-        del H
+        H.close()
         sys.exit(0)
     else:
         try: parsetFile = args[1]
