@@ -75,7 +75,6 @@ def parmdbToAxes(solEntry):
             thisSolType, pol, ant = solEntry.split(':')
             pol1 = pol
             pol2 = pol
-        dir = 'pointing'
 
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
@@ -347,7 +346,8 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     for tab in solset._v_children:
         c = solset._f_getChild(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
-            dirs.extend(list(set(c.dir)))
+            if c.__contains__('dir'):
+                dirs.extend(list(set(c.dir)))
     # remove duplicates
     dirs = list(set(dirs))
     # remove any pointing (already in the table)
