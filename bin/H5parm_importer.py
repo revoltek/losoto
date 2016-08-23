@@ -75,6 +75,7 @@ def parmdbToAxes(solEntry):
             thisSolType, pol, ant = solEntry.split(':')
             pol1 = pol
             pol2 = pol
+        dir = 'pointing'
 
     # For CommonScalarPhase assuming [CommonScalarPhase:ant]
     elif thisSolType == 'CommonScalarPhase':
