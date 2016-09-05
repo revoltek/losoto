@@ -539,14 +539,14 @@ if __name__=='__main__':
                     # etienne part; if it is borken, curse his name
                     # check whether this is clock or tec; if so, reshape properly to account for all freqs in the parmdb
                     # anyway these tables are freq-indep
-                    #if solType == "Clock" or solType == "TEC" or solType == "RotationMeasure":
-                    #    # find freq-dimensionality 
-                    #    nfreq = freqs.shape[0]
-                    #    print val.shape
-                    #    # reshape such that all freq arrays are filled properly
-                    #    val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
-                    #    print val.shape
-                    #    weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
+                    if solType == "Clock":# or solType == "TEC" or solType == "RotationMeasure":
+                        # find freq-dimensionality 
+                        nfreq = freqs.shape[0]
+                        #print val.shape
+                        # reshape such that all freq arrays are filled properly
+                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
+                        #print val.shape
+                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
 
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
