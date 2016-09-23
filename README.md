@@ -2,12 +2,12 @@ LoSoTo: LOFAR solutions tool
 ============================
 
 Authors:
-* Francesco de Gasperin
-* David Rafferty
+* Francesco de Gasperin (main developer)
+* David Rafferty (h5parm exporter)
+* Maaijke Mevius (CT separation)
 * Jose Sabater Montes
-* Maaijke Mevius
 * Martin Hardcastle
-* Bas van der Tol
+* Andreas Horneffer
 
 Contents:
 * __doc/__: documentation
