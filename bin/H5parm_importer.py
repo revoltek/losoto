@@ -97,7 +97,6 @@ if __name__=='__main__':
     if not os.path.isdir(fieldFile):
         logging.critical('Missing FIELD table.')
         sys.exit(1)
-            
     
     # Call the method that creates the h5parm file
     create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
