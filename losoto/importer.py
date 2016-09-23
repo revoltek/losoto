@@ -11,9 +11,6 @@ corresponding file names.
 It handles Gain/DirectionalGain/RotationAngle/
            Clock/TEC/CommonRotationAngle/CommonScalarPhase/CommonScalarAmpitude solution types.
 """
-# Authors:
-# Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
 
 import sys, os
 import socket
