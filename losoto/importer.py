@@ -21,7 +21,7 @@ import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import solWriter
-from losoto.h5parm import h5parm as h5parm2
+from losoto.h5parm import h5parm as h5parm_mod
 try:
     import progressbar
 except ImportError:
@@ -129,7 +129,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     """
     
     # open/create the h5parm file and the solution-set
-    h5parm = h5parm2(h5parmFile, readonly = False, complevel = complevel)
+    h5parm = h5parm_mod(h5parmFile, readonly = False, complevel = complevel)
     
     solset = h5parm.makeSolset(solsetName)
     
