@@ -5,7 +5,7 @@
 
 # Authors:
 # Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@hs.uni-hamurg.de)"
+_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
 
 import sys, os, glob
 import numpy as np

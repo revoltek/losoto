@@ -20,5 +20,6 @@ def changelog():
     2013/09/30 - History of operations now added to tables
     2013/10/21 - H5parm_exporter added
     2015/08/13 - Reconfiguration as a module
+    2016/10/07 - Sagecal solution support
     """
     pass

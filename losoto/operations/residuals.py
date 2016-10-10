@@ -67,10 +67,10 @@ def run( step, parset, H ):
                     elif sfs.getType() == 'rotationmeasure':
                         wav = 2.99792458e8/coord['freq']
                         ph = wav * wav * valsSub
-                        if coord['pol'] == 'XX':
-                            vals += ph
-                        elif coord['pol'] == 'YY':
+                        if coord['pol'] == 'XX' or coord['pol'] == 'RR':
                             vals -= ph
+                        elif coord['pol'] == 'YY' or coord['pol'] == 'LL':
+                            vals += ph
                     else:
                         vals -= valsSub
 

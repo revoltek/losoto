@@ -5,7 +5,7 @@
 # existing parmdb instrument table(s).
 #
 # It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
-_author = "Francesco de Gasperin (fdg@hs.uni-hamburg.de), David Rafferty (drafferty@hs.uni-hamburg.de)"
+_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl), David Rafferty (drafferty@hs.uni-hamburg.de)"
 
 import sys, os, glob, re, time
 import numpy as np

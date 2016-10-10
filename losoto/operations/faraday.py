@@ -99,8 +99,8 @@ def run( step, parset, H ):
                         logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant'])
                         continue
         
-                    # LL-RR to be consistent with BBS/NDPPP
-                    phase_diff  = (phase_ll - phase_rr)      # not divide by 2 otherwise jump problem, then later fix this
+                    # RR-LL to be consistent with BBS/NDPPP
+                    phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
                     wav = c/freq
     
                     fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
