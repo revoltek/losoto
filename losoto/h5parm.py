@@ -31,10 +31,10 @@ class h5parm( object ):
                 raise Exception('Wrong HDF5 format for '+h5parmFile+'.')
             if readonly:
                 logging.debug('Reading from '+h5parmFile+'.')
-                self.H = tables.openFile(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+                self.H = tables.open_file(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
             else:
                 logging.warn('Appending to '+h5parmFile+'.')
-                self.H = tables.openFile(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+                self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
@@ -42,7 +42,7 @@ class h5parm( object ):
                 logging.debug('Creating '+h5parmFile+'.')
                 # add a compression filter
                 f = tables.Filters(complevel=complevel, complib=complib)
-                self.H = tables.openFile(h5parmFile, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+                self.H = tables.open_file(h5parmFile, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
 
         self.fileName = h5parmFile
 
