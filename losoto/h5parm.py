@@ -578,11 +578,6 @@ class solHandler( object ):
                 else:
                     self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
-                # check for mispelled values
-                #for selValCheck in selVal:
-                #    if not selValCheck in self.getAxisValues(axis, ignoreSelection=True):
-                #        logging.warning('Values '+str(selValCheck)+' not found for axis '+axis+'. Ignored.')
-
                 # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
                 # transform list of continuous numbers in slices (faster)
