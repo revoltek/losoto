@@ -6,7 +6,6 @@ import sys
 import logging
 from lofar.expion import baselinefitting as fitting
 
-
 # from pylab import *
 def ClockTEC_3rdorder_func(xarray, par):
     """clock tec fitting withextra parameter for third order ionospheric effects at lowest frequencies"""
@@ -173,12 +172,15 @@ def getInitPar(
         A[:,1]=2*np.pi*1e-9*freqs
         A[:,0]=-8.44797245e9/freqs
     a=np.mgrid[int(-nrTEC/2):int(nrTEC/2)+1,-int(nrClock/2):int(nrClock/2)+1]
-    if len(initsol)>=2 and not (initsol[0]==0 and initsol[1]==0)  :
+    if len(initsol)>=2 and not (initsol[0]==0 and initsol[1]==0) and not (initsol[0]==-10 and initsol[1]==-10)  :
+        #print "unwrapping with initsol",initsol
         fitdata=np.dot(initsol,A.T)
         data=unwrapPhases(data,fitdata,doFlag=doFlag)
     else:
         if doFlag:
+            #print "unwrapping pahses",data.count()
             data=unwrapPhases(data,doFlag=doFlag)
+            #print "unwrapped pahses",data.count()
         else:
             data=unwrapSparsePhases(data,freqs)
         steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
@@ -262,6 +264,7 @@ def getClockTECFit(
                         if fit3rdorder:
                             n3rd=1
                     else:
+                        sol[ist]=0
                         if fit3rdorder:
                             n3rd=200
                         if 'CS' in stations[ist]:
@@ -296,18 +299,18 @@ def getClockTECFit(
                 datatmpist = datatmp[:, ist]
                 if datatmpist.count() / float(nF) > 0.5:
                     # do brutforce and update data, unwrp pdata,update flags
-                    #if itm%100==0:
+                    #if ist==23 or ist==25:
                     #    logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
                     par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[ist,:])
                     sol[ist, :] = par[:]
                 #if itm%100==0:
-                #    logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
+                    #logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
         for ist in xrange(nSt):
             #now do the real fitting
             datatmpist=datatmp[:,ist]
             if datatmpist.count() / float(nF) < 0.5:
                 logging.debug("Too many data points flagged t=%d st=%d flags=%d" % (itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
-                sol[ist] = [-10.,]*sol.shape[1]
+            sol[ist] = [-10.,]*sol.shape[1]
                 continue
             fitdata=np.dot(sol[ist],A.T)
             datatmpist=unwrapPhases(datatmpist,fitdata)
@@ -448,6 +451,13 @@ def correctWraps(
             break
     return (offsets, wraps, steps)
 
+def get_first_good(data,axis=1,check=lambda x:np.logical_and(x!=-10,x !=0)):
+    a=check(data).nonzero()
+    ndata=[]
+    for i in range(data.shape[axis]):
+        idx=np.where(a[axis]==i)[0][0]
+        ndata.append(np.take(data,a[abs(1-axis)][idx],axis=abs(1-axis))[i])
+    return np.array(ndata)
 
 def doFit(
     phases,
@@ -611,8 +621,8 @@ def doFit(
         # remove fitoffset
         if removePhaseWraps:
             initsol = np.zeros((nSt, 2), dtype=np.float32)
-            initsol[:, 0] = tecarray[0, :] + wraps * steps[0]
-            initsol[:, 1] = clockarray[0, :] + wraps * steps[1]
+            initsol[:, 0] = get_first_good(tecarray[:, :]) + wraps * steps[0]
+            initsol[:, 1] = get_first_good(clockarray[:, :]) + wraps * steps[1]
             logging.debug('Initsol TEC, pol %d: ' % pol + str(initsol[:, 0]))
             logging.debug('Initsol clock, pol %d: ' % pol + str(initsol[:, 1]))
             tecarray = 0
