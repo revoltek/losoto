@@ -451,6 +451,13 @@ def correctWraps(
             break
     return (offsets, wraps, steps)
 
+def get_first_good(data,axis=1,check=lambda x:np.logical_and(x!=-10,x !=0)):
+    a=check(data).nonzero()
+    ndata=[]
+    for i in range(data.shape[axis]):
+        idx=np.where(a[axis]==i)[0][0]
+        ndata.append(np.take(data,a[abs(1-axis)][idx],axis=abs(1-axis))[i])
+    return np.array(ndata)
 
 def doFit(
     phases,
@@ -614,8 +621,8 @@ def doFit(
         # remove fitoffset
         if removePhaseWraps:
             initsol = np.zeros((nSt, 2), dtype=np.float32)
-            initsol[:, 0] = tecarray[0, :] + wraps * steps[0]
-            initsol[:, 1] = clockarray[0, :] + wraps * steps[1]
+            initsol[:, 0] = get_first_good(tecarray[:, :]) + wraps * steps[0]
+            initsol[:, 1] = get_first_good(clockarray[:, :]) + wraps * steps[1]
             logging.debug('Initsol TEC, pol %d: ' % pol + str(initsol[:, 0]))
             logging.debug('Initsol clock, pol %d: ' % pol + str(initsol[:, 1]))
             tecarray = 0
