@@ -306,7 +306,7 @@ def getClockTECFit(
             #now do the real fitting
             datatmpist=datatmp[:,ist]
             if datatmpist.count() / float(nF) < 0.5:
-                logging.debug("Too many data points flagged t=%d st=%d flags=%d"%(itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
+                logging.debug("Too many data points flagged t=%d st=%d flags=%d" % (itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
                 sol[ist] = [-10.,]*sol.shape[1]
                 continue
             fitdata=np.dot(sol[ist],A.T)
