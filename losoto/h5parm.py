@@ -552,6 +552,12 @@ class solHandler( object ):
             # dict -> min max
             elif type(selVal) is dict:
                 axisVals = self.getAxisValues(axis)
+                if 'min' in selVal and selVal['min'] > np.max(axisVals): 
+                    logging.error("Selection with min > than maximum value. Use all available values.")
+                    continue
+                if 'max' in selVal and selVal['max'] < np.min(axisVals): 
+                    logging.error("Selection with max < than minimum value. Use all available values.")
+                    continue
                 if 'min' in selVal and 'max' in selVal:
                     self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],np.where(axisVals <= selVal['max'])[0][-1]+1)
                 elif 'min' in selVal:
@@ -562,7 +568,6 @@ class solHandler( object ):
                     logging.error("Selection with a dict must have 'min' and/or 'max' entry. Use all available values.")
                     continue
                 if 'step' in selVal:
-                    type(self.selection[idx]) == slice # to add a step we need a slice
                     self.selection[idx] = slice(self.selection[idx].start, self.selection[idx].stop, selVal['step'])
 
             # single val/list -> exact matching
