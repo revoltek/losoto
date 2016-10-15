@@ -80,8 +80,11 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
-                    if log: ax.imshow(np.log10(vals), origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
-                    else: ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=aspect, vmin=minZ, vmax=maxZ)
+                    if log:
+                        if minZ != None: minZ = np.log10(minZ)
+                        if maxZ != None: maxZ = np.log10(maxZ)
+                        vals = np.log10(vals)
+                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
                 # make an antenna plot
                 elif antCoords != []:
                     areas = 5 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 0-15 pt
@@ -173,9 +176,6 @@ def run( step, parset, H ):
     if ref == '': ref = None
     sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, plot)
-
     for soltab in openSoltabs( H, soltabs ):
 
         logging.info("Plotting soltab: "+soltab._v_name)
@@ -234,6 +234,9 @@ def run( step, parset, H ):
             antCoords = []
             
         datatype = sf.getType()
+
+        # start processes for multi-thread
+        mpm = multiprocManager(ncpu, plot)
 
         # cycle on files
         if makeMovie: pngs = [] # store png filenames
@@ -352,6 +355,7 @@ def run( step, parset, H ):
 
                         if valsAdd.shape != vals.shape:
                             logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
+                            mpm.wait()
                             return 1
 
                         vals += valsAdd
