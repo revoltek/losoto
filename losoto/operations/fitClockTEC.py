@@ -455,7 +455,10 @@ def get_first_good(data,axis=1,check=lambda x:np.logical_and(x!=-10,x !=0)):
     a=check(data).nonzero()
     ndata=[]
     for i in range(data.shape[axis]):
-        idx=np.where(a[axis]==i)[0][0]
+        if np.any(a[axis]==i):
+            idx=np.where(a[axis]==i)[0][0]
+        else:
+            idx=0
         ndata.append(np.take(data,a[abs(1-axis)][idx],axis=abs(1-axis))[i])
     return np.array(ndata)
 
