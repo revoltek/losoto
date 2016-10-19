@@ -26,8 +26,12 @@ def parmdbToAxes(solEntry):
     """
     Extract the information written as a string in the parmdb format
     """
-    pol = None; pol1 = None; pol2 = None;
-    dir = None; ant = None; parm = None
+    pol = None
+    pol1 = None
+    pol2 = None
+    dir = None
+    ant = None
+    parm = None
 
     thisSolType = solEntry.split(':')[0]
 
@@ -98,17 +102,17 @@ def parmdbToAxes(solEntry):
     else:
         logging.error('Unknown solution type "'+thisSolType+'". Ignored.')
 
-    if pol1 != None and pol2 != None:
+    if pol1 is not None and pol2 is not None:
         if pol1 == '0' and pol2 == '0': pol = 'XX'
         if pol1 == '1' and pol2 == '0': pol = 'YX'
         if pol1 == '0' and pol2 == '1': pol = 'XY'
         if pol1 == '1' and pol2 == '1': pol = 'YY'
 
-    if pol != None:
+    if pol is not None:
         pol = re.escape(pol)
-    if dir != None:
+    if dir is not None:
         dir = re.escape(dir)
-    if ant != None:
+    if ant is not None:
         ant = re.escape(ant)
     return pol, dir, ant, parm
 
@@ -126,7 +130,7 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
     matches are returned.
     """
     solTabList = []
-    if parm != None:
+    if parm is not None:
         parm = parm.lower()
 
     for name, st in solTabs.iteritems():
