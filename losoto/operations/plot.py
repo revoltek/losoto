@@ -280,6 +280,7 @@ def run( step, parset, H ):
 
                 if len(xvals) <= 1 or len(yvals) <=1:
                     logging.error('3D plot must have more then one value per axes.')
+                    mpm.wait()
                     return 1
 
                 ylabelunit=''
