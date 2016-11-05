@@ -32,8 +32,12 @@ def parmdbToAxes(solEntry):
     """
     Extract the information written as a string in the parmdb format
     """
-    pol = None; pol1 = None; pol2 = None;
-    dir = None; ant = None; parm = None
+    pol = None
+    pol1 = None
+    pol2 = None
+    dir = None
+    ant = None
+    parm = None
 
     thisSolType = solEntry.split(':')[0]
 
@@ -103,7 +107,7 @@ def parmdbToAxes(solEntry):
     else:
         logging.error('Unknown solution type "'+thisSolType+'". Ignored.')
 
-    if pol1 != None and pol2 != None:
+    if pol1 is not None and pol2 is not None:
         if pol1 == '0' and pol2 == '0': pol = 'XX'
         if pol1 == '1' and pol2 == '0': pol = 'YX'
         if pol1 == '0' and pol2 == '1': pol = 'XY'
@@ -184,8 +188,12 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         # skip missing solTypes (not all parmdbs have e.g. TEC)
         if len(pdb.getNames(solType+':*')) == 0: continue
 
-        pols = set(); dirs = set(); ants = set();
-        freqs = set(); times = set(); ptype = set()
+        pols = set() 
+        dirs = set() 
+        ants = set()
+        freqs = set() 
+        times = set() 
+        ptype = set()
 
         logging.info('Reading '+solType+'.')
 
@@ -206,9 +214,9 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
             for solEntry in data:
 
                 pol, dir, ant, parm = parmdbToAxes(solEntry)
-                if pol != None: pols |= set([pol])
-                if dir != None: dirs |= set([dir])
-                if ant != None: ants |= set([ant])
+                if pol is not None: pols |= set([pol])
+                if dir is not None: dirs |= set([dir])
+                if ant is not None: ants |= set([ant])
                 freqs |= set(data[solEntry]['freqs'])
                 times |= set(data[solEntry]['times'])
                 pbar.update(ipbar)
@@ -216,7 +224,11 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
 
         pbar.finish()
 
-        pols = np.sort(list(pols)); dirs = np.sort(list(dirs)); ants = np.sort(list(ants)); freqs = np.sort(list(freqs)); times = np.sort(list(times))
+        pols = np.sort(list(pols)) 
+        dirs = np.sort(list(dirs)) 
+        ants = np.sort(list(ants)) 
+        freqs = np.sort(list(freqs)) 
+        times = np.sort(list(times))
         shape = [i for i in (len(pols), len(dirs), len(ants), len(freqs), len(times)) if i != 0]
         vals = np.empty(shape)
         vals[:] = np.nan
@@ -255,13 +267,13 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                     val = np.arctan2(val, valR)
 
                 coords = []
-                if pol != None:
+                if pol is not None:
                     polCoord = np.searchsorted(pols, pol)
                     coords.append(polCoord)
-                if dir != None:
+                if dir is not None:
                     dirCoord = np.searchsorted(dirs, dir)
                     coords.append(dirCoord)
-                if ant != None:
+                if ant is not None:
                     antCoord = np.searchsorted(ants, ant)
                     coords.append(antCoord)
                 freqCoord = np.searchsorted(freqs, freq)

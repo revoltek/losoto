@@ -327,10 +327,10 @@ def run( step, parset, H ):
         logging.error('Mode must be smooth, poly or spline')
         return 1
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, flag)
-
     for soltab in openSoltabs( H, soltabs ):
+
+        # start processes for multi-thread
+        mpm = multiprocManager(ncpu, flag)
 
         logging.info("Flagging soltab: "+soltab._v_name)
 
@@ -346,6 +346,7 @@ def run( step, parset, H ):
         for axisToFlag in axesToFlag:
             if axisToFlag not in sf.getAxesNames():
                 logging.error('Axis \"'+axis+'\" not found.')
+                mpm.wait()
                 return 1
 
         # reorder axesToFlag as axes in the table

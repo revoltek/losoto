@@ -17,7 +17,7 @@ if int(tables.__version__.split('.')[0]) < 3:
 
 class h5parm( object ):
 
-    def __init__(self, h5parmFile, readonly = True, complevel = 5, complib='zlib'):
+    def __init__(self, h5parmFile, readonly=True, complevel=5, complib='zlib'):
         """
         Keyword arguments:
         h5parmFile -- H5parm filename
@@ -26,7 +26,7 @@ class h5parm( object ):
         complib -- library for compression: lzo, zlib, bzip2 (default=zlib)
         """
         if os.path.isfile(h5parmFile):
-            if tables.is_pytables_file(h5parmFile) == None:
+            if tables.is_pytables_file(h5parmFile) is None:
                 logging.critical('Wrong HDF5 format for '+h5parmFile+'.')
                 raise Exception('Wrong HDF5 format for '+h5parmFile+'.')
             if readonly:
@@ -62,7 +62,7 @@ class h5parm( object ):
         return self.printInfo()
 
 
-    def makeSolset(self, solsetName = None, addTables=True):
+    def makeSolset(self, solsetName=None, addTables=True):
         """
         Create a new solset, if the provided name is not given or exists
         then it falls back on the first available sol###
@@ -79,7 +79,7 @@ class h5parm( object ):
             logging.warning('Solution-set '+solsetName+' already present. Switching to default.')
             solsetName = None
 
-        if solsetName == None:
+        if solsetName is None:
             solsetName = self._fisrtAvailSolsetName()
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
@@ -116,7 +116,7 @@ class h5parm( object ):
         Keyword arguments:
         solset -- name of the solution set
         """
-        if solset == None:
+        if solset is None:
             raise Exception("Solution set not specified.")
 
         if not solset in self.getSolsets():
@@ -156,11 +156,11 @@ class h5parm( object ):
         parmdbType -- original parmdb solution type
         """
 
-        if soltype == None:
+        if soltype is None:
             raise Exception("Solution-type not specified while adding a solution-table.")
 
         # checks on the solset
-        if solset == None:
+        if solset is None:
             raise Exception("Solution-set not specified while adding a solution-table.")
         if type(solset) is str:
             solset = self.getSolset(solset)
@@ -179,7 +179,7 @@ class h5parm( object ):
             logging.warning('Solution-table '+soltabName+' already present. Switching to default.')
             soltabName = None
 
-        if soltabName == None:
+        if soltabName is None:
             soltabName = self._fisrtAvailSoltabName(solset, soltype)
 
         logging.info('Creating a new solution-table: '+soltabName+'.')
@@ -234,7 +234,7 @@ class h5parm( object ):
         solset -- a solution-set name (String) or instance (required if soltab is a string)
         soltab -- a solution-table name (String) or instance
         """
-        if soltab == None:
+        if soltab is None:
             raise Exception("Solution-table not specified while deleting a solution-table.")
 
         if type(soltab) is str:
@@ -251,7 +251,7 @@ class h5parm( object ):
         Keyword arguments:
         solset -- a solution-set name (String) or a Group instance
         """
-        if solset == None:
+        if solset is None:
             raise Exception("Solution-set not specified while querying for solution-tables list.")
         if type(solset) is str:
             solset = self.getSolset(solset)
@@ -266,9 +266,9 @@ class h5parm( object ):
         solset -- a solution-set name (String) or a Group instance
         soltab -- a solution-table name (String)
         """
-        if solset == None:
+        if solset is None:
             raise Exception("Solution-set not specified while querying for solution-table.")
-        if soltab == None:
+        if soltab is None:
             raise Exception("Solution-table not specified while querying for solution-table.")
 
         if not soltab in self.getSoltabs(solset):
@@ -289,9 +289,9 @@ class h5parm( object ):
         solset -- a solution-set name as Group instance
         soltype -- type of solution (amplitude, phase, RM, clock...) as a string
         """
-        if solset == None:
+        if solset is None:
             raise Exception("Solution-set not specified while querying for solution-tables list.")
-        if soltype == None:
+        if soltype is None:
             raise Exception("Solution type not specified while querying for solution-tables list.")
 
         nums = []
@@ -328,7 +328,7 @@ class h5parm( object ):
         Keyword arguments:
         solset -- a solution-set name (String) or a Group instance
         """
-        if solset == None:
+        if solset is None:
             raise Exception("Solution-set not specified.")
         if type(solset) is str:
             solset = self.H.root._f_get_child(solset)
@@ -552,17 +552,22 @@ class solHandler( object ):
             # dict -> min max
             elif type(selVal) is dict:
                 axisVals = self.getAxisValues(axis)
+                if 'min' in selVal and selVal['min'] > np.max(axisVals): 
+                    logging.error("Selection with min > than maximum value. Use all available values.")
+                    continue
+                if 'max' in selVal and selVal['max'] < np.min(axisVals): 
+                    logging.error("Selection with max < than minimum value. Use all available values.")
+                    continue
                 if 'min' in selVal and 'max' in selVal:
-                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],np.where(axisVals <= selVal['max'])[0][-1]+1)
+                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0], np.where(axisVals <= selVal['max'])[0][-1]+1)
                 elif 'min' in selVal:
-                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0],None)
+                    self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0], None)
                 elif 'max' in selVal:
-                    self.selection[idx] = slice(0,np.where(axisVals <= selVal['max'])[0][-1]+1)
+                    self.selection[idx] = slice(0, np.where(axisVals <= selVal['max'])[0][-1]+1)
                 else:
                     logging.error("Selection with a dict must have 'min' and/or 'max' entry. Use all available values.")
                     continue
                 if 'step' in selVal:
-                    type(self.selection[idx]) == slice # to add a step we need a slice
                     self.selection[idx] = slice(self.selection[idx].start, self.selection[idx].stop, selVal['step'])
 
             # single val/list -> exact matching
@@ -608,7 +613,7 @@ class solHandler( object ):
         return self.axesNames[:]
 
 
-    def getAxis(self, axis = None):
+    def getAxis(self, axis=None):
         """
         Return the axis istance for the corresponding name
         Keyword arguments:
@@ -621,7 +626,7 @@ class solHandler( object ):
             return None
 
 
-    def getAxisLen(self, axis = None, ignoreSelection = False):
+    def getAxisLen(self, axis=None, ignoreSelection=False):
         """
         Return the axis lenght
         Keyword arguments:
@@ -631,7 +636,7 @@ class solHandler( object ):
         return len(self.getAxisValues(axis, ignoreSelection = ignoreSelection))
 
 
-    def getAxisType(self, axis = None):
+    def getAxisType(self, axis=None):
         """
         Return the axis dtype
         Keyword arguments:
@@ -644,7 +649,7 @@ class solHandler( object ):
             return None
 
 
-    def getAxisValues(self, axis='', ignoreSelection = False):
+    def getAxisValues(self, axis='', ignoreSelection=False):
         """
         Return a copy of all the possible values present along a specific axis (no duplicates)
         Keyword arguments:
@@ -713,9 +718,9 @@ class solWriter(solHandler):
         useCache -- write the data on a local copy of the table,
         use flush() to write them on the disk, speeds up writing
         """
-        solHandler.__init__(self, table = table, useCache = useCache, **args)
+        solHandler.__init__(self, table=table, useCache=useCache, **args)
 
-    def setAxisValues(self, axis = None, vals = None):
+    def setAxisValues(self, axis=None, vals=None):
         """
         Set the value of a specific axis
         Keyword arguments:
@@ -806,7 +811,7 @@ class solFetcher(solHandler):
             #return None
 
 
-    def getValues(self, retAxesVals = True, weight = False, reference = None):
+    def getValues(self, retAxesVals=True, weight=False, reference=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
         Keyword arguments:
@@ -849,7 +854,7 @@ class solFetcher(solHandler):
                 elif type(sel) is slice: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
             dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
 
-        if reference != None:
+        if reference is not None:
             # TODO: flag when reference is flagged?
             if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock':
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, and rotation solution tables. Ignore referencing.')
@@ -860,8 +865,8 @@ class solFetcher(solHandler):
             else:
                 selection_stored = np.copy(self.selection)
                 antAxis = self.getAxesNames().index('ant')
-                self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection = True)).index(reference)]
-                dataValsRef = self.getValues(retAxesVals = False, reference = None)
+                self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection=True)).index(reference)]
+                dataValsRef = self.getValues(retAxesVals=False, reference=None)
                 self.selection = selection_stored
                 dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
                 if not self.getType() != 'tec' and not self.getType() != 'clock':
@@ -881,7 +886,7 @@ class solFetcher(solHandler):
         return dataVals, axisVals
 
 
-    def getValuesIter(self, returnAxes = [], weight = False, reference = None):
+    def getValuesIter(self, returnAxes=[], weight=False, reference=None):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
@@ -898,8 +903,8 @@ class solFetcher(solHandler):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         4) a selection which should be used to write this data back using a solWriter
         """
-        if weight: weigthVals = self.getValues(retAxesVals = False, weight = True, reference = None)
-        dataVals = self.getValues(retAxesVals = False, weight = False, reference = reference)
+        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=None)
+        dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference)
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]
@@ -917,7 +922,7 @@ class solFetcher(solHandler):
                     if axisName in returnAxes:
                         thisAxesVals[axisName] = self.getAxisValues(axisName)
                         # add a slice with all possible values (main selection will be preapplied)
-                        refSelection.append(slice(0,self.getAxisLen(axisName),None))
+                        refSelection.append(slice(0,self.getAxisLen(axisName), None))
                         # for the return selection use the "main" selection for the return axes
                         returnSelection.append(self.selection[j])
                     else:

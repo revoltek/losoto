@@ -63,10 +63,10 @@ def run( step, parset, H ):
         logging.error("Please specify at least one axis to extend flag.")
         return 1
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, flag)
-
     for soltab in openSoltabs( H, soltabs ):
+
+        # start processes for multi-thread
+        mpm = multiprocManager(ncpu, flag)
 
         logging.info("Extending flag on soltab: "+soltab._v_name)
 
@@ -82,6 +82,7 @@ def run( step, parset, H ):
         for axisToExt in axesToExt:
             if axisToExt not in sf.getAxesNames():
                 logging.error('Axis \"'+axisToExt+'\" not found.')
+                mpm.wait()
                 return 1
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)

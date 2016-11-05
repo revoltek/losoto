@@ -81,8 +81,8 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if log:
-                        if minZ != None: minZ = np.log10(minZ)
-                        if maxZ != None: maxZ = np.log10(maxZ)
+                        if minZ is not None: minZ = np.log10(minZ)
+                        if maxZ is not None: maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
                     ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
                 # make an antenna plot
@@ -280,6 +280,7 @@ def run( step, parset, H ):
 
                 if len(xvals) <= 1 or len(yvals) <=1:
                     logging.error('3D plot must have more then one value per axes.')
+                    mpm.wait()
                     return 1
 
                 ylabelunit=''
