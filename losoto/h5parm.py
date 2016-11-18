@@ -89,14 +89,14 @@ class h5parm( object ):
             # add antenna table
             logging.info('--Creating new antenna table.')
             descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
-            soltab = self.H.createTable(solset, 'antenna', descriptor, \
+            soltab = self.H.create_table(solset, 'antenna', descriptor, \
                     title = 'Antenna names and positions', expectedrows = 40)
             soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 
             # add direction table
             logging.info('--Creating new source table.')
             descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
-            soltab = self.H.createTable(solset, 'source', descriptor, \
+            soltab = self.H.create_table(solset, 'source', descriptor, \
                     title = 'Source names and directions', expectedrows = 10)
             soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 

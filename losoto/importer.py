@@ -353,7 +353,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
 
     dirs = []
     for tab in solset._v_children:
-        c = solset._f_getChild(tab)
+        c = solset._f_get_child(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
             if c.__contains__('dir'):
                 dirs.extend(list(set(c.dir)))
