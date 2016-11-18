@@ -44,15 +44,15 @@ def run( step, parset, H ):
         for vals, weights, coord, selection in tr.getValuesIter(returnAxes=normAxes, weight = True):
 
             # rescale solutions
-            if np.sum(weights) == 0: continue # skip flagged antenna
+            if np.sum(weights) == 0: continue # skip flagged selections
             valsMean = np.average(vals, weights=weights)
-            valsNew = normVal*vals/valsMean
+            vals[weights != 0] *= normVal/valsMean
             logging.debug(str(coord))
             logging.debug("Rescaling by: "+str(normVal/valsMean))
 
             # writing back the solutions
             tw.selection = selection
-            tw.setValues(valsNew)
+            tw.setValues(vals)
 
         tw.flush()
         tw.addHistory('NORM (on axis %s)' % (normAxes))
