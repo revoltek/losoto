@@ -26,15 +26,25 @@ class h5parm( object ):
         complib -- library for compression: lzo, zlib, bzip2 (default=zlib)
         """
         if os.path.isfile(h5parmFile):
-            if tables.is_pytables_file(h5parmFile) is None:
-                logging.critical('Wrong HDF5 format for '+h5parmFile+'.')
-                raise Exception('Wrong HDF5 format for '+h5parmFile+'.')
+            if not tables.is_hdf5_file(h5parmFile):
+                logging.critical('Not a HDF5 file: '+h5parmFile+'.')
+                raise Exception('Not a HDF5 file: '+h5parmFile+'.')
             if readonly:
                 logging.debug('Reading from '+h5parmFile+'.')
                 self.H = tables.open_file(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
             else:
                 logging.warn('Appending to '+h5parmFile+'.')
                 self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+            # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any node
+            is_h5parm = False
+            for node in self.H.walk_nodes("/"):
+                if 'h5parm_version' in node._v_attrs:
+                    is_h5parm=True
+                    break
+            if not is_h5parm:
+                self.close()
+                logging.critical('Not a H5parm file: '+h5parmFile+'.')
+                raise Exception('Not a H5parm file: '+h5parmFile+'.')
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
