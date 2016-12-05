@@ -75,7 +75,7 @@ if __name__=='__main__':
     if options.i:
         H = h5parm(h5parmFile, readonly=True)
         # List h5parm information if desired
-        print(H.printInfo(options.filter, verbouse=options.v))
+        print(H.printInfo(options.filter, verbose=options.v))
         H.close()
         sys.exit(0)
     elif options.delete != None:
@@ -87,7 +87,7 @@ if __name__=='__main__':
         sys.exit(0)
     else:
         try: parsetFile = args[1]
-        except: 
+        except:
             logging.warning('Using default parset: losoto.parset')
             parsetFile = 'losoto.parset'
 
@@ -104,7 +104,7 @@ if __name__=='__main__':
 
     # Possible operations, linked to relative function
     import losoto.operations as operations
-    ops = { 
+    ops = {
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
