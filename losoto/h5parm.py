@@ -197,15 +197,15 @@ class h5parm( object ):
             axis = self.H.create_array('/'+solsetName+'/'+soltabName, axisName, obj=axesVals[i])
             axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
-        
+
 #            # Put time/freq on max lenght for better performances
 #            if chunkShape == None:
 #                if axisName == 'time':
-#                    newChunkShape.append(100) 
+#                    newChunkShape.append(100)
 #                elif axisName == 'freq':
-#                    newChunkShape.append(10) 
+#                    newChunkShape.append(10)
 #                else:
-#                    newChunkShape.append(1) 
+#                    newChunkShape.append(1)
 #        if chunkShape == None: chunkShape = newChunkShape
 #        logging.debug('Chunk shape: '+str(chunkShape))
 
@@ -340,7 +340,7 @@ class h5parm( object ):
         return sources
 
 
-    def printInfo(self, filter=None, verbouse=False):
+    def printInfo(self, filter=None, verbose=False):
         """
         Returns string with info about H5parm contents
         """
@@ -401,7 +401,7 @@ class h5parm( object ):
         solset_names = solsets.keys()
         solset_names.sort()
         # delete axes value file if already present
-        if verbouse and os.path.exists(self.fileName+'-axes_values.txt'): 
+        if verbose and os.path.exists(self.fileName+'-axes_values.txt'):
                 logging.warning('Overwriting '+self.fileName+'-axes_values.txt')
                 os.system('rm '+self.fileName+'-axes_values.txt')
         # For each solution set, list solution tables, sources, and antennas
@@ -425,12 +425,12 @@ class h5parm( object ):
 
             # For each table, print length of each axis and history of
             # operations applied to the table.
-            if verbouse:
+            if verbose:
                 logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
                 f = file(self.fileName+'-axes_values.txt','a')
             for soltab_name, soltab in self.getSoltabs(solset=solset_name).iteritems():
                 try:
-                    if verbouse: 
+                    if verbose:
                         f.write("### /"+solset_name+"/"+soltab_name+"\n")
                     logging.debug('Fetching info for '+soltab_name+'.')
                     sf = solFetcher(soltab)
@@ -438,13 +438,14 @@ class h5parm( object ):
                     #print self.getSoltabs(solset=solset_name)
                     axis_str_list = []
                     for axisName in axisNames:
+                        info
                         nslots = sf.getAxisLen(axisName)
                         if nslots > 1:
                             pls = "s"
                         else:
                             pls = ""
                         axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
-                        if verbouse: 
+                        if verbose:
                             f.write(axisName+": ")
                             vals = sf.getAxisValues(axisName)
                             # ugly hardcoded workaround to print all the important decimal values for time/freq
@@ -463,14 +464,14 @@ class h5parm( object ):
                 except tables.exceptions.NoSuchNodeError:
                     info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
 
-            if verbouse:
+            if verbose:
                     f.close()
         return info
 
 
 class solHandler( object ):
     """
-    Generic class to principally handle selections
+    Generic #class to principally handle selections
     Selections are:
     axisName = None # to select all
     axisName = xxx # to select ONLY that value for an axis
@@ -552,10 +553,10 @@ class solHandler( object ):
             # dict -> min max
             elif type(selVal) is dict:
                 axisVals = self.getAxisValues(axis)
-                if 'min' in selVal and selVal['min'] > np.max(axisVals): 
+                if 'min' in selVal and selVal['min'] > np.max(axisVals):
                     logging.error("Selection with min > than maximum value. Use all available values.")
                     continue
-                if 'max' in selVal and selVal['max'] < np.min(axisVals): 
+                if 'max' in selVal and selVal['max'] < np.min(axisVals):
                     logging.error("Selection with max < than minimum value. Use all available values.")
                     continue
                 if 'min' in selVal and 'max' in selVal:
