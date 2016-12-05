@@ -229,9 +229,9 @@ class h5parm( object ):
         # array do not have compression but are much faster
         val = self.H.create_array('/'+solsetName+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
         weight = self.H.create_array('/'+solsetName+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
-        val.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
+        val.attrs['h5parm_version'] = _version.__h5parmVersion__
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-        weight.attrs['VERSION_H5PARM'] = _version.__h5parmVersion__
+        weight.attrs['h5parm_version'] = _version.__h5parmVersion__
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return soltab
