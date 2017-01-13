@@ -13,8 +13,18 @@ import scipy.interpolate
 
 logging.debug('Loading FLAG module.')
 
-#def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection):
-def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection, outQueue):
+def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection, outQueue):
+    
+    def rolling_rms(a, window):
+        """
+        Return the rms for each element of the array calculated using the element inside a window,
+        edges are mirrored
+        """
+        assert window % 2 == 1 # window must be odd
+        a = np.pad(a, window/2, mode='reflect')
+        shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+        strides = a.strides + (a.strides[-1],)
+        return np.sqrt(np.var(np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides), -1)) 
 
     def normalize(phase):
         """
@@ -79,30 +89,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
             return np.polynomial.polynomial.polyval2d(x, y, m)
  
 
-#    def clean_noisy(data, times, window, max_rms):
-#        """
-#        calculate a running RMS and remove noisy data
-#
-#        window = in timestamps, sliding window dimension
-#        max_rms = flag points in a region with rms larger than max_rms times the rms of rmses
-#        
-#        return: an array of data dimensions with flags
-#        """
-#        if len(data) == 0: return []
-#        # loop over solution times
-#        rmses = np.zeros(shape=data.shape, dtype=np.float)
-#        for i, time in enumerate(times):
-#    
-#            # get data to smooth (values inside the time window)
-#            data_array = data[ np.where( abs(times - time) <= window / 2. ) ]
-#            rmses[i] = np.std(data_array)
-#
-#        rms =  1.4826 * np.median( abs(rmses) )
-#        flags = abs(rmses) > max_rms * rms
-# 
-#        return flags
-    
-    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles=3, fix_rms=0, max_rms=3., replace=False):
+    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles=3, max_rms=3., max_rms_noise=0., window_noise=11., fix_rms_noise=0., replace=False):
         """
         Reject outliers using a running median
         val = the array (avg must be 0)
@@ -111,6 +98,8 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
         order = "see polyfit()"
         max_ncycles = maximum number of cycles
         max_rms = number of rms times for outlier flagging
+        max_rms_noise = cut on the rms of the rmss
+        window_noise = window used to calculate the rmss to detect noise
         replace = instead of flag it, replace the data point with the smoothed one
     
         return: flags array and final rms
@@ -150,10 +139,10 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
                 break
 
             if mode == 'smooth':
-                    vals_smooth = np.copy(vals)
-                    np.putmask(vals_smooth, weights==0, np.nan)
-                    vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
-                    vals_detrend = vals - vals_smooth
+                vals_smooth = np.copy(vals)
+                np.putmask(vals_smooth, weights==0, np.nan)
+                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
+                vals_detrend = vals - vals_smooth
             elif mode == 'poly':
                 # get polynomia and values
                 if len(axes) == 1: 
@@ -177,22 +166,24 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
                     spline = scipy.interpolate.SmoothBivariateSpline(x, y, z, w, kx=order[0], ky=order[1])
                     vals_detrend = vals - spline(axes[0], axes[1])
 
-            # remove noisy regions of data
-            #flag_noisy = clean_noisy(vals_detrend, time[ s ], window, max_rms_noise)
-            #print 'noise flagging', float(sum(flag_noisy))/len(flag_noisy)
-            #flags[ s ] = flag_noisy # add flags g (shape s=True) to global flags
-            #s[ s ] = ~flag_noisy # new refined selection
-            #vals_detrend = vals[ s ] - vals_smoothed[ ~flag_noisy ] # keep only vals satisfying s and g
+            # remove outliers
+            if max_rms > 0:
+                # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
+                rms =  1.4826 * np.nanmedian( np.abs(vals_detrend[(weights != 0)]) )
+                flags = abs(vals_detrend) > max_rms * rms
+                weights[ flags ] = 0
 
-            # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
-            if fix_rms == 0:
-                rms =  1.4826 * np.median( np.abs(vals_detrend[(weights != 0)]) )
-            else:
-                rms = fix_rms
-    
-            # rejection  
-            flags = abs(vals_detrend) > max_rms * rms
-            weights[ flags ] = 0
+            # remove noisy regions of data
+            if max_rms_noise > 0 or fix_rms_noise > 0:
+                rmses = rolling_rms(vals_detrend, window_noise)
+                rms =  1.4826 * np.nanmedian( abs(rmses) )
+
+                # rejection  
+                if fix_rms_noise > 0:
+                    flags = rmses > fix_rms_noise
+                else:
+                    flags = rmses > (max_rms_noise * rms)
+                weights[ flags ] = 0
 
             # all is flagged? break
             if (weights == 0).all():
@@ -250,7 +241,6 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
     # check if everything flagged
     if (weights == 0).all() == True:
         logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axesToFlag)))
-#        return vals, weights, selection
         outQueue.put([vals, weights, selection])
         return
 
@@ -270,15 +260,15 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fi
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
         vals = normalize(vals - mean)
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
         vals = normalize(vals + mean)
 
     elif solType == 'amplitude':
-        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
+        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
         vals == 10**vals
 
     else:
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, fixRms, maxRms, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
     
     clean_coord = {key: coord[key] for key in coord if key not in axesToFlag}
     if percentFlagged(weights) == initPercentFlag:
@@ -301,7 +291,9 @@ def run( step, parset, H ):
     axesToFlag = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), 'time' )
     maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
     maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
-    fixRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FixRms"]), 0 )
+    maxRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRmsNoise"]), 0. )
+    fixRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FixRmsNoise"]), 0. )
+    windowNoise = parset.getInt('.'.join(["LoSoTo.Steps", step, "WindowNoise"]), 11 )
     order = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Order"]), 3 )
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
@@ -359,8 +351,7 @@ def run( step, parset, H ):
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True, reference=ref):
-            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection])
-            #v, w, sel = flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, fixRms, maxRms, replace, axesToFlag, selection)
+            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection])
 
         mpm.wait()
         

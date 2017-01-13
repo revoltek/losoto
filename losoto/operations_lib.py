@@ -8,7 +8,6 @@ import logging
 from losoto.h5parm import solFetcher
 import multiprocessing
 
-
 class multiprocManager(object):
 
     class multiThread(multiprocessing.Process):
