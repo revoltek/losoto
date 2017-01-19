@@ -16,10 +16,12 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         # avoids error if re-setting "agg" a second run of plot
         if not 'matplotlib' in sys.modules:
             import matplotlib as mpl
-            mpl.rc('font',size =8 )
-            mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+            mpl.rcParams['xtick.labelsize'] = 20
+            mpl.rcParams['font.size'] = 20
+            #mpl.rc('figure.subplot',left=0.1, bottom=0.1, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
+
 
         autominZ = None; automaxZ = None 
 
@@ -43,34 +45,37 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
 
         # axes label 
         if len(axa.shape) == 1: # only one row 
-            [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[:]]
+            [ax.set_xlabel(axesInPlot[0]+xlabelunit, fontsize=20) for ax in axa[:]]
             if cmesh:
-                axa[0].set_ylabel(axesInPlot[1]+ylabelunit)
+                axa[0].set_ylabel(axesInPlot[1]+ylabelunit, fontsize=20)
             else:
-                axa[0].set_ylabel(datatype)
+                axa[0].set_ylabel(datatype, fontsize=20)
         else:
-            [ax.set_xlabel(axesInPlot[0]+xlabelunit) for ax in axa[-1,:]]
+            [ax.set_xlabel(axesInPlot[0]+xlabelunit, fontsize=20) for ax in axa[-1,:]]
             if cmesh:
-                [ax.set_ylabel(axesInPlot[1]+ylabelunit) for ax in axa[:,0]]
+                [ax.set_ylabel(axesInPlot[1]+ylabelunit, fontsize=20) for ax in axa[:,0]]
             else:
-                [ax.set_ylabel(datatype) for ax in axa[:,0]]
+                [ax.set_ylabel(datatype, fontsize=20) for ax in axa[:,0]]
 
         for Ntab, title in enumerate(titles):
            
             ax = axa.flatten()[Ntab]
-            ax.text(.5, .9, title, horizontalalignment='center',fontsize=8,transform=ax.transAxes)
+            ax.text(.5, .9, title, horizontalalignment='center', fontsize=14, transform=ax.transAxes)
            
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
 
-            # set colors (red reserved for flags)
-            colors = cycle(['g', 'b', 'c', 'm', 'y', 'k'])
-
+            colors = cycle(['g', 'b', 'c', 'm'])
             for Ncol, data in enumerate(dataCube[Ntab]):
 
-                # set color
-                color = next(colors)
+                # set color, use defined colors if a few lines, otherwise a continuum colormap
+                if len(dataCube[Ntab]) <= 4:
+                    color = colors.next()
+                    colorFlag = 'r'
+                else:
+                    color = plt.cm.jet(Ncol/float(len(dataCube[Ntab])-1)) # from 0 to 1
+                    colorFlag = 'k'
                 vals = dataCube[Ntab][Ncol]
 
                 # plotting
@@ -84,15 +89,15 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                         if minZ is not None: minZ = np.log10(minZ)
                         if maxZ is not None: maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
-                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.rainbow, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
+                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
                 # make an antenna plot
                 elif antCoords != []:
                     areas = 5 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 0-15 pt
                     plt.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
-                    ax.plot(xvals, vals, 'o', color=color, markersize=3) # flagged data are automatically masked
+                    ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
                     if plotflag: 
-                        ax.plot(xvals[vals.mask], vals.data[vals.mask], 'ro', markersize=3) # plot flagged points
+                        ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=2, markeredgecolor='none') # plot flagged points
                     plt.xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
@@ -118,8 +123,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                 plt.ylim(ymax=automaxZ)
 
         logging.info("Saving "+filename+'.png')
-        if axisInTable != []: plt.savefig(filename+'.png', bbox_inches='tight')
-        else: plt.savefig(filename+'.png')
+        plt.savefig(filename+'.png', bbox_inches='tight')
         plt.close()
 
 

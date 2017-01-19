@@ -17,7 +17,6 @@ def run( step, parset, H ):
     from losoto.h5parm import solFetcher, solWriter
     
     soltabs = getParSoltabs( step, parset, H )
-    solTypes = getParSolTypes( step, parset, H )
 
     normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
     normAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "NormAxes"]), ['time'] )
