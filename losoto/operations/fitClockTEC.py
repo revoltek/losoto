@@ -204,6 +204,7 @@ def getInitPar(
     par=bigdata[idx]
     fitdata=np.dot(par,A[:,:2].T)
     data=unwrapPhases(data,fitdata,doFlag=doFlag,flagfitdata=True)
+    A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
     #now add third parameter if needed:
     if nrthird>0:
         steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
