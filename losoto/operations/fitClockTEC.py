@@ -190,7 +190,7 @@ def getInitPar(
         par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,data))
         nrTEC+=np.abs(np.round(par[0]/steps[0]))
         nrClock+=np.abs(np.round(par[1]/steps[1]))
-    if data.mask.count()<0.5*data.size:
+    if data.mask.sum()<0.5*data.size:
         A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
     steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
     #get initial guess, first only for first two parameters
@@ -204,7 +204,7 @@ def getInitPar(
     par=bigdata[idx]
     fitdata=np.dot(par,A[:,:2].T)
     data=unwrapPhases(data,fitdata,doFlag=doFlag,flagfitdata=True)
-    if data.mask.count()<0.5*data.size:
+    if data.mask.sum()<0.5*data.size:
         A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
     #now add third parameter if needed:
     if nrthird>0:
