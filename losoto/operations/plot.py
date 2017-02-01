@@ -92,7 +92,11 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
                 # make an antenna plot
                 elif antCoords != []:
-                    areas = 5 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 0-15 pt
+                    ax.set_xlabel('')
+                    ax.set_ylabel('')
+                    ax.axes.get_xaxis().set_ticks([])
+                    ax.axes.get_yaxis().set_ticks([])
+                    areas = 15 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 15-30 pt
                     plt.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked

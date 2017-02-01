@@ -35,16 +35,17 @@ class h5parm( object ):
             else:
                 logging.warn('Appending to '+h5parmFile+'.')
                 self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
-            # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any node
-            is_h5parm = False
-            for node in self.H.walk_nodes("/"):
-                if 'h5parm_version' in node._v_attrs:
-                    is_h5parm=True
+
+            # Check if it's a valid  H5parm file: attribute h5parm_version should be defined in any solset
+            is_h5parm = True
+            for node in self.H.root:
+                if 'h5parm_version' not in node._v_attrs:
+                    is_h5parm=False
                     break
             if not is_h5parm:
-                self.close()
-                logging.critical('Not a H5parm file: '+h5parmFile+'.')
-                raise Exception('Not a H5parm file: '+h5parmFile+'.')
+                logging.critical('Missing H5pram version.')
+                #self.close()
+                #raise Exception('Not a H5parm file: '+h5parmFile+'.')
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
@@ -94,6 +95,7 @@ class h5parm( object ):
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
         solset = self.H.create_group("/", solsetName)
+        solset._f_setattr('h5parm_version', _version.__h5parmVersion__)
 
         if addTables:
             # add antenna table
@@ -101,14 +103,12 @@ class h5parm( object ):
             descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
             soltab = self.H.create_table(solset, 'antenna', descriptor, \
                     title = 'Antenna names and positions', expectedrows = 40)
-            soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 
             # add direction table
             logging.info('--Creating new source table.')
             descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
             soltab = self.H.create_table(solset, 'source', descriptor, \
                     title = 'Source names and directions', expectedrows = 10)
-            soltab.attrs['h5parm_version'] = _version.__h5parmVersion__
 
         return solset
 
@@ -205,7 +205,6 @@ class h5parm( object ):
             #axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
             #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
             axis = self.H.create_array('/'+solsetName+'/'+soltabName, axisName, obj=axesVals[i])
-            axis.attrs['h5parm_version'] = _version.__h5parmVersion__
             dim.append(len(axesVals[i]))
 
 #            # Put time/freq on max lenght for better performances
@@ -229,9 +228,7 @@ class h5parm( object ):
         # array do not have compression but are much faster
         val = self.H.create_array('/'+solsetName+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
         weight = self.H.create_array('/'+solsetName+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
-        val.attrs['h5parm_version'] = _version.__h5parmVersion__
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-        weight.attrs['h5parm_version'] = _version.__h5parmVersion__
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return soltab
