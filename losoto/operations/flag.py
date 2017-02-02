@@ -170,8 +170,10 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
             if max_rms > 0:
                 # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
                 rms =  1.4826 * np.nanmedian( np.abs(vals_detrend[(weights != 0)]) )
-                flags = abs(vals_detrend) > max_rms * rms
-                weights[ flags ] = 0
+                if np.isnan(rms): weights[:] = 0
+                else:
+                    flags = abs(vals_detrend) > max_rms * rms
+                    weights[ flags ] = 0
 
             # remove noisy regions of data
             if max_rms_noise > 0 or fix_rms_noise > 0:

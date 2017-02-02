@@ -66,14 +66,14 @@ def run( step, parset, H ):
                 return 1
 
             fitrm = np.zeros(len(times))
-            fitweights = np.ones(len(times))
+            fitweights = np.ones(len(times)) # all unflagged to start
             fitrmguess = 0 # good guess
 
             if 'RR' in coord['pol'] and 'LL' in coord['pol']:
                 coord_rr = np.where(coord['pol'] == 'RR')[0][0]
                 coord_ll = np.where(coord['pol'] == 'LL')[0][0]
             elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
-                logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
+                logging.warning('Linear polarization detected in ant '+coord['ant']+', LoSoTo assumes XX->RR and YY->LL.')
                 coord_rr = np.where(coord['pol'] == 'XX')[0][0]
                 coord_ll = np.where(coord['pol'] == 'YY')[0][0]
             else:
@@ -83,73 +83,78 @@ def run( step, parset, H ):
             if not coord['ant'] == refAnt:
                 logging.debug('Working on ant: '+coord['ant']+'...')
 
-                for t, time in enumerate(times):
+                if (weights == 0.).all() == True:
+                    logging.warning('Skipping flagged antenna: '+coord['ant'])
+                    fitweights[:] = 0
+                else:
 
-                    # apply flags
-                    idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
-                    freq      = np.copy(coord['freq'])[idx]
-                    phase_rr  = vals[coord_rr,:,t][idx]
-                    phase_ll  = vals[coord_ll,:,t][idx]
+                    for t, time in enumerate(times):
 
-                    if (len(weights[0,:,t]) - len(idx))/len(weights[0,:,t]) > 1/4.:
-                        logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
-        
-                    if len(freq) < 10:
-                        fitweights[t] = 0
-                        logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant'])
-                        continue
-        
-                    # RR-LL to be consistent with BBS/NDPPP
-                    phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-                    wav = c/freq
+                        # apply flags
+                        idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
+                        freq      = np.copy(coord['freq'])[idx]
+                        phase_rr  = vals[coord_rr,:,t][idx]
+                        phase_ll  = vals[coord_ll,:,t][idx]
     
-                    fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
-                    # fractional residual
-                    residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi) - np.pi))
-
-#                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
-
-                    if residual > 0.5:
-                        fitrmguess = fitresultrm_wav[0]
-                        weight = 1
-                    else:       
-                        # high residual, flag
-                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
-                        weight = 0
-
-                    # Debug plot
-                    doplot = False
-                    if doplot and coord['ant'] == 'RS310LBA' and t%10==0:
-                        print "Plotting"
-                        if not 'matplotlib' in sys.modules:
-                            import matplotlib as mpl
-                            mpl.rc('font',size =8 )
-                            mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-                            mpl.use("Agg")
-                        import matplotlib.pyplot as plt
-
-                        fig = plt.figure()
-                        fig.subplots_adjust(wspace=0)
-                        ax = fig.add_subplot(110)
-
-                        # plot rm fit
-                        plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
-                        ax.plot(freq, plotrm(fitresultrm_wav, c/freq[:]), "-", color='purple')
-
-                        ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                        ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
-                        ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
-     
-                        residual = np.mod(plotrm(fitresultrm_wav, c/freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
-                        ax.plot(freq, residual, '.', color='yellow')
+                        if (len(weights[0,:,t]) - len(idx))/len(weights[0,:,t]) > 1/4.:
+                            logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
+            
+                        if len(freq) < 10:
+                            fitweights[t] = 0
+                            logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant']+' at timestamp '+str(t))
+                            continue
+            
+                        # RR-LL to be consistent with BBS/NDPPP
+                        phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+                        wav = c/freq
         
-                        ax.set_xlabel('freq')
-                        ax.set_ylabel('phase')
-                        ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+                        fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
+                        # fractional residual
+                        residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi) - np.pi))
     
-                        logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
-                        plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
-                        del fig
+    #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
+    
+                        if residual > 0.5:
+                            fitrmguess = fitresultrm_wav[0]
+                            weight = 1
+                        else:       
+                            # high residual, flag
+                            logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
+                            weight = 0
+    
+                        # Debug plot
+                        doplot = False
+                        if doplot and coord['ant'] == 'RS310LBA' and t%10==0:
+                            print "Plotting"
+                            if not 'matplotlib' in sys.modules:
+                                import matplotlib as mpl
+                                mpl.rc('font',size =8 )
+                                mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+                                mpl.use("Agg")
+                            import matplotlib.pyplot as plt
+    
+                            fig = plt.figure()
+                            fig.subplots_adjust(wspace=0)
+                            ax = fig.add_subplot(110)
+    
+                            # plot rm fit
+                            plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
+                            ax.plot(freq, plotrm(fitresultrm_wav, c/freq[:]), "-", color='purple')
+    
+                            ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
+                            ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
+                            ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
+         
+                            residual = np.mod(plotrm(fitresultrm_wav, c/freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
+                            ax.plot(freq, residual, '.', color='yellow')
+            
+                            ax.set_xlabel('freq')
+                            ax.set_ylabel('phase')
+                            ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+        
+                            logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
+                            plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
+                            del fig
 
                     fitrm[t] = fitresultrm_wav[0]
                     fitweights[t] = weight

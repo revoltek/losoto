@@ -129,9 +129,9 @@ if __name__=='__main__':
     }
 
     globalstart = time.time()
+    H = h5parm(h5parmFile, readonly=False)
     for step in steps:
         op = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
-        H = h5parm(h5parmFile, readonly=False)
         if not op in ops:
             logging.error('Unkown operation: '+op)
             continue
@@ -141,7 +141,6 @@ if __name__=='__main__':
                logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
             else:
                logging.info("Step \'" + step + "\' completed successfully.")
-        H.close()
         gc.collect()
         # Memory debug
        # def namestr(obj, namespace):
@@ -151,6 +150,7 @@ if __name__=='__main__':
        #     print namestr(referrer, globals())
        #     print namestr(referrer, locals())
        # print gc.garbage
+    H.close()
 
     logging.info("Time for all steps: %i s." % ( time.time() - globalstart ))
     logging.info("Done.")
