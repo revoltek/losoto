@@ -51,6 +51,10 @@ def run( step, parset, H ):
             return 1
         if refAnt == '': refAnt = ants[0]
 
+        if 'XX' in sf.getAxisValues('pol') and 'YY' in sf.getAxisValues('pol'):
+            logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
+
+        # create new table
         solsetname = soltabs[t].split('/')[0]
         st = H.makeSoltab(solsetname, 'rotationmeasure',
                                  axesNames=['ant','time'], axesVals=[ants, times],
@@ -73,7 +77,6 @@ def run( step, parset, H ):
                 coord_rr = np.where(coord['pol'] == 'RR')[0][0]
                 coord_ll = np.where(coord['pol'] == 'LL')[0][0]
             elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
-                logging.warning('Linear polarization detected in ant '+coord['ant']+', LoSoTo assumes XX->RR and YY->LL.')
                 coord_rr = np.where(coord['pol'] == 'XX')[0][0]
                 coord_ll = np.where(coord['pol'] == 'YY')[0][0]
             else:
@@ -121,6 +124,9 @@ def run( step, parset, H ):
                             # high residual, flag
                             logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
                             weight = 0
+
+                        fitrm[t] = fitresultrm_wav[0]
+                        fitweights[t] = weight
     
                         # Debug plot
                         doplot = False
@@ -155,9 +161,6 @@ def run( step, parset, H ):
                             logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
                             plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
                             del fig
-
-                    fitrm[t] = fitresultrm_wav[0]
-                    fitweights[t] = weight
 
             sw.setSelection(ant=coord['ant'], time=coord['time'])
             sw.setValues( np.expand_dims(fitrm, axis=1) )

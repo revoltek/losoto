@@ -43,9 +43,7 @@ class h5parm( object ):
                     is_h5parm=False
                     break
             if not is_h5parm:
-                logging.critical('Missing H5pram version.')
-                #self.close()
-                #raise Exception('Not a H5parm file: '+h5parmFile+'.')
+                logging.warning('Missing H5pram version. Is this a properly made h5parm?')
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
