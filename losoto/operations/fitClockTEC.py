@@ -57,7 +57,7 @@ def getInitClock(data, freq):
                 avgdata[ist, :, pol].mask[0] = False
             # logging.debug("mask station %d pol %d "%(ist,pol) +str(mymask))
             # logging.debug("average data station %d pol %d "%(ist,pol) +str(avgdata[ist,:,pol]))
-            avgdata[ist, :, pol][~mymask] = np.float32(np.unwrapSparsePhases(avgdata[ist, :, pol][~mymask]),freq)
+            avgdata[ist, :, pol][~mymask] = np.float32(unwrapSparsePhases(avgdata[ist, :, pol][~mymask]),freq)
             # logging.debug("average unwrapped data station %d pol %d "%(ist,pol) +str(avgdata[ist,:,pol]))
             # logging.debug("remainder " +str(np.remainder(avgdata[ist,:,pol]+np.pi,2*np.pi)-np.pi))
     A = np.ones((nF, 2), dtype=np.float)
