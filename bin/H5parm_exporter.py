@@ -548,9 +548,9 @@ if __name__=='__main__':
                         nfreq = freqs.shape[0]
                         #print val.shape
                         # reshape such that all freq arrays are filled properly
-                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape)) ) )
+                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape),dtype=np.int) ) )
                         #print val.shape
-                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape)) ) )
+                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape),dtype=np.int) ) )
 
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
