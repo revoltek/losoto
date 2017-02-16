@@ -104,12 +104,12 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     ax.axes.get_xaxis().set_ticks([])
                     ax.axes.get_yaxis().set_ticks([])
                     areas = 15 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 15-30 pt
-                    plt.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
+                    ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
                     if plotflag: 
                         ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=2, markeredgecolor='none') # plot flagged points
-                    plt.xlim(xmin=min(xvals), xmax=max(xvals))
+                    ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
                     if np.all(vals.mask) == False:
@@ -128,16 +128,20 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
 
         if not cmesh: 
             if minZ is not None:
-                plt.ylim(ymin=minZ)
+                ax.set_ylim(ymin=minZ)
             else:
-                plt.ylim(ymin=autominZ)
+                ax.set_ylim(ymin=autominZ)
             if maxZ is not None:
-                plt.ylim(ymax=maxZ)
+                ax.set_ylim(ymax=maxZ)
             else:
-                plt.ylim(ymax=automaxZ)
+                ax.set_ylim(ymax=automaxZ)
 
         logging.info("Saving "+filename+'.png')
-        plt.savefig(filename+'.png', bbox_inches='tight')
+        try:
+            figgrid.savefig(filename+'.png', bbox_inches='tight')
+        except:
+            figgrid.tight_layout()
+            figgrid.savefig(filename+'.png')
         plt.close()
 
 
