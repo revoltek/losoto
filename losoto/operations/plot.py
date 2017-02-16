@@ -80,16 +80,23 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
 
                 # plotting
                 if cmesh:
-                    if minZ == 0: minZ = None
-                    if maxZ == 0: maxZ = None
-                    # stratch the imshow output to fill the plot size
+                    # setting min max
+                    if minZ == None and maxZ == None: 
+                        autominZ = np.median(vals) - np.sqrt(np.std(vals))
+                        automaxZ = np.median(vals) + np.sqrt(np.std(vals))
+                    else:
+                        autominZ = minZ
+                        automaxZ = maxZ
+                   # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
-                    if log:
-                        if minZ is not None: minZ = np.log10(minZ)
-                        if maxZ is not None: maxZ = np.log10(maxZ)
+                    if 'Z' in log:
+                        if minZ != None:
+                            minZ = np.log10(minZ)
+                        if maxZ != None:
+                            maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
-                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
+                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=autominZ, vmax=automaxZ)
                 # make an antenna plot
                 elif antCoords != []:
                     ax.set_xlabel('')
@@ -115,6 +122,9 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                             automaxZ = vals.max(fill_value=-np.inf)
                         elif automaxZ < vals.max(fill_value=-np.inf):
                             automaxZ = vals.max(fill_value=-np.inf)
+
+                        # prevent warning from empty plots
+                        if automaxZ == autominZ: automaxZ += 1
 
         if not cmesh: 
             if minZ is not None:
@@ -376,6 +386,10 @@ def run( step, parset, H ):
                     # unwrap if required
                     if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
                         vals = unwrap(vals)
+                    
+                    # is user requested axis in an order that is different from h5parm, we need to transpose
+                    if len(axesInPlot) == 2:
+                        if sf3.getAxesNames().index(axesInPlot[0]) < sf3.getAxesNames().index(axesInPlot[1]): vals = vals.T
 
                     dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
 
