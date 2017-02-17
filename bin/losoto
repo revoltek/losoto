@@ -123,6 +123,7 @@ if __name__=='__main__':
                    "SMOOTH": operations.smooth,
                    "SMOOTHCLOCK": operations.smoothclock,
                    "TECFIT": operations.tecfit,
+                   "TECJUMP": operations.tecjump,
                    "TECSCREEN": operations.tecscreen,
                    # example operation
                    #"EXAMPLE": operations.example
