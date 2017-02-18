@@ -30,13 +30,13 @@ def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, o
         import scipy.ndimage
         initialPercent = 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)
 
-        # if size=0 then extend to all axis
+        # if size=0 then extend to all 2*axis, this otherwise create issues with mirroring
         for i, s in enumerate(size):
-            if s == 0: size[i] = weights.shape[i]
+            if s == 0: size[i] = 2*weights.shape[i]
 
         for cycle in xrange(cycles):
             flag = scipy.ndimage.filters.generic_filter((weights==0), extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
-            weights[ np.where( flag == 1 ) ] = 0
+            weights[ ( flag == 1 ) ] = 0
             # no new flags
             if cycle != 0 and np.count_nonzero(flag) == oldFlagCount: break
             oldFlagCount = np.count_nonzero(flag)

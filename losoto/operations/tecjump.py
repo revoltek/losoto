@@ -85,26 +85,31 @@ def run( step, parset, H ):
             idx_jumps = []
             for i, d in enumerate(vals_d):
                 if np.abs(d) > 5*std_d[i]:
-                    idx_jumps.append(i)
-                    jumps_init.append(d - smooth_d[i])
+                    #idx_jumps.append(i)
+                    #jumps_init.append(d - smooth_d[i])
+                    d = d - smooth_d[i]
+                    vals_d[i] = np.rint(d/0.019628) * 0.019628
+                    print vals_d[i]
+                else:
+                    vals_d[i] = 0
 
             #print vals_d[np.where(vals_d!=0)]
             print "%s: number of jumps: %i" % (coord['ant'], len(np.where(vals_d != 0)[0]))
 
             # couple of idexes for contiguos regions
-            idx_jumps = zip([0]+idx_jumps,idx_jump+[len(vals_d)])
+            #idx_jumps = zip( [0]+idx_jumps, idx_jumps+[len(vals_d)] )
 
-            for i, j in idx_jumps:
-                    f_dist.append(lambda)
+            #for i, j in idx_jumps:
+            #        f_dist.append()
 
             # minimise the distance between each point and the std_d having vals_d as free parameters
             # define system of equation
-            def f_all(f_dist, x)
-                return np.sum(f(x[i]) for i,f in enumerate(f_dist))
+            #def f_all(f_dist, x):
+            #    return np.sum(f(x[i]) for i,f in enumerate(f_dist))
 
             # correct vals with cumulative jumps
-            #for i in range(len(vals)):
-            #    vals[i] += np.sum(vals_d[0:i])
+            for i in range(len(vals)):
+                vals[i] += np.sum(vals_d[0:i])
 
             # set back to 0 the values for flagged data
             vals[weights == 0] = 0
