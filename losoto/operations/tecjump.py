@@ -31,7 +31,7 @@ def run( step, parset, H ):
         """
         this_vals = vals.copy()
         #this_vals[mask] = np.interp(np.where(mask)[0], np.where(~mask)[0], vals[~mask])
-        this_vals[mask] = griddata(np.where(~mask)[0], vals[~mask], np.where(mask)[0], method)
+        this_vals[mask] = griddata(np.where(~mask)[0], vals[~mask], np.where(mask)[0], method, fill_value=0)
         return this_vals
 
     tec_jump_val = 0.019628 * 2
@@ -105,7 +105,7 @@ def run( step, parset, H ):
                 jumps = [jump for jump in jumps if jump.closejump != 0]
                 jumps = [jump for jump in jumps if jump.size != 0] # prevent bug on edges
                 jumps = [jump for jump in jumps if jump.size < maxsize]
-                #jumps.sort(key=lambda x: np.abs(x.hight), reverse=True)
+
                 jumps.sort(key=lambda x: (np.abs(x.size), x.hight), reverse=False) #smallest first
                 #print [(j.hight, j.closejump) for j in jumps]
 
