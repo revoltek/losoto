@@ -17,6 +17,7 @@ def run( step, parset, H ):
     from scipy.optimize import minimize
     import itertools
     from scipy.interpolate import griddata
+    import scipy.cluster.vq as vq
 
     def robust_std(data, sigma=3):
         """
@@ -31,7 +32,12 @@ def run( step, parset, H ):
         """
         this_vals = vals.copy()
         #this_vals[mask] = np.interp(np.where(mask)[0], np.where(~mask)[0], vals[~mask])
-        this_vals[mask] = griddata(np.where(~mask)[0], vals[~mask], np.where(mask)[0], method, fill_value=0)
+        #this_vals[mask] = griddata(np.where(~mask)[0], vals[~mask], np.where(mask)[0], method)
+
+        # griddata has nan bug with nearest, I need to use vq
+        code, dist = vq.vq(np.where(mask)[0], np.where(~mask)[0])
+        this_vals[ np.where(mask)[0] ] = this_vals[code]
+        
         return this_vals
 
     tec_jump_val = 0.019628 * 2

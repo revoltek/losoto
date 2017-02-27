@@ -24,10 +24,6 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
 
     refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     for t, soltab in enumerate(openSoltabs( H, soltabs )):
         logging.info("--> Working on soltab: "+soltab._v_name)
