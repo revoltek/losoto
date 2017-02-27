@@ -123,10 +123,10 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                         elif automaxZ < vals.max(fill_value=-np.inf):
                             automaxZ = vals.max(fill_value=-np.inf)
 
-                        # prevent warning from empty plots
-                        if automaxZ == autominZ: automaxZ += 1
 
         if not cmesh: 
+            # prevent warning from empty plots
+            if automaxZ == autominZ: automaxZ += 1
             if minZ is not None:
                 ax.set_ylim(ymin=minZ)
             else:
