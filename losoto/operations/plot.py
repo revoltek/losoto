@@ -186,7 +186,11 @@ def run( step, parset, H ):
     makeAntPlot = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeAntPlot"]), False )
     makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
+    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
+    if ncpu == 0:
+        import multiprocessing
+        ncpu = multiprocessing.cpu_count()
+
 
     if makeMovie: 
         prefix = prefix+'__tmp__'

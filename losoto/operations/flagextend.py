@@ -57,7 +57,10 @@ def run( step, parset, H ):
     size = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Size"]), [11,11] )
     percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 50 )
     cycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "Cycles"]), 3 )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
+    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
+    if ncpu == 0:
+        import multiprocessing
+        ncpu = multiprocessing.cpu_count()
     
     if axesToExt == []:
         logging.error("Please specify at least one axis to extend flag.")

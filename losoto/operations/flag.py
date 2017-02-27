@@ -301,7 +301,10 @@ def run( step, parset, H ):
     preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
     mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
     ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 1 )
+    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
+    if ncpu == 0:
+        import multiprocessing
+        ncpu = multiprocessing.cpu_count()
 
     if ref == '': ref = None
 
