@@ -23,7 +23,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
 
-        autominZ = None; automaxZ = None 
+        autominZ = np.inf; automaxZ = -np.inf
 
         # if user-defined number of col use that
         if NColFig != 0: Nc = NColFig
@@ -112,21 +112,15 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
-                    if np.all(vals.mask) == False:
-                        if autominZ is None:
+                    print autominZ, all(vals.mask == True)
+                    if not all(vals.mask == True):
+                        if autominZ > vals.min(fill_value=np.inf) or autominZ == np.inf: 
                             autominZ = vals.min(fill_value=np.inf)
-                        elif autominZ > vals.min(fill_value=np.inf): 
-                            autominZ = vals.min(fill_value=np.inf)
-
-                        if automaxZ is None:
+                        if automaxZ < vals.max(fill_value=-np.inf) or automaxZ == -np.inf:
                             automaxZ = vals.max(fill_value=-np.inf)
-                        elif automaxZ < vals.max(fill_value=-np.inf):
-                            automaxZ = vals.max(fill_value=-np.inf)
-
 
         if not cmesh: 
-            # prevent warning from empty plots
-            if automaxZ == autominZ: automaxZ += 1
+            print autominZ, automaxZ
             if minZ is not None:
                 ax.set_ylim(ymin=minZ)
             else:
