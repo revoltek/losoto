@@ -69,7 +69,7 @@ def run( step, parset, H ):
 
                 if (weights == 0.).all() == True:
                     logging.warning('Skipping flagged antenna: '+coord['ant'])
-                    fitweights[:] = 0
+                    weights[:] = 0
                 else:
 
                     for t, time in enumerate(times):
