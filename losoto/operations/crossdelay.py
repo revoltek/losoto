@@ -1,29 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Faraday rotation extraction
+# Estimate cross-delay
 
 import logging
 from losoto.operations_lib import *
-logging.debug('Loading FARADAY module.')
+logging.debug('Loading CROSSDELAY module.')
 
 def run( step, parset, H ):
-    """
-    Separate phase solutions into FR, Clock and TEC.
-
-    The Clock and TEC values are stored in the specified output soltab with type 'clock', 'tec', 'FR'.
-    """
     from losoto.h5parm import solFetcher, solWriter
     import numpy as np
     import scipy.optimize
 
-    rmwavcomplex = lambda RM, wav, y: abs(np.cos(2.*RM[0]*wav*wav)  - np.cos(y)) + abs(np.sin(2.*RM[0]*wav*wav)  - np.sin(y))
-    c = 2.99792458e8
+    delaycomplex = lambda d, freq, y: abs(np.cos(d[0]*freq)  - np.cos(y)) + abs(np.sin(d[0]*freq)  - np.sin(y))
 
     # get involved solsets using local step values or global values or all
     soltabs = getParSoltabs( step, parset, H )
 
     refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
+    outTab = parset.getString('.'.join(["LoSoTo.Steps", step, "OutTable"]), 'phasediff' )
 
     for t, soltab in enumerate(openSoltabs( H, soltabs )):
         logging.info("--> Working on soltab: "+soltab._v_name)
@@ -50,37 +45,24 @@ def run( step, parset, H ):
             return 1
         if refAnt == '': refAnt = ants[0]
 
-        if 'XX' in sf.getAxisValues('pol') and 'YY' in sf.getAxisValues('pol'):
-            logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
-
         # create new table
         solsetname = soltabs[t].split('/')[0]
-        st = H.makeSoltab(solsetname, 'rotationmeasure',
-                                 axesNames=['ant','time'], axesVals=[ants, times],
-                                 vals=np.zeros((len(ants),len(times))),
-                                 weights=np.ones((len(ants),len(times))))
+        st = H.makeSoltab(solsetname, soltype = sf.getType(), soltab = outTab, axesNames=sf.getAxesNames(), \
+                          axesVals=[sf.getAxisValues(axisName) for axisName in sf.getAxesNames()], \
+                          vals=sf.getValues(retAxesVals = False), weights=sf.getValues(weight = True, retAxesVals = False), parmdbType=sf.t._v_attrs['parmdb_type'])
         sw = solWriter(st)
-        sw.addHistory('Created by FARADAY operation.')
+        sw.addHistory('Created by CROSSDELAY operation.')
             
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference = refAnt):
 
-            if len(coord['freq']) < 10:
-                logging.error('Faraday rotation estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
-                return 1
-
-            fitrm = np.zeros(len(times))
-            fitweights = np.ones(len(times)) # all unflagged to start
-            fitrmguess = 0 # good guess
+            fitdelayguess = 0 # good guess
 
             if 'RR' in coord['pol'] and 'LL' in coord['pol']:
-                coord_rr = np.where(coord['pol'] == 'RR')[0][0]
-                coord_ll = np.where(coord['pol'] == 'LL')[0][0]
+                coord1 = np.where(coord['pol'] == 'RR')[0][0]
+                coord2 = np.where(coord['pol'] == 'LL')[0][0]
             elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
-                coord_rr = np.where(coord['pol'] == 'XX')[0][0]
-                coord_ll = np.where(coord['pol'] == 'YY')[0][0]
-            else:
-                logging.error("Cannot proceed with Faraday estimation with polarizations: "+str(coord['pol']))
-                return 1
+                coord1 = np.where(coord['pol'] == 'XX')[0][0]
+                coord2 = np.where(coord['pol'] == 'YY')[0][0]
 
             if not coord['ant'] == refAnt:
                 logging.debug('Working on ant: '+coord['ant']+'...')
@@ -93,44 +75,42 @@ def run( step, parset, H ):
                     for t, time in enumerate(times):
 
                         # apply flags
-                        idx       = ((weights[coord_rr,:,t] != 0.) & (weights[coord_ll,:,t] != 0.))
+                        idx       = ((weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.))
                         freq      = np.copy(coord['freq'])[idx]
-                        phase_rr  = vals[coord_rr,:,t][idx]
-                        phase_ll  = vals[coord_ll,:,t][idx]
+                        phase1    = vals[coord1,:,t][idx]
+                        phase2    = vals[coord2,:,t][idx]
     
                         if len(freq) < 10:
-                            fitweights[t] = 0
-                            logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant']+' at timestamp '+str(t))
+                            vals[:,:,t] = 0.
+                            weights[:,:,t] = 0.
                             continue
             
                         if (len(idx) - len(freq))/len(freq) > 1/4.:
-                            logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
-
-                        # RR-LL to be consistent with BBS/NDPPP
-                        phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-                        wav = c/freq
+                            logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(idx) - len(freq)))
+            
+                        phase_diff  = (phase1 - phase2)
         
-                        fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
+                        fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                         # fractional residual
-                        residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi) - np.pi))
-    
-    #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
+                        residual = np.mean(np.abs(np.mod((fitresultdelay*freq)-phase_diff,2.*np.pi) - np.pi))
     
                         if residual > 0.5:
-                            fitrmguess = fitresultrm_wav[0]
+                            fitdelayguess = fitresultdelay[0]
                             weight = 1
                         else:       
                             # high residual, flag
                             logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
                             weight = 0
 
-                        fitrm[t] = fitresultrm_wav[0]
-                        fitweights[t] = weight
-    
+                        vals[:,:,t] = 0.
+                        vals[coord1,:,t][idx] = fitresultdelay[0]*freq
+                        weights[:,:,t] = 0.
+                        weights[coord1,:,t][idx] = weight
+                        weights[coord2,:,t][idx] = weight
+
                         # Debug plot
                         doplot = False
-                        if doplot and coord['ant'] == 'RS310LBA' and t%10==0:
-                            print "Plotting"
+                        if doplot and t%500==0:# and coord['ant'] == 'RS210LaBA' :
                             if not 'matplotlib' in sys.modules:
                                 import matplotlib as mpl
                                 mpl.rc('font',size =8 )
@@ -143,14 +123,14 @@ def run( step, parset, H ):
                             ax = fig.add_subplot(110)
     
                             # plot rm fit
-                            plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
-                            ax.plot(freq, plotrm(fitresultrm_wav, c/freq[:]), "-", color='purple')
+                            plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
+                            ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
     
-                            ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                            ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
+                            ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
+                            ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
                             ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
          
-                            residual = np.mod(plotrm(fitresultrm_wav, c/freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
+                            residual = np.mod(plotdelay(fitresultdelay[0], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
                             ax.plot(freq, residual, '.', color='yellow')
             
                             ax.set_xlabel('freq')
@@ -158,12 +138,12 @@ def run( step, parset, H ):
                             ax.set_ylim(ymin=-np.pi, ymax=np.pi)
         
                             logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
-                            plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
+                            plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
                             del fig
 
-            sw.setSelection(ant=coord['ant'], time=coord['time'])
-            sw.setValues( np.expand_dims(fitrm, axis=1) )
-            sw.setValues( np.expand_dims(fitweights, axis=1), weight=True )
+            sw.setSelection(**coord)
+            sw.setValues( vals )
+            sw.setValues( weights, weight=True )
 
         del st
         del sw        

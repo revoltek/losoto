@@ -108,7 +108,7 @@ if __name__=='__main__':
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
-                   #"CLOCKTEC2": operations.clocktec2,
+                   "CROSSDELAY": operations.crossdelay,
                    "DUPLICATE": operations.duplicate,
                    "FARADAY": operations.faraday,
                    "FLAG": operations.flag,

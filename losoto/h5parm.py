@@ -245,7 +245,7 @@ class h5parm( object ):
         if type(soltab) is str:
             soltabobj = self.getSoltab(solset, soltab)
 
-        soltabobj._f_remove(recursive=True)
+        soltabobj._f_remove(recursive=True, force=True)
         logging.info("Soltab \""+soltab+"\" deleted.")
 
 

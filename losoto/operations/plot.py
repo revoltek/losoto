@@ -112,7 +112,6 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
-                    print autominZ, all(vals.mask == True)
                     if not all(vals.mask == True):
                         if autominZ > vals.min(fill_value=np.inf) or autominZ == np.inf: 
                             autominZ = vals.min(fill_value=np.inf)
@@ -120,7 +119,6 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                             automaxZ = vals.max(fill_value=-np.inf)
 
         if not cmesh: 
-            print autominZ, automaxZ
             if minZ is not None:
                 ax.set_ylim(ymin=minZ)
             else:
