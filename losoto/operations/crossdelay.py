@@ -92,9 +92,11 @@ def run( step, parset, H ):
         
                         fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                         # fractional residual
-                        residual = np.mean(np.abs(np.mod((fitresultdelay*freq)-phase_diff,2.*np.pi) - np.pi))
+                        residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
+
+                        #print "t:", t, "result:", fitresultdelay, "residual:", residual
     
-                        if residual > 0.5:
+                        if residual < 1.:
                             fitdelayguess = fitresultdelay[0]
                             weight = 1
                         else:       

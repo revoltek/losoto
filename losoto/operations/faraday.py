@@ -112,11 +112,11 @@ def run( step, parset, H ):
         
                         fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
                         # fractional residual
-                        residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff,2.*np.pi) - np.pi))
-    
+                        residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff + np.pi, 2.*np.pi) - np.pi))
+
     #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
     
-                        if residual > 0.5:
+                        if residual < 0.5:
                             fitrmguess = fitresultrm_wav[0]
                             weight = 1
                         else:       
