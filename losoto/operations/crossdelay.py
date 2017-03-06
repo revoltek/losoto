@@ -103,7 +103,8 @@ def run( step, parset, H ):
                             weight = 0
 
                         vals[:,:,t] = 0.
-                        vals[coord1,:,t][idx] = fitresultdelay[0]*freq
+                        vals[coord1,:,t][idx] = fitresultdelay[0]*freq/2.
+                        vals[coord2,:,t][idx] = -1.*(fitresultdelay[0]*freq)/2.
                         weights[:,:,t] = 0.
                         weights[coord1,:,t][idx] = weight
                         weights[coord2,:,t][idx] = weight
