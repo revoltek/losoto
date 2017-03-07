@@ -55,7 +55,7 @@ def run( step, parset, H ):
             
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference = refAnt):
 
-            fitdelayguess = 0 # good guess
+            fitdelayguess = 1.e-10 # good guess, do not use 0 as it seems the minimizer is unstable with that
 
             if 'RR' in coord['pol'] and 'LL' in coord['pol']:
                 coord1 = np.where(coord['pol'] == 'RR')[0][0]
@@ -83,6 +83,7 @@ def run( step, parset, H ):
                         if len(freq) < 10:
                             vals[:,:,t] = 0.
                             weights[:,:,t] = 0.
+                            logging.debug('Not enough unflagged point for the timeslot '+str(t))
                             continue
             
                         if (len(idx) - len(freq))/len(freq) > 1/4.:
@@ -91,6 +92,7 @@ def run( step, parset, H ):
                         phase_diff  = (phase1 - phase2)
         
                         fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
+                        #if t%100==0: print fitresultdelay
                         # fractional residual
                         residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
 
@@ -113,7 +115,7 @@ def run( step, parset, H ):
 
                         # Debug plot
                         doplot = False
-                        if doplot and t%500==0:# and coord['ant'] == 'RS210LaBA' :
+                        if doplot and t%500==0 and coord['ant'] == 'CS004LBA':
                             if not 'matplotlib' in sys.modules:
                                 import matplotlib as mpl
                                 mpl.rc('font',size =8 )
@@ -123,7 +125,7 @@ def run( step, parset, H ):
     
                             fig = plt.figure()
                             fig.subplots_adjust(wspace=0)
-                            ax = fig.add_subplot(110)
+                            ax = fig.add_subplot(111)
     
                             # plot rm fit
                             plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
