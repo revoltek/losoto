@@ -70,7 +70,7 @@ def run( step, parset, H ):
 
             fitrm = np.zeros(len(times))
             fitweights = np.ones(len(times)) # all unflagged to start
-            fitrmguess = 0 # good guess
+            fitrmguess = 0.001 # good guess
 
             if 'RR' in coord['pol'] and 'LL' in coord['pol']:
                 coord_rr = np.where(coord['pol'] == 'RR')[0][0]
