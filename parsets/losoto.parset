@@ -40,6 +40,7 @@ LoSoTo.Steps.clocktec.FitOffset = False
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
 LoSoTo.Steps.crossdelay.RefAnt = '' # reference antenna, if not given use the first
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
+LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
 
 LoSoTo.Steps.duplicate.Operation = DUPLICATE
 LoSoTo.Steps.duplicate.InTable = sol000/clock000 # complete solset/solt

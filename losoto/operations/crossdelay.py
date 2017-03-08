@@ -19,6 +19,7 @@ def run( step, parset, H ):
 
     refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
     outTab = parset.getString('.'.join(["LoSoTo.Steps", step, "OutTable"]), 'phasediff' )
+    maxres = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxResidual"]), 1.)
 
     for t, soltab in enumerate(openSoltabs( H, soltabs )):
         logging.info("--> Working on soltab: "+soltab._v_name)
@@ -96,7 +97,7 @@ def run( step, parset, H ):
 
                         #print "t:", t, "result:", fitresultdelay, "residual:", residual
     
-                        if residual < 1.:
+                        if residual < maxres:
                             fitdelayguess = fitresultdelay[0]
                             weight = 1
                         else:       
