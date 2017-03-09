@@ -116,7 +116,7 @@ def run( step, parset, H ):
 
     #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
     
-                        if residual < 0.5:
+                        if residual < 1.:
                             fitrmguess = fitresultrm_wav[0]
                             weight = 1
                         else:       

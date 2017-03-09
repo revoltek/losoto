@@ -518,7 +518,7 @@ if __name__=='__main__':
                         else:
                             sf_phase = cachedSolTabs[solTabList[0]._v_title]
                         sf_phase.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
-                            time={'min':np.min(times), 'max':np.max(times)})
+                            time={'min':np.min(times-0.1), 'max':np.max(times+0.1)})
                         val_amp = sf.getValues()[0]
                         val_phase = sf_phase.getValues()[0]
                         val = val_amp * np.cos(val_phase)
@@ -530,7 +530,7 @@ if __name__=='__main__':
                         else:
                             sf_amp = cachedSolTabs[solTabList[0]._v_title]
                         sf_amp.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
-                            time={'min':np.min(times), 'max':np.max(times)})
+                            time={'min':np.min(times-0.1), 'max':np.max(times+0.1)})
                         val_phase = sf.getValues()[0]
                         val_amp = sf_amp.getValues()[0]
                         val = val_amp * np.sin(val_phase)
