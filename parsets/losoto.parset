@@ -87,6 +87,7 @@ LoSoTo.Steps.plot.FigSize = [0,0] # Size of the image [x,y], if one of the value
 LoSoTo.Steps.plot.MinMax = [0,0] # min max value for the independent variable (0 means automatic)
 LoSoTo.Steps.plot.TableAxis = [] # the axis to plot on a page - e.g. ant to get all antenna's on one file
 LoSoTo.Steps.plot.ColorAxis = [] # the axis to plot in different colours - e.g. pol to get correlations with different colors
+LoSoTo.Steps.plot.DiffAxis = [] # this must be a len=2 axis and the plot will have the differential value - e.g. 'pol' to plot XX-YY
 LoSoTo.Steps.plot.Log = "" # log='XYZ' to set which axes to put in Log
 LoSoTo.Steps.plot.PlotFlag = False
 LoSoTo.Steps.plot.Unwrap = False

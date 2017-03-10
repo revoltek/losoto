@@ -165,10 +165,9 @@ def run( step, parset, H ):
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     if minZ == 0: minZ = None
     if maxZ == 0: maxZ = None
-    # the axis to plot on one page - e.g. ant to get all antenna's on one plot #
     axisInTable = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "TableAxis"]), [] )
-    # the axis to plot in different colours - e.g. pol to get all correlations on one plot #
     axisInCol = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), [] )
+    axisInDiff = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "DiffAxis"]), [] )
     # log='XYZ' to set which axes to put in Log
     log = parset.getString('.'.join(["LoSoTo.Steps", step, "Log"]), "" )
     plotflag = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlag"]), False )
@@ -178,11 +177,11 @@ def run( step, parset, H ):
     makeAntPlot = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeAntPlot"]), False )
     makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+
     ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
     if ncpu == 0:
         import multiprocessing
         ncpu = multiprocessing.cpu_count()
-
 
     if makeMovie: 
         prefix = prefix+'__tmp__'
@@ -220,17 +219,18 @@ def run( step, parset, H ):
             logging.error('Axes must be a len 1 or 2 array.')
             return 1
 
-        if len(set(axisInTable+axesInPlot+axisInCol)) != len(axisInTable+axesInPlot+axisInCol):
+        if len(set(axisInTable+axesInPlot+axisInCol+axisInDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
             logging.error('Axis defined multiple times.')
             return 1
 
-        if len(axisInTable) > 1 or len(axisInCol) > 1:
-            logging.error('Too many AxisInTable/AxisInCol, they must be at most one each.')
+        # just because we use lists, check that they are 1-d
+        if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisInDiff) > 1:
+            logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
             return 1
 
         # all axes that are not iterated by anything else
         axesInFile = sf.getAxesNames()
-        for axis in axisInTable+axesInPlot+axisInCol:
+        for axis in axisInTable+axesInPlot+axisInCol+axisInDiff:
             axesInFile.remove(axis)
  
         # set subplots scheme
@@ -258,8 +258,8 @@ def run( step, parset, H ):
 
         # cycle on files
         if makeMovie: pngs = [] # store png filenames
-        for vals, coord, selection in sf.getValuesIter(returnAxes=axisInTable+axisInCol+axesInPlot):
-            
+        for vals, coord, selection in sf.getValuesIter(returnAxes=axisInDiff+axisInTable+axisInCol+axesInPlot):
+           
             # set filename
             filename = ''
             for axis in axesInFile:
@@ -275,10 +275,10 @@ def run( step, parset, H ):
             # if plotting time - convert in h/min/s
             xlabelunit=''
             if axesInPlot[0] == 'time':
-                if len(xvals) > 3600:
+                if xvals[-1] - xvals[0] > 3600:
                     xvals = (xvals-xvals[0])/3600.  # hrs
                     xlabelunit = ' [hr]'
-                elif len(xvals) > 60:
+                elif xvals[-1] - xvals[0] > 60:
                     xvals = (xvals-xvals[0])/60.   # mins
                     xlabelunit = ' [min]'
                 else:
@@ -303,10 +303,10 @@ def run( step, parset, H ):
 
                 ylabelunit=''
                 if axesInPlot[1] == 'time':
-                    if len(yvals) > 3600:
+                    if yvals[-1] - yvals[0] > 3600:
                         yvals = (yvals-yvals[0])/3600.  # hrs
                         ylabelunit = ' [hr]'
-                    elif len(yvals) > 60:
+                    elif yvals[-1] - yvals[0] > 60:
                         yvals = (yvals-yvals[0])/60.   # mins
                         ylabelunit = ' [min]'
                     else:
@@ -325,7 +325,7 @@ def run( step, parset, H ):
             titles = []
             dataCube = []
             weightCube = []
-            for Ntab, (vals, coord, selection) in enumerate(sf2.getValuesIter(returnAxes=axisInCol+axesInPlot)):
+            for Ntab, (vals, coord, selection) in enumerate(sf2.getValuesIter(returnAxes=axisInDiff+axisInCol+axesInPlot)):
                 dataCube.append([])
                 weightCube.append([])
 
@@ -340,9 +340,32 @@ def run( step, parset, H ):
                 sf3.selection = selection
                 # cycle on colors
 
-                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axesInPlot, weight=True, reference=ref)):
+                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axisInDiff+axesInPlot, weight=True, reference=ref)):
                     dataCube[Ntab].append([])
                     weightCube[Ntab].append([])
+        
+                    # differential plot
+                    if axisInDiff != []:
+                        # find ordered list of axis
+                        names = [axis for axis in sf.getAxesNames() if axis in axisInDiff+axesInPlot]
+                        if axisInDiff[0] not in names:
+                            logging.error("Axis to differentiate (%s) not found." % axisInDiff[0])
+                            mpm.wait()
+                            return 1
+                        if len(coord[axisInDiff[0]]) != 2:
+                            logging.error("Axis to differentiate (%s) has too many values, only 2 is allowed." % axisInDiff[0])
+                            mpm.wait()
+                            return 1
+
+                        # find position of interesting axis
+                        diff_idx = names.index(axisInDiff[0])
+                        # roll to first place
+                        vals = np.rollaxis(vals,diff_idx,0)
+                        vals = vals[0] - vals[1]
+                        weight = np.rollaxis(weight,diff_idx,0)
+                        weight = ((weight[0]==1) & (weight[1]==1))
+                        del coord[axisInDiff[0]]
+ 
 
                     # add tables if required (e.g. phase/tec)
                     for sfAdd in sfsAdd:
