@@ -13,7 +13,7 @@ logging.debug('Loading RESIDUALS module.')
 
 def run( step, parset, H ):
     """
-    subtract a clock and/or tec from a phase.
+    subtract two tables or a clock/tec/tec3rd/rm from a phase.
     """
     import numpy as np
     from losoto.h5parm import solFetcher, solWriter

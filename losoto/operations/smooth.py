@@ -11,9 +11,10 @@ logging.debug('Loading SMOOTH module.')
 
 def run( step, parset, H ):
 
-    import scipy.ndimage.filters
+#    import scipy.ndimage.filters
     import numpy as np
     from losoto.h5parm import solFetcher, solWriter
+    from scipy.ndimage import generic_filter
 
     soltabs = getParSoltabs( step, parset, H )
 
@@ -25,8 +26,8 @@ def run( step, parset, H ):
         logging.error("Axes and FWHM lenghts must be equal.")
         return 1
 
-    if mode == "runningmedian":
-        logging.warning('Flagged data are still taken into account!')
+#    if mode == "runningmedian":
+#        logging.warning('Flagged data are still taken into account!')
 
     if FWHM != [] and mode != "runningmedian":
         logging.warning("FWHM makes sense only with runningmedian mode, ignoring it.")
@@ -53,7 +54,9 @@ def run( step, parset, H ):
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth, weight=True):
 
             if mode == 'runningmedian':
-                valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
+                np.putmask(vals, weights==0, np.nan)
+                valsnew = generic_filter(vals, np.nanmedian, size=FWHM)
+                #valsnew = scipy.ndimage.filters.median_filter(vals, FWHM)
             elif mode == 'median':
                 valsnew = np.median( vals[(weights!=0)] )
             elif mode == 'mean':
