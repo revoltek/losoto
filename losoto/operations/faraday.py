@@ -24,6 +24,7 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
 
     refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
+    max_residual = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxResidual"]), 1 )
 
     for t, soltab in enumerate(openSoltabs( H, soltabs )):
         logging.info("--> Working on soltab: "+soltab._v_name)
@@ -116,7 +117,7 @@ def run( step, parset, H ):
 
     #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
     
-                        if residual < 1.:
+                        if residual < max_residual:
                             fitrmguess = fitresultrm_wav[0]
                             weight = 1
                         else:       

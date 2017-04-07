@@ -60,6 +60,10 @@ LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS).
 LoSoTo.Steps.flag.Mode = smooth # smooth (running median)/poly/spline
 LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
 
+LoSoTo.Steps.faraday.Operation = FARADAY
+LoSoTo.Steps.faraday.maxResidual = 1. #  max average residual in rad before flagging datapoint
+LoSoTo.Steps.faraday.refAnt = '' # a reference antenna
+
 # PARALLEL
 LoSoTo.Steps.flagextend.Operation = FLAGEXTEND
 LoSoTo.Steps.flagextend.Axes = ['freq','time'] # axes used to find close flags
