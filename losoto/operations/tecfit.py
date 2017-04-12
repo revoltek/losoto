@@ -731,9 +731,6 @@ def run( step, parset, H ):
     # Switch to the Agg backend to prevent problems with pylab imports when
     # DISPLAY env. variable is not set
     import os
-    if 'DISPLAY' not in os.environ:
-        import matplotlib
-        matplotlib.use("Agg")
     from pylab import find
     import re
     from .tecscreen import calculate_piercepoints

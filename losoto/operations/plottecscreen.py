@@ -34,11 +34,19 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     """
     from numpy import kron, concatenate, newaxis
     from numpy.linalg import pinv, norm
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     import numpy as np
     import os
-    from operations.tecscreen import calc_piercepoint
+    from losoto.operations.tecscreen import calc_piercepoint
+    # avoids error if re-setting "agg" a second run of plot
+    if not 'matplotlib' in sys.modules:
+        import matplotlib as mpl
+        mpl.rc('font',size =8 )
+        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+        mpl.use("Agg")
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt # after setting "Agg" to speed up
+    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+ 
     try:
         import progressbar
     except ImportError:
@@ -172,7 +180,7 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
     pbar = progressbar.ProgressBar(maxval=N_times).start()
     ipbar = 0
     sm = plt.cm.ScalarMappable(cmap=plt.cm.jet,
-        norm=plt.normalize(vmin=vmin, vmax=vmax))
+        norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax))
     sm._A = []
     plt.gca().set_aspect('equal')
 
@@ -231,7 +239,7 @@ def make_tec_screen_plots(pp, tec_screen, residuals, station_positions,
             axins.set_xlim(xr[-1]/1000.0, xr[0]/1000.0)
             axins.set_ylim(yr[0]/1000.0, yr[-1]/1000.0)
 
-        plt.savefig(root_dir+'/'+prestr+'frame%0.3i.png' % k)
+        plt.savefig(root_dir+'/'+prestr+'frame%0.4i.png' % k)
         pbar.update(ipbar)
         ipbar += 1
     pbar.finish()
@@ -261,18 +269,12 @@ def run( step, parset, H ):
     import os
     import numpy as np
     from losoto.h5parm import solFetcher, solHandler
-    # avoids error if re-setting "agg" a second run of plot
-    if not 'matplotlib' in sys.modules:
-        import matplotlib as mpl
-        mpl.rc('font',size =8 )
-        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-        mpl.use("Agg")
-    import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
     soltabs = getParSoltabs( step, parset, H )
 
     minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
     prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+    remove_gradient = parset.getBool('.'.join(["LoSoTo.Steps", step, "RemoveGradient"]), False )
 
     # Plot various TEC-screen properties
 
@@ -317,7 +319,7 @@ def run( step, parset, H ):
         make_tec_screen_plots(pp, tec_screen, residuals,
             np.array(station_positions), np.array(source_names), times,
             height, order, beta_val, r_0, prefix=prefix,
-            remove_gradient=True, show_source_names=False, min_tec=min_tec,
+            remove_gradient=remove_gradient, show_source_names=False, min_tec=min_tec,
             max_tec=max_tec)
 
     return 0

@@ -84,6 +84,7 @@ if __name__=='__main__':
         solset, soltab = options.delete.split('/')
         H.delSoltab(solset, soltab)
         H.close()
+        logging.warning('To reduce file size after deleting SolTabs use "h5repack infile outfile".')
         sys.exit(0)
     else:
         try: parsetFile = args[1]

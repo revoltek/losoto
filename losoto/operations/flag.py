@@ -204,33 +204,34 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
         # plot 1d
         plot = False
         if plot:
-            #import matplotlib as mpl
-            #mpl.use("Agg")
-            #import matplotlib.pyplot as plt
-            #plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
-            #vals_smooth = spline(axes[0])
-            #plt.plot(axes[0], vals_smooth, 'r-')
-            #plt.savefig('test.png')
-            #sys.exit(1)
-
-            # plot 2d
             import matplotlib as mpl
             mpl.use("Agg")
             import matplotlib.pyplot as plt
-            plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            plt.colorbar()
-            plt.savefig('test2d.png')
-            plt.clf()
-            #plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            #plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            plt.imshow(spline(axes[0],axes[1]).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            plt.colorbar()
-            plt.savefig('test2d-smooth.png')
-            plt.clf()
-            plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
-            plt.colorbar()
-            plt.savefig('test2d-detrend.png')
-            sys.exit(1)
+            plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
+            plt.plot(axes[0], vals, 'k.')
+            plt.plot(axes[0], vals_smooth, 'r.')
+            #plt.plot(axes[0], vals_detrend, 'g.')
+            plt.savefig('test.png')
+            #sys.exit(1)
+
+            # plot 2d
+            #import matplotlib as mpl
+            #mpl.use("Agg")
+            #import matplotlib.pyplot as plt
+            #plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            #plt.colorbar()
+            #plt.savefig('test2d.png')
+            #plt.clf()
+            ##plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            ##plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            #plt.imshow(spline(axes[0],axes[1]).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
+            #plt.colorbar()
+            #plt.savefig('test2d-smooth.png')
+            #plt.clf()
+            #plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
+            #plt.colorbar()
+            #plt.savefig('test2d-detrend.png')
+            #sys.exit(1)
 
         return weights, vals, rms
 

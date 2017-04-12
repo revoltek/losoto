@@ -40,7 +40,7 @@ def run( step, parset, H ):
         
         return this_vals
 
-    tec_jump_val = 0.019628 * 2
+    tec_jump_val = 0.019628
     maxsize = 300
     clip = 10 # TECs over these amount of jumps are flagged
 
@@ -69,82 +69,84 @@ def run( step, parset, H ):
             if (np.diff(vals[(weights == 1)]) == 0).all(): continue
 
             # kill large values
-            weights[abs(vals/tec_jump_val)>clip] = 0
+#            weights[abs(vals/tec_jump_val)>clip] = 0
 
             # interpolate flagged values to get resonable distances
-            vals = mask_interp(vals, mask=(weights == 0))/tec_jump_val
+#            vals = mask_interp(vals, mask=(weights == 0))/tec_jump_val
             # add edges to allow intervals to the borders
-            vals = np.insert(vals, 0, vals[0])
-            vals = np.insert(vals, len(vals), vals[-1])
+#            vals = np.insert(vals, 0, vals[0])
+#            vals = np.insert(vals, len(vals), vals[-1])
 
-            def find_jumps(d_vals):
-                # jump poistion finder
-                d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 21 )
-                d_vals -= d_smooth
-                jumps = list(np.where(np.abs(d_vals) > 0.8)[0])
-                return [0]+jumps+[len(d_vals)-1] # add edges
+            vals = np.fmod(vals,tec_jump_val)
 
-            class Jump(object):
-                def __init__(self, jumps_idx, med):
-                    self.idx_left = jumps_idx[0]
-                    self.idx_right = jumps_idx[1]
-                    self.jump_left = np.rint(d_vals[self.idx_left])
-                    self.jump_right = np.rint(d_vals[self.idx_right])
-                    self.size = self.idx_right-self.idx_left
-                    self.hight = np.median(vals[self.idx_left+1:self.idx_right+1]-med)
-                    if abs((self.hight-self.jump_left)-med) > abs((self.hight-self.jump_right)-med):
-                        self.closejump = self.jump_right
-                    else:
-                        self.closejump = self.jump_left
-    
-            i = 0
-            while True:
-                # get tec[i] - tec[i+1], i.e. the derivative assuming constant timesteps
-                # this is in units of tec_jump_val!
-                d_vals = np.diff(vals)
-                # get jumps idx, idx=n means a jump beteen val n and n+1
-                jumps_idx = find_jumps(d_vals)
-
-                # get regions
-                med = np.median(vals)
-                jumps = [Jump(jump_idx, med) for jump_idx in zip( jumps_idx[:-1], jumps_idx[1:] )]
-                jumps = [jump for jump in jumps if jump.closejump != 0]
-                jumps = [jump for jump in jumps if jump.size != 0] # prevent bug on edges
-                jumps = [jump for jump in jumps if jump.size < maxsize]
-
-                jumps.sort(key=lambda x: (np.abs(x.size), x.hight), reverse=False) #smallest first
-                #print [(j.hight, j.closejump) for j in jumps]
-
-                plot = False
-                if plot:
-                    import matplotlib.pyplot as plt
-                    fig, ((ax1, ax2, ax3)) = plt.subplots(3, 1, sharex=True)
-                    fig.subplots_adjust(hspace=0)
-                    d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 31 )
-                    ax1.plot(d_vals,'k-')
-                    ax2.plot(d_smooth,'k-')
-                    ax3.plot(vals, 'k-')
-                    [ax3.axvline(jump_idx+0.5, color='r', ls=':') for jump_idx in jumps_idx]
-                    ax1.set_ylabel('d_vals')
-                    ax2.set_ylabel('d_vals - smooth')
-                    ax3.set_ylabel('TEC/jump')
-                    ax3.set_xlabel('timestep')
-                    ax1.set_xlim(xmin=-10, xmax=len(d_smooth)+10)
-                    fig.savefig('plots/%stecjump_debug_%03i' % (coord['ant'], i))
-                    i+=1
-
-                if len(jumps) == 0: 
-                    break
-
-                # move down the highest to the side closest to the median
-                j = jumps[0]
-                #print j.idx_left, j.idx_right, j.jump_left, j.jump_right, j.hight, j.closejump
-
-                vals[j.idx_left+1:j.idx_right+1] -= j.closejump
-                logging.debug("%s: Number of jumps left: %i - Removing jump: %i - Size %i" % (coord['ant'], len(jumps_idx)-2, j.closejump, j.size))
+#            def find_jumps(d_vals):
+#                # jump poistion finder
+#                d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 21 )
+#                d_vals -= d_smooth
+#                jumps = list(np.where(np.abs(d_vals) > 1.)[0])
+#                return [0]+jumps+[len(d_vals)-1] # add edges
+#
+#            class Jump(object):
+#                def __init__(self, jumps_idx, med):
+#                    self.idx_left = jumps_idx[0]
+#                    self.idx_right = jumps_idx[1]
+#                    self.jump_left = np.rint(d_vals[self.idx_left])
+#                    self.jump_right = np.rint(d_vals[self.idx_right])
+#                    self.size = self.idx_right-self.idx_left
+#                    self.hight = np.median(vals[self.idx_left+1:self.idx_right+1]-med)
+#                    if abs((self.hight-self.jump_left)-med) > abs((self.hight-self.jump_right)-med):
+#                        self.closejump = self.jump_right
+#                    else:
+#                        self.closejump = self.jump_left
+#    
+#            i = 0
+#            while i<len(coord['time']):
+#                # get tec[i] - tec[i+1], i.e. the derivative assuming constant timesteps
+#                # this is in units of tec_jump_val!
+#                d_vals = np.diff(vals)
+#                # get jumps idx, idx=n means a jump beteen val n and n+1
+#                jumps_idx = find_jumps(d_vals)
+#
+#                # get regions
+#                med = np.median(vals)
+#                jumps = [Jump(jump_idx, med) for jump_idx in zip( jumps_idx[:-1], jumps_idx[1:] )]
+#                jumps = [jump for jump in jumps if jump.closejump != 0]
+#                jumps = [jump for jump in jumps if jump.size != 0] # prevent bug on edges
+#                jumps = [jump for jump in jumps if jump.size < maxsize]
+#
+#                jumps.sort(key=lambda x: (np.abs(x.size), x.hight), reverse=False) #smallest first
+#                #print [(j.hight, j.closejump) for j in jumps]
+#
+#                plot = False
+#                if plot:
+#                    import matplotlib.pyplot as plt
+#                    fig, ((ax1, ax2, ax3)) = plt.subplots(3, 1, sharex=True)
+#                    fig.subplots_adjust(hspace=0)
+#                    d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 31 )
+#                    ax1.plot(d_vals,'k-')
+#                    ax2.plot(d_smooth,'k-')
+#                    ax3.plot(vals, 'k-')
+#                    [ax3.axvline(jump_idx+0.5, color='r', ls=':') for jump_idx in jumps_idx]
+#                    ax1.set_ylabel('d_vals')
+#                    ax2.set_ylabel('d_vals - smooth')
+#                    ax3.set_ylabel('TEC/jump')
+#                    ax3.set_xlabel('timestep')
+#                    ax1.set_xlim(xmin=-10, xmax=len(d_smooth)+10)
+#                    fig.savefig('plots/%stecjump_debug_%03i' % (coord['ant'], i))
+#                i+=1
+#
+#                if len(jumps) == 0: 
+#                    break
+#
+#                # move down the highest to the side closest to the median
+#                j = jumps[0]
+#                #print j.idx_left, j.idx_right, j.jump_left, j.jump_right, j.hight, j.closejump
+#
+#                vals[j.idx_left+1:j.idx_right+1] -= j.closejump
+#                logging.debug("%s: Number of jumps left: %i - Removing jump: %i - Size %i" % (coord['ant'], len(jumps_idx)-2, j.closejump, j.size))
                 
             # re-create proper vals
-            vals = vals[1:-1]*tec_jump_val
+#            vals = vals[1:-1]*tec_jump_val
             # set back to 0 the values for flagged data
             vals[weights == 0] = 0
 
