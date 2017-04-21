@@ -256,7 +256,7 @@ def run( step, parset, H ):
     soltabs = getParSoltabs( step, parset, H )
     outSoltabs = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), [] )
     height = np.array(parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "Height"]), [200e3] ))
-    order = int(parset.getString('.'.join(["LoSoTo.Steps", step, "Order"]), '15' ))
+    order = int(parset.getString('.'.join(["LoSoTo.Steps", step, "Order"]), '5' ))
 
     # Load TEC values from TECFIT operation
     indx = 0
@@ -296,7 +296,8 @@ def run( step, parset, H ):
         N_piercepoints = N_sources * N_stations
         if N_sources > 1:
             if len(r.shape) > 3: r = np.squeeze(r) # remove degenerate freq axis added by ndppp
-            rr = np.reshape(r.transpose([0, 1, 2]), [N_piercepoints, N_times])
+            # I want: dir ant time
+            rr = np.reshape(r.transpose([1, 0, 2]), [N_piercepoints, N_times])
         else:
             assert t.getAxesNames()[0] == 'time'
             assert t.getAxesNames()[1] == 'ant'
