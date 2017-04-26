@@ -76,7 +76,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
 
         return m
 
-    def  polyval(x=None, y=None, m=None):
+    def polyval(x=None, y=None, m=None):
         """Values to two-dimensional polynomial fit. Based uppon code 
             provided by Joe Kington.
         """
@@ -143,6 +143,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
                 np.putmask(vals_smooth, weights==0, np.nan)
                 vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
                 vals_detrend = vals - vals_smooth
+            # TODO: should be rolling
             elif mode == 'poly':
                 # get polynomia and values
                 if len(axes) == 1: 
@@ -151,6 +152,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
                 elif len(axes) == 2: 
                     fit_sol = polyfit(axes[0], axes[1], z=vals, w=weights, order=order)
                     vals_detrend = vals - polyval(axes[0], axes[1], m=fit_sol)
+            # TODO: should be rolling
             elif mode == 'spline':
                 # get spline
                 if len(axes) == 1: 

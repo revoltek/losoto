@@ -111,10 +111,11 @@ LoSoTo.Steps.reweight.Operation = REWEIGHT
 LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
 LoSoTo.Steps.reweight.FlagBad = False # re-flag bad values
 
-LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axis
-LoSoTo.Steps.smooth.FWHM = [10, 5]
-LoSoTo.Steps.smooth.Axes = [freq, time]
-LoSoTo.Steps.smooth.Mode = runningmedian # runningmedian or mean or median (these last two values set all the solutions to the mean/median)
+LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axes - running polyfit on 1 axis or set all solutions to mean/median value
+LoSoTo.Steps.smooth.size = [10, 5] # window size for the runningmedian and runningpoly
+LoSoTo.Steps.smooth.Axes = [freq, time] # axes to smooth
+LoSoTo.Steps.smooth.Degree = 1 # degrees of the polynomia for the runningpoly
+LoSoTo.Steps.smooth.Mode = runningmedian # runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median)
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
