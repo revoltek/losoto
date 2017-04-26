@@ -57,7 +57,7 @@ LoSoTo.Steps.flag.WindowNoise = 11 # window for the running rms
 LoSoTo.Steps.flag.Order = 3  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median.
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
-LoSoTo.Steps.flag.Mode = smooth # smooth (running median)/poly/spline
+LoSoTo.Steps.flag.Mode = smooth # smooth / poly / spline
 LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
 
 LoSoTo.Steps.faraday.Operation = FARADAY

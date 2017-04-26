@@ -252,14 +252,11 @@ def run( step, parset, H ):
     # Switch to the Agg backend to prevent problems with pylab imports when
     # DISPLAY env. variable is not set
     import os
-    if 'DISPLAY' not in os.environ:
-        import matplotlib
-        matplotlib.use("Agg")
 
     soltabs = getParSoltabs( step, parset, H )
     outSoltabs = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "OutSoltab"]), [] )
     height = np.array(parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "Height"]), [200e3] ))
-    order = int(parset.getString('.'.join(["LoSoTo.Steps", step, "Order"]), '15' ))
+    order = int(parset.getString('.'.join(["LoSoTo.Steps", step, "Order"]), '5' ))
 
     # Load TEC values from TECFIT operation
     indx = 0
@@ -277,7 +274,10 @@ def run( step, parset, H ):
         # that they are ordered correctly.
         t = solFetcher(soltab)
         r, axis_vals = t.getValues()
-        source_names = axis_vals['dir']
+        try:
+            source_names = axis_vals['dir']
+        except:
+            source_names = ['pointing']
         source_dict = H.getSou(solset)
         source_positions = []
         for source in source_names:
@@ -294,7 +294,14 @@ def run( step, parset, H ):
         N_times = len(times)
         N_stations = len(station_names)
         N_piercepoints = N_sources * N_stations
-        rr = np.reshape(r.transpose([0, 2, 1]), [N_piercepoints, N_times])
+        if N_sources > 1:
+            if len(r.shape) > 3: r = np.squeeze(r) # remove degenerate freq axis added by ndppp
+            # I want: dir ant time
+            rr = np.reshape(r.transpose([1, 0, 2]), [N_piercepoints, N_times])
+        else:
+            assert t.getAxesNames()[0] == 'time'
+            assert t.getAxesNames()[1] == 'ant'
+            rr = np.reshape(r.transpose([1,0]), [N_piercepoints, N_times])
 
         heights = list(set(np.linspace(height[0], height[-1], 5)))
         heights.sort()
