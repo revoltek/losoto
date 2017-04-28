@@ -92,7 +92,7 @@ def run( step, parset, H ):
                 valsnew = generic_filter(vals, polyfit, size=size[0], mode='constant', cval=np.nan)
                 if replace:
                     weights[ weights == 0] = 1
-                    weights[ np.isnan(valsNew) ] = 0 # all the size was flagged cannoth estrapolate value
+                    weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannoth estrapolate value
                 else:
                     valsnew[ weights == 0 ] = vals_bkp
                 #print coord['ant'], vals, valsnew
