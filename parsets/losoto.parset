@@ -116,6 +116,7 @@ LoSoTo.Steps.smooth.Size = [10, 5] # window size for the runningmedian and runni
 LoSoTo.Steps.smooth.Axes = [freq, time] # axes to smooth
 LoSoTo.Steps.smooth.Degree = 1 # degrees of the polynomia for the runningpoly
 LoSoTo.Steps.smooth.Mode = runningmedian # runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median)
+LoSoTo.Steps.smooth.Replace = False # Flagged data are replaced with smoothed value and unflagged
 
 LoSoTo.Steps.tecfit.Operation = TECFIT
 LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now

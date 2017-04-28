@@ -22,6 +22,7 @@ def run( step, parset, H ):
     size = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Size"]), [] )
     mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), "runningmedian" )
     degree = parset.getInt('.'.join(["LoSoTo.Steps", step, "Degree"]), 1 )
+    replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
 
     if mode == "runningmedian" and len(axesToSmooth) != len(size):
         logging.error("Axes and Size lenghts must be equal for runningmedian.")
@@ -61,13 +62,20 @@ def run( step, parset, H ):
             if (weights == 0).all(): continue
 
             if mode == 'runningmedian':
+                vals_bkp = vals[ weights == 0 ]
                 np.putmask(vals, weights==0, np.nan)
-                valsnew = generic_filter(vals, np.nanmedian, size=size, mode='reflect')
+                valsnew = generic_filter(vals, np.nanmedian, size=size, mode='constant', cval=np.nan)
+                if replace: 
+                    weights[ weights == 0] = 1
+                    weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannoth estrapolate value
+                else:
+                    valsnew[ weights == 0 ] = vals_bkp
 
             elif mode == 'runningpoly':
                 def polyfit(data):
-                    x = np.arange(len(data))[ data != 0]
-                    y = data[ data != 0 ]
+                    if (np.isnan(data)).all(): return np.nan # all size is flagged
+                    x = np.arange(len(data))[ ~np.isnan(data)]
+                    y = data[ ~np.isnan(data) ]
                     p = np.polynomial.polynomial.polyfit(x, y, deg=degree)
                     #import matplotlib as mpl
                     #mpl.use("Agg")
@@ -80,16 +88,22 @@ def run( step, parset, H ):
 
                 # flags and at edges pass 0 and then remove them
                 vals_bkp = vals[ weights == 0 ]
-                vals[ weights == 0 ] = 0
-                valsnew = generic_filter(vals, polyfit, size=size[0], mode='constant', cval=0)
-                valsnew[ weights == 0 ] = vals_bkp
+                np.putmask(vals, weights==0, np.nan)
+                valsnew = generic_filter(vals, polyfit, size=size[0], mode='constant', cval=np.nan)
+                if replace:
+                    weights[ weights == 0] = 1
+                    weights[ np.isnan(valsNew) ] = 0 # all the size was flagged cannoth estrapolate value
+                else:
+                    valsnew[ weights == 0 ] = vals_bkp
                 #print coord['ant'], vals, valsnew
 
             elif mode == 'median':
                 valsnew = np.median( vals[(weights!=0)] )
+                if replace: weights[ weights == 0] = 1
 
             elif mode == 'mean':
                 valsnew = np.mean( vals[(weights!=0)] )
+                if replace: weights[ weights == 0] = 1
 
             else:
                 logging.error('Mode must be: runningmedian, runningpoly, median or mean')
@@ -97,6 +111,7 @@ def run( step, parset, H ):
 
             sw.selection = selection
             sw.setValues(valsnew)
+            if replace: sw.setValues(weights, weight=True)
 
         sw.flush()
         sw.addHistory('SMOOTH (over %s with mode = %s)' % (axesToSmooth, mode))
