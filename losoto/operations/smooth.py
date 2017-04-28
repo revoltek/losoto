@@ -57,6 +57,9 @@ def run( step, parset, H ):
 
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToSmooth, weight=True):
 
+            # skip completely flagged selections
+            if (weights == 0).all(): continue
+
             if mode == 'runningmedian':
                 np.putmask(vals, weights==0, np.nan)
                 valsnew = generic_filter(vals, np.nanmedian, size=size, mode='reflect')
