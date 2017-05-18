@@ -82,8 +82,8 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                 if cmesh:
                     # setting min max
                     if minZ == None and maxZ == None: 
-                        autominZ = np.median(vals) - 3*np.std(vals)
-                        automaxZ = np.median(vals) + 3*np.std(vals)
+                        autominZ = np.mean(vals) - 3*np.std(vals)
+                        automaxZ = np.mean(vals) + 3*np.std(vals)
                     else:
                         autominZ = minZ
                         automaxZ = maxZ
