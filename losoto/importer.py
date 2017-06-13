@@ -348,7 +348,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     fieldTable.close()
 
     sourceTable = solset._f_get_child('source')
-    # add the field centre, that is also the direction for Gain and CommonRotationAngle
+    # add the field centre, that is also the direction for Gain and Common*
     sourceTable.append([('pointing',pointing)])
 
     dirs = []

@@ -3,7 +3,7 @@
 import sys, os
 import numpy as np
 from itertools import chain
-from losoto.h5parm import solFetcher, solWriter
+from losoto.h5parm import solFetcher
 from losoto.h5parm import h5parm
 from losoto import _version
 from losoto import _logging
@@ -11,7 +11,7 @@ from losoto import _logging
 # get input
 import argparse
 parser = argparse.ArgumentParser(description='Combine tables in h5parm files')
-parser.add_argument('h5parms', nargs='+', help='List of h5parms')
+parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--intable', '-i', dest='intable', help='Input soltab name (e.g. sol000/tabin000)')
 parser.add_argument('--outh5parm', '-o', dest='outh5parm', help='Output h5parm name')
 parser.add_argument('--outtable', '-t', dest='outtable', help='Output soltab name (e.g. sol000/tabout000)')
@@ -45,11 +45,25 @@ class sfr(solFetcher):
 # read all tables
 insolset, insoltab = args.intable.split('/')
 sfs = []
-for h5parmFile in args.h5parms:
+pointingNames = []; antennaNames = []
+pointingDirections = []; antennaPositions = []
+for h5parmFile in args.h5parmFiles:
     logging.info("Reading "+h5parmFile)
     h5 = h5parm(h5parmFile, readonly = True)
     soltab = h5.getSoltab(solset=insolset, soltab=insoltab):
     sfs.append( sfr(soltab) )
+    # collect pointings
+    sous = h5.getSou(insolset)
+    pointingNames.append(sous.keys())
+    pointingDirections.append(sous.values())
+    # collect anntennas
+    ants = h5.getSou(insolset)
+    antennaNames.append(ants.keys())
+    antennaPositions.append(ants.values())
+
+antennaNames = list(set(antennaNames))
+antennaPositions = list(set(antennaPositions))
+assert len(antennaNames) == len(antennaPositions) # different poistion for same antennas?!
 
 # combine tables
 times = []
@@ -79,7 +93,7 @@ if times != []:
 if freqs != []:
     freqResamp = list(set(chain(*freqs)))
 
-# resampling of time/freq
+# resampling of time/freq values
 for sf in sfs:
     axesValsNew = sf.axesVals
     if 'time' in sf.getAxesNames():
@@ -94,6 +108,11 @@ for sf in sfs:
 firstValsConcatAxis = [sf.getAxisValues(args.concataxis)[0] for sf in sfs]
 sfs = [sf for (v,sf) in sorted(zip( firstValsConcatAxis, sfs))]
 
+# re-order dirs (if concatenating in directions)
+if args.concataxis == 'dir':
+    pointingNames = [p for (v,p) in sorted(zip( firstValsConcatAxis, pointingNames))]
+    pointingDirections = [p for (v,p) in sorted(zip( firstValsConcatAxis, pointingDirections))]
+
 # get all vals/weights to concatenate
 valsAll = []; weightsAll = []
 for sf in sfs:
@@ -104,8 +123,14 @@ for sf in sfs:
 axesVals = []; vals = []; weights = []
 for a, axis in enumerate(axes):
     axisValsAll = []
-    for sf in sfs:
-        axisValsAll.append( sf.getAxisVals(axis) )
+    for i, sf in enumerate(sfs):
+        val = sf.getAxisVals(axis)
+        # allow concatenating directions all named 'pointing'
+        if val == 'pointing':
+            axisValsAll.append( 'pointing-%03i' % i )
+            pointingNames[i] = 'pointing-%03i' % i
+        else:
+            axisValsAll.append( val )
 
     # check if all elements of the axis are equal
     if axisValsAll[1:] == axisValsAll[:-1]:
@@ -129,14 +154,14 @@ outsolset, outsoltab = args.outtable.split('/')
 h5Out = h5parm(args.outh5parm, readonly = False)
 
 # create solset (and add all antennas and directions of other solsets)
-
+h5Out.makeSolset(outsolset)
+sourceTable = solset._f_get_child('source')
+antennaTable = solset._f_get_child('antenna')
 
 # create soltab
 h5Out.makeSoltab(outsolset, typ, outsoltab, axesNames=axes, \
                  axesVals=axesVals, vals=vals, weights=weights, parmdbType=sfs[0]._v_attrs['parmdb_type'])
+sourceTable.append([(pointingNames,pointingDirections)])
+antennaTable.append(zip(*(antennaNames,antennaPositions)))
 
-
-
-
-
-
+del h5Out

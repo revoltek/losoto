@@ -100,13 +100,13 @@ class h5parm( object ):
             logging.info('--Creating new antenna table.')
             descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
             soltab = self.H.create_table(solset, 'antenna', descriptor, \
-                    title = 'Antenna names and positions', expectedrows = 40)
+                    title = 'Antenna names and positions', expectedrows = 50)
 
             # add direction table
             logging.info('--Creating new source table.')
             descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
             soltab = self.H.create_table(solset, 'source', descriptor, \
-                    title = 'Source names and directions', expectedrows = 10)
+                    title = 'Source names and directions', expectedrows = 50)
 
         return solset
 
