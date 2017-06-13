@@ -17,7 +17,7 @@ if int(tables.__version__.split('.')[0]) < 3:
 
 class h5parm( object ):
 
-    def __init__(self, h5parmFile, readonly=True, complevel=5, complib='zlib'):
+    def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
         """
         Keyword arguments:
         h5parmFile -- H5parm filename
