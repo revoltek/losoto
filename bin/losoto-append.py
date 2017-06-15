@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys, os
+
+# Authors:
+# Francesco de Gasperin
+# David Raffery
+# Cyril Tasse
+# Reinout van Weeren
+# Maaijke Mevius
+# Bas van der Tol
+_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
+
+import sys, os, logging
 import numpy as np
 from itertools import chain
 from losoto.h5parm import solFetcher
@@ -15,11 +25,11 @@ parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--intable', '-i', dest='intable', help='Input soltab name (e.g. sol000/tabin000)')
 parser.add_argument('--outh5parm', '-o', dest='outh5parm', help='Output h5parm name')
 parser.add_argument('--outtable', '-t', dest='outtable', help='Output soltab name (e.g. sol000/tabout000)')
-parser.add_argument('--verbouse', '-v', dest='verbouse', action='store_true', help='Go Vebose! (default=False)')
+parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--concataxis', '-c', dest='concataxis', help='Axis to concatenate (e.g. time)')
 args = parser.parse_args()
 
-if len(args.h5parms) < 2:
+if len(args.h5parmFiles) < 2:
     argparse.print_help()
     sys.exit()
 
@@ -28,19 +38,27 @@ if args.verbose: _logging.setLevel("debug")
 ################################
 
 class sfr(solFetcher):
-    def __init__(self, table, concataxis)
+    def __init__(self, table):
         solFetcher.__init__(self, table = table, useCache = True)
         
-        self.axesVals = []
-        for axis in self.getAxesNames()
-            self.axesVals.append( self.getAxisVals(axis) )
+    def resample(self, axisValsNew, axisName):
+        logging.info('Resampling...')
+        axisIdx = self.getAxesNames().index(axisName)
+        from scipy.interpolate import interp1d
+        self.cacheVal = interp1d(self.getAxisValues(axisName), self.cacheVal, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
+        self.cacheWeight = interp1d(self.getAxisValues(axisName), self.cacheWeight, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
+        # update axis vals
+        self.axes[axisName] = axisValsNew
+        self.setSelection() # reset selection to empty
 
-    def resample(self, axesValsNew):
-        if axesValsNew != self.axesVals:
-            from scipy.interpolate import griddata
-            self.cacheVal = griddata(self.axesVals, self.cacheVal, axesValsNew, method='nearest')
-            self.cacheWeight = griddata(self.axesVals, self.cacheWeight, axesValsNew, method='nearest')
-            self.axesVals = axesValsNew
+def equalArr(arr):
+    """
+    Check if arrays are equal
+    """
+    for a in arr[1:]:
+        if not np.array_equal(a, arr[0]):
+            return False
+    return True
 
 # read all tables
 insolset, insoltab = args.intable.split('/')
@@ -50,22 +68,19 @@ pointingDirections = []; antennaPositions = []
 for h5parmFile in args.h5parmFiles:
     logging.info("Reading "+h5parmFile)
     h5 = h5parm(h5parmFile, readonly = True)
-    soltab = h5.getSoltab(solset=insolset, soltab=insoltab):
+    soltab = h5.getSoltab(solset=insolset, soltab=insoltab)
     sfs.append( sfr(soltab) )
     # collect pointings
     sous = h5.getSou(insolset)
     pointingNames.append(sous.keys())
-    pointingDirections.append(sous.values())
+    pointingDirections.append(sous.values()[0])
     # collect anntennas
-    ants = h5.getSou(insolset)
-    antennaNames.append(ants.keys())
-    antennaPositions.append(ants.values())
-
-antennaNames = list(set(antennaNames))
-antennaPositions = list(set(antennaPositions))
-assert len(antennaNames) == len(antennaPositions) # different poistion for same antennas?!
+    ants = h5.getAnt(insolset)
+    [antennaNames.append(k) for k in ants.keys() if not k in antennaNames]
+    [antennaPositions.append(v) for v in ants.values() if not any((v == x).all() for x in antennaPositions)]
 
 # combine tables
+logging.info('Ordering data...')
 times = []
 freqs = []
 for sf in sfs:
@@ -76,9 +91,9 @@ for sf in sfs:
         logging.critical('Input soltabs have different types.')
         sys.exit(1)
     if 'time' in sf.getAxesNames():
-        times.append(sf.getAxisVals('time'))
+        times.append(sf.getAxisValues('time'))
     if 'freq' in sf.getAxesNames():
-        freqs.append(sf.getAxisVals('freq'))
+        freqs.append(sf.getAxisValues('freq'))
 
 axes = sfs[0].getAxesNames()
 typ = sfs[0].getType()
@@ -89,58 +104,68 @@ if not args.concataxis in axes:
 
 # resampled time/freq axes values
 if times != []:
-    timeResamp = list(set(chain(*times)))
+    timeResamp = np.array(list(set(chain(*times))))
+    print 'len times:',
+    for t in times:
+        print len(t),
+    print 'Resamp to:', len(timeResamp)
 if freqs != []:
-    freqResamp = list(set(chain(*freqs)))
+    freqResamp = np.array(list(set(chain(*freqs))))
+    print 'len freqs:',
+    for f in freqs:
+        print len(f),
+    print 'Resamp to:', len(freqResamp)
 
 # resampling of time/freq values
 for sf in sfs:
-    axesValsNew = sf.axesVals
-    if 'time' in sf.getAxesNames():
-        timeidx = axes.index('time')
-        axesValsNew[timeidx] = timeResamp
-    if 'freq' in sf.getAxesNames():
-        freqidx = axes.index('freq')
-        axesValsNew[freqidx] = freqResamp
-    sf.resample(axesValsNew)
+    if 'time' in sf.getAxesNames() and len(timeResamp) != len(sf.getAxisValues('time')):
+        sf.resample(timeResamp, 'time')
+    # first resample in time, then in freq
+    if 'freq' in sf.getAxesNames() and len(freqResamp) != len(sf.getAxisValues('freq')):
+        sf.resample(freqResamp, 'freq')
 
 # sort tables on the concataxis first value
+logging.info('Sorting tables...')
 firstValsConcatAxis = [sf.getAxisValues(args.concataxis)[0] for sf in sfs]
-sfs = [sf for (v,sf) in sorted(zip( firstValsConcatAxis, sfs))]
+idxToSort = [i[0] for i in sorted(enumerate(firstValsConcatAxis), key=lambda x:x[1])]
+print 'idxToSort', idxToSort
+sfs = [sfs[i] for i in idxToSort]
 
 # re-order dirs (if concatenating in directions)
 if args.concataxis == 'dir':
-    pointingNames = [p for (v,p) in sorted(zip( firstValsConcatAxis, pointingNames))]
-    pointingDirections = [p for (v,p) in sorted(zip( firstValsConcatAxis, pointingDirections))]
+    pointingNames = [pointingNames[i] for i in idxToSort]
+    pointingDirections = [pointingDirections[i] for i in idxToSort]
 
 # get all vals/weights to concatenate
+logging.info('Allocate final data...')
 valsAll = []; weightsAll = []
 for sf in sfs:
-    valsAll.append( sf.getValues(retAxesVals=False) )
-    weightsAll.append( sf.getValues(weights=True, retAxesVals=False) )
+    valsAll.append( sf.cacheVal )
+    weightsAll.append( sf.cacheWeight )
 
 # creating concatenated table
+logging.info('Concatenate final dataset...')
 axesVals = []; vals = []; weights = []
 for a, axis in enumerate(axes):
     axisValsAll = []
     for i, sf in enumerate(sfs):
-        val = sf.getAxisVals(axis)
+        val = sf.getAxisValues(axis)
         # allow concatenating directions all named 'pointing'
-        if val == 'pointing':
-            axisValsAll.append( 'pointing-%03i' % i )
+        if axis == 'dir' and len(val) == 1 and val[0] == 'pointing':
+            axisValsAll.append( np.array(['pointing-%03i' % i]) )
             pointingNames[i] = 'pointing-%03i' % i
         else:
             axisValsAll.append( val )
 
     # check if all elements of the axis are equal
-    if axisValsAll[1:] == axisValsAll[:-1]:
+    if equalArr(axisValsAll):
         axesVals.append(axisValsAll[0])
 
     elif axis == args.concataxis:
         # check intersection is empty
         if len( set.intersection(*map(set,axisValsAll)) ) > 0:
             logging.critical('Intersection of axis values in %s is not empty.' % axis)
-        axesVals.append( [ [item for sublist in axisValsAll for item in sublist] ]) # flatten list of lists
+        axesVals.append( np.array( [item for sublist in axisValsAll for item in sublist] ) ) # flatten list of lists
         vals = np.concatenate(valsAll, axis=a)
         weights = np.concatenate(weightsAll, axis=a)
 
@@ -149,19 +174,21 @@ for a, axis in enumerate(axes):
         logging.critical('Axis %s is not the same for all h5parm.' % axis)
         sys.exit(1)
 
+logging.info('Writing output...')
 # output
 outsolset, outsoltab = args.outtable.split('/')
 h5Out = h5parm(args.outh5parm, readonly = False)
 
 # create solset (and add all antennas and directions of other solsets)
-h5Out.makeSolset(outsolset)
+solset = h5Out.makeSolset(outsolset)
 sourceTable = solset._f_get_child('source')
 antennaTable = solset._f_get_child('antenna')
 
 # create soltab
 h5Out.makeSoltab(outsolset, typ, outsoltab, axesNames=axes, \
-                 axesVals=axesVals, vals=vals, weights=weights, parmdbType=sfs[0]._v_attrs['parmdb_type'])
-sourceTable.append([(pointingNames,pointingDirections)])
+                 axesVals=axesVals, vals=vals, weights=weights, parmdbType=soltab._v_attrs['parmdb_type'])
+
 antennaTable.append(zip(*(antennaNames,antennaPositions)))
+sourceTable.append(zip(*(pointingNames,pointingDirections)))
 
 del h5Out
