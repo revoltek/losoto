@@ -38,7 +38,6 @@ LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
 LoSoTo.Steps.clocktec.FitOffset = False
 
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
-LoSoTo.Steps.crossdelay.RefAnt = '' # reference antenna, if not given use the first
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
 LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
 

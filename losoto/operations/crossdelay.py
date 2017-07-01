@@ -17,7 +17,7 @@ def run( step, parset, H ):
     # get involved solsets using local step values or global values or all
     soltabs = getParSoltabs( step, parset, H )
 
-    refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
+#    refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "RefAnt"]), '' )
     outTab = parset.getString('.'.join(["LoSoTo.Steps", step, "OutTable"]), 'phasediff' )
     maxres = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxResidual"]), 1.)
 
@@ -41,10 +41,10 @@ def run( step, parset, H ):
            logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
            continue
 
-        if refAnt != '' and not refAnt in ants:
-            logging.error('Reference antenna '+refAnt+' not found.')
-            return 1
-        if refAnt == '': refAnt = ants[0]
+#        if refAnt != '' and not refAnt in ants:
+#            logging.error('Reference antenna '+refAnt+' not found.')
+#            return 1
+#        if refAnt == '': refAnt = ants[0]
 
         # create new table
         solsetname = soltabs[t].split('/')[0]
@@ -54,7 +54,8 @@ def run( step, parset, H ):
         sw = solWriter(st)
         sw.addHistory('Created by CROSSDELAY operation.')
             
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference = refAnt):
+#        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference = refAnt):
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True):
 
             fitdelayguess = 1.e-10 # good guess, do not use 0 as it seems the minimizer is unstable with that
 
@@ -65,87 +66,90 @@ def run( step, parset, H ):
                 coord1 = np.where(coord['pol'] == 'XX')[0][0]
                 coord2 = np.where(coord['pol'] == 'YY')[0][0]
 
-            if not coord['ant'] == refAnt:
-                logging.debug('Working on ant: '+coord['ant']+'...')
+#            if not coord['ant'] == refAnt:
+            logging.debug('Working on ant: '+coord['ant']+'...')
 
-                if (weights == 0.).all() == True:
-                    logging.warning('Skipping flagged antenna: '+coord['ant'])
-                    weights[:] = 0
-                else:
+            if (weights == 0.).all() == True:
+                logging.warning('Skipping flagged antenna: '+coord['ant'])
+                weights[:] = 0
+            else:
 
-                    for t, time in enumerate(times):
+                for t, time in enumerate(times):
 
-                        # apply flags
-                        idx       = ((weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.))
-                        freq      = np.copy(coord['freq'])[idx]
-                        phase1    = vals[coord1,:,t][idx]
-                        phase2    = vals[coord2,:,t][idx]
-    
-                        if len(freq) < 10:
-                            vals[:,:,t] = 0.
-                            weights[:,:,t] = 0.
-                            logging.debug('Not enough unflagged point for the timeslot '+str(t))
-                            continue
-            
-                        if (len(idx) - len(freq))/len(freq) > 1/4.:
-                            logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(idx) - len(freq)))
-            
-                        phase_diff  = (phase1 - phase2)
-        
-                        fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
-                        #if t%100==0: print fitresultdelay
-                        # fractional residual
-                        residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
+                    # apply flags
+                    idx       = ((weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.))
+                    freq      = np.copy(coord['freq'])[idx]
+                    phase1    = vals[coord1,:,t][idx]
+                    phase2    = vals[coord2,:,t][idx]
 
-                        #print "t:", t, "result:", fitresultdelay, "residual:", residual
-    
-                        if residual < maxres:
-                            fitdelayguess = fitresultdelay[0]
-                            weight = 1
-                        else:       
-                            # high residual, flag
-                            logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
-                            weight = 0
-
+                    if len(freq) < 10:
                         vals[:,:,t] = 0.
-                        vals[coord1,:,t][idx] = fitresultdelay[0]*freq/2.
-                        vals[coord2,:,t][idx] = -1.*(fitresultdelay[0]*freq)/2.
                         weights[:,:,t] = 0.
-                        weights[coord1,:,t][idx] = weight
-                        weights[coord2,:,t][idx] = weight
-
-                        # Debug plot
-                        doplot = False
-                        if doplot and t%500==0 and coord['ant'] == 'CS004LBA':
-                            if not 'matplotlib' in sys.modules:
-                                import matplotlib as mpl
-                                mpl.rc('font',size =8 )
-                                mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-                                mpl.use("Agg")
-                            import matplotlib.pyplot as plt
-    
-                            fig = plt.figure()
-                            fig.subplots_adjust(wspace=0)
-                            ax = fig.add_subplot(111)
-    
-                            # plot rm fit
-                            plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
-                            ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
-    
-                            ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                            ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
-                            ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
-         
-                            residual = np.mod(plotdelay(fitresultdelay[0], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
-                            ax.plot(freq, residual, '.', color='yellow')
-            
-                            ax.set_xlabel('freq')
-                            ax.set_ylabel('phase')
-                            ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+                        logging.debug('Not enough unflagged point for the timeslot '+str(t))
+                        continue
         
-                            logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
-                            plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
-                            del fig
+                    if (len(idx) - len(freq))/len(freq) > 1/4.:
+                        logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(idx) - len(freq)))
+        
+                    phase_diff  = (phase1 - phase2)
+                    phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
+                    #phase_diff[ phase_diff < -np.pi ] += 2*np.pi
+                    #phase_diff[ phase_diff > +np.pi ] -= 2*np.pi
+    
+                    fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
+                    #if t%100==0: print fitresultdelay
+                    # fractional residual
+                    residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
+
+                    #print "t:", t, "result:", fitresultdelay, "residual:", residual
+
+                    if residual < maxres:
+                        fitdelayguess = fitresultdelay[0]
+                        weight = 1
+                    else:       
+                        # high residual, flag
+                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
+                        weight = 0
+
+                    vals[:,:,t] = 0.
+                    vals[coord1,:,t][idx] = fitresultdelay[0]*freq/2.
+                    vals[coord2,:,t][idx] = -1.*(fitresultdelay[0]*freq)/2.
+                    weights[:,:,t] = 0.
+                    weights[coord1,:,t][idx] = weight
+                    weights[coord2,:,t][idx] = weight
+
+                    # Debug plot
+                    doplot = False
+                    if doplot and t%500==0 and coord['ant'] == 'CS004LBA':
+                        if not 'matplotlib' in sys.modules:
+                            import matplotlib as mpl
+                            mpl.rc('font',size =8 )
+                            mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+                            mpl.use("Agg")
+                        import matplotlib.pyplot as plt
+
+                        fig = plt.figure()
+                        fig.subplots_adjust(wspace=0)
+                        ax = fig.add_subplot(111)
+
+                        # plot rm fit
+                        plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
+                        ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
+
+                        ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
+                        ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
+                        ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
+     
+                        residual = np.mod(plotdelay(fitresultdelay[0], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
+                        ax.plot(freq, residual, '.', color='yellow')
+        
+                        ax.set_xlabel('freq')
+                        ax.set_ylabel('phase')
+                        ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+    
+                        logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
+                        plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
+                        del fig
 
             sw.setSelection(**coord)
             sw.setValues( vals )
