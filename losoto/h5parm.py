@@ -17,7 +17,7 @@ if int(tables.__version__.split('.')[0]) < 3:
 
 class h5parm( object ):
 
-    def __init__(self, h5parmFile, readonly=True, complevel=5, complib='zlib'):
+    def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
         """
         Keyword arguments:
         h5parmFile -- H5parm filename
@@ -100,13 +100,13 @@ class h5parm( object ):
             logging.info('--Creating new antenna table.')
             descriptor = np.dtype([('name', np.str_, 16),('position', np.float32, 3)])
             soltab = self.H.create_table(solset, 'antenna', descriptor, \
-                    title = 'Antenna names and positions', expectedrows = 40)
+                    title = 'Antenna names and positions', expectedrows = 50)
 
             # add direction table
             logging.info('--Creating new source table.')
             descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
             soltab = self.H.create_table(solset, 'source', descriptor, \
-                    title = 'Source names and directions', expectedrows = 10)
+                    title = 'Source names and directions', expectedrows = 50)
 
         return solset
 
@@ -512,8 +512,15 @@ class solHandler( object ):
         self.useCache = useCache
         if self.useCache:
             logging.debug("Caching...")
-            self.cacheWeight = np.copy(self.t.weight)
-            self.cacheVal = np.copy(self.t.val)
+            self.setCache(np.copy(self.t.val), np.copy(self.t.weight))
+
+
+    def setCache(self, val, weight):
+        """
+        Set cache value
+        """
+        self.cacheVal = val
+        self.cacheWeight = weight
 
 
     def getAddress(self):
