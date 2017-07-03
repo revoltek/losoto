@@ -28,10 +28,24 @@ def run( step, parset, H ):
         sf = solFetcher(soltab)
         sw = solWriter(soltab, useCache = True)
 
+        # this will make a selection for the getValues() and getValuesIter()
+        userSel = {}
+        for axis in sf.getAxesNames():
+            userSel[axis] = getParAxis( step, parset, H, axis )
+        sf.setSelection(**userSel)
+        sw.setSelection(**userSel)
+
         sfss = [] # sol fetcher to sub tables
         for soltabToSub in soltabsToSub:
             ss, st = soltabToSub.split('/')
             sfs = solFetcher(H.getSoltab(ss, st))
+
+            # selection
+            userSel = {}
+            for axis in sfs.getAxesNames():
+                userSel[axis] = getParAxis( step, parset, H, axis )
+            sfs.setSelection(**userSel)
+
             if sf.getType() != 'phase' and (sfs.getType() == 'tec' or sfs.getType() == 'clock' or sfs.getType() == 'rotationmeasure' or sfs.getType() == 'tec3rd'):
                 logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
                 continue

@@ -40,6 +40,8 @@ LoSoTo.Steps.clocktec.FitOffset = False
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
 LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
+LoSoTo.Steps.crossdelay.Smooth = 0 # median-smooth in time the resulting delays, number of timestamp for smoothing window
+LoSoTo.Steps.crossdelay.Replace = False # replace using smoothed value instead of flag bad data?
 
 LoSoTo.Steps.duplicate.Operation = DUPLICATE
 LoSoTo.Steps.duplicate.InTable = sol000/clock000 # complete solset/solt
