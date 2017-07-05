@@ -498,6 +498,7 @@ if __name__=='__main__':
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
                     parms = {}
+
                     if 'ant' in sf.getAxesNames():
                         parms['ant'] = [ant]
                         # skip missing antennas (e.g. internationals)
