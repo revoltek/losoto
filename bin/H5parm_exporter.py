@@ -498,7 +498,10 @@ if __name__=='__main__':
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
                     parms = {}
-                    if 'ant' in sf.getAxesNames(): parms['ant'] = [ant]
+                    if 'ant' in sf.getAxesNames():
+                        parms['ant'] = [ant]
+                        # skip missing antennas (e.g. internationals)
+                        if not ant in sf.getAxisValues('ant'): continue
                     if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
                     if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
                     if 'freq' in sf.getAxesNames(): parms['freq'] = freqs.tolist()
