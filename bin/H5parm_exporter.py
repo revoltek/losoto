@@ -494,6 +494,7 @@ if __name__=='__main__':
                         cachedSolTabs[solTab._v_title] = sf
                     else:
                         sf = cachedSolTabs[solTab._v_title]
+                        sf.setSelection()
 
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
