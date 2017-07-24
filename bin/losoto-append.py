@@ -42,6 +42,11 @@ class sfr(solFetcher):
         solFetcher.__init__(self, table = table, useCache = True)
         
     def resample(self, axisValsNew, axisName):
+        """
+        axisValsNew : new sampling values of the axis
+        axisName : name of the axis to resample
+        Get a list of axis values for an axisName and resample with neearest interpolation the values of the table
+        """
         logging.info('Resampling...')
         axisIdx = self.getAxesNames().index(axisName)
         from scipy.interpolate import interp1d
@@ -49,7 +54,7 @@ class sfr(solFetcher):
         self.cacheWeight = interp1d(self.getAxisValues(axisName), self.cacheWeight, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
         # update axis vals
         self.axes[axisName] = axisValsNew
-        self.setSelection() # reset selection to empty
+        self.setSelection() # reset selection to empty since values are different
 
 def equalArr(arr):
     """
@@ -103,14 +108,15 @@ if not args.concataxis in axes:
     sys.exit(1)
 
 # resampled time/freq axes values
+# every single time/freq valu for all tables is in these arrays (ordered)
 if times != []:
-    timeResamp = np.array(list(set(chain(*times))))
+    timeResamp = np.array(sorted(list(set(chain(*times)))))
     print 'len times:',
     for t in times:
         print len(t),
     print 'Resamp to:', len(timeResamp)
 if freqs != []:
-    freqResamp = np.array(list(set(chain(*freqs))))
+    freqResamp = np.array(sorted(list(set(chain(*freqs)))))
     print 'len freqs:',
     for f in freqs:
         print len(f),
@@ -124,7 +130,7 @@ for sf in sfs:
     if 'freq' in sf.getAxesNames() and len(freqResamp) != len(sf.getAxisValues('freq')):
         sf.resample(freqResamp, 'freq')
 
-# sort tables on the concataxis first value
+# sort tables based on the first value of the concatAxis
 logging.info('Sorting tables...')
 firstValsConcatAxis = [sf.getAxisValues(args.concataxis)[0] for sf in sfs]
 idxToSort = [i[0] for i in sorted(enumerate(firstValsConcatAxis), key=lambda x:x[1])]

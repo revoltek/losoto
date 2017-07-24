@@ -869,8 +869,8 @@ class solFetcher(solHandler):
 
         if reference is not None:
             # TODO: flag when reference is flagged?
-            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock':
-                logging.error('Reference possible only for phase, scalarphase, clock, tec, and rotation solution tables. Ignore referencing.')
+            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock' and self.getType() != 'tec3rd':
+                logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, and rotation solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
             elif not reference in self.getAxisValues('ant', ignoreSelection = True):
