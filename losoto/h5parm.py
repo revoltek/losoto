@@ -824,7 +824,7 @@ class solFetcher(solHandler):
             #return None
 
 
-    def getValues(self, retAxesVals=True, weight=False, reference=None):
+    def getValues(self, retAxesVals=True, weight=False, reference=None, referencePol=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
         Keyword arguments:
@@ -832,6 +832,7 @@ class solFetcher(solHandler):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         weight -- if true get the weights instead that the vals (default: False)
         reference -- in case of phase solutions, reference to this station name
+        referencePol -- reference to first pol of reference station
         Return:
         A numpy ndarrey (values or weights depending on parameters)
         If selected, returns also the axes values
@@ -880,6 +881,17 @@ class solFetcher(solHandler):
                 antAxis = self.getAxesNames().index('ant')
                 self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection=True)).index(reference)]
                 dataValsRef = self.getValues(retAxesVals=False, reference=None)
+                if referencePol is not None:
+                    polAxis = self.getAxesNames().index('pol')
+                    # put pol axis at the beginning
+                    dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
+                    # find reference pol index
+                    polValIdx = self.getAxisValues('pol').index(referencePol)
+                    # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
+                    for i in enumerate(self.getAxisValues('pol']):
+                        dataValsRef[i] = dataValsRef[polValIdx]
+                    # put pol axis back in place
+                    dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
                 self.selection = selection_stored
                 dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
                 if not self.getType() != 'tec' and not self.getType() != 'clock':
