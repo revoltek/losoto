@@ -46,12 +46,12 @@ def run( step, parset, H ):
         # some checks
         solType = sf.getType()
         if solType != 'phase':
-           logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
-           continue
-
+            logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
+            continue
+        
         if refAnt != '' and not refAnt in ants:
             logging.error('Reference antenna '+refAnt+' not found.')
-       ￼    return 1
+            return 1
         if refAnt == '': refAnt = ants[0]
 
         # create new table
@@ -66,7 +66,7 @@ def run( step, parset, H ):
         elif 'RR' in sf.getAxisValues('pol'): pol = 'RR'
         else:
             logging.error('Cannot reference to known polarisation.')
-       ￼    return 1
+            return 1
 
         for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt, referencePol=pol):
 
