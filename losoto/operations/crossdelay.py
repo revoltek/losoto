@@ -23,6 +23,7 @@ def run( step, parset, H ):
     maxres = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxResidual"]), 1.)
     smooth = parset.getInt('.'.join(["LoSoTo.Steps", step, "Smooth"]), 0)
     replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False)
+    refAnt = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
 
     if smooth != 0 and smooth % 2 == 0:
         logging.warning('Smooth should be odd, adding 1.')
@@ -48,6 +49,11 @@ def run( step, parset, H ):
            logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
            continue
 
+        if refAnt != '' and not refAnt in ants:
+            logging.error('Reference antenna '+refAnt+' not found.')
+       ￼    return 1
+        if refAnt == '': refAnt = ants[0]
+
         # create new table
         solsetname = soltabs[t].split('/')[0]
         st = H.makeSoltab(solsetname, soltype = sf.getType(), soltab = outTab, axesNames=sf.getAxesNames(), \
@@ -55,8 +61,14 @@ def run( step, parset, H ):
                           vals=sf.getValues(retAxesVals = False), weights=sf.getValues(weight = True, retAxesVals = False), parmdbType=sf.t._v_attrs['parmdb_type'])
         sw = solWriter(st)
         sw.addHistory('Created by CROSSDELAY operation.')
-            
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True):
+
+        if 'XX' in sf.getAxisValues('pol'): pol = 'XX'
+        elif 'RR' in sf.getAxisValues('pol'): pol = 'RR'
+        else:
+            logging.error('Cannot reference to known polarisation.')
+       ￼    return 1
+
+        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt, referencePol=pol):
 
             fitdelayguess = 1.e-10 # good guess, do not use 0 as it seems the minimizer is unstable with that
 

@@ -502,7 +502,7 @@ if __name__=='__main__':
 
                     if 'ant' in sf.getAxesNames():
                         parms['ant'] = [ant]
-                        # skip missing antennas (e.g. internationals)
+                        # skip missing antennas (e.g. internationals sometimes are retained in the parmdb)
                         if not ant in sf.getAxisValues('ant'): continue
                     if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
                     if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
