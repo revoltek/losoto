@@ -339,6 +339,10 @@ def run( step, parset, H ):
                 sf3 = solFetcher(soltab)
                 sf3.selection = selection
                 # cycle on colors
+                
+                if not ref in sf.getAxisValues('ant') and not ref is None:
+                    logging.error('Reference antenna '+ref+' not found. Using: '+sf.getAxisValues('ant')[1])
+                    ref = sf.getAxisValues('ant')[1]
 
                 for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axisInDiff+axesInPlot, weight=True, reference=ref)):
                     dataCube[Ntab].append([])
