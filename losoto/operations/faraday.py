@@ -117,7 +117,7 @@ def run( step, parset, H ):
 
     #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
     
-                        if residual < max_residual:
+                        if max_residual == 0 or residual < max_residual:
                             fitrmguess = fitresultrm_wav[0]
                             weight = 1
                         else:       
