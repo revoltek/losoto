@@ -502,12 +502,13 @@ def doFit(
             'CS004',
             'CS005',
             'CS006',
-            'CS007',
-            ]]
+            'CS007'
+        ]]
         refstIdx = [i for (i, j) in enumerate(stations) if j in superterpstations]
+        if len(refstIdx)==0:
+            refstIdx=0
     if not hasattr(refstIdx, '__len__'):
         refstIdx = [refstIdx]
-
     # get phases from reference stations
     refdata = np.ma.sum(np.cos(data[:, :, refstIdx, :]) + 1.j * np.sin(data[:, :, refstIdx, :]), axis=2)
     refdata = np.ma.arctan2(np.imag(refdata), np.real(refdata))
