@@ -109,7 +109,6 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
         if len(axes) == 1:
             axes[0] -= axes[0][0]
             axes[0] /= axes[0][1] - axes[0][0]
-            order = order[0]
         elif len(axes) == 2:
             axes[0] -= axes[0][0]
             axes[0] /= (axes[0][1]-axes[0][0])
@@ -135,12 +134,13 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
 
             # all is flagged? break
             if (weights == 0).all():
-                rms == 0.
+                rms = 0.
                 break
 
             if mode == 'smooth':
                 vals_smooth = np.copy(vals)
                 np.putmask(vals_smooth, weights==0, np.nan)
+                if all(o == 0 for o in order): order = vals_smooth.shape
                 vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
                 vals_detrend = vals - vals_smooth
             # TODO: should be rolling
@@ -156,7 +156,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
             elif mode == 'spline':
                 # get spline
                 if len(axes) == 1: 
-                    spline = scipy.interpolate.UnivariateSpline(axes[0], y=vals, w=weights, k=order)
+                    spline = scipy.interpolate.UnivariateSpline(axes[0], y=vals, w=weights, k=order[0])
                     vals_detrend = vals - spline(axes[0])
                 elif len(axes) == 2: 
                     x, y = np.meshgrid(axes[0], axes[1], indexing='ij')
@@ -270,7 +270,7 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
 
     elif solType == 'amplitude':
         weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
-        vals == 10**vals
+        vals = 10**vals
 
     else:
         weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
@@ -319,8 +319,7 @@ def run( step, parset, H ):
         logging.error("AxesToFlag and order must be both 1 or 2 values.")
         return 1
 
-    if len(order) == 1: order = order[0]
-    elif len(order) == 2: order = tuple(order)
+    if len(order) == 2: order = tuple(order)
 
     mode = mode.lower()
     if mode != 'smooth' and mode != 'poly' and mode != 'spline':
@@ -352,7 +351,6 @@ def run( step, parset, H ):
         # reorder axesToFlag as axes in the table
         axesToFlag_orig = axesToFlag
         axesToFlag = [coord for coord in sf.getAxesNames() if coord in axesToFlag]
-        if type(order) is int: order = [order]
         if axesToFlag_orig != axesToFlag: order = order[::-1] # reverse order if we changed axesToFlag
 
         solType = sf.getType()
