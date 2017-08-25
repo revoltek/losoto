@@ -102,7 +102,7 @@ def run( step, parset, H ):
                         logging.debug('Not enough unflagged point for the timeslot '+str(t))
                         continue
         
-                    if (len(idx) - len(freq))/len(freq) > 1/4.:
+                    if (len(idx) - len(freq))/len(freq) > 1/2.:
                         logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(idx) - len(freq)))
         
                     phase_diff  = (phase1 - phase2)
@@ -115,7 +115,7 @@ def run( step, parset, H ):
                     #print "t:", t, "result:", fitresultdelay, "residual:", residual
 
                     fit_delays.append(fitresultdelay[0])
-                    if residual < maxres:
+                    if maxres == 0 or residual < maxres:
                         fitdelayguess = fitresultdelay[0]
                         fit_weights.append(1.)
                     else:       
@@ -167,15 +167,16 @@ def run( step, parset, H ):
                     fit_delays = generic_filter(fit_delays, np.nanmedian, size=smooth, mode='constant', cval=np.nan)
                     if replace:
                         fit_weights[ fit_weights == 0 ] = 1.
-                        fit_weights[ np.isnan(fit_delays) ] = 0. # all the size was flagged cannoth estrapolate value
+                        fit_weights[ np.isnan(fit_delays) ] = 0. # all the size was flagged cannot estrapolate value
                     else:
                         fit_delays[ fit_weights == 0 ] = fit_delays_bkp
 
                 logging.debug('Average delay: %f ns' % (np.mean(fit_delays)*1e9))
                 for t, time in enumerate(times):
                     #vals[:,:,t] = 0.
-                    vals[coord1,:,t] = fit_delays[t]*np.array(coord['freq'])/2.
-                    vals[coord2,:,t] = -1.*(fit_delays[t]*np.array(coord['freq']))/2.
+                    #vals[coord1,:,t] = fit_delays[t]*np.array(coord['freq'])/2.
+                    vals[coord1,:,t] = 0
+                    vals[coord2,:,t] = -1.*(fit_delays[t]*np.array(coord['freq']))#/2.
                     #weights[:,:,t] = 0.
                     weights[coord1,:,t] = fit_weights[t]
                     weights[coord2,:,t] = fit_weights[t]

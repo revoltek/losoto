@@ -39,7 +39,7 @@ LoSoTo.Steps.clocktec.FitOffset = False
 
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
-LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
+LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging, 0: no check
 LoSoTo.Steps.crossdelay.Smooth = 0 # median-smooth in time the resulting delays, number of timestamp for smoothing window
 LoSoTo.Steps.crossdelay.Replace = False # replace using smoothed value instead of flag bad data?
 
@@ -62,7 +62,7 @@ LoSoTo.Steps.flag.Mode = smooth # smooth / poly / spline
 LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
 
 LoSoTo.Steps.faraday.Operation = FARADAY
-LoSoTo.Steps.faraday.maxResidual = 1. #  max average residual in rad before flagging datapoint
+LoSoTo.Steps.faraday.maxResidual = 1. #  max average residual in rad before flagging datapoint; 0: no check
 LoSoTo.Steps.faraday.refAnt = '' # a reference antenna
 
 # PARALLEL
