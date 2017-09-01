@@ -38,9 +38,10 @@ LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
 LoSoTo.Steps.clocktec.FitOffset = False
 
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
-LoSoTo.Steps.crossdelay.RefAnt = '' # reference antenna, if not given use the first
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
-LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
+LoSoTo.Steps.crossdelay.MaxRes = 1. # maximum acceptable rms of the residuals in radians before flagging, 0: no check
+LoSoTo.Steps.crossdelay.Smooth = 0 # median-smooth in time the resulting delays, number of timestamp for smoothing window
+LoSoTo.Steps.crossdelay.Replace = False # replace using smoothed value instead of flag bad data?
 
 LoSoTo.Steps.duplicate.Operation = DUPLICATE
 LoSoTo.Steps.duplicate.InTable = sol000/clock000 # complete solset/solt
@@ -54,14 +55,14 @@ LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
 LoSoTo.Steps.flag.MaxRmsNoise = 0 # Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, if 0 ignored
 LoSoTo.Steps.flag.FixRmsNoise = 0 # instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), if 0 ignored
 LoSoTo.Steps.flag.WindowNoise = 11 # window for the running rms
-LoSoTo.Steps.flag.Order = 3  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median.
+LoSoTo.Steps.flag.Order = 3  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median (0=all axis).
 LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
 LoSoTo.Steps.flag.Mode = smooth # smooth / poly / spline
 LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
 
 LoSoTo.Steps.faraday.Operation = FARADAY
-LoSoTo.Steps.faraday.maxResidual = 1. #  max average residual in rad before flagging datapoint
+LoSoTo.Steps.faraday.maxResidual = 1. #  max average residual in rad before flagging datapoint; 0: no check
 LoSoTo.Steps.faraday.refAnt = '' # a reference antenna
 
 # PARALLEL

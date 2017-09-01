@@ -494,11 +494,16 @@ if __name__=='__main__':
                         cachedSolTabs[solTab._v_title] = sf
                     else:
                         sf = cachedSolTabs[solTab._v_title]
+                        sf.setSelection()
 
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
                     parms = {}
-                    if 'ant' in sf.getAxesNames(): parms['ant'] = [ant]
+
+                    if 'ant' in sf.getAxesNames():
+                        parms['ant'] = [ant]
+                        # skip missing antennas (e.g. internationals sometimes are retained in the parmdb)
+                        if not ant in sf.getAxisValues('ant'): continue
                     if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
                     if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
                     if 'freq' in sf.getAxesNames(): parms['freq'] = freqs.tolist()

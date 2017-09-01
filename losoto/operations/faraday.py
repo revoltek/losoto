@@ -47,9 +47,9 @@ def run( step, parset, H ):
            continue
 
         if refAnt != '' and not refAnt in ants:
-            logging.error('Reference antenna '+refAnt+' not found.')
-            return 1
-        if refAnt == '': refAnt = ants[0]
+            logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
+            refAnt = ants[1]
+        if refAnt == '': refAnt = ants[1]
 
         if 'XX' in sf.getAxisValues('pol') and 'YY' in sf.getAxisValues('pol'):
             logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
@@ -117,7 +117,7 @@ def run( step, parset, H ):
 
     #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
     
-                        if residual < max_residual:
+                        if max_residual == 0 or residual < max_residual:
                             fitrmguess = fitresultrm_wav[0]
                             weight = 1
                         else:       
