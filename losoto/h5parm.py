@@ -33,6 +33,7 @@ class h5parm( object ):
         """
 
         self.H = None # variable to store the pytable object
+        self.fileName = h5parmFile
 
         if os.path.isfile(h5parmFile):
             if not tables.is_hdf5_file(h5parmFile):
@@ -62,8 +63,6 @@ class h5parm( object ):
                 # add a compression filter
                 f = tables.Filters(complevel=complevel, complib=complib)
                 self.H = tables.open_file(h5parmFile, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
-
-        self.fileName = h5parmFile
 
 
     def close(self):
@@ -159,7 +158,7 @@ class h5parm( object ):
         return solsetNames
 
 
-    def getSolset(self, solset = None):
+    def getSolset(self, solset):
         """
         Parameters
         ----------
@@ -171,9 +170,6 @@ class h5parm( object ):
         solset obj
             return solset object
         """
-        if solset is None:
-            raise Exception("Solution set not specified.")
-
         if not solset in self.getSolsetsNames():
             logging.critical("Cannot find solset: "+solset+".")
             raise Exception("Cannot find solset: "+solset+".")
@@ -321,6 +317,7 @@ class h5parm( object ):
 
 
 class Solset( object ):
+
     def __init__(self, solset):
         """
         Create a solset object
@@ -328,7 +325,7 @@ class Solset( object ):
         Parameters
         ----------
         solset : pytables group
-            the solution set pytables group object
+            The solution set pytables group object
         """
 
         if not isinstance( solset, tables.Group ):
@@ -339,7 +336,15 @@ class Solset( object ):
         self.name = solset._v_name
 
 
-    def makeSoltab(self, soltype=None, soltab=None,
+    def delete(self):
+        """
+        Delete this solset
+        """
+        logging.info("Solset \""+self.name+"\" deleted.")
+        self.obj._f_remove(recursive=True)
+
+
+    def makeSoltab(self, soltype=None, soltabName=None,
             axesNames = [], axesVals = [], chunkShape=None, vals=None,
             weights=None, parmdbType=None):
         """
@@ -348,34 +353,33 @@ class Solset( object ):
         Parameters
         ----------
         soltype : str
-            solution-type (e.g. amplitude, phase)
-        soltab : str, optional
-            the solution-table name, if not specified is generated from the solution-type
+            Solution-type (e.g. amplitude, phase)
+        soltabName : str, optional
+            The solution-table name, if not specified is generated from the solution-type
         axesNames : list
-            list with the axes names
+            List with the axes names
         axesVals : list
-            list with the axes values (each is a separate list)
+            List with the axes values (each is a separate list)
         chunkShape : list, optional
-            list with the chunk shape
+            List with the chunk shape
         vals : numpy array
-            array with shape given by the axesVals lenghts
+            Array with shape given by the axesVals lenghts
         weights : numpy array
-            same shape of the vals array
+            Same shape of the vals array
             0->FLAGGED, 1->MAX_WEIGHT
         parmdbType : str
-            original parmdb solution type
+            Original parmdb solution type
 
         Returns
         -------
         soltab obj
-            newly created soltab object
+            Newly created soltab object
         """
 
         if soltype is None:
             raise Exception("Solution-type not specified while adding a solution-table.")
 
         # checks on the soltab
-        soltabName = soltab
         if type(soltabName) is str and not re.match(r'^[A-Za-z0-9_-]+$', soltabName):
             logging.warning('Solution-table '+soltabName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
             soltabName = None
@@ -388,7 +392,7 @@ class Solset( object ):
             soltabName = self._fisrtAvailSoltabName(soltype)
 
         logging.info('Creating a new solution-table: '+soltabName+'.')
-        soltab = self.H.create_group("/"+self.name, soltabName, title=soltype)
+        soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
         soltab._v_attrs['parmdb_type'] = parmdbType
 
         # create axes
@@ -397,9 +401,9 @@ class Solset( object ):
 
 #        newChunkShape = []
         for i, axisName in enumerate(axesNames):
-            #axis = self.H.create_carray('/'+self.name+'/'+soltabName, axisName,\
+            #axis = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, axisName,\
             #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
-            axis = self.H.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
+            axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
             dim.append(len(axesVals[i]))
 
         # check if the axes were in the proper order
@@ -407,18 +411,18 @@ class Solset( object ):
         assert dim == list(weights.shape)
 
         # create the val/weight Carrays
-        #val = self.H.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
-        #weight = self.H.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
+        #val = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
+        #weight = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
         # array do not have compression but are much faster
-        val = self.H.create_array('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
-        weight = self.H.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
+        val = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
+        weight = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return Soltab(soltab)
     
 
-    def _fisrtAvailSoltabName(self, soltype=None):
+    def _fisrtAvailSoltabName(self, soltype):
         """
         Find the first available soltab name which
         has the form of "soltypeName###"
@@ -426,16 +430,13 @@ class Solset( object ):
         Parameters
         ----------
         soltype : str
-            type of solution (amplitude, phase, RM, clock...)
+            Type of solution (amplitude, phase, RM, clock...)
 
         Returns
         -------
         str
-            first available soltab name
+            First available soltab name
         """
-        if soltype is None:
-            raise Exception("Solution type not specified while querying for solution-tables list.")
-
         nums = []
         for soltab in self.getSoltabs():
             if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab.name):
@@ -444,28 +445,12 @@ class Solset( object ):
         return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
 
 
-    def delSoltab(self, soltab=None):
-        """
-        Delete a solution-table of a specific solution-set
-        Keyword arguments:
-        soltab -- a solution-table name (String) or instance
-        """
-        if soltab is None:
-            raise Exception("Solution-table not specified while deleting a solution-table.")
-
-        if type(soltab) is str:
-            soltabobj = self.getSoltab(soltab)
-
-        soltabobj._f_remove(recursive=True, force=True)
-        logging.info("Soltab \""+soltab+"\" deleted.")
-
-
     def getSoltabs(self):
         """
         Returns
         -------
         list
-            list of solution tables objects for all available soltabs in this solset
+            List of solution tables objects for all available soltabs in this solset
         """
         soltabs = []
         for soltab in self.obj._v_groups:
@@ -478,7 +463,7 @@ class Solset( object ):
         Returns
         -------
         list
-            list of str for all available soltabs in this solset
+            List of str for all available soltabs in this solset
         """
         soltabNames = []
         for soltab in self.getSoltabs():
@@ -486,11 +471,19 @@ class Solset( object ):
         return soltabNames
 
 
-    def getSoltab(self, soltab=None):
+    def getSoltab(self, soltab):
         """
-        Return a specific solution-table (object) of a specific solution-set
-        Keyword arguments:
-        soltab -- a solution-table name (String)
+        Return a soltab
+        
+        Parameters
+        ----------
+        soltab : str
+            A solution table name
+
+        Returns
+        -------
+        soltab obj
+            A solution table obj
         """
         if soltab is None:
             raise Exception("Solution-table not specified while querying for solution-table.")
@@ -498,7 +491,7 @@ class Solset( object ):
         if not soltab in self.getSoltabsNames():
             raise Exception("Solution-table "+soltab+" not found in solset "+self.name+".")
 
-        return self.obj.get_child(soltab)
+        return Soltab(self.obj.get_child(soltab))
 
 
     def getAnt(self):
@@ -506,7 +499,7 @@ class Solset( object ):
         Returns
         -------
         dict
-            available antennas in the form {name1:[position coords], name2:[position coords], ...}
+            Available antennas in the form {name1:[position coords], name2:[position coords], ...}
         """
         ants = {}
         for x in self.obj.antenna:
@@ -520,7 +513,7 @@ class Solset( object ):
         Returns
         -------
         dict
-            available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}
+            Available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}
         """
         sources = {}
         for x in self.obj.source:
@@ -530,67 +523,108 @@ class Solset( object ):
 
 
 class soltab( object ):
-    """
-    Generic #class to principally handle selections
-    Selections are:
-    axisName = None # to select all
-    axisName = xxx # to select ONLY that value for an axis
-    axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
-    axisName = 'xxx' # regular expression selection
-    axisName = {min: xxx} # to selct values grater or equal than xxx
-    axisName = {max: yyy} # to selct values lower or equal than yyy
-    axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
-    """
-    def __init__(self, table, useCache = False, **args):
+
+    def __init__(self, soltab, useCache = False, **args):
         """
-        Keyword arguments:
-        table -- table object or solset/soltab string
-        useCache -- cache all data in memory
-        **args -- used to create a selection
+        Parameters
+        ----------
+        soltab : pytables obj
+            Pytable object
+        useCache : bool, optional
+            Cache all data in memory, by default False
+        **args : optional
+            used to create a selection
+            Selections examples:
+            axisName = None # to select all
+            axisName = xxx # to select ONLY that value for an axis
+            axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
+            axisName = 'xxx' # regular expression selection
+            axisName = {min: xxx} # to selct values grater or equal than xxx
+            axisName = {max: yyy} # to selct values lower or equal than yyy
+            axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
         """
 
-        if not isinstance( table, tables.Group ):
+        if not isinstance( soltab, tables.Group ):
             logging.error("Object must be initialized with a pyTables Table object.")
             sys.exit(1)
 
-        self.t = table
-        self.name = table._v_name
-        # set axes names once to speed up calls
-        self.axesNames = table.val.attrs['AXES'].split(',')
-        # set axes values once to speed up calls (a bit of memory usage though)
+        self.obj = soltab
+        self.name = soltab._v_name
+
+        # list of axes names, set once to speed up calls
+        self.axesNames = soltab.val.attrs['AXES'].split(',')
+
+        # dict of axes values, set once to speed up calls (a bit of memory usage though)
         self.axes = {}
         for axis in self.getAxesNames():
-            self.axes[axis] = table._f_get_child(axis)
+            self.axes[axis] = soltab._f_get_child(axis)
 
-        self.selection = {}
+        self.selection = []
         self.setSelection(**args)
 
         self.useCache = useCache
         if self.useCache:
             logging.debug("Caching...")
-            self.setCache(np.copy(self.t.val), np.copy(self.t.weight))
+            self.setCache(np.copy(self.obj.val), np.copy(self.obj.weight))
+            
+
+    def delete(self):
+        """
+        Delete this soltab
+        """
+        logging.info("Soltab \""+self.name+"\" deleted.")
+        self.obj._f_remove(recursive=True)
 
 
     def setCache(self, val, weight):
         """
         Set cache value
+
+        Parameters
+        ----------
+        val : array
+        weight : array
         """
         self.cacheVal = val
         self.cacheWeight = weight
 
 
+    def getSolset(self):
+        """
+        Returns
+        -------
+        solset obj
+            The parent solset
+        """
+        return Solset(self.obj._g_getparent())
+
+
     def getAddress(self):
         """
-        return the solset/soltab address of self.t as a string
+        Returns
+        -------
+        str
+            The solset/soltab address of self.obj as a string.
         """
-        return self.t._v_pathname[1:]
+        return self.obj._v_pathname[1:]
+
+
+    def clearSelection(self):
+        """
+        Clear selection, all values are considered.
+        """
+        self.selection = [slice(0,self.getAxisLen(axisName, ignoreSelection=True)) \
+                                                for axisName in self.getAxesNames()]
 
 
     def setSelection(self, **args):
         """
-        set a default selection criteria.
-        Keyword arguments:
-        *args -- valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
+        Set a selection criteria.
+
+        Parameters
+        ----------
+        **args : 
+            Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
         """
         # create an initial selection which selects all values
         # any selection will modify only the slice relative to that axis
@@ -666,148 +700,130 @@ class soltab( object ):
 
     def getType(self):
         """
-        return the type of the solution-tables (it is stored in an attrs)
+        Returns
+        -------
+        str
+            Return the type of the solution-tables (e.g. amplitude).
         """
 
-        return self.t._v_title
+        return self.obj._v_title
 
 
     def getAxesNames(self):
         """
-        Return a list with all the axis names in the correct order for
-        slicing the getValuesGrid() reurned matrix.
+        Returns
+        -------
+        list
+            A list with all the axis names in the correct order for
+            slicing the getValuesGrid() reurned matrix.
         """
 
-        #return self.t.val.attrs['AXES'].split(',') # slower
         return self.axesNames[:]
 
 
-    def getAxis(self, axis=None):
+    def getAxisLen(self, axis, ignoreSelection=False):
         """
-        Return the axis istance for the corresponding name
-        Keyword arguments:
-        axis -- the name of the axis to be returned
-        """
-        try:
-            return self.axes[axis]
-        except:
-            logging.error("Cannot find "+axis+", it doesn't exist.")
-            return None
+        Return an axis lenght.
+        
+        Parameters
+        ----------
+        axis : str
+            The name of the axis.
+        ignoreSelection : bool, optional
+            If True returns the axis lenght without any selection active, by default False.
 
-
-    def getAxisLen(self, axis=None, ignoreSelection=False):
-        """
-        Return the axis lenght
-        Keyword arguments:
-        axis -- the name of the axis to be returned
-        ignoreSelection -- if True returns the axis lenght without any selection active
+        Returns
+        -------
+        int
+            The axis lenght.
         """
         return len(self.getAxisValues(axis, ignoreSelection = ignoreSelection))
 
 
-    def getAxisType(self, axis=None):
+    def getAxisType(self, axis):
         """
         Return the axis dtype
-        Keyword arguments:
-        axis -- the name of the axis whose type is returned
+        
+        Parameters
+        ----------
+        axis : str
+            The name of the axis.
+
+        Returns
+        -------
+        dtype
+            The axis dtype.
         """
-        try:
-            return self.t._f_get_child(axis).dtype
-        except:
+        if axis not in self.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')
             return None
 
+        return self.obj._f_get_child(axis).dtype
 
-    def getAxisValues(self, axis='', ignoreSelection=False):
+
+    def getAxisValues(self, axis, ignoreSelection=False):
         """
-        Return a copy of all the possible values present along a specific axis (no duplicates)
-        Keyword arguments:
-        axis -- the axis name
-        ignoreSelection -- if True returns the axis values without any selection active
+        Parameters
+        ----------
+        axis : str
+            The name of the axis.
+        ignoreSelection : bool, optional
+            If True returns the axis values without any selection active, by default False.
+
+        Returns
+        -------
+        list
+            A copy of all values present along a specific axis.
         """
-        try:
-            if ignoreSelection:
-                return self.getAxis(axis)[:]
-            else:
-                axisIdx = self.getAxesNames().index(axis)
-                return self.getAxis(axis)[self.selection[axisIdx]]
-        except:
+        if axis not in self.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')
             return None
 
-
-    def addHistory(self, entry=""):
-        """
-        Adds entry to the table history with current date and time
-
-        Since attributes cannot by default be larger than 64 kB, each
-        history entry is stored in a separate attribute.
-
-        Keyword arguments:
-        entry -- string to add to history list
-        """
-        import datetime
-        current_time = str(datetime.datetime.now()).split('.')[0]
-        attrs = self.t.val.attrs._f_list("user")
-        nums = []
-        for attr in attrs:
-            try:
-                if attr[:-3] == 'HISTORY':
-                    nums.append(int(attr[-3:]))
-            except:
-                pass
-        historyAttr = "HISTORY%03d" % min(list(set(range(1000)) - set(nums)))
-
-        self.t.val.attrs[historyAttr] = current_time + ": " + str(entry)
-
-
-    def getHistory(self):
-        """
-        Returns the table history as a string with each entry separated by
-        newlines
-        """
-        attrs = self.t.val.attrs._f_list("user")
-        attrs.sort()
-        history_list = []
-        for attr in attrs:
-            if attr[:-3] == 'HISTORY':
-                history_list.append(self.t.val.attrs[attr])
-        if len(history_list) == 0:
-            history_str = ""
+        if ignoreSelection:
+            return self.axes[axis][:] # TODO: remove [:]
         else:
-            history_str = "\n".join(history_list)
+            axisIdx = self.getAxesNames().index(axis)
+            return self.axes[axis][ self.selection[axisIdx] ]
 
-        return history_str
 
-
-    def setAxisValues(self, axis=None, vals=None):
+    def setAxisValues(self, axis, vals):
         """
         Set the value of a specific axis
-        Keyword arguments:
-        axis -- the axis name
-        vals -- the values
+
+        Parameters
+        ----------
+        axis : str
+            The name of the axis.
+        vals : array
+            Values
         """
 
         if axis not in self.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')
+            return
 
         axisIdx = self.getAxesNames().index(axis)
-        self.getAxis(axis)[self.selection[axisIdx]] = vals
+        self.axes[axis][self.selection[axisIdx]] = vals
 
 
     def setValues(self, vals, weight = False):
         """
         Save values in the val grid
-        Keyword arguments:
-        vals -- values to write as an n-dimentional array which match the selection dimention
-        weight -- if true store in the weights instead that in the vals (default: False)
+
+        Parameters
+        ----------
+        vals : array, float
+            values to write as an n-dimentional array which match the selection dimention
+            if a float is passed or the selected data are set to that value
+        weight : bool, optional
+            If true store in the weights instead that in the vals, by default False
         """
         if self.useCache:
             if weight: dataVals = self.cacheWeight
             else: dataVals = self.cacheVal
         else:
-            if weight: dataVals = self.t.weight
-            else: dataVals = self.t.val
+            if weight: dataVals = self.obj.weight
+            else: dataVals = self.obj.val
 
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
         # Conversely, one can apply how many slices he wants.
@@ -840,17 +856,21 @@ class soltab( object ):
         if not self.useCache:
             logging.error("Flushing non cached data.")
             sys.exit(1)
+
         logging.info("Writing results...")
-        self.t.weight[:] = self.cacheWeight
-        self.t.val[:] = self.cacheVal
+        self.obj.weight[:] = self.cacheWeight
+        self.obj.val[:] = self.cacheVal
 
 
     def __getattr__(self, axis):
         """
-        links any attribute with an "axis name" to getValuesAxis("axis name")
-        also links val and weight to the relative arrays
-        Keyword arguments:
-        axis -- the axis name
+        Links any attribute with an "axis name" to getValuesAxis("axis name")
+        also links val and weight to the relative arrays.
+
+        Parameters
+        ----------
+        axis : str
+            The axis name.
         """
         if not axis in self.getAxesNames() and (axis != 'val' and axis != 'weight'):
             logging.error('Axis \"'+axis+'\" not found.')
@@ -869,23 +889,33 @@ class soltab( object ):
     def getValues(self, retAxesVals=True, weight=False, reference=None, referencePol=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
-        Keyword arguments:
-        retAxisVals -- if true returns also the axes vals as a dict of:
-        {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
-        weight -- if true get the weights instead that the vals (default: False)
-        reference -- in case of phase solutions, reference to this station name
-        referencePol -- reference to selected pol of reference station
-        Return:
-        A numpy ndarrey (values or weights depending on parameters)
-        If selected, returns also the axes values
+
+        Parameters
+        ----------
+        retAxisVals : bool, optional
+            If true returns also the axes vals as a dict of:
+            {'axisname1':[axisvals1],'axisname2':[axisvals2],...}.
+            By default True.
+        weight : bool
+            If true get the weights instead that the vals, by defaul False.
+        reference : str
+            In case of phase solutions, reference to this station name.
+        referencePol : str
+            In case of phase reference to selected pol of reference station.
+        
+        Returns
+        -------
+        array
+            A numpy ndarrey (values or weights depending on parameters)
+            If selected, returns also the axes values
         """
 
         if self.useCache:
             if weight: dataVals = self.cacheWeight
             else: dataVals = self.cacheVal
         else:
-            if weight: dataVals = self.t.weight
-            else: dataVals = self.t.val
+            if weight: dataVals = self.obj.weight
+            else: dataVals = self.obj.val
 
         # apply the self.selection
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
@@ -924,19 +954,22 @@ class soltab( object ):
                 self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection=True)).index(reference)]
                 dataValsRef = self.getValues(retAxesVals=False, reference=None)
                 if referencePol is not None:
-                    polAxis = self.getAxesNames().index('pol')
-                    # put pol axis at the beginning
-                    dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
-                    # find reference pol index
-                    polValIdx = list(self.getAxisValues('pol')).index(referencePol)
-                    # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
-                    for i in xrange(len(self.getAxisValues('pol'))):
-                        dataValsRef[i] = dataValsRef[polValIdx]
-                    # put pol axis back in place
-                    dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
+                    if not 'pol' in self.getAxesNames():
+                        logging.error('Cannot find pol axis for referencing phases. Ignore pol referencing.')
+                    else:
+                        polAxis = self.getAxesNames().index('pol')
+                        # put pol axis at the beginning
+                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
+                        # find reference pol index
+                        polValIdx = list(self.getAxisValues('pol')).index(referencePol)
+                        # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
+                        for i in xrange(len(self.getAxisValues('pol'))):
+                            dataValsRef[i] = dataValsRef[polValIdx]
+                        # put pol axis back in place
+                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
                 self.selection = selection_stored
                 dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                if not self.getType() != 'tec' and not self.getType() != 'clock':
+                if not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
                     # Convert to range [-2*pi, 2*pi].
                     dataVals = np.fmod(dataVals, 2.0 * np.pi)
                     # Convert to range [-pi, pi]
@@ -958,17 +991,26 @@ class soltab( object ):
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
         matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
-        Note that all the data are fetched in memory before returning them one at a time. This is quick.
-        Keyword arguments:
-        returnAxes -- axes of the returned array, all others will be cycled
+        Note that all the data are fetched in memory before returning them one at a time. This is quicker.
 
-        weight -- if true return also the weights (default: False)
-        Return:
+        Parameters
+        ----------
+        returnAxes : list
+            Axes of the returned array, all _others_ will be cycled on each element combinations.
+        weight : bool, optional
+            If true return also the weights, by default False.
+        reference : str
+            In case of phase solutions, reference to this station name.
+        referencePol : str
+            In case of phase reference to selected pol of reference station.
+        
+        Returns
+        -------
         1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
         2) (if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
         3) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
-        4) a selection which should be used to write this data back using a solWriter
+        4) a selection which should be used to write this data back using a setValues()
         """
         if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=None)
         dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference, referencePol=referencePol)
@@ -1009,3 +1051,51 @@ class soltab( object ):
                     yield (data, thisAxesVals, returnSelection)
 
         return g()
+
+
+    def addHistory(self, entry=""):
+        """
+        Adds entry to the table history with current date and time
+
+        Since attributes cannot by default be larger than 64 kB, each
+        history entry is stored in a separate attribute.
+
+        Parameters
+        ----------
+        entry : str
+            entry to add to history list
+        """
+        import datetime
+        current_time = str(datetime.datetime.now()).split('.')[0]
+        attrs = self.obj.val.attrs._f_list("user")
+        nums = []
+        for attr in attrs:
+            try:
+                if attr[:-3] == 'HISTORY':
+                    nums.append(int(attr[-3:]))
+            except:
+                pass
+        historyAttr = "HISTORY%03d" % min(list(set(range(1000)) - set(nums)))
+
+        self.obj.val.attrs[historyAttr] = current_time + ": " + str(entry)
+
+
+    def getHistory(self):
+        """
+        Returns
+        -------
+        str
+            the table history as a string with each entry separated by newlines
+        """
+        attrs = self.obj.val.attrs._f_list("user")
+        attrs.sort()
+        history_list = []
+        for attr in attrs:
+            if attr[:-3] == 'HISTORY':
+                history_list.append(self.obj.val.attrs[attr])
+        if len(history_list) == 0:
+            history_str = ""
+        else:
+            history_str = "\n".join(history_list)
+
+        return history_str
