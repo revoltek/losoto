@@ -49,7 +49,7 @@ sou=ss.getSou()
 # soltabs
 print "###########################################"
 logging.info('### Soltab')
-axesVals = [['a','b','c','d'], np.arange(10), np.arange(100)]
+axesVals = [['a','b','c','d'], np.arange(10, dtype=float), np.arange(100, dtype=float)]
 vals = np.arange(4*10*100).reshape(4,10,100)
 logging.info("Create soltab")
 ss.makeSoltab('amplitude', 'stTest', axesNames=['axis1','axis2','axis3'], axesVals=axesVals, vals=vals, weights=vals)
@@ -86,36 +86,36 @@ print st.getAxisValues('axis1')
 print "###########################################"
 logging.info('### Soltab - selection')
 logging.info('Set a selection using single/multiple vals and append (exp: 3x1x2)')
-st.setSelection(axis1=['f','e','h'], axis2=1, axis3=[1,10])
+st.setSelection(axis1=['f','e','h'], axis2=1., axis3=[1.,10.])
 v,a = st.getValues()
 print v.shape
 print v
 print a
 logging.info('Writing back with selction')
-st.setSelection(axis1=['f','e','h'], axis2=1, axis3=[1,10])
+st.setSelection(axis1=['f','e','h'], axis2=1., axis3=[1.,10.])
 st.setValues(v)
 
-logging.info('Set a selection using min max (exp: 4x4x10)')
-st.setSelection(axis1='e', axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
+logging.info('Set a selection using min max (exp: 2x4x10)')
+st.setSelection(axis1=['e','h'], axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
 v,a = st.getValues()
 print v.shape
 print a
 logging.info('Writing back with selction')
-st.setSelection(axis1='e', axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
+st.setSelection(axis1=['e','h'], axis2={'min':2,'max':5}, axis3={'min':90, 'max':1e6})
 st.setValues(v)
 
-logging.info('Get Vaues Iter (exp: 40 and 10)')
+logging.info('Get Vaues Iter (exp: 10)')
 i=0
 for matrix, coord, sel in st.getValuesIter(returnAxes=['axis3']):
     print matrix.shape
     i += 1
-print "Iterations:", i
+print "Iterations:", i, "(expected: 2x4=8)"
+logging.info('Get Vaues Iter (exp: 4x10)')
 i=0
 for matrix, coord, sel in st.getValuesIter(returnAxes=['axis2','axis3']):
     print matrix.shape
-    print coord
     i += 1
-print "Iterations:", i
+print "Iterations:", i, "(expected: 2)"
 
 
 print "###########################################"
