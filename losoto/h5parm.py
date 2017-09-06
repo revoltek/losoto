@@ -140,7 +140,7 @@ class h5parm( object ):
             list of all solsets objects
         """
         solsets = []
-        for solset in self.H.root._v_groups:
+        for solset in self.H.root._v_groups.itervalues():
             solsets.append(Solset(solset))
         return solsets
 
@@ -153,8 +153,8 @@ class h5parm( object ):
             list of str of all solsets names
         """
         solsetNames = []
-        for solset in self.getSolsets():
-            solsetNames.append(solset.name)
+        for solsetName in self.H.root._v_groups.iterkeys():
+            solsetNames.append(solsetName)
         return solsetNames
 
 
@@ -189,7 +189,7 @@ class h5parm( object ):
         nums = []
         for solsetName in self.getSolsetsNames():
             if re.match(r'^sol[0-9][0-9][0-9]$', solsetName):
-                nums.append(int(solset[-3:]))
+                nums.append(int(solsetName[-3:]))
 
         return "sol%03d" % min(list(set(range(1000)) - set(nums)))
 
@@ -307,7 +307,6 @@ class h5parm( object ):
                         info += "\n" + 4*" " + "History:\n" + 4*" "
                         joinstr =  "\n" + 4*" "
                         info += joinstr.join(wrap(history)) + "\n"
-                    del sf
                 except tables.exceptions.NoSuchNodeError:
                     info += "\nSolution table '%s': No valid data found\n" % (soltab.name)
 
@@ -384,7 +383,7 @@ class Solset( object ):
             logging.warning('Solution-table '+soltabName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
             soltabName = None
 
-        if soltabName in self.getSoltabs().keys():
+        if soltabName in self.getSoltabNames():
             logging.warning('Solution-table '+soltabName+' already present. Switching to default.')
             soltabName = None
 
@@ -440,7 +439,7 @@ class Solset( object ):
         nums = []
         for soltab in self.getSoltabs():
             if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab.name):
-                nums.append(int(soltab[-3:]))
+                nums.append(int(soltab.name[-3:]))
 
         return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
 
@@ -453,7 +452,7 @@ class Solset( object ):
             List of solution tables objects for all available soltabs in this solset
         """
         soltabs = []
-        for soltab in self.obj._v_groups:
+        for soltab in self.obj._v_groups.itervalues():
             soltabs.append(Soltab(soltab))
         return soltabs
 
@@ -466,8 +465,8 @@ class Solset( object ):
             List of str for all available soltabs in this solset
         """
         soltabNames = []
-        for soltab in self.getSoltabs():
-            soltabNames.append(soltab.name)
+        for soltabName in self.obj._v_groups.iterkeys():
+            soltabNames.append(soltabName)
         return soltabNames
 
 
@@ -488,10 +487,10 @@ class Solset( object ):
         if soltab is None:
             raise Exception("Solution-table not specified while querying for solution-table.")
 
-        if not soltab in self.getSoltabsNames():
+        if not soltab in self.getSoltabNames():
             raise Exception("Solution-table "+soltab+" not found in solset "+self.name+".")
 
-        return Soltab(self.obj.get_child(soltab))
+        return Soltab(self.obj._f_get_child(soltab))
 
 
     def getAnt(self):
@@ -522,7 +521,7 @@ class Solset( object ):
         return sources
 
 
-class soltab( object ):
+class Soltab( object ):
 
     def __init__(self, soltab, useCache = False, **args):
         """
