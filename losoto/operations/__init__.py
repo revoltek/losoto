@@ -28,4 +28,3 @@ class timer(object):
         if type is not None:
             raise type, value, tb
         self.log.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - self.start), (time.clock() - self.startcpu) ))
-

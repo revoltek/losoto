@@ -17,6 +17,7 @@ import logging
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
+from losoto.configparser import parset
 
 def my_close_open_files(verbose):
     open_files = tables.file._open_files
@@ -59,10 +60,14 @@ if __name__=='__main__':
         _logging.setLevel('debug')
         atexit.register(my_close_open_files, True) # Print info about closing open files at exit
 
-    # Check options
+    # Check h5parm
     if args.h5parm == None:
         logging.error('No h5parm given.')
-        sys.exit()
+        sys.exit(1)
+    
+    if not os.path.isfile(args.h5parm):
+        logging.critical("Missing h5parm file.")
+        sys.exit(1)
 
     if not tables.is_hdf5_file(args.h5parm):
         logging.critical('File \"%s\" is not a valid HDF5-file!'%(h5parmFile))
@@ -84,17 +89,14 @@ if __name__=='__main__':
         H.close()
         logging.warning('To reduce file size after deleting SolTabs use "h5repack infile outfile".')
         sys.exit(0)
-    else:
 
-        if not os.path.isfile(args.h5parm):
-            logging.critical("Missing h5parm file.")
-            sys.exit(1)
-        if not os.path.isfile(args.parset) and args.delete == None:
-            logging.critical("Missing parset file, I don't know what to do :'(")
-            sys.exit(1)
+    # check parset
+    if not os.path.isfile(args.parset) and args.delete == None:
+        logging.critical("Missing parset file, I don't know what to do :'(")
+        sys.exit(1)
+    p = parset( args.parset )
 
-    parset = lofar.parameterset.parameterset( parsetFile )
-    steps = parset.getStringVector( "LoSoTo.Steps", [] )
+    steps = p.getStringVector( "LoSoTo.Steps", [] )
 
     # Possible operations, linked to relative function
     import losoto.operations as operations
