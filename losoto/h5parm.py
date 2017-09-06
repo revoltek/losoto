@@ -3,12 +3,11 @@
 
 # Retrieving and writing data in H5parm format
 
-import os, sys, re
+import os, sys, re, itertools
 import numpy as np
 import tables
 import logging
 import _version
-import itertools
 
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:
@@ -19,12 +18,22 @@ class h5parm( object ):
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
         """
-        Keyword arguments:
-        h5parmFile -- H5parm filename
-        readonly -- if True the table is open in readonly mode (default=True)
-        complevel -- compression level from 0 to 9 (default=5) when creating the file
-        complib -- library for compression: lzo, zlib, bzip2 (default=zlib)
+        Create an h5parm object.
+
+        Parameters
+        ----------
+        h5parmFile : str
+            H5parm filename
+        readonly : bool, optional
+            if True the table is open in readonly mode, by default True
+        complevel : int, optional
+            compression level from 0 to 9 when creating the file, by default 5
+        complib : str, optional
+            library for compression: lzo, zlib, bzip2, by default zlib
         """
+
+        self.H = None # variable to store the pytable object
+
         if os.path.isfile(h5parmFile):
             if not tables.is_hdf5_file(h5parmFile):
                 logging.critical('Not a HDF5 file: '+h5parmFile+'.')
@@ -33,10 +42,10 @@ class h5parm( object ):
                 logging.debug('Reading from '+h5parmFile+'.')
                 self.H = tables.open_file(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
             else:
-                logging.warn('Appending to '+h5parmFile+'.')
+                logging.debug('Appending to '+h5parmFile+'.')
                 self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
 
-            # Check if it's a valid  H5parm file: attribute h5parm_version should be defined in any solset
+            # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any solset
             is_h5parm = True
             for node in self.H.root:
                 if 'h5parm_version' not in node._v_attrs:
@@ -44,6 +53,7 @@ class h5parm( object ):
                     break
             if not is_h5parm:
                 logging.warning('Missing H5pram version. Is this a properly made h5parm?')
+
         else:
             if readonly:
                 raise Exception('Missing file '+h5parmFile+'.')
@@ -58,7 +68,7 @@ class h5parm( object ):
 
     def close(self):
         """
-        Close the open table
+        Close the open table.
         """
         logging.debug('Closing table.')
         self.H.close()
@@ -66,7 +76,10 @@ class h5parm( object ):
 
     def __str__(self):
         """
-        Returns string with info about H5parm contents
+        Returns
+        -------
+        string
+            Info about H5parm contents.
         """
         return self.printInfo()
 
@@ -75,9 +88,18 @@ class h5parm( object ):
         """
         Create a new solset, if the provided name is not given or exists
         then it falls back on the first available sol###
-        Keyword arguments:
-        solset -- name of the solution set
-        addTables -- if True (default) add antenna/direction/array tables
+
+        Parameters
+        ----------
+        solset : str
+            name of the solution set
+        addTables : bool, optional
+            if True add antenna/direction/array tables, by default True
+
+        Returns
+        -------
+        pytables Group
+            newly created solset object
         """
 
         if type(solsetName) is str and not re.match(r'^[A-Za-z0-9_-]+$', solsetName):
@@ -89,7 +111,7 @@ class h5parm( object ):
             solsetName = None
 
         if solsetName is None:
-            solsetName = self._fisrtAvailSolsetName()
+            solsetName = self._firstAvailSolsetName()
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
         solset = self.H.create_group("/", solsetName)
@@ -106,23 +128,32 @@ class h5parm( object ):
             logging.info('--Creating new source table.')
             descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
             soltab = self.H.create_table(solset, 'source', descriptor, \
-                    title = 'Source names and directions', expectedrows = 50)
+                    title = 'Source names and directions', expectedrows = 25)
 
         return solset
 
 
     def getSolsets(self):
         """
-        Return a dict with all the available solultion-sets (as Groups objects)
+        Returns
+        -------
+        dict
+            a dict with all the available solultion-sets and relative Group object
         """
         return self.H.root._v_groups
 
 
     def getSolset(self, solset = None):
         """
-        Return a solultion-set as a Group object
-        Keyword arguments:
-        solset -- name of the solution set
+        Parameters
+        ----------
+        solset : str
+            name of the solution set
+
+        Returns
+        -------
+        pytables Group
+            return the solultion-set
         """
         if solset is None:
             raise Exception("Solution set not specified.")
@@ -134,10 +165,14 @@ class h5parm( object ):
         return self.H.get_node('/',solset)
 
 
-    def _fisrtAvailSolsetName(self):
+    def _firstAvailSolsetName(self):
         """
-        Create and return the first available solset name which
-        has the form of "sol###"
+        Find the first available solset name which has the form of "sol###"
+
+        Returns
+        -------
+        str
+            solset name
         """
         nums = []
         for solset in self.getSolsets().keys():
@@ -152,16 +187,33 @@ class h5parm( object ):
             weights=None, parmdbType=None):
         """
         Create a solution-table into a specified solution-set
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        soltype -- solution-type (e.g. amplitude, phase)
-        soltab -- the solution-table name (String) if not specified is generated from the solution-type
-        axesNames -- list with the axes names
-        axesVals -- list with the axes values
-        chunkShape -- list with the chunk shape
-        vals --
-        weights -- 0->FLAGGED, 1->MAX_WEIGHT
-        parmdbType -- original parmdb solution type
+        
+        Parameters
+        ----------
+        solset : str or pytables Group
+            solution-set name or a Group instance
+        soltype : str
+            solution-type (e.g. amplitude, phase)
+        soltab : str, optional
+            the solution-table name, if not specified is generated from the solution-type
+        axesNames : list
+            list with the axes names
+        axesVals : list
+            list with the axes values (each is a separate list)
+        chunkShape : list, optional
+            list with the chunk shape
+        vals : numpy array
+            array with shape given by the axesVals lenghts
+        weights : numpy array
+            same shape of the vals array
+            0->FLAGGED, 1->MAX_WEIGHT
+        parmdbType : str
+            original parmdb solution type
+
+        Returns
+        -------
+        pytables Group
+            newly created soltab object
         """
 
         if soltype is None:
@@ -205,17 +257,6 @@ class h5parm( object ):
             axis = self.H.create_array('/'+solsetName+'/'+soltabName, axisName, obj=axesVals[i])
             dim.append(len(axesVals[i]))
 
-#            # Put time/freq on max lenght for better performances
-#            if chunkShape == None:
-#                if axisName == 'time':
-#                    newChunkShape.append(100)
-#                elif axisName == 'freq':
-#                    newChunkShape.append(10)
-#                else:
-#                    newChunkShape.append(1)
-#        if chunkShape == None: chunkShape = newChunkShape
-#        logging.debug('Chunk shape: '+str(chunkShape))
-
         # check if the axes were in the proper order
         assert dim == list(vals.shape)
         assert dim == list(weights.shape)
@@ -230,6 +271,27 @@ class h5parm( object ):
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return soltab
+    
+
+    def _fisrtAvailSoltabName(self, solset=None, soltype=None):
+        """
+        Return the first available solset name which
+        has the form of "soltypeName###"
+        Keyword arguments:
+        solset -- a solution-set name as Group instance
+        soltype -- type of solution (amplitude, phase, RM, clock...) as a string
+        """
+        if solset is None:
+            raise Exception("Solution-set not specified while querying for solution-tables list.")
+        if soltype is None:
+            raise Exception("Solution type not specified while querying for solution-tables list.")
+
+        nums = []
+        for soltab in self.getSoltabs(solset).keys():
+            if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab):
+                nums.append(int(soltab[-3:]))
+
+        return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
 
 
     def delSoltab(self, solset=None, soltab=None):
@@ -284,27 +346,6 @@ class h5parm( object ):
             solset = self.getSolset(solset)
 
         return self.H.get_node(solset, soltab)
-
-
-    def _fisrtAvailSoltabName(self, solset=None, soltype=None):
-        """
-        Return the first available solset name which
-        has the form of "soltypeName###"
-        Keyword arguments:
-        solset -- a solution-set name as Group instance
-        soltype -- type of solution (amplitude, phase, RM, clock...) as a string
-        """
-        if solset is None:
-            raise Exception("Solution-set not specified while querying for solution-tables list.")
-        if soltype is None:
-            raise Exception("Solution type not specified while querying for solution-tables list.")
-
-        nums = []
-        for soltab in self.getSoltabs(solset).keys():
-            if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab):
-                nums.append(int(soltab[-3:]))
-
-        return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
 
 
     def getAnt(self, solset):
