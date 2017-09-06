@@ -98,7 +98,7 @@ class h5parm( object ):
 
         Returns
         -------
-        pytables Group
+        solset obj
             newly created solset object
         """
 
@@ -106,7 +106,7 @@ class h5parm( object ):
             logging.warning('Solution-set '+solsetName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
             solsetName = None
 
-        if solsetName in self.getSolsets().keys():
+        if solsetName in self.getSolsetsNames():
             logging.warning('Solution-set '+solsetName+' already present. Switching to default.')
             solsetName = None
 
@@ -130,17 +130,33 @@ class h5parm( object ):
             soltab = self.H.create_table(solset, 'source', descriptor, \
                     title = 'Source names and directions', expectedrows = 25)
 
-        return solset
+        return Solset(solset)
 
 
     def getSolsets(self):
         """
         Returns
         -------
-        dict
-            a dict with all the available solultion-sets and relative Group object
+        list
+            list of all solsets objects
         """
-        return self.H.root._v_groups
+        solsets = []
+        for solset in self.H.root._v_groups:
+            solsets.append(Solset(solset))
+        return solsets
+
+
+    def getSolsetsNames(self):
+        """
+        Returns
+        -------
+        list
+            list of str of all solsets names
+        """
+        solsetNames = []
+        for solset in self.getSolsets():
+            solsetNames.append(solset.name)
+        return solsetNames
 
 
     def getSolset(self, solset = None):
@@ -152,17 +168,17 @@ class h5parm( object ):
 
         Returns
         -------
-        pytables Group
-            return the solultion-set
+        solset obj
+            return solset object
         """
         if solset is None:
             raise Exception("Solution set not specified.")
 
-        if not solset in self.getSolsets():
+        if not solset in self.getSolsetsNames():
             logging.critical("Cannot find solset: "+solset+".")
             raise Exception("Cannot find solset: "+solset+".")
 
-        return self.H.get_node('/',solset)
+        return Solset(self.H.get_node('/',solset))
 
 
     def _firstAvailSolsetName(self):
@@ -175,215 +191,11 @@ class h5parm( object ):
             solset name
         """
         nums = []
-        for solset in self.getSolsets().keys():
-            if re.match(r'^sol[0-9][0-9][0-9]$', solset):
+        for solsetName in self.getSolsetsNames():
+            if re.match(r'^sol[0-9][0-9][0-9]$', solsetName):
                 nums.append(int(solset[-3:]))
 
         return "sol%03d" % min(list(set(range(1000)) - set(nums)))
-
-
-    def makeSoltab(self, solset=None, soltype=None, soltab=None,
-            axesNames = [], axesVals = [], chunkShape=None, vals=None,
-            weights=None, parmdbType=None):
-        """
-        Create a solution-table into a specified solution-set
-        
-        Parameters
-        ----------
-        solset : str or pytables Group
-            solution-set name or a Group instance
-        soltype : str
-            solution-type (e.g. amplitude, phase)
-        soltab : str, optional
-            the solution-table name, if not specified is generated from the solution-type
-        axesNames : list
-            list with the axes names
-        axesVals : list
-            list with the axes values (each is a separate list)
-        chunkShape : list, optional
-            list with the chunk shape
-        vals : numpy array
-            array with shape given by the axesVals lenghts
-        weights : numpy array
-            same shape of the vals array
-            0->FLAGGED, 1->MAX_WEIGHT
-        parmdbType : str
-            original parmdb solution type
-
-        Returns
-        -------
-        pytables Group
-            newly created soltab object
-        """
-
-        if soltype is None:
-            raise Exception("Solution-type not specified while adding a solution-table.")
-
-        # checks on the solset
-        if solset is None:
-            raise Exception("Solution-set not specified while adding a solution-table.")
-        if type(solset) is str:
-            solset = self.getSolset(solset)
-        solsetName = solset._v_name
-
-        if not solsetName in self.getSolsets().keys():
-            raise Exception("Solution-set "+solsetName+" doesn't exist.")
-
-        # checks on the soltab
-        soltabName = soltab
-        if type(soltabName) is str and not re.match(r'^[A-Za-z0-9_-]+$', soltabName):
-            logging.warning('Solution-table '+soltabName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
-            soltabName = None
-
-        if soltabName in self.getSoltabs(solset).keys():
-            logging.warning('Solution-table '+soltabName+' already present. Switching to default.')
-            soltabName = None
-
-        if soltabName is None:
-            soltabName = self._fisrtAvailSoltabName(solset, soltype)
-
-        logging.info('Creating a new solution-table: '+soltabName+'.')
-        soltab = self.H.create_group("/"+solsetName, soltabName, title=soltype)
-        soltab._v_attrs['parmdb_type'] = parmdbType
-
-        # create axes
-        assert len(axesNames) == len(axesVals)
-        dim = []
-
-#        newChunkShape = []
-        for i, axisName in enumerate(axesNames):
-            #axis = self.H.create_carray('/'+solsetName+'/'+soltabName, axisName,\
-            #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
-            axis = self.H.create_array('/'+solsetName+'/'+soltabName, axisName, obj=axesVals[i])
-            dim.append(len(axesVals[i]))
-
-        # check if the axes were in the proper order
-        assert dim == list(vals.shape)
-        assert dim == list(weights.shape)
-
-        # create the val/weight Carrays
-        #val = self.H.create_carray('/'+solsetName+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
-        #weight = self.H.create_carray('/'+solsetName+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
-        # array do not have compression but are much faster
-        val = self.H.create_array('/'+solsetName+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
-        weight = self.H.create_array('/'+solsetName+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
-        val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-        weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-
-        return soltab
-    
-
-    def _fisrtAvailSoltabName(self, solset=None, soltype=None):
-        """
-        Return the first available solset name which
-        has the form of "soltypeName###"
-        Keyword arguments:
-        solset -- a solution-set name as Group instance
-        soltype -- type of solution (amplitude, phase, RM, clock...) as a string
-        """
-        if solset is None:
-            raise Exception("Solution-set not specified while querying for solution-tables list.")
-        if soltype is None:
-            raise Exception("Solution type not specified while querying for solution-tables list.")
-
-        nums = []
-        for soltab in self.getSoltabs(solset).keys():
-            if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab):
-                nums.append(int(soltab[-3:]))
-
-        return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
-
-
-    def delSoltab(self, solset=None, soltab=None):
-        """
-        Delete a solution-table of a specific solution-set
-        Keyword arguments:
-        solset -- a solution-set name (String) or instance (required if soltab is a string)
-        soltab -- a solution-table name (String) or instance
-        """
-        if soltab is None:
-            raise Exception("Solution-table not specified while deleting a solution-table.")
-
-        if type(soltab) is str:
-            soltabobj = self.getSoltab(solset, soltab)
-
-        soltabobj._f_remove(recursive=True, force=True)
-        logging.info("Soltab \""+soltab+"\" deleted.")
-
-
-    def getSoltabs(self, solset=None):
-        """
-        Return a dict {name1: object1, name2: object2, ...}
-        of all the available solultion-tables into a specified solution-set
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        """
-        if solset is None:
-            raise Exception("Solution-set not specified while querying for solution-tables list.")
-        if type(solset) is str:
-            solset = self.getSolset(solset)
-
-        return solset._v_groups
-
-
-    def getSoltab(self, solset=None, soltab=None):
-        """
-        Return a specific solution-table (object) of a specific solution-set
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        soltab -- a solution-table name (String)
-        """
-        if solset is None:
-            raise Exception("Solution-set not specified while querying for solution-table.")
-        if soltab is None:
-            raise Exception("Solution-table not specified while querying for solution-table.")
-
-        if not soltab in self.getSoltabs(solset):
-            logging.critical("Solution-table "+soltab+" not found in solset "+solset+".")
-            raise Exception("Solution-table "+soltab+" not found in solset "+solset+".")
-
-        if type(solset) is str:
-            solset = self.getSolset(solset)
-
-        return self.H.get_node(solset, soltab)
-
-
-    def getAnt(self, solset):
-        """
-        Return a dict of all available antennas
-        in the form {name1:[position coords],name2:[position coords],...}
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        """
-        if solset == None:
-            raise Exception("Solution-set not specified.")
-        if type(solset) is str:
-            solset = self.H.root._f_get_child(solset)
-
-        ants = {}
-        for x in solset.antenna:
-            ants[x['name']] = x['position']
-
-        return ants
-
-
-    def getSou(self, solset):
-        """
-        Return a dict of all available sources
-        in the form {name1:[ra,dec],name2:[ra,dec],...}
-        Keyword arguments:
-        solset -- a solution-set name (String) or a Group instance
-        """
-        if solset is None:
-            raise Exception("Solution-set not specified.")
-        if type(solset) is str:
-            solset = self.H.root._f_get_child(solset)
-
-        sources = {}
-        for x in solset.source:
-            sources[x['name']] = x['dir']
-
-        return sources
 
 
     def printInfo(self, filter=None, verbose=False):
@@ -435,35 +247,31 @@ class h5parm( object ):
         if filter is not None:
             keys_to_remove = []
             info += "\nFiltering on solution set name with filter = '{0}'\n".format(filter)
-            for solset_name in solsets.keys():
-                if not re.search(filter, solset_name):
-                    keys_to_remove.append(solset_name)
-            for key in keys_to_remove:
-                solsets.pop(key)
+            solsets = [solset for solset in solsets if re.search(filter, solset.name)]
 
         if len(solsets) == 0:
             info += "\nNo solution sets found.\n"
             return info
-        solset_names = solsets.keys()
-        solset_names.sort()
+
         # delete axes value file if already present
         if verbose and os.path.exists(self.fileName+'-axes_values.txt'):
-                logging.warning('Overwriting '+self.fileName+'-axes_values.txt')
-                os.system('rm '+self.fileName+'-axes_values.txt')
+            logging.warning('Overwriting '+self.fileName+'-axes_values.txt')
+            os.system('rm '+self.fileName+'-axes_values.txt')
+
         # For each solution set, list solution tables, sources, and antennas
-        for solset_name in solset_names:
-            info += "\nSolution set '%s':\n" % solset_name
-            info += "=" * len(solset_name) + "=" * 16 + "\n\n"
+        for solset in solsets:
+            info += "\nSolution set '%s':\n" % solset.name
+            info += "=" * len(solset.name) + "=" * 16 + "\n\n"
 
             # Print direction (source) names
-            sources = self.getSou(solset_name).keys()
+            sources = solset.getSou().keys()
             sources.sort()
             info += "Directions: "
             for src_name in sources:
                 info += "%s\n            " % src_name
 
             # Print station names
-            antennas = self.getAnt(solset_name).keys()
+            antennas = solset.getAnt().keys()
             antennas.sort()
             info += "\nStations: "
             for ant1, ant2, ant3, ant4 in grouper(4, antennas):
@@ -474,18 +282,15 @@ class h5parm( object ):
             if verbose:
                 logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
                 f = file(self.fileName+'-axes_values.txt','a')
-            for soltab_name, soltab in self.getSoltabs(solset=solset_name).iteritems():
+            for soltab in solset.getSoltabs():
                 try:
                     if verbose:
-                        f.write("### /"+solset_name+"/"+soltab_name+"\n")
-                    logging.debug('Fetching info for '+soltab_name+'.')
-                    sf = solFetcher(soltab)
-                    axisNames = sf.getAxesNames()
-                    #print self.getSoltabs(solset=solset_name)
+                        f.write("### /"+solset.name+"/"+soltab.name+"\n")
+                    logging.debug('Fetching info for '+soltab.name+'.')
+                    axisNames = soltab.getAxesNames()
                     axis_str_list = []
                     for axisName in axisNames:
-                        info
-                        nslots = sf.getAxisLen(axisName)
+                        nslots = soltab.getAxisLen(axisName)
                         if nslots > 1:
                             pls = "s"
                         else:
@@ -493,29 +298,238 @@ class h5parm( object ):
                         axis_str_list.append("%i %s%s" % (nslots, axisName, pls))
                         if verbose:
                             f.write(axisName+": ")
-                            vals = sf.getAxisValues(axisName)
+                            vals = soltab.getAxisValues(axisName)
                             # ugly hardcoded workaround to print all the important decimal values for time/freq
                             if axisName == 'freq': f.write(" ".join(["{0:.8f}".format(v) for v in vals])+"\n\n")
                             elif axisName == 'time': f.write(" ".join(["{0:.7f}".format(v) for v in vals])+"\n\n")
                             else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
-                    info += "\nSolution table '%s' (type: %s): %s\n" % (soltab_name, sf.getType(), ", ".join(axis_str_list))
-                    weights = sf.getValues(weight = True, retAxesVals = False)
+                    info += "\nSolution table '%s' (type: %s): %s\n" % (soltab.name, soltab.getType(), ", ".join(axis_str_list))
+                    weights = soltab.getValues(weight = True, retAxesVals = False)
                     info += 'Flagged data %.3f%%\n' % (100.*np.sum(weights==0)/len(weights.flat))
-                    history = sf.getHistory()
+                    history = soltab.getHistory()
                     if history != "":
                         info += "\n" + 4*" " + "History:\n" + 4*" "
                         joinstr =  "\n" + 4*" "
                         info += joinstr.join(wrap(history)) + "\n"
                     del sf
                 except tables.exceptions.NoSuchNodeError:
-                    info += "\nSolution table '%s': No valid data found\n" % (soltab_name)
+                    info += "\nSolution table '%s': No valid data found\n" % (soltab.name)
 
             if verbose:
-                    f.close()
+                f.close()
         return info
 
 
-class solHandler( object ):
+class Solset( object ):
+    def __init__(self, solset):
+        """
+        Create a solset object
+
+        Parameters
+        ----------
+        solset : pytables group
+            the solution set pytables group object
+        """
+
+        if not isinstance( solset, tables.Group ):
+            logging.error("Object must be initialized with a pyTables Table object.")
+            sys.exit(1)
+
+        self.obj = solset
+        self.name = solset._v_name
+
+
+    def makeSoltab(self, soltype=None, soltab=None,
+            axesNames = [], axesVals = [], chunkShape=None, vals=None,
+            weights=None, parmdbType=None):
+        """
+        Create a solution-table into a specified solution-set
+        
+        Parameters
+        ----------
+        soltype : str
+            solution-type (e.g. amplitude, phase)
+        soltab : str, optional
+            the solution-table name, if not specified is generated from the solution-type
+        axesNames : list
+            list with the axes names
+        axesVals : list
+            list with the axes values (each is a separate list)
+        chunkShape : list, optional
+            list with the chunk shape
+        vals : numpy array
+            array with shape given by the axesVals lenghts
+        weights : numpy array
+            same shape of the vals array
+            0->FLAGGED, 1->MAX_WEIGHT
+        parmdbType : str
+            original parmdb solution type
+
+        Returns
+        -------
+        soltab obj
+            newly created soltab object
+        """
+
+        if soltype is None:
+            raise Exception("Solution-type not specified while adding a solution-table.")
+
+        # checks on the soltab
+        soltabName = soltab
+        if type(soltabName) is str and not re.match(r'^[A-Za-z0-9_-]+$', soltabName):
+            logging.warning('Solution-table '+soltabName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
+            soltabName = None
+
+        if soltabName in self.getSoltabs().keys():
+            logging.warning('Solution-table '+soltabName+' already present. Switching to default.')
+            soltabName = None
+
+        if soltabName is None:
+            soltabName = self._fisrtAvailSoltabName(soltype)
+
+        logging.info('Creating a new solution-table: '+soltabName+'.')
+        soltab = self.H.create_group("/"+self.name, soltabName, title=soltype)
+        soltab._v_attrs['parmdb_type'] = parmdbType
+
+        # create axes
+        assert len(axesNames) == len(axesVals)
+        dim = []
+
+#        newChunkShape = []
+        for i, axisName in enumerate(axesNames):
+            #axis = self.H.create_carray('/'+self.name+'/'+soltabName, axisName,\
+            #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
+            axis = self.H.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
+            dim.append(len(axesVals[i]))
+
+        # check if the axes were in the proper order
+        assert dim == list(vals.shape)
+        assert dim == list(weights.shape)
+
+        # create the val/weight Carrays
+        #val = self.H.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
+        #weight = self.H.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
+        # array do not have compression but are much faster
+        val = self.H.create_array('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
+        weight = self.H.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
+        val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
+        weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
+
+        return Soltab(soltab)
+    
+
+    def _fisrtAvailSoltabName(self, soltype=None):
+        """
+        Find the first available soltab name which
+        has the form of "soltypeName###"
+
+        Parameters
+        ----------
+        soltype : str
+            type of solution (amplitude, phase, RM, clock...)
+
+        Returns
+        -------
+        str
+            first available soltab name
+        """
+        if soltype is None:
+            raise Exception("Solution type not specified while querying for solution-tables list.")
+
+        nums = []
+        for soltab in self.getSoltabs():
+            if re.match(r'^'+soltype+'[0-9][0-9][0-9]$', soltab.name):
+                nums.append(int(soltab[-3:]))
+
+        return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
+
+
+    def delSoltab(self, soltab=None):
+        """
+        Delete a solution-table of a specific solution-set
+        Keyword arguments:
+        soltab -- a solution-table name (String) or instance
+        """
+        if soltab is None:
+            raise Exception("Solution-table not specified while deleting a solution-table.")
+
+        if type(soltab) is str:
+            soltabobj = self.getSoltab(soltab)
+
+        soltabobj._f_remove(recursive=True, force=True)
+        logging.info("Soltab \""+soltab+"\" deleted.")
+
+
+    def getSoltabs(self):
+        """
+        Returns
+        -------
+        list
+            list of solution tables objects for all available soltabs in this solset
+        """
+        soltabs = []
+        for soltab in self.obj._v_groups:
+            soltabs.append(Soltab(soltab))
+        return soltabs
+
+
+    def getSoltabNames(self):
+        """
+        Returns
+        -------
+        list
+            list of str for all available soltabs in this solset
+        """
+        soltabNames = []
+        for soltab in self.getSoltabs():
+            soltabNames.append(soltab.name)
+        return soltabNames
+
+
+    def getSoltab(self, soltab=None):
+        """
+        Return a specific solution-table (object) of a specific solution-set
+        Keyword arguments:
+        soltab -- a solution-table name (String)
+        """
+        if soltab is None:
+            raise Exception("Solution-table not specified while querying for solution-table.")
+
+        if not soltab in self.getSoltabsNames():
+            raise Exception("Solution-table "+soltab+" not found in solset "+self.name+".")
+
+        return self.obj.get_child(soltab)
+
+
+    def getAnt(self):
+        """
+        Returns
+        -------
+        dict
+            available antennas in the form {name1:[position coords], name2:[position coords], ...}
+        """
+        ants = {}
+        for x in self.obj.antenna:
+            ants[x['name']] = x['position']
+
+        return ants
+
+
+    def getSou(self):
+        """
+        Returns
+        -------
+        dict
+            available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}
+        """
+        sources = {}
+        for x in self.obj.source:
+            sources[x['name']] = x['dir']
+
+        return sources
+
+
+class soltab( object ):
     """
     Generic #class to principally handle selections
     Selections are:
@@ -540,6 +554,7 @@ class solHandler( object ):
             sys.exit(1)
 
         self.t = table
+        self.name = table._v_name
         # set axes names once to speed up calls
         self.axesNames = table.val.attrs['AXES'].split(',')
         # set axes values once to speed up calls (a bit of memory usage though)
@@ -765,15 +780,6 @@ class solHandler( object ):
         return history_str
 
 
-class solWriter(solHandler):
-
-    def __init__(self, table, useCache = False, **args):
-        """
-        useCache -- write the data on a local copy of the table,
-        use flush() to write them on the disk, speeds up writing
-        """
-        solHandler.__init__(self, table=table, useCache=useCache, **args)
-
     def setAxisValues(self, axis=None, vals=None):
         """
         Set the value of a specific axis
@@ -838,11 +844,6 @@ class solWriter(solHandler):
         self.t.weight[:] = self.cacheWeight
         self.t.val[:] = self.cacheVal
 
-
-class solFetcher(solHandler):
-
-    def __init__(self, table, useCache = False, **args):
-        solHandler.__init__(self, table = table, useCache = useCache, **args)
 
     def __getattr__(self, axis):
         """
