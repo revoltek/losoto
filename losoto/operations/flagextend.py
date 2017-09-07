@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This operation for LoSoTo implement a extend flag procedure
-# It can work in multi dimensional space and for each datum check if the surrounding data are flagged to a certain %, then flag also that datum
-# The size of the surrounding footprint can be tuned
-# WEIGHT: compliant
-
 import logging
 from losoto.operations_lib import *
-import numpy as np
 
 logging.debug('Loading FLAGEXTEND module.')
 
-def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, outQueue=None):
+def run_parser(soltab, parser, step):
+    axesToExt = parser.getarray( step, 'axesToExt') # no default
+    size = parser.getarray( step, 'size' ) # no default
+    percent = parser.getfloat( step, 'percent', 50. )
+    maxCycles = parser.getint( step, 'maxCycles', 3 )
+    ncpu = parser.getint( '_general', 'ncpu', 0 )
+    return run(soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0)
+
+
+def flag(weights, coord, axesToExt, selection, percent=90, size=[0], maxCycles=3, outQueue=None):
         """
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
@@ -27,37 +30,66 @@ def flag(weights, coord, axesToExt, selection, percent=90, size=[0], cycles=3, o
             else:
                 return 0
 
+        def percentFlagged(w):
+            return 100.*(weights.size-np.count_nonzero(weights))/float(weights.size)
+
+
         import scipy.ndimage
-        initialPercent = 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)
+        import numpy as np
+        initPercent = percentFlagged(weights)
 
         # if size=0 then extend to all 2*axis, this otherwise create issues with mirroring
         for i, s in enumerate(size):
             if s == 0: size[i] = 2*weights.shape[i]
 
-        for cycle in xrange(cycles):
+        for cycle in xrange(maxCycles):
             flag = scipy.ndimage.filters.generic_filter((weights==0), extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
             weights[ ( flag == 1 ) ] = 0
             # no new flags
             if cycle != 0 and np.count_nonzero(flag) == oldFlagCount: break
             oldFlagCount = np.count_nonzero(flag)
 
-        logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
-            % (removeKeys(coord, axesToExt), initialPercent, 100.*(np.size(weights)-np.count_nonzero(weights))/np.size(weights)))
+        if percentFlagged(weights) == initPercent:
+            logging.debug('Percentage of data flagged (%s): %.3f -> None' \
+                    % (removeKeys(coord, axesToExt), initPercent))
+        else:
+            logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
+                    % (removeKeys(coord, axesToExt), initPercent, percentFlagged(weights)))
 
         outQueue.put([weights, selection])
         
             
-def run( step, parset, H ):
+def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
+    """
+    This operation for LoSoTo implement a extend flag procedure
+    It can work in multi dimensional space and for each datum check if the surrounding data are flagged to a certain %, then flag also that datum
+    The size of the surrounding footprint can be tuned
+    WEIGHT: compliant
 
-    from losoto.h5parm import solFetcher, solWriter
+    Parameters
+    ----------
+    axesToExt : list of str
+        Axes used to find close flags.
 
-    soltabs = getParSoltabs( step, parset, H )
+    size : list of int
+        Size of the window (diameter), per axis. If 0 is given then the entire length of the axis is assumed.
+        Must be a vector of same length of Axes.
 
-    axesToExt = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), ['freq','time'] )
-    size = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Size"]), [11,11] )
-    percent = parset.getFloat('.'.join(["LoSoTo.Steps", step, "Percent"]), 50 )
-    cycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "Cycles"]), 3 )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
+    percent : float, optional
+        Percent of flagged data around the point to flag it, by default 50.
+
+    maxCycles : int, optional
+        Number of independent cycles of flag expansion, by default 3.
+
+    ncpu : int, optional
+        Number of CPU used, by default all available.
+    """
+
+    import numpy as np
+
+    logging.info("Extending flag on soltab: "+soltab.name)
+
+    # input check
     if ncpu == 0:
         import multiprocessing
         ncpu = multiprocessing.cpu_count()
@@ -66,40 +98,24 @@ def run( step, parset, H ):
         logging.error("Please specify at least one axis to extend flag.")
         return 1
 
-    for soltab in openSoltabs( H, soltabs ):
+    # start processes for multi-thread
+    mpm = multiprocManager(ncpu, flag)
 
-        # start processes for multi-thread
-        mpm = multiprocManager(ncpu, flag)
+    for axisToExt in axesToExt:
+        if axisToExt not in soltab.getAxesNames():
+            logging.error('Axis \"'+axisToExt+'\" not found.')
+            mpm.wait()
+            return 1
 
-        logging.info("Extending flag on soltab: "+soltab._v_name)
+    # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToExt, weight=True):
+        mpm.put([weights, coord, axesToExt, selection, percent, size, maxCycles])
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab)
+    mpm.wait()
 
-        # axis selection
-        userSel = {}
-        for axis in sf.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        sf.setSelection(**userSel)
+    logging.info('Writing solutions')
+    for w, sel in mpm.get():
+        soltab.setValues(w, sel, weight=True)
 
-        for axisToExt in axesToExt:
-            if axisToExt not in sf.getAxesNames():
-                logging.error('Axis \"'+axisToExt+'\" not found.')
-                mpm.wait()
-                return 1
-
-        # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToExt, weight=True):
-            mpm.put([weights, coord, axesToExt, selection, percent, size, cycles])
-
-        mpm.wait()
-
-        logging.info('Writing solutions')
-        for w,sel in mpm.get():
-            sw.selection = sel
-            sw.setValues(w, weight=True) # convert back to np.float16
-
-        sw.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))
-        del sf
-        del sw
+    soltab.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))
     return 0

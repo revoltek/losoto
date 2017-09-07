@@ -625,8 +625,7 @@ class Soltab( object ):
         """
         Clear selection, all values are considered.
         """
-        self.selection = [slice(0,self.getAxisLen(axisName, ignoreSelection=True)) \
-                                                for axisName in self.getAxesNames()]
+        self.setSelection()
 
 
     def setSelection(self, **args):
@@ -818,7 +817,7 @@ class Soltab( object ):
         self.axes[axis][self.selection[axisIdx]] = vals
 
 
-    def setValues(self, vals, weight = False, selection = None):
+    def setValues(self, vals, selection = None, weight = False):
         """
         Save values in the val grid
 
@@ -827,10 +826,12 @@ class Soltab( object ):
         vals : array, float
             values to write as an n-dimentional array which match the selection dimention
             if a float is passed or the selected data are set to that value
-        weight : bool, optional
-            If true store in the weights instead that in the vals, by default False
+
         selection : selection format, optional
             To set only a subset of data, overriding global selection, by default use global selection
+
+        weight : bool, optional
+            If true store in the weights instead that in the vals, by default False
         """
         if selection is None: selection = self.selection
 

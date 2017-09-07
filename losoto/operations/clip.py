@@ -7,7 +7,7 @@ from losoto.operations_lib import *
 logging.debug('Loading CLIP module.')
 
 def run_parser(soltab, parser, step):
-    axesToClip = parser.getarray( step, 'axestoClip' )
+    axesToClip = parser.getarray( step, 'axestoClip' ) # no default
     clipLevel = parser.getfloat( step, 'clipLevel', 5. )
     log = parser.getbool( step, 'log', True )
     return run(soltab, axesToClip, clipLevel, log)
@@ -76,7 +76,7 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
         after_count += (len(weights)-np.count_nonzero(weights))
 
         # writing back the solutions
-        soltab.setValues(weights, weight=True, selection=selection)
+        soltab.setValues(weights, selection, weight=True)
 
     soltab.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
     logging.info('Clip, flagged data: %f %% -> %f %%' \
