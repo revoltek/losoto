@@ -14,10 +14,12 @@ import os, sys, time, gc
 import atexit
 import tables
 import logging
+import ConfigParser
+import StringIO
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
-from losoto.configparser import parset
+import losoto.operations_lib
 
 def my_close_open_files(verbose):
     open_files = tables.file._open_files
@@ -94,9 +96,15 @@ if __name__=='__main__':
     if not os.path.isfile(args.parset) and args.delete == None:
         logging.critical("Missing parset file, I don't know what to do :'(")
         sys.exit(1)
-    p = parset( args.parset )
 
-    steps = p.getStringVector( "LoSoTo.Steps", [] )
+    # read parset and replace '#' with ';' to allow # as inline comments
+    # also add [_global] fake section at beginning
+    config = StringIO.StringIO()
+    config.write('[_global]\n'+open(args.parset).read().replace('#',';'))
+    config.seek(0, os.SEEK_SET)
+    parser = ConfigParser.ConfigParser()
+    parser.readfp(config)
+    steps = parser.sections()
 
     # Possible operations, linked to relative function
     import losoto.operations as operations
@@ -126,19 +134,27 @@ if __name__=='__main__':
     }
 
     globalstart = time.time()
-    H = h5parm(h5parmFile, readonly=False)
+    H = h5parm(args.h5parm, readonly=False)
     for step in steps:
-        op = parset.getString( '.'.join( [ "LoSoTo.Steps", step, "Operation" ] ) )
+
+        if step == '_global': continue # skip global setting
+
+        op = parser.get(step,'Operation')
         if not op in ops:
             logging.error('Unkown operation: '+op)
             continue
+
+        returncode = 0
         with operations.timer(logging, step, op) as t:
-            returncode = ops[ op ].run( step, parset, H )
+            for soltab in losoto.operations_lib.getStepSoltabs(parser, step, H):
+                returncode += ops[ op ].run_parser( soltab, parser )
             if returncode != 0:
                logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
             else:
                logging.info("Step \'" + step + "\' completed successfully.")
+
         gc.collect()
+
         # Memory debug
        # def namestr(obj, namespace):
        #     return [name for name in namespace if namespace[name] is obj]

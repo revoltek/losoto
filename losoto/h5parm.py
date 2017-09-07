@@ -444,8 +444,17 @@ class Solset( object ):
         return soltype+"%03d" % min(list(set(range(1000)) - set(nums)))
 
 
-    def getSoltabs(self):
+    def getSoltabs(self, useCache=False, sel={}):
         """
+        get all Soltabs in this Solset
+
+        Parameters
+        ----------
+        useCache : bool, optional
+            soltabs obj will use cache, by default False
+        sel : dict, optional
+            selection dict, by default no selection
+
         Returns
         -------
         list
@@ -453,7 +462,7 @@ class Solset( object ):
         """
         soltabs = []
         for soltab in self.obj._v_groups.itervalues():
-            soltabs.append(Soltab(soltab))
+            soltabs.append(Soltab(soltab, useCache, sel))
         return soltabs
 
 
@@ -470,7 +479,7 @@ class Solset( object ):
         return soltabNames
 
 
-    def getSoltab(self, soltab):
+    def getSoltab(self, soltab, useCache=False, sel={}):
         """
         Return a soltab
         
@@ -478,6 +487,10 @@ class Solset( object ):
         ----------
         soltab : str
             A solution table name
+        useCache : bool, optional
+            soltabs obj will use cache, by default False
+        sel : dict, optional
+            selection dict, by default no selection
 
         Returns
         -------
@@ -490,7 +503,7 @@ class Solset( object ):
         if not soltab in self.getSoltabNames():
             raise Exception("Solution-table "+soltab+" not found in solset "+self.name+".")
 
-        return Soltab(self.obj._f_get_child(soltab))
+        return Soltab(self.obj._f_get_child(soltab), useCache, sel)
 
 
     def getAnt(self):
@@ -523,7 +536,7 @@ class Solset( object ):
 
 class Soltab( object ):
 
-    def __init__(self, soltab, useCache = False, **args):
+    def __init__(self, soltab, useCache = False, args = {}):
         """
         Parameters
         ----------
@@ -635,7 +648,7 @@ class Soltab( object ):
             if selVal is None: continue
 
             if not axis in self.getAxesNames():
-                logging.error("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
+                logging.warning("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
                 continue
 
             # find the index of the working axis

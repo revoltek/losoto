@@ -3,9 +3,9 @@
 
 # Some utilities for operations
 
-import sys
+import sys, re, json
 import logging
-from losoto.h5parm import solFetcher
+from losoto.h5parm import h5parm
 import multiprocessing
 
 class multiprocManager(object):
@@ -83,173 +83,89 @@ class multiprocManager(object):
         self.inQueue.join()
 
 
-def getParSolsets( step, parset, H ):
+def getParAxis( parser, step, axisName ):
     """
-    Return the solution-set list for this parset.
-    The order is:
-    * local step (from the Soltab parameter)
-    * if nothing found, global value (from the Soltab parameter)
-    * restrict to global Solset var
-    * if nothing found use the global Solset var
-    * default = all
+    Parameters
+    ----------
+    parser : parser obj
+        configuration file
+    step : str
+        this step
+    axisName : str
+        an axis name
+
+    Returns
+    -------
+    str, dict or list
+        a selection criteria
     """
-    allSolsets = H.getSolsets().keys()
 
-    # local val from soltab
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
-    soltabs = parset.getStringVector( stepOptName, [] )
-    solsets = []
-    for soltab in soltabs:
-        solsets.append(soltab.split('/')[0])
+    axisOpt = None
+    if parser.has_option(step, axisName.lower()):
+        axisOpt = parser.get(step, axisName.lower())
+        # if vector/dict, reread it
+        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
+            axisOpt = json.loads( parser.get(step, axisName.lower()) )
 
-    # global value from soltab
-    if solsets == []:
-        for soltab in parset.getStringVector( "LoSoTo.Soltab", [] ):
-            solsets.append(soltab.split('/')[0])
+    elif parser.has_option('_global', axisName.lower()):
+        axisOpt = parser.get('_global', axisName.lower())
+        # if vector/dict, reread it
+        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
+            axisOpt = json.loads( parser.get('_global', axisName.lower()) )
 
-    # global value from solset
-    globalSolsets = parset.getStringVector( "LoSoTo.Solset", allSolsets )
-    if solsets != []:
-        solsets = list(set(solsets).intersection(set(globalSolsets)))
+    if axisOpt == '' or axisOpt == []:
+        axisOpt = None
+ 
+    return axisOpt
+
+
+def getStepSoltabs(parser, step, H):
+    """
+    Return a list of soltabs object for 
+
+    Parameters
+    ----------
+    parser : parser obj
+        configuration file
+    step : str
+        current step
+    H : h5parm obj
+        the h5parm object
+
+    Returns
+    -------
+    list
+        list of soltab obj with applied selection
+    """
+    cacheSteps = ['FLAG'] # steps to use chaced data
+
+    # selection on soltabs
+    if parser.has_option(step, 'soltab'):
+        stsel = parser.get(step, 'soltab')
+    elif parser.has_option('_global', 'soltab'):
+        stsel = parser.get('_global', 'soltab')
     else:
-        solsets = globalSolsets
+        stsel = '*/*' # select all
+    stsel = re.compile(stsel)
 
-    # default value
-    if solsets == []:
-        solsets = allSolsets
-
-    # sanity check
-    for solset in solsets[:]:
-        if solset not in allSolsets:
-            logging.warning("Solution-set \""+solset+"\" not found. Ignoring")
-            solsets.remove(solset)
-
-    return list(set(solsets))
-
-
-def getParSoltabs( step, parset, H ):
-    """
-    Return the solution-table list (in ["solset/soltab",...] form) for this step.
-        - compatible with the solset parameters
-        - compatible the soltype parameters
-    The order is:
-    * local step value
-    * global value
-    * default = all
-
-    This is what one wants to call to find out the tables the user wants to operate on
-    """
-
-    # local val
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
-    ssst = parset.getStringVector( stepOptName, [] )
-
-    # global value
-    if ssst == []:
-        ssst = parset.getStringVector( "LoSoTo.Soltab", [] )
-
-    # default value
-    if ssst == []:
-        # add all the table in the available Solsets
-        for solset in getParSolsets( step, parset, H ):
-            for soltab in H.getSoltabs(solset).keys():
-                ssst.append(solset+'/'+soltab)
-
-    # sanity check
-    allawedSolTypes = getParSolTypes( step, parset, H )
-    for s in ssst[:]:
-        solset, soltab = s.split('/')
-        # check that soltab exists and that the declared solset is usable
-        if solset not in getParSolsets( step, parset, H ) or \
-                soltab not in H.getSoltabs(solset).keys():
-            logging.warning("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
-            ssst.remove(s)
-        # check if the soltab is compatible with the chosen solTypes
-        elif H.getSoltab(solset, soltab)._v_title not in allawedSolTypes and allawedSolTypes != []:
-            ssst.remove(s)
-
-    return ssst
-
-
-def getParSolTypes( step, parset, H ):
-    """
-    Return the SolType list for this step.
-    The order is:
-    * local step value
-    * global value
-    * default = [] (==all)
-    """
-
-    # local val
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
-    solTypes = parset.getStringVector( stepOptName, [] )
-
-    # global val or default
-    if solTypes == []:
-        solTypes = parset.getStringVector( "LoSoTo.SolType", [] )
-
-    return solTypes
-
-
-def getParAxis( step, parset, H, axisName ):
-    """
-    Return the axis val array for this step.
-        - check if all the soltabs have this axis.
-    The order is:
-    * local
-    * local minmax
-    * global
-    * global minmax
-    * default = None (which keep all in setSelection)
-    """
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName.lower() ] )
-
-    # local
-    axisVals = parset.getString( stepOptName, '' )
-    # if the user defined a vector, load it as a vector, otherwise keep string
-    if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
-        axisVals = parset.getStringVector( stepOptName, [] )
-    
-    # minmax - local
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getDoubleVector( stepOptName+'.minmax', [] )
-        if len(axisVals) == 2: axisVals.append(1) # assume no step if not given
-        if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
-
-    # global
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getString( "LoSoTo."+axisName.lower(), '' )
-        # if the user defined a vector, load it as a vector, otherwise keep string
-        if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
-            axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
-
-    # minmax - global
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getDoubleVector( "LoSoTo."+axisName.lower()+'.minmax', [] )
-        if len(axisVals) == 2: axisVals.append(1)
-        if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
-
-    # default val
-    if axisVals == '' or axisVals == []:
-        axisVals = None
-
-    return axisVals
-
-
-def openSoltabs( H, ss_sts ):
-    """
-    Return a list of soltab objects
-    Keyword arguments:
-    ss_sts -- 'solution-set/solution-tabs' list
-    """
     soltabs = []
-    for ss_st in ss_sts:
-        ss, st = ss_st.split('/')
-        soltabs.append( H.getSoltab(ss, st) )
+    for solset in H.getSolsets():
+        for soltabName in solset.getSoltabNames():
+            if stsel.match(soltabName):
+                if step in cacheSteps:
+                    soltabs.append( solset.getSoltab(soltabName, useCache=True) )
+                else:
+                    soltabs.append( solset.getSoltab(soltabName, useCache=False) )
+
+    # axes selection
+    for soltab in soltabs:
+        userSel = {}
+        for axisName in soltab.getAxesNames():
+            userSel[axisName] = getParAxis( parser, step, axisName )
+        soltab.setSelection(**userSel)
 
     return soltabs
+
 
 def removeKeys( dic, keys = [] ):
     """
@@ -265,6 +181,7 @@ def removeKeys( dic, keys = [] ):
     return dicCopy
 
 
+############################################################################
 # unwrap fft
 def unwrap_fft(phase, iterations=3):
     """

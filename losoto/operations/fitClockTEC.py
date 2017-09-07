@@ -4,7 +4,10 @@ import numpy as np
 import numpy.ma as ma
 import sys
 import logging
-from lofar.expion import baselinefitting as fitting
+try:
+    from lofar.expion import baselinefitting as fitting
+except:
+    logging.error('No lofar.expion present, clock/tec separation not active.')
 
 # from pylab import *
 def ClockTEC_3rdorder_func(xarray, par):
