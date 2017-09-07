@@ -122,7 +122,7 @@ def getStepSoltabs(parser, step, H):
     list
         list of soltab obj with applied selection
     """
-    cacheSteps = ['clip','flag', 'norm'] # steps to use chaced data
+    cacheSteps = ['clip','flag', 'norm', 'residuals'] # steps to use chaced data
 
     # selection on soltabs
     if parser.has_option(step, 'soltab'):

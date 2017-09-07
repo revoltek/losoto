@@ -11,7 +11,6 @@ logging.debug('Loading SMOOTH module.')
 
 def run( step, parset, H ):
 
-#    import scipy.ndimage.filters
     import numpy as np
     from losoto.h5parm import solFetcher, solWriter
     from scipy.ndimage import generic_filter
