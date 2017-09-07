@@ -4,10 +4,7 @@
 # Authors:
 # Francesco de Gasperin
 # David Raffery
-# Cyril Tasse
-# Reinout van Weeren
 # Maaijke Mevius
-# Bas van der Tol
 _author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
 
 import sys, os, logging
@@ -22,9 +19,9 @@ from losoto import _logging
 import argparse
 parser = argparse.ArgumentParser(description='Combine tables in h5parm files')
 parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
-parser.add_argument('--intable', '-i', dest='intable', help='Input soltab name (e.g. sol000/tabin000)')
+parser.add_argument('--insolsset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
+parser.add_argument('--insoltab', '-t', dest='insoltab', help='Input soltab name (e.g. tabin000) - if not give use all')
 parser.add_argument('--outh5parm', '-o', dest='outh5parm', help='Output h5parm name')
-parser.add_argument('--outtable', '-t', dest='outtable', help='Output soltab name (e.g. sol000/tabout000)')
 parser.add_argument('--verbose', '-v', dest='verbose', action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--concataxis', '-c', dest='concataxis', help='Axis to concatenate (e.g. time)')
 args = parser.parse_args()
@@ -66,7 +63,8 @@ def equalArr(arr):
     return True
 
 # read all tables
-insolset, insoltab = args.intable.split('/')
+insolset = args.insolsset
+insoltab = args.insoltab
 sfs = []
 pointingNames = []; antennaNames = []
 pointingDirections = []; antennaPositions = []
@@ -182,7 +180,8 @@ for a, axis in enumerate(axes):
 
 logging.info('Writing output...')
 # output
-outsolset, outsoltab = args.outtable.split('/')
+outsolset = args.insolset
+outsoltab = args.insoltab
 h5Out = h5parm(args.outh5parm, readonly = False)
 
 # create solset (and add all antennas and directions of other solsets)

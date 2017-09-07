@@ -97,6 +97,7 @@ def run( step, parset, H ):
                     valsnew[ weights == 0 ] = vals_bkp
                 #print coord['ant'], vals, valsnew
 
+            # TODO: if phase use angular mean/median
             elif mode == 'median':
                 valsnew = np.median( vals[(weights!=0)] )
                 if replace: weights[ weights == 0] = 1
