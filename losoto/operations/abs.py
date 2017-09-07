@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Take absolute value. Needed before smooth if amplitudes are negative!
-# WEIGHT: no need to be weight compliant
-
-
 import logging
 from losoto.operations_lib import *
 
 logging.debug('Loading ABS module.')
 
-def run_parser(soltab, parser):
+def run_parser(soltab, parser, step):
     return run(soltab)
 
 def run( soltab ):
     """
+    Take absolute value. Needed before smooth if amplitudes are negative!
+    WEIGHT: no need to be weight compliant
+
     Parameters
     ----------
     soltab : soltab obj

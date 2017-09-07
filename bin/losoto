@@ -14,12 +14,10 @@ import os, sys, time, gc
 import atexit
 import tables
 import logging
-import ConfigParser
-import StringIO
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
-import losoto.operations_lib
+from losoto.losoto_lib import LosotoParser, getStepSoltabs
 
 def my_close_open_files(verbose):
     open_files = tables.file._open_files
@@ -99,11 +97,7 @@ if __name__=='__main__':
 
     # read parset and replace '#' with ';' to allow # as inline comments
     # also add [_global] fake section at beginning
-    config = StringIO.StringIO()
-    config.write('[_global]\n'+open(args.parset).read().replace('#',';'))
-    config.seek(0, os.SEEK_SET)
-    parser = ConfigParser.ConfigParser()
-    parser.readfp(config)
+    parser = LosotoParser(args.parset)
     steps = parser.sections()
 
     # Possible operations, linked to relative function
@@ -139,15 +133,15 @@ if __name__=='__main__':
 
         if step == '_global': continue # skip global setting
 
-        op = parser.get(step,'Operation')
+        op = parser.getstr(step,'Operation')
         if not op in ops:
             logging.error('Unkown operation: '+op)
             continue
 
         returncode = 0
         with operations.timer(logging, step, op) as t:
-            for soltab in losoto.operations_lib.getStepSoltabs(parser, step, H):
-                returncode += ops[ op ].run_parser( soltab, parser )
+            for soltab in getStepSoltabs(parser, step, H):
+                returncode += ops[ op ].run_parser( soltab, parser, step )
             if returncode != 0:
                logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
             else:

@@ -3,7 +3,7 @@
 
 # Some utilities for operations
 
-import sys, re, json
+import sys
 import logging
 from losoto.h5parm import h5parm
 import multiprocessing
@@ -83,90 +83,6 @@ class multiprocManager(object):
         self.inQueue.join()
 
 
-def getParAxis( parser, step, axisName ):
-    """
-    Parameters
-    ----------
-    parser : parser obj
-        configuration file
-    step : str
-        this step
-    axisName : str
-        an axis name
-
-    Returns
-    -------
-    str, dict or list
-        a selection criteria
-    """
-
-    axisOpt = None
-    if parser.has_option(step, axisName.lower()):
-        axisOpt = parser.get(step, axisName.lower())
-        # if vector/dict, reread it
-        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
-            axisOpt = json.loads( parser.get(step, axisName.lower()) )
-
-    elif parser.has_option('_global', axisName.lower()):
-        axisOpt = parser.get('_global', axisName.lower())
-        # if vector/dict, reread it
-        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
-            axisOpt = json.loads( parser.get('_global', axisName.lower()) )
-
-    if axisOpt == '' or axisOpt == []:
-        axisOpt = None
- 
-    return axisOpt
-
-
-def getStepSoltabs(parser, step, H):
-    """
-    Return a list of soltabs object for 
-
-    Parameters
-    ----------
-    parser : parser obj
-        configuration file
-    step : str
-        current step
-    H : h5parm obj
-        the h5parm object
-
-    Returns
-    -------
-    list
-        list of soltab obj with applied selection
-    """
-    cacheSteps = ['FLAG'] # steps to use chaced data
-
-    # selection on soltabs
-    if parser.has_option(step, 'soltab'):
-        stsel = parser.get(step, 'soltab')
-    elif parser.has_option('_global', 'soltab'):
-        stsel = parser.get('_global', 'soltab')
-    else:
-        stsel = '*/*' # select all
-    stsel = re.compile(stsel)
-
-    soltabs = []
-    for solset in H.getSolsets():
-        for soltabName in solset.getSoltabNames():
-            if stsel.match(soltabName):
-                if step in cacheSteps:
-                    soltabs.append( solset.getSoltab(soltabName, useCache=True) )
-                else:
-                    soltabs.append( solset.getSoltab(soltabName, useCache=False) )
-
-    # axes selection
-    for soltab in soltabs:
-        userSel = {}
-        for axisName in soltab.getAxesNames():
-            userSel[axisName] = getParAxis( parser, step, axisName )
-        soltab.setSelection(**userSel)
-
-    return soltabs
-
-
 def removeKeys( dic, keys = [] ):
     """
     Remove a list of keys from a dict and return a new one.
@@ -181,8 +97,6 @@ def removeKeys( dic, keys = [] ):
     return dicCopy
 
 
-############################################################################
-# unwrap fft
 def unwrap_fft(phase, iterations=3):
     """
     Unwrap phase using Fourier techniques.
@@ -228,7 +142,6 @@ def unwrap_fft(phase, iterations=3):
     return phase2D[:, 0]
 
 
-# unwrap windowed
 def unwrap(phase, window_size=5):
     """
     Unwrap phase by estimating the trend of the phase signal.
@@ -277,7 +190,6 @@ def unwrap(phase, window_size=5):
     return out
 
 
-# unwrap huib
 def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
     clip_range = [ 170., 180. ] ):
     """

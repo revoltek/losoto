@@ -818,7 +818,7 @@ class Soltab( object ):
         self.axes[axis][self.selection[axisIdx]] = vals
 
 
-    def setValues(self, vals, weight = False):
+    def setValues(self, vals, weight = False, selection = None):
         """
         Save values in the val grid
 
@@ -829,7 +829,11 @@ class Soltab( object ):
             if a float is passed or the selected data are set to that value
         weight : bool, optional
             If true store in the weights instead that in the vals, by default False
+        selection : selection format, optional
+            To set only a subset of data, overriding global selection, by default use global selection
         """
+        if selection is None: selection = self.selection
+
         if self.useCache:
             if weight: dataVals = self.cacheWeight
             else: dataVals = self.cacheVal
@@ -843,17 +847,17 @@ class Soltab( object ):
         # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         try:
             # the float check allows quick reset of large arrays to a single value
-            if isinstance(vals, (np.floating, float)): dataVals[tuple(self.selection)] = vals
+            if isinstance(vals, (np.floating, float)): dataVals[tuple(selection)] = vals
             # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
-            else: dataVals[tuple(self.selection)] = np.reshape(vals, dataVals[tuple(self.selection)].shape)
+            else: dataVals[tuple(selection)] = np.reshape(vals, dataVals[tuple(selection)].shape)
         except:
-            logging.debug('Optimizing selection writing '+str(self.selection))
-            selectionListsIdx = [i for i, s in enumerate(self.selection) if type(s) is list]
-            subSelection = self.selection[:]
+            logging.debug('Optimizing selection writing '+str(selection))
+            selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
+            subSelection = selection[:]
             # create a subSelection also for the "vals" array
             subSelectionForVals = [slice(None) for i in xrange(len(subSelection))]
             # cycle across lists and save data index by index
-            for selectionListValsIter in itertools.product(*[self.selection[selectionListIdx] for selectionListIdx in selectionListsIdx[1:]]):
+            for selectionListValsIter in itertools.product(*[selection[selectionListIdx] for selectionListIdx in selectionListsIdx[1:]]):
                 for i, selectionListIdx in enumerate(selectionListsIdx[1:]):
                     # this is the sub selection which has a slice for every slice and a single value for every list
                     subSelection[selectionListIdx] = selectionListValsIter[i]
@@ -1054,6 +1058,7 @@ class Soltab( object ):
                         # for the return selection use the complete axis and find the correct index
                         returnSelection.append( list(np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0]) )
                         i += 1
+
                 # costly command
                 data = dataVals[tuple(refSelection)]
                 if weight:
