@@ -164,52 +164,52 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     Parameters
     ----------
     axesInPlot : array of str
-
+        1- or 2-element array which says the coordinates to plot (2 for 3D plots).
 
     axisInTable : str, optional
-
+        the axis to plot on a page - e.g. ant to get all antenna's on one file. By default ''.
 
     axisInCol : str, optional
-
+        The axis to plot in different colours - e.g. pol to get correlations with different colors. By default ''.
 
     axisDiff : str, optional
-
+        This must be a len=2 axis and the plot will have the differential value - e.g. 'pol' to plot XX-YY. By default ''.
 
     NColFig : int, optional
-
+        Number of columns in a multi-table image. By default is automatically chosen.
 
     figSize : array of int, optional
-
+        Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.
 
     minmax : array of float, optional
-
+        Min max value for the independent variable (0 means automatic). By default 0.
 
     log : bool, optional
-
+        Use Log='XYZ' to set which axes to put in Log. By default ''.
 
     plotFlag : bool, optional
-    
+        Whether to plot also flags as red points in 2D plots. By default False.
     
     doUnwrap : bool, optional
-    
+        Unwrap phases. By default False.
     
     refAnt : str, optional
-    
+        Reference antenna for phases. By default None.
     
     soltabsToAdd : str, optional
-    
+        Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
     
     makeAntPlot : bool, optional
-    
+        Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]. By default False.
     
     makeMovie : bool, optional
-    
+        Make a movie summing up all the produced plots, by default False.
     
     prefix : str, optional
-    
+        Prefix to add before the self-generated filename, by default None.
     
     ncpu : int, optional
-    
+        Number of cpus, by default all available.
     """
     import os, random
     import numpy as np
