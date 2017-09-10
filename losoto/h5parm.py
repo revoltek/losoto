@@ -828,7 +828,8 @@ class Soltab( object ):
             if a float is passed or the selected data are set to that value
 
         selection : selection format, optional
-            To set only a subset of data, overriding global selection, by default use global selection
+            To set only a subset of data, overriding global selectioan, by default use global selection.
+            Global seclection is restoread at the end of the function. This is used to set values in a loop of getValueIter().
 
         weight : bool, optional
             If true store in the weights instead that in the vals, by default False

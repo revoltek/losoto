@@ -7,24 +7,24 @@ from losoto.operations_lib import *
 logging.debug('Loading CROSSDELAY module.')
 
 def run_parser(soltab, parser, step):
-    outTab = parser.getstr( step, 'outtab', 'phasediff' )
-    maxres = parser.getfloat( step, 'maxres', 1. )
+    soltabOut = parser.getstr( step, 'soltabOut', 'phasediff' )
+    maxResidual = parser.getfloat( step, 'maxResidual', 1. )
     smooth = parser.getint( step, 'smooth', 0 )
     replace = parser.getbool( step, 'replace', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
-    return run(soltab, outTab, maxres, smooth, replace, refAnt)
+    return run(soltab, soltabOut, maxResidual, smooth, replace, refAnt)
 
 
-def run( soltab, outTab='phasediff', maxres=1., smooth=0, replace=False, refAnt='' ):
+def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False, refAnt='' ):
     """
     Estimate cross-delay
 
     Parameters
     ----------
-    outTab : str, optional
+    soltabOut : str, optional
         output table name (same solset), by deault "phasediff".
 
-    maxres : float, optional
+    maxResidual : float, optional
         Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.
 
     smooth : int, optional
@@ -64,7 +64,7 @@ def run( soltab, outTab='phasediff', maxres=1., smooth=0, replace=False, refAnt=
 
     # create new table
     solset = soltab.getSolset()
-    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = outTab, axesNames=soltab.getAxesNames(), \
+    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
                       axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
                       vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False), parmdbType=soltab.obj._v_attrs['parmdb_type'])
     soltabout.addHistory('Created by CROSSDELAY operation.')
@@ -122,7 +122,7 @@ def run( soltab, outTab='phasediff', maxres=1., smooth=0, replace=False, refAnt=
                 #print "t:", t, "result:", fitresultdelay, "residual:", residual
 
                 fit_delays.append(fitresultdelay[0])
-                if maxres == 0 or residual < maxres:
+                if maxResidual == 0 or residual < maxResidual:
                     fitdelayguess = fitresultdelay[0]
                     fit_weights.append(1.)
                 else:       

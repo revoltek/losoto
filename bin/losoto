@@ -73,6 +73,7 @@ if __name__=='__main__':
         logging.critical('File \"%s\" is not a valid HDF5-file!'%(h5parmFile))
         sys.exit(1)
 
+    # do actions that do not require a parset
     if args.info:
         H = h5parm(args.h5parm, readonly=True)
         # List h5parm information if desired
@@ -95,8 +96,7 @@ if __name__=='__main__':
         logging.critical("Missing parset file, I don't know what to do :'(")
         sys.exit(1)
 
-    # read parset and replace '#' with ';' to allow # as inline comments
-    # also add [_global] fake section at beginning
+    # read parset
     parser = LosotoParser(args.parset)
     steps = parser.sections()
 

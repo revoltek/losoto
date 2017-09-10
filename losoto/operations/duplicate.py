@@ -7,25 +7,25 @@ from losoto.operations_lib import *
 logging.debug('Loading DUPLICATE module.')
 
 def run_parser(soltab, parser, step):
-    outTab = parser.getstr( step, 'outtab', '' )
-    return run(soltab, outTab)
+    soltabOut = parser.getstr( step, 'soltabOut', '' )
+    return run(soltab, soltabOut)
 
 
-def run( soltab, outTab=''):
+def run( soltab, soltabOut=''):
     """
     Duplicate a table
 
     Parameters
     ----------
-    outTab : str, optional
+    soltabOut : str, optional
         Output table name. By default choose next available from table type.
     """
 
-    if outTab == '':
-        outTab = None
+    if soltabOut == '':
+        sosoltabOut = None
 
     solset = soltab.getSolset()
-    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = outTab, axesNames=soltab.getAxesNames(), \
+    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
         axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
         vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False), parmdbType=soltab.obj._v_attrs['parmdb_type'])
 

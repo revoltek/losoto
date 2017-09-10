@@ -86,15 +86,50 @@ class multiprocManager(object):
 def removeKeys( dic, keys = [] ):
     """
     Remove a list of keys from a dict and return a new one.
-    Keyword arguments:
-    dic -- the input dictionary
-    keys -- a list of arguments to remove or a string for single argument
+    
+    Parameters
+    ----------
+    dic : dcit
+        The input dictionary.
+    keys : list of str
+        A list of arguments to remove or a string for single argument.
+
+    Returns
+    -------
+    dict
+        Dictionary with removed keys.
     """
     dicCopy = dict(dic)
     if type(keys) is str: keys = [keys]
     for key in keys:
         del dicCopy[key]
     return dicCopy
+
+
+def normalize_phase(phase):
+    """
+    Normalize phase to the range [-pi, pi].
+    
+    Parameters
+    ----------
+    phase : array of float
+        Phase to normalize.
+    
+    Returns
+    -------
+    array of float
+        Normalized phases.
+    """
+    import numpy as np
+
+    # Convert to range [-2*pi, 2*pi].
+    out = np.fmod(phase, 2.0 * np.pi)
+    # Remove nans
+    np.putmask(out, out!=out, 0)
+    # Convert to range [-pi, pi]
+    out[out < -np.pi] += 2.0 * np.pi
+    out[out > np.pi] -= 2.0 * np.pi
+    return out
 
 
 def unwrap_fft(phase, iterations=3):

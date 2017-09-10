@@ -8,11 +8,11 @@ logging.debug('Loading FARADAY module.')
 
 def run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '')
-    maxRes = parser.getfloat( step, 'maxRes', 1. )
-    return run(soltab, refAnt, maxRes)
+    maxResidual = parser.getfloat( step, 'maxResidual', 1. )
+    return run(soltab, refAnt, maxResidual)
 
 
-def run( soltab, refAnt='', maxRes=1. ):
+def run( soltab, refAnt='', maxResidual=1. ):
     """
     Faraday rotation extraction.
 
@@ -21,7 +21,7 @@ def run( soltab, refAnt='', maxRes=1. ):
     refAnt : str, optional
         Reference antenna, by default the first.
 
-    maxRes : float, optional
+    maxResidual : float, optional
         Max average residual in radians before flagging datapoint, by default 1. If 0: no check.
 
     """
@@ -113,7 +113,7 @@ def run( soltab, refAnt='', maxRes=1. ):
 
 #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
 
-                    if maxRes == 0 or residual < maxRes:
+                    if maxResidual == 0 or residual < maxResidual:
                         fitrmguess = fitresultrm_wav[0]
                         weight = 1
                     else:       

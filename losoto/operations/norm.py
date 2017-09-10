@@ -7,18 +7,18 @@ from losoto.operations_lib import *
 logging.debug('Loading NORM module.')
 
 def run_parser(soltab, parser, step):
-    normAxes = parser.getarray( step, 'normAxes' ) # no default
+    axesToNorm = parser.getarray( step, 'axesToNorm' ) # no default
     normVal = parser.getfloat( step, 'normVal', 1.)
-    return run(soltab, normAxes, normVal)
+    return run(soltab, axesToNorm, normVal)
 
-def run( soltab, normAxes, normVal = 1. ):
+def run( soltab, axesToNorm, normVal = 1. ):
     """
     Normalize the solutions to a given value
     WEIGHT: Weights compliant
 
     Parameters
     ----------
-    normAxes : array of str
+    axesToNorm : array of str
         Axes along which compute the normalization.
 
     normVal : float, optional
@@ -30,12 +30,12 @@ def run( soltab, normAxes, normVal = 1. ):
 
     # input check
     axesNames = soltab.getAxesNames()
-    for normAxis in normAxes:
+    for normAxis in axesToNorm:
         if normAxis not in axesNames:
             logging.error('Normalization axis '+normAxis+' not found.')
             return 1
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=normAxes, weight = True):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToNorm, weight = True):
 
         # rescale solutions
         if np.sum(weights) == 0: continue # skip flagged selections
@@ -48,6 +48,6 @@ def run( soltab, normAxes, normVal = 1. ):
         soltab.setValues(vals, selection)
 
     soltab.flush()
-    soltab.addHistory('NORM (on axis %s)' % (normAxes))
+    soltab.addHistory('NORM (on axis %s)' % (axesToNorm))
 
     return 0

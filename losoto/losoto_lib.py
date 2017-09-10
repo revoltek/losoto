@@ -6,67 +6,87 @@
 import os, sys
 import ast, re
 import logging
+from ConfigParser import RawConfigParser
 
-class LosotoParser(object):
+class LosotoParser(RawConfigParser):
 
     def __init__(self, parsetFile):
-        import StringIO, ConfigParser
-        self.parsetFile = parsetFile
+        RawConfigParser.__init__(self)
+
+        # read parset and replace '#' with ';' to allow # as inline comments
+        # also add [_global] fake section at beginning
+        import StringIO
         config = StringIO.StringIO()
         config.write('[_global]\n'+open(parsetFile).read().replace('#',';'))
         config.seek(0, os.SEEK_SET)
-        self.parser = ConfigParser.RawConfigParser()
-        self.parser.readfp(config)
-
-    def sections(self):
-        return self.parser.sections()
+        self.readfp(config)
 
     def getstr(self, s, v, default=None):
-        if self.parser.has_option(s, v):
-            return self.parser.get(s, v)
+        if self.has_option(s, v):
+            return self.parser.get(s, v).replace('\'','').replace('"','') # remove apex
         elif default is None:
-            logging.error('Section: %s - Values: %s: required.' % (s, v))
+            logging.error('Section: %s - Values: %s: required (expected string).' % (s, v))
         else:
             return default
 
     def getbool(self, s, v, default=None):
-        if self.parser.has_option(s, v):
+        if self.has_option(s, v):
             return self.parser.getboolean(s, v)
         elif default is None:
-            logging.error('Section: %s - Values: %s: required.' % (s, v))
+            logging.error('Section: %s - Values: %s: required (expected bool).' % (s, v))
         else:
             return default
 
     def getfloat(self, s, v, default=None):
-        if self.parser.has_option(s, v):
+        if self.has_option(s, v):
             return self.parser.getfloat(s, v)
         elif default is None:
-            logging.error('Section: %s - Values: %s: required.' % (s, v))
+            logging.error('Section: %s - Values: %s: required (expected float).' % (s, v))
         else:
             return default
 
     def getint(self, s, v, default=None):
-        if self.parser.has_option(s, v):
+        if self.has_option(s, v):
             return self.parser.getint(s, v)
         elif default is None:
-            logging.error('Section: %s - Values: %s: required.' % (s, v))
+            logging.error('Section: %s - Values: %s: required (expected int).' % (s, v))
         else:
             return default
 
     def getarray(self, s, v, default=None):
-        if self.parser.has_option(s, v):
+        if self.has_option(s, v):
             try:
-                return ast.literal_eval( self.parser.get(s, v) )
+                return list(ast.literal_eval( self.parser.get(s, v) ))
             except:
-                logging.error('Problem interpreting section: %s - values: %s' % (s, v))
-                sys.exit(1)
+                logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...], strings shoudl have \'apex\')' % (s, v))
         elif default is None:
             logging.error('Section: %s - Values: %s: required.' % (s, v))
         else:
             return default
 
-    def has_option(self, s, v):
-        return self.parser.has_option(s, v)
+    def getarraystr(self, s, v, default=None):
+        try:
+            return [str(x) for x in self.getarray(s, v, default)]
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of str.)' % (s, v))
+
+    def getarraybool(self, s, v, default=None):
+        try:
+            return [bool(x) for x in self.getarray(s, v, default)]
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of bool.)' % (s, v))
+
+    def getarrayfloat(self, s, v, default=None):
+        try:
+            return [float(x) for x in self.getarray(s, v, default)]
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of float.)' % (s, v))
+
+    def getarrayint(self, s, v, default=None):
+        try:
+            return [int(x) for x in self.getarray(s, v, default)]
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of int.)' % (s, v))
 
 
 def getParAxis( parser, step, axisName ):
@@ -122,7 +142,7 @@ def getStepSoltabs(parser, step, H):
     list
         list of soltab obj with applied selection
     """
-    cacheSteps = ['clip','flag', 'norm', 'residuals'] # steps to use chaced data
+    cacheSteps = ['clip','flag', 'norm', 'residuals', 'smooth'] # steps to use chaced data
 
     # selection on soltabs
     if parser.has_option(step, 'soltab'):
