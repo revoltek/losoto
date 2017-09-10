@@ -11,20 +11,25 @@ logging.debug('Loading EXAMPLE module.')
 # this funct is called by losoto to set parameters and call the real run()
 def run_parser(soltab, parser, step):
     opt1 = parser.getfloat( step, 'opt1') # no default
-    opt2 = parser.getint( step, 'opt2', 0 )
-    return run(soltab, opt1, opt2)
+    opt2 = parser.getarrayfloat( step, 'opt3', [1., 2., 3.])
+    opt3 = parser.getint( step, 'opt2', 0 )
+    return run(soltab, opt1, opt2, opt3)
 
 # this funct can be called by python directly
-def run( soltab, opt1, opt2 = 0 ):
+# parameters that are non optional require the default value equal to the one defined for the parset above
+def run( soltab, opt1, opt2 = [1., 2., 3.], opt3 = 0 ):
     """
     Generic unspecified step for easy expansion.
 
     Parameters
     ----------
-    opt1 : x
+    opt1 : float
         Is a mandatory parameter.
 
-    opt2 : x, optional
+    opt2 : list of float, optional
+        Is optional, by default [1.,2.,3.]
+
+    opt2 : int, optional
         Is optional, by default 0.
     """
 

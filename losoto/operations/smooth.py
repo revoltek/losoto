@@ -7,8 +7,8 @@ from losoto.operations_lib import *
 logging.debug('Loading SMOOTH module.')
 
 def run_parser(soltab, parser, step):
-    axesToSmooth = parser.getarray( step, 'axesToSmooth' ) # no default
-    size = parser.getarray( step, 'size', [] )
+    axesToSmooth = parser.getarraystr( step, 'axesToSmooth' ) # no default
+    size = parser.getarrayint( step, 'size', [] )
     mode = parser.getstr( step, 'mode', 'runningmedian' )
     degree = parser.getint( step, 'degree', 1 )
     replace = parser.getbool( step, 'replace', False )

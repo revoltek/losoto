@@ -7,8 +7,8 @@ from losoto.operations_lib import *
 logging.debug('Loading FLAGEXTEND module.')
 
 def run_parser(soltab, parser, step):
-    axesToExt = parser.getarray( step, 'axesToExt') # no default
-    size = parser.getarray( step, 'size' ) # no default
+    axesToExt = parser.getarraystr( step, 'axesToExt') # no default
+    size = parser.getarrayint( step, 'size' ) # no default
     percent = parser.getfloat( step, 'percent', 50. )
     maxCycles = parser.getint( step, 'maxCycles', 3 )
     ncpu = parser.getint( '_general', 'ncpu', 0 )

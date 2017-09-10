@@ -12,7 +12,7 @@ from losoto.operations_lib import *
 logging.debug('Loading RESIDUALS module.')
 
 def run_parser(soltab, parser, step):
-    soltabsToSub = parser.getarray( step, 'soltabsToSub' ) # no default
+    soltabsToSub = parser.getarraystr( step, 'soltabsToSub' ) # no default
     ratio = parser.getbool( step, 'ratio', False )
     return run(soltab, soltabsToSub, ratio)
 

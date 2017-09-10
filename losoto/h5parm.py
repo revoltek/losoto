@@ -630,7 +630,10 @@ class Soltab( object ):
 
     def setSelection(self, **args):
         """
-        Set a selection criteria.
+        Set a selection criteria. For each axes there can be a:
+            * string: regexp
+            * list: use only the listed values
+            * dict: with min/max/[step] to select a range.
 
         Parameters
         ----------
@@ -666,12 +669,14 @@ class Soltab( object ):
             # dict -> min max
             elif type(selVal) is dict:
                 axisVals = self.getAxisValues(axis)
+                # some checks
                 if 'min' in selVal and selVal['min'] > np.max(axisVals):
                     logging.error("Selection with min > than maximum value. Use all available values.")
                     continue
                 if 'max' in selVal and selVal['max'] < np.min(axisVals):
                     logging.error("Selection with max < than minimum value. Use all available values.")
                     continue
+
                 if 'min' in selVal and 'max' in selVal:
                     self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0], np.where(axisVals <= selVal['max'])[0][-1]+1)
                 elif 'min' in selVal:

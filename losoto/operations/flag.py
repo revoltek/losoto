@@ -7,8 +7,8 @@ from losoto.operations_lib import *
 logging.debug('Loading FLAG module.')
 
 def run_parser(soltab, parser, step):
-    axesToFlag = parser.getarray( step, 'axesToFlag') # no default
-    order = parser.getarray( step, 'order') # no default
+    axesToFlag = parser.getarraystr( step, 'axesToFlag') # no default
+    order = parser.getarrayint( step, 'order') # no default
     maxCycles = parser.getint( step, 'maxCycles', 5)
     maxRms = parser.getfloat( step, 'maxRms', 5.)
     maxRmsNoise = parser.getfloat( step, 'maxRmsNoise', 0.)

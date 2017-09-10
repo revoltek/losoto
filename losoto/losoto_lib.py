@@ -23,7 +23,7 @@ class LosotoParser(RawConfigParser):
 
     def getstr(self, s, v, default=None):
         if self.has_option(s, v):
-            return self.parser.get(s, v).replace('\'','').replace('"','') # remove apex
+            return self.get(s, v).replace('\'','').replace('"','') # remove apex
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected string).' % (s, v))
         else:
@@ -31,7 +31,7 @@ class LosotoParser(RawConfigParser):
 
     def getbool(self, s, v, default=None):
         if self.has_option(s, v):
-            return self.parser.getboolean(s, v)
+            return RawConfigParser.getboolean(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected bool).' % (s, v))
         else:
@@ -39,7 +39,7 @@ class LosotoParser(RawConfigParser):
 
     def getfloat(self, s, v, default=None):
         if self.has_option(s, v):
-            return self.parser.getfloat(s, v)
+            return RawConfigParser.getfloat(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected float).' % (s, v))
         else:
@@ -47,7 +47,7 @@ class LosotoParser(RawConfigParser):
 
     def getint(self, s, v, default=None):
         if self.has_option(s, v):
-            return self.parser.getint(s, v)
+            return RawConfigParser.getint(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected int).' % (s, v))
         else:
@@ -56,9 +56,9 @@ class LosotoParser(RawConfigParser):
     def getarray(self, s, v, default=None):
         if self.has_option(s, v):
             try:
-                return list(ast.literal_eval( self.parser.get(s, v) ))
+                return self.getstr(s, v).replace(' ','').split(',') # split also turns str into 1-element lists
             except:
-                logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...], strings shoudl have \'apex\')' % (s, v))
+                logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...])' % (s, v))
         elif default is None:
             logging.error('Section: %s - Values: %s: required.' % (s, v))
         else:
@@ -91,6 +91,11 @@ class LosotoParser(RawConfigParser):
 
 def getParAxis( parser, step, axisName ):
     """
+    Axes values can be selected with:
+    - an array of values
+    - a string (reg exp): passed as axisName.regexp = ...
+    - a min,max,step format: passed as axisName.minmaxstep = ...
+
     Parameters
     ----------
     parser : parser obj
@@ -106,20 +111,26 @@ def getParAxis( parser, step, axisName ):
         a selection criteria
     """
     axisOpt = None
-    if parser.has_option(step, axisName):
-        axisOpt = parser.getstr(step, axisName)
-        # if vector/dict, reread it
-        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
-            axisOpt = ast.literal_eval( parser.getstr(step, axisName) )
 
+    if parser.has_option(step, axisName):
+        axisOpt = parser.getarray(step, axisName)
+    elif parser.has_option(step, axisName+'.regexp'):
+        axisOpt = parser.getstr(step, axisName+'.regexp')
+    elif parser.has_option(step, axisName+'.minmaxstep'):
+        axisOpt = parser.getarray(step, axisName+'.minmaxstep')
+
+    # global options
     elif parser.has_option('_global', axisName):
-        axisOpt = parser.getstr('_global', axisName)
-        # if vector/dict, reread it
-        if axisOpt != '' and (axisOpt[0] == '[' and axisOpt[-1] == ']') or (axisOpt[0] == '{' and axisOpt[-1] == '}'):
-            axisOpt = ast.literal_eval( parser.getstr('_global', axisName) )
+        axisOpt = parser.getarray('_global', axisName)
+    elif parser.has_option('_global', axisName+'.regexp'):
+        axisOpt = parser.getstr('_global', axisName+'.regexp')
+    elif parser.has_option('_global', axisName+'.minmaxstep'):
+        axisOpt = parser.getarray('_global', axisName+'.minmaxstep')
 
     if axisOpt == '' or axisOpt == []:
         axisOpt = None
+
+    print axisOpt, axisName
  
     return axisOpt
 
@@ -146,13 +157,13 @@ def getStepSoltabs(parser, step, H):
 
     # selection on soltabs
     if parser.has_option(step, 'soltab'):
-        stsel = ast.literal_eval(parser.getstr(step, 'soltab'))
+        stsel = parser.getarraystr(step, 'soltab')
     elif parser.has_option('_global', 'soltab'):
-        stsel = ast.literal_eval(parser.getstr('_global', 'soltab'))
+        stsel = parser.getarraystr('_global', 'soltab')
     else:
         stsel = '*/*' # select all
-    if not type(stsel) is list: stsel = [stsel]
-
+    #if not type(stsel) is list: stsel = [stsel]
+    
     soltabs = []
     for solset in H.getSolsets():
         for soltabName in solset.getSoltabNames():

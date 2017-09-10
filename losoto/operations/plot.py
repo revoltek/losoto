@@ -7,18 +7,18 @@ from losoto.operations_lib import *
 logging.debug('Loading PLOT module.')
 
 def run_parser(soltab, parser, step):
-    axesInPlot = parser.getarray( step, 'axesInPlot' ) # no default
-    axisInTable = parser.getarray( step, 'axisInTable', [] )
-    axisInCol = parser.getarray( step, 'axisInCol', [] )
-    axisDiff = parser.getarray( step, 'axisDiff', [] )
+    axesInPlot = parser.getarraystr( step, 'axesInPlot' ) # no default
+    axisInTable = parser.getstr( step, 'axisInTable', '' )
+    axisInCol = parser.getstr( step, 'axisInCol', '' )
+    axisDiff = parser.getstr( step, 'axisDiff', '' )
     NColFig = parser.getint( step, 'NColFig', 0 )
-    figSize = parser.getarray( step, 'figSize', [] )
-    minmax = parser.getarray( step, 'minmax', [0,0] )
+    figSize = parser.getarrayint( step, 'figSize', [] )
+    minmax = parser.getarrayfloat( step, 'minmax', [0,0] )
     log = parser.getstr( step, 'log', '' )
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
-    soltabsToAdd = parser.getarray( step, 'soltabToAdd', [] )
+    soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
@@ -155,32 +155,61 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         plt.close()
 
 
-def run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
-               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[], minmax=[0,0], log='', \
+               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
-    WEIGHT: flag-only compliant
+    WEIGHT: flag-only compliant, no need for weight
 
     Parameters
     ----------
     axesInPlot : array of str
 
 
-    axisInTable : str
-    axisInCol
-    axisDiff
-    NColFig
-    figSize
-    minmax
-    log
-    plotFlag
-    doUnwrap
-    refAnt
-    soltabsToAdd
-    makeAntPlot
-    makeMovie
-    prefix
-    ncpu
+    axisInTable : str, optional
+
+
+    axisInCol : str, optional
+
+
+    axisDiff : str, optional
+
+
+    NColFig : int, optional
+
+
+    figSize : array of int, optional
+
+
+    minmax : array of float, optional
+
+
+    log : bool, optional
+
+
+    plotFlag : bool, optional
+    
+    
+    doUnwrap : bool, optional
+    
+    
+    refAnt : str, optional
+    
+    
+    soltabsToAdd : str, optional
+    
+    
+    makeAntPlot : bool, optional
+    
+    
+    makeMovie : bool, optional
+    
+    
+    prefix : str, optional
+    
+    
+    ncpu : int, optional
+    
     """
     import os, random
     import numpy as np
@@ -188,9 +217,30 @@ def run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, 
     logging.info("Plotting soltab: "+soltab.name)
 
     # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
+
+    # str2list
+    if axisInTable == '': axisInTable = []
+    else: axisInTable = [axisInTable]
+    if axisInPlot == '': axisInPlot = []
+    else: axisInPlot = [axisInPlot]
+    if axisInCol == '': axisInCol = []
+    else: axisInCol = [axisInCol]
+    if axisInDiff == '': axisInDiff = []
+    else: axisInDiff = [axisInDiff]
+
+    if len(set(axisInTable+axesInPlot+axisInCol+axisDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
+        logging.error('Axis defined multiple times.')
+        return 1
+
+    # just because we use lists, check that they are 1-d
+    if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisDiff) > 1:
+        logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
+        return 1
+
+    for axis in axesInPlot:
+        if axis not in soltab.getAxesNames():
+            logging.error('Axis \"'+axis+'\" not found.')
+            return 1
 
     if makeMovie: 
         prefix = prefix+'__tmp__'
@@ -206,10 +256,9 @@ def run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, 
     solset = soltab.getSolset()
     soltabsToAdd = [ solset.getSoltab(soltabName) for soltabName in soltabsToAdd ]
 
-    for axis in axesInPlot:
-        if axis not in soltab.getAxesNames():
-            logging.error('Axis \"'+axis+'\" not found.')
-            return 1
+    if ncpu == 0:
+        import multiprocessing
+        ncpu = multiprocessing.cpu_count()
 
     cmesh = False
     if len(axesInPlot) == 2:
@@ -219,15 +268,7 @@ def run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, 
     elif len(axesInPlot) != 1:
         logging.error('Axes must be a len 1 or 2 array.')
         return 1
-
-    if len(set(axisInTable+axesInPlot+axisInCol+axisDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
-        logging.error('Axis defined multiple times.')
-        return 1
-
-    # just because we use lists, check that they are 1-d
-    if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisDiff) > 1:
-        logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
-        return 1
+    # end input check
 
     # all axes that are not iterated by anything else
     axesInFile = soltab.getAxesNames()

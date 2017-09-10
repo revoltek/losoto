@@ -7,7 +7,7 @@ from losoto.operations_lib import *
 logging.debug('Loading CLIP module.')
 
 def run_parser(soltab, parser, step):
-    axesToClip = parser.getarray( step, 'axesToClip' ) # no default
+    axesToClip = parser.getarraystr( step, 'axesToClip' ) # no default
     clipLevel = parser.getfloat( step, 'clipLevel', 5. )
     log = parser.getbool( step, 'log', True )
     return run(soltab, axesToClip, clipLevel, log)
@@ -19,7 +19,7 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
 
     Parameters
     ----------
-    axesToClip : list
+    axesToClip : list of str
         axes along which to calculate the median
 
     clipLevel : float, optional
