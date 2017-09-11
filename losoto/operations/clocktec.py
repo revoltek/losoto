@@ -63,7 +63,8 @@ def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=Fal
        return 1
 
     # Collect station properties
-    station_dict = H.getAnt(solsetname)
+    solset = soltab.getSolset()
+    station_dict = solset.getAnt()
     stations = soltab.getAxisValues('ant')
     station_positions = np.zeros((len(stations), 3), dtype=np.float)
     for i, station_name in enumerate(stations):
@@ -112,7 +113,6 @@ def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=Fal
         clock[np.logical_not(weights)]=0
         weights=np.float16(weights)
 
-        solset = soltab.getSolset()
         if combinePol:
             tf_st = solset.makeSoltab('tec',
                              axesNames=['time', 'ant'], axesVals=[times, stations],

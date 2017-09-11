@@ -9,6 +9,14 @@ import logging
 from ConfigParser import RawConfigParser
 
 class LosotoParser(RawConfigParser):
+    """
+    A parser for losoto parset files.
+
+    Parameters
+    ----------
+    parsetFile : str
+        Name of the parset file.
+    """
 
     def __init__(self, parsetFile):
         RawConfigParser.__init__(self)
@@ -100,8 +108,10 @@ def getParAxis( parser, step, axisName ):
     ----------
     parser : parser obj
         configuration file
+
     step : str
         this step
+    
     axisName : str
         an axis name
 
@@ -143,8 +153,10 @@ def getStepSoltabs(parser, step, H):
     ----------
     parser : parser obj
         configuration file
+
     step : str
         current step
+
     H : h5parm obj
         the h5parm object
 

@@ -15,22 +15,22 @@ if int(tables.__version__.split('.')[0]) < 3:
     sys.exit(1)
 
 class h5parm( object ):
+    """
+    Create an h5parm object.
+
+    Parameters
+    ----------
+    h5parmFile : str
+        H5parm filename
+    readonly : bool, optional
+        if True the table is open in readonly mode, by default True
+    complevel : int, optional
+        compression level from 0 to 9 when creating the file, by default 5
+    complib : str, optional
+        library for compression: lzo, zlib, bzip2, by default zlib
+    """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
-        """
-        Create an h5parm object.
-
-        Parameters
-        ----------
-        h5parmFile : str
-            H5parm filename
-        readonly : bool, optional
-            if True the table is open in readonly mode, by default True
-        complevel : int, optional
-            compression level from 0 to 9 when creating the file, by default 5
-        complib : str, optional
-            library for compression: lzo, zlib, bzip2, by default zlib
-        """
 
         self.H = None # variable to store the pytable object
         self.fileName = h5parmFile
@@ -86,19 +86,19 @@ class h5parm( object ):
     def makeSolset(self, solsetName=None, addTables=True):
         """
         Create a new solset, if the provided name is not given or exists
-        then it falls back on the first available sol###
+        then it falls back on the first available sol###.
 
         Parameters
         ----------
         solset : str
-            name of the solution set
+            Name of the solution set.
         addTables : bool, optional
-            if True add antenna/direction/array tables, by default True
+            If True add antenna/direction/array tables, by default True.
 
         Returns
         -------
         solset obj
-            newly created solset object
+            Newly created solset object.
         """
 
         if type(solsetName) is str and not re.match(r'^[A-Za-z0-9_-]+$', solsetName):
@@ -134,10 +134,12 @@ class h5parm( object ):
 
     def getSolsets(self):
         """
+        Get all solution set objects.
+
         Returns
         -------
         list
-            list of all solsets objects
+            A list of all solsets objects.
         """
         solsets = []
         for solset in self.H.root._v_groups.itervalues():
@@ -147,10 +149,12 @@ class h5parm( object ):
 
     def getSolsetsNames(self):
         """
+        Get all solution set names.
+
         Returns
         -------
         list
-            list of str of all solsets names
+            A list of str of all solsets names.
         """
         solsetNames = []
         for solsetName in self.H.root._v_groups.iterkeys():
@@ -160,15 +164,17 @@ class h5parm( object ):
 
     def getSolset(self, solset):
         """
+        Get a solution set with a given name.
+
         Parameters
         ----------
         solset : str
-            name of the solution set
+            Name of the solution set.
 
         Returns
         -------
         solset obj
-            return solset object
+            Return solset object.
         """
         if not solset in self.getSolsetsNames():
             logging.critical("Cannot find solset: "+solset+".")
@@ -179,12 +185,12 @@ class h5parm( object ):
 
     def _firstAvailSolsetName(self):
         """
-        Find the first available solset name which has the form of "sol###"
+        Find the first available solset name which has the form of "sol###".
 
         Returns
         -------
         str
-            solset name
+            Solset name.
         """
         nums = []
         for solsetName in self.getSolsetsNames():
@@ -196,7 +202,12 @@ class h5parm( object ):
 
     def printInfo(self, filter=None, verbose=False):
         """
-        Returns string with info about H5parm contents
+        Used to get readable information on the h5parm file.
+
+        Returns
+        -------
+        str
+            Returns a string with info about H5parm contents.
         """
         from itertools import izip_longest
 
@@ -204,12 +215,17 @@ class h5parm( object ):
             """
             Groups iterables into specified groups
 
-            Keyword arguments:
-            n -- number of iterables to group
-            iterable -- iterable to group
-            fillvalue -- value to use when to fill blanks in output groups
+            Parameters
+            ----------
+            n : int
+                number of iterables to group
+            iterable : iterable
+                iterable to group
+            fillvalue : str
+                value to use when to fill blanks in output groups
 
-            Example:
+            Example
+            -------
             grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
             """
             args = [iter(iterable)] * n
@@ -316,16 +332,16 @@ class h5parm( object ):
 
 
 class Solset( object ):
+    """
+    Create a solset object
+
+    Parameters
+    ----------
+    solset : pytables group
+        The solution set pytables group object
+    """
 
     def __init__(self, solset):
-        """
-        Create a solset object
-
-        Parameters
-        ----------
-        solset : pytables group
-            The solution set pytables group object
-        """
 
         if not isinstance( solset, tables.Group ):
             logging.error("Object must be initialized with a pyTables Table object.")
@@ -347,7 +363,7 @@ class Solset( object ):
             axesNames = [], axesVals = [], chunkShape=None, vals=None,
             weights=None, parmdbType=None):
         """
-        Create a solution-table into a specified solution-set
+        Create a Soltab into this solset.
         
         Parameters
         ----------
@@ -446,7 +462,7 @@ class Solset( object ):
 
     def getSoltabs(self, useCache=False, sel={}):
         """
-        get all Soltabs in this Solset
+        Get all Soltabs in this Solset.
 
         Parameters
         ----------
@@ -468,10 +484,12 @@ class Solset( object ):
 
     def getSoltabNames(self):
         """
+        Get all Soltab names in this Solset.
+
         Returns
         -------
         list
-            List of str for all available soltabs in this solset
+            List of str for all available soltabs in this solset.
         """
         soltabNames = []
         for soltabName in self.obj._v_groups.iterkeys():
@@ -481,21 +499,21 @@ class Solset( object ):
 
     def getSoltab(self, soltab, useCache=False, sel={}):
         """
-        Return a soltab
+        Get a soltab with a given name.
         
         Parameters
         ----------
         soltab : str
-            A solution table name
+            A solution table name.
         useCache : bool, optional
-            soltabs obj will use cache, by default False
+            Soltabs obj will use cache, by default False.
         sel : dict, optional
-            selection dict, by default no selection
+            Selection dict, by default no selection.
 
         Returns
         -------
         soltab obj
-            A solution table obj
+            A solution table obj.
         """
         if soltab is None:
             raise Exception("Solution-table not specified while querying for solution-table.")
@@ -508,10 +526,12 @@ class Solset( object ):
 
     def getAnt(self):
         """
+        Get the antenna subtable with antenna names and positions.
+
         Returns
         -------
         dict
-            Available antennas in the form {name1:[position coords], name2:[position coords], ...}
+            Available antennas in the form {name1:[position coords], name2:[position coords], ...}.
         """
         ants = {}
         for x in self.obj.antenna:
@@ -522,10 +542,12 @@ class Solset( object ):
 
     def getSou(self):
         """
+        Get the source subtable with direction names and coordinates.
+
         Returns
         -------
         dict
-            Available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}
+            Available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}.
         """
         sources = {}
         for x in self.obj.source:
@@ -535,26 +557,26 @@ class Solset( object ):
 
 
 class Soltab( object ):
+    """
+    Parameters
+    ----------
+    soltab : pytables obj
+        Pytable object.
+    useCache : bool, optional
+        Cache all data in memory, by default False.
+    **args : optional
+        Used to create a selection.
+        Selections examples:
+        axisName = None # to select all
+        axisName = xxx # to select ONLY that value for an axis
+        axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
+        axisName = 'xxx' # regular expression selection
+        axisName = {min: xxx} # to selct values grater or equal than xxx
+        axisName = {max: yyy} # to selct values lower or equal than yyy
+        axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
+    """
 
     def __init__(self, soltab, useCache = False, args = {}):
-        """
-        Parameters
-        ----------
-        soltab : pytables obj
-            Pytable object
-        useCache : bool, optional
-            Cache all data in memory, by default False
-        **args : optional
-            used to create a selection
-            Selections examples:
-            axisName = None # to select all
-            axisName = xxx # to select ONLY that value for an axis
-            axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
-            axisName = 'xxx' # regular expression selection
-            axisName = {min: xxx} # to selct values grater or equal than xxx
-            axisName = {max: yyy} # to selct values lower or equal than yyy
-            axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy
-        """
 
         if not isinstance( soltab, tables.Group ):
             logging.error("Object must be initialized with a pyTables Table object.")
@@ -582,7 +604,7 @@ class Soltab( object ):
 
     def delete(self):
         """
-        Delete this soltab
+        Delete this soltab.
         """
         logging.info("Soltab \""+self.name+"\" deleted.")
         self.obj._f_remove(recursive=True)
@@ -590,7 +612,7 @@ class Soltab( object ):
 
     def setCache(self, val, weight):
         """
-        Set cache value
+        Set cache values.
 
         Parameters
         ----------
@@ -603,16 +625,20 @@ class Soltab( object ):
 
     def getSolset(self):
         """
+        This is used to obtain the parent solset object to e.g. get antennas or create new soltabs.
+
         Returns
         -------
         solset obj
-            The parent solset
+            A solset obj.
         """
         return Solset(self.obj._g_getparent())
 
 
     def getAddress(self):
         """
+        Get the "solset000/soltab000" type string for this Soltab.
+
         Returns
         -------
         str
@@ -623,7 +649,7 @@ class Soltab( object ):
 
     def clearSelection(self):
         """
-        Clear selection, all values are considered.
+        Clear selection, all values are now considered.
         """
         self.setSelection()
 
@@ -716,6 +742,8 @@ class Soltab( object ):
 
     def getType(self):
         """
+        Get the solution type of this Soltab.
+
         Returns
         -------
         str
@@ -727,6 +755,8 @@ class Soltab( object ):
 
     def getAxesNames(self):
         """
+        Get axes names.
+
         Returns
         -------
         list
@@ -779,6 +809,8 @@ class Soltab( object ):
 
     def getAxisValues(self, axis, ignoreSelection=False):
         """
+        Get the values of a given axis.
+
         Parameters
         ----------
         axis : str
@@ -919,12 +951,12 @@ class Soltab( object ):
             If true returns also the axes vals as a dict of:
             {'axisname1':[axisvals1],'axisname2':[axisvals2],...}.
             By default True.
-        weight : bool
+        weight : bool, optional
             If true get the weights instead that the vals, by defaul False.
-        reference : str
-            In case of phase solutions, reference to this station name.
-        referencePol : str
-            In case of phase reference to selected pol of reference station.
+        reference : str, optional
+            In case of phase solutions, reference to this station name. By default no reference.
+        referencePol : str, optional
+            In case of phase reference to selected pol of reference station. By default no reference.
         
         Returns
         -------
@@ -1077,7 +1109,7 @@ class Soltab( object ):
         return g()
 
 
-    def addHistory(self, entry=""):
+    def addHistory(self, entry):
         """
         Adds entry to the table history with current date and time
 
@@ -1106,10 +1138,12 @@ class Soltab( object ):
 
     def getHistory(self):
         """
+        Get the soltab history.
+
         Returns
         -------
         str
-            the table history as a string with each entry separated by newlines
+            The table history as a string with each entry separated by newlines.
         """
         attrs = self.obj.val.attrs._f_list("user")
         attrs.sort()

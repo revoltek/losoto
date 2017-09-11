@@ -148,14 +148,6 @@ losoto\.operations\.smooth module
     :undoc-members:
     :show-inheritance:
 
-losoto\.operations\.smoothclock module
---------------------------------------
-
-.. automodule:: losoto.operations.smoothclock
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 losoto\.operations\.tecfit module
 ---------------------------------
 
