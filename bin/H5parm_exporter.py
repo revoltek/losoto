@@ -15,7 +15,7 @@ import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
 from losoto import _logging
-from losoto.h5parm import h5parm, solWriter, solFetcher
+from losoto.h5parm import h5parm
 try:
     import progressbar
 except ImportError:
@@ -133,10 +133,10 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
     if parm is not None:
         parm = parm.lower()
 
-    for name, st in solTabs.iteritems():
+    for st in solTabs:
         # Handle gain table separately, as we need to distinguish ampl and phase
         if solType == 'DirectionalGain' or solType == 'Gain':
-            if (parm == 'ampl' or parm == 'real') and st._v_title == 'amplitude':
+            if (parm == 'ampl' or parm == 'real') and st.getType() == 'amplitude':
                 if hasattr(st._v_attrs, 'parmdb_type'):
                     if st._v_attrs['parmdb_type'] is not None:
                         if solType in st._v_attrs['parmdb_type'].split(', '):
@@ -145,7 +145,7 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                         solTabList.append(st)
                 else:
                     solTabList.append(st)
-            elif (parm == 'phase' or parm == 'imag') and st._v_title == 'phase':
+            elif (parm == 'phase' or parm == 'imag') and st.getType() == 'phase':
                 if hasattr(st._v_attrs, 'parmdb_type'):
                     if st._v_attrs['parmdb_type'] is not None:
                         if solType in st._v_attrs['parmdb_type'].split(', '):
@@ -160,30 +160,30 @@ def getSoltabFromSolType(solType, solTabs, parm='ampl'):
                     if solType in st._v_attrs['parmdb_type'].split(', '):
                         solTabList.append(st)
                 else:
-                    if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
+                    if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st.getType() == 'rotation':
                         solTabList.append(st)
-                    elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
+                    elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st.getType() == 'scalarphase':
                         solTabList.append(st)
-                    elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st._v_title == 'scalaramplitude':
+                    elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st.getType() == 'scalaramplitude':
                         solTabList.append(st)
-                    elif solType == 'Clock' and st._v_title == 'clock':
+                    elif solType == 'Clock' and st.getType() == 'clock':
                         solTabList.append(st)
-                    elif solType == 'TEC' and st._v_title == 'tec':
+                    elif solType == 'TEC' and st.getType() == 'tec':
                         solTabList.append(st)
-                    elif solType == 'RotationMeasure' and st._v_title == 'rotationmeasure':
+                    elif solType == 'RotationMeasure' and st.getType() == 'rotationmeasure':
                         solTabList.append(st)
             else:
-                if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st._v_title == 'rotation':
+                if (solType == 'RotationAngle' or solType == 'CommonRotationAngle') and st.getType() == 'rotation':
                     solTabList.append(st)
-                elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st._v_title == 'scalarphase':
+                elif (solType == 'CommonScalarPhase' or solType == 'ScalarPhase') and st.getType() == 'scalarphase':
                     solTabList.append(st)
-                elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st._v_title == 'scalaramplitude':
+                elif (solType == 'CommonScalarAmplitude' or solType == 'ScalarAmplitude') and st.getType() == 'scalaramplitude':
                     solTabList.append(st)
-                elif solType == 'Clock' and st._v_title == 'clock':
+                elif solType == 'Clock' and st.getType() == 'clock':
                     solTabList.append(st)
-                elif solType == 'TEC' and st._v_title == 'tec':
+                elif solType == 'TEC' and st.getType() == 'tec':
                     solTabList.append(st)
-                elif solType == 'RotationMeasure' and st._v_title == 'rotationmeasure':
+                elif solType == 'RotationMeasure' and st.getType() == 'rotationmeasure':
                     solTabList.append(st)
 
     if len(solTabList) == 0:
@@ -204,14 +204,17 @@ def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
     """
     global ipbar, pbar
 
-    station_dict = H.getAnt(solset)
+    solset = H.getSolset(solset)
+
+    station_dict = solset.getAnt()
     station_names = station_dict.keys()
     station_positions = station_dict.values()
-    source_dict = H.getSou(solset)
+
+    source_dict = solset.getSou()
     source_names = source_dict.keys()
     source_positions = source_dict.values()
 
-    tec_sf = solFetcher(TECsolTab)
+    tec_sf = solset.getSoltab(TECsolTab)
     tec_screen, axis_vals = tec_sf.getValues()
     times = axis_vals['time']
     beta = TECsolTab._v_attrs['beta']
@@ -354,7 +357,7 @@ if __name__=='__main__':
 
     # Open the h5parm file and get solution set names
     h5parm_in = h5parm(h5parmFile, readonly = True)
-    solsetNames = h5parm_in.getSolsets()
+    solsetNames = h5parm_in.getSolsetNames()
 
     # Check input parmdb file
     globaldbFile = args[1]
@@ -397,17 +400,17 @@ if __name__=='__main__':
     # TODO: is there a better solution which check all the instrumentdbs?
     pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
     solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))
-    solTabs = h5parm_in.getSoltabs(solset)
+    solTabs = solset.getSoltabs()
     if options.soltab != 'all':
         soltabs_to_use = [s.strip() for s in options.soltab.split(',')]
         logging.info('Using solution tables: {0}'.format(soltabs_to_use))
-        solTabs_filt = {}
-        for s, v in solTabs.iteritems():
-            if s in soltabs_to_use:
-                solTabs_filt[s] = v
+        solTabs_filt = []
+        for s in solTabs:
+            if s.name in soltabs_to_use:
+                solTabs_filt.append(s)
         for s in soltabs_to_use:
-            if s not in solTabs_filt.keys():
-                logging.warning('Solution table {0} not found in input H5parm file.'.format(s))
+            if s.name not in solset.getSoltabNames()):
+                logging.warning('Solution table {0} not found in input H5parm file.'.format(s.name))
         solTabs = solTabs_filt
     if len(solTabs) == 0:
         logging.critical('No solution tables found in input H5parm file')
@@ -425,8 +428,8 @@ if __name__=='__main__':
     # Look for tecscreen solution table in the solset. If
     # found, add to solTypes
     st_tec = None
-    for name, st in solTabs.iteritems():
-        if st._v_title == 'tecscreen':
+    for st in solTab:
+        if st.getType() == 'tecscreen':
             st_tec = st
     if st_tec is not None:
         solTypes.append('TECScreen')
@@ -440,8 +443,7 @@ if __name__=='__main__':
         if solType != 'TECScreen':
             len_sol[solType] = len(pdb.getNames(solType+':*'))
         else:
-            tec_sf = solFetcher(st_tec)
-            N_times = tec_sf.getAxisLen(axis='time')
+            N_times = st_tec.getAxisLen(axis='time')
             len_sol[solType] = N_times
 
     cachedSolTabs = {}
@@ -489,61 +491,60 @@ if __name__=='__main__':
                     solTab = solTabList[0]
 
                     # search in the cache for open soltab
-                    if not solTab._v_title in cachedSolTabs:
-                        sf = solFetcher(solTab, useCache=True)
-                        cachedSolTabs[solTab._v_title] = sf
+                    if not solTab.getType() in cachedSolTabs:
+                        cachedSolTabs[solTab.getType()] = soltab
                     else:
-                        sf = cachedSolTabs[solTab._v_title]
-                        sf.setSelection()
+                        soltab = cachedSolTabs[solTab.getType()]
+                        soltab.setSelection()
 
                     freqs = data[solEntry]['freqs']
                     times = data[solEntry]['times']
                     parms = {}
 
-                    if 'ant' in sf.getAxesNames():
+                    if 'ant' in soltab.getAxesNames():
                         parms['ant'] = [ant]
                         # skip missing antennas (e.g. internationals sometimes are retained in the parmdb)
-                        if not ant in sf.getAxisValues('ant'): continue
-                    if 'pol' in sf.getAxesNames(): parms['pol'] = [pol]
-                    if 'dir' in sf.getAxesNames(): parms['dir'] = [dir]
-                    if 'freq' in sf.getAxesNames(): parms['freq'] = freqs.tolist()
+                        if not ant in soltab.getAxisValues('ant'): continue
+                    if 'pol' in soltab.getAxesNames(): parms['pol'] = [pol]
+                    if 'dir' in soltab.getAxesNames(): parms['dir'] = [dir]
+                    if 'freq' in soltab.getAxesNames(): parms['freq'] = freqs.tolist()
                     # workaround for bbs and ndppp dealing differently with the last time slot when #timeslots%ntime != 0
                     # NDPPP has all intervals the same
                     # BBS has a maller interval in the last timeslot which is compensated here
                     if times[-1] - times[-2] < times[-2] - times[-3]: times[-1] = times[-2] + (times[-2] - times[-3])
-                    if 'time' in sf.getAxesNames(): parms['time'] = {'min':np.min(times-0.1), 'max':np.max(times+0.1)}
-                    sf.setSelection(**parms)
+                    if 'time' in soltab.getAxesNames(): parms['time'] = {'min':np.min(times-0.1), 'max':np.max(times+0.1)}
+                    soltab.setSelection(**parms)
 
                     # If needed, convert Amp and Phase to Real and Imag
                     if parm == 'Real':
                         solTabList = getSoltabFromSolType(solType, solTabs, parm='phase')
-                        if not solTabList[0]._v_title in cachedSolTabs:
-                            sf_phase = solFetcher(solTabList[0], useCache=True)
-                            cachedSolTabs[solTabList[0]._v_title] = sf_phase
+                        if not solTabList[0].getType() in cachedSolTabs:
+                            soltab_ph = solTabList[0]
+                            cachedSolTabs[solTabList[0].getType()] = soltab_ph
                         else:
-                            sf_phase = cachedSolTabs[solTabList[0]._v_title]
-                        sf_phase.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
+                            soltab_ph = cachedSolTabs[solTabList[0].getType()]
+                        soltab_ph.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
                             time={'min':np.min(times-0.1), 'max':np.max(times+0.1)})
-                        val_amp = sf.getValues()[0]
-                        val_phase = sf_phase.getValues()[0]
+                        val_phase = soltab_ph.getValues()[0]
+                        val_amp = soltab.getValues()[0]
                         val = val_amp * np.cos(val_phase)
                     elif parm == 'Imag':
                         solTabList = getSoltabFromSolType(solType, solTabs, parm='ampl')
-                        if not solTabList[0]._v_title in cachedSolTabs:
-                            sf_amp = solFetcher(solTabList[0], useCache=True)
-                            cachedSolTabs[solTabList[0]._v_title] = sf_amp
+                        if not solTabList[0].getType() in cachedSolTabs:
+                            soltab_amp = solTabList[0]
+                            cachedSolTabs[solTabList[0].getType()] = soltab_amp
                         else:
-                            sf_amp = cachedSolTabs[solTabList[0]._v_title]
-                        sf_amp.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
+                            soltab_amp = cachedSolTabs[solTabList[0].getType()]
+                        soltab_amp.setSelection(ant=[ant], pol=[pol], dir=[dir], freq=freqs.tolist(),
                             time={'min':np.min(times-0.1), 'max':np.max(times+0.1)})
-                        val_phase = sf.getValues()[0]
-                        val_amp = sf_amp.getValues()[0]
+                        val_phase = soltab.getValues()[0]
+                        val_amp = soltab_amp.getValues()[0]
                         val = val_amp * np.sin(val_phase)
                     else:
-                        val = sf.getValues()[0]
+                        val = soltab.getValues()[0]
 
                     # Apply flags
-                    weights = sf.getValues(weight=True)[0]
+                    weights = soltab.getValues(weight=True)[0]
 
                     # etienne part; if it is borken, curse his name
                     # check whether this is clock or tec; if so, reshape properly to account for all freqs in the parmdb
