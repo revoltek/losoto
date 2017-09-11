@@ -27,7 +27,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
     size : array of int, optional
         Window size for the runningmedian and runningpoly (array of same size of axesToSmooth), by default [].
 
-    mode : str, optional
+    mode : {'runningmedian','runningpoly','mean','median'}, optional
         Runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median), by default "runningmedian".
 
     degree : int, optional
