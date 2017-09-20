@@ -470,7 +470,7 @@ def fitPLaneLTSQ(XYZ):
     return (a, b, c)
 
 
-def run(soltab, ressoltab, minZ=3.2, maxZ=3.2, prefix='', remove_gradient=False,
+def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False,
     is_phase=True, ncpu=0):
     """
     Plot screens (one plot is made per time and per station)
