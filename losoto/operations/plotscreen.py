@@ -128,9 +128,9 @@ def calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up
     outQueue.put([k, fitted_tec, screen, x, y])
 
 
-def plot_frame(screen, fitted_phase1, residuals, x, y, k, lower, upper, vmin, vmax,
-    source_names, show_source_names, station_names, sindx, root_dir, prestr,
-    is_image_plane,  midRA, midDec, outQueue):
+def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
+    upper, vmin, vmax, source_names, show_source_names, station_names, sindx,
+    root_dir, prestr, is_image_plane,  midRA, midDec, outQueue):
     """
     Plots screen images
 
@@ -142,6 +142,8 @@ def plot_frame(screen, fitted_phase1, residuals, x, y, k, lower, upper, vmin, vm
         Array of fitted phase values
     residuals: array
         Array of screen residuals at the piercepoints
+    weights: array
+        Array of weights at the piercepoints
     x: array
         Array of piercepoint x locations
     y: array
@@ -203,8 +205,10 @@ def plot_frame(screen, fitted_phase1, residuals, x, y, k, lower, upper, vmin, vm
     s = []
     c = []
     for j in range(fitted_phase1.shape[0]):
-        fit_screen_diff = abs(residuals[j])
-        s.append(40)
+        if weights[j] > 0.0:
+            s.append(max(10, 200*np.sqrt(weights[j]/np.median(weights))))
+        else:
+            s.append(10)
         c.append(sm.to_rgba(fitted_phase1[j]))
 
     if is_image_plane:
@@ -265,7 +269,7 @@ def plot_frame(screen, fitted_phase1, residuals, x, y, k, lower, upper, vmin, vm
     plt.close(fig)
 
 
-def make_screen_plots(pp, inscreen, inresiduals, station_names,
+def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
     station_positions, source_names, times, height, order, beta_val,
     r_0, prefix='frame_', remove_gradient=True, show_source_names=False,
     min_val=None, max_val=None, is_phase=False, midRA=0.0, midDec=0.0, ncpu=0):
@@ -276,42 +280,44 @@ def make_screen_plots(pp, inscreen, inresiduals, station_names,
     ----------
 
     pp: array
-        array of piercepoint locations
+        Array of piercepoint locations
     inscreen: array
-        array of screen values at the piercepoints
+        Array of screen values at the piercepoints
     residuals: array
-        array of screen residuals at the piercepoints
+        Array of screen residuals at the piercepoints
+    weights: array
+        Array of weights for each piercepoint
     source_names: array
-        array of source names
+        Array of source names
     times: array
-        array of times
+        Array of times
     height: float
-        height of screen (m)
+        Height of screen (m)
     order: int
-        order of screen (e.g., number of KL base vectors to keep)
+        Order of screen (e.g., number of KL base vectors to keep)
     r_0: float
-        scale size of phase fluctuations
+        Scale size of phase fluctuations
     beta_val: float
-        power-law index for phase structure function (5/3 =>
+        Power-law index for phase structure function (5/3 =>
         pure Kolmogorov turbulence)
     prefix: str
-        prefix for output file names
+        Prefix for output file names
     remove_gradient: bool
-        fit and remove a gradient from each screen
+        Fit and remove a gradient from each screen
     show_source_names: bool
-        label sources on screen plots
+        Label sources on screen plots
     min_val: float
-        minimum value for plot range
+        Minimum value for plot range
     max_val: float
-        maximum value for plot range
+        Maximum value for plot range
     is_phase: bool
-        input screen is a phase screen
+        Input screen is a phase screen
     midRA : float
         RA for WCS reference in degrees
     midDec : float
         Dec for WCS reference in degrees
     ncpu: int
-        number of CPUs to use
+        Number of CPUs to use
 
     """
     from numpy import kron, concatenate, newaxis
@@ -438,8 +444,10 @@ def make_screen_plots(pp, inscreen, inresiduals, station_names,
         logging.info('Plotting screens...')
         mpm = multiprocManager(ncpu, plot_frame)
         for k in range(N_times):
-            mpm.put([screen[:, :, k], fitted_phase1[:, k], residuals[:, k], x[k, :], y[k, :], k, lower, upper, vmin, vmax,
-                source_names, show_source_names, station_names, sindx, root_dir, prestr, is_image_plane, midRA, midDec])
+            mpm.put([screen[:, :, k], fitted_phase1[:, k], residuals[:, k],
+            weights[:, k, sindx], x[k, :], y[k, :], k, lower, upper, vmin, vmax,
+            source_names, show_source_names, station_names, sindx, root_dir,
+            prestr, is_image_plane, midRA, midDec])
         mpm.wait()
 
 
@@ -504,6 +512,7 @@ def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False
     # Get values from soltabs
     solset = soltab.getSolset()
     screen = np.array(soltab.val)
+    weights = np.array(soltab.weight)
     residuals = np.array(ressoltab.val)
     times = np.array(soltab.time)
 
@@ -538,7 +547,7 @@ def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False
         min_val = minZ
         max_val = maxZ
 
-    make_screen_plots(pp, screen, residuals, np.array(station_names),
+    make_screen_plots(pp, screen, residuals, weights, np.array(station_names),
         np.array(station_positions), np.array(source_names), times,
         height, order, beta_val, r_0, prefix=prefix,
         remove_gradient=remove_gradient, show_source_names=False, min_val=min_val,

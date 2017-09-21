@@ -382,7 +382,7 @@ def normalize(phase):
     return out
 
 
-def estimate_weights(srcindx, phase_residual, nsigma, N, outQueue):
+def estimate_weights(srcindx, phase_residual, nsigma, N, total_stddev, outQueue):
     """
     Estimates the weights for a direction using a sliding window
 
@@ -396,6 +396,8 @@ def estimate_weights(srcindx, phase_residual, nsigma, N, outQueue):
         number of sigma above with outliers are clipped (= weight set to zero)
     N: int
         number of time samples to use for sliding window
+    total_stddev: float
+        Total standard dev over all directions
 
     Returns
     -------
@@ -417,16 +419,27 @@ def estimate_weights(srcindx, phase_residual, nsigma, N, outQueue):
 
     # Calculate sliding standard deviation with window of size N
     idx = np.arange(N) + np.arange(len(phase_residual)-N+1)[:, None]
-    stddev = np.std(phase_residual[idx], axis=1)
+    var = np.sum(np.square(phase_residual)[idx], axis=1)
+    stddev2 = var / N
+
+    # Calculate sliding mean of total standard deviation over all directions
+    mean_stddev = np.zeros(phase_residual.shape)
+    mstddev2 = np.sum(np.square(total_stddev)[idx], axis=1)
+    mean_stddev[0:(N-1)/2] = np.sqrt(mstddev2)[0]
+    mean_stddev[(N-1)/2:-(N-1)/2] = np.sqrt(mstddev2)
+    mean_stddev[-(N-1)/2:] = np.sqrt(mstddev2)[-1]
 
     # Calculate weights as 1 / stddev^2
-    phase_stddev = np.zeros(phase_residual.shape)
-    phase_stddev[0:-N+1] = stddev
-    phase_stddev[-N+1:] = stddev[-1]
-    weights = 1.0 / phase_stddev
+    phase_stddev2 = np.zeros(phase_residual.shape)
+    phase_stddev2[0:(N-1)/2] = stddev2[0]
+    phase_stddev2[(N-1)/2:-(N-1)/2] = stddev2
+    phase_stddev2[-(N-1)/2:] = stddev2[-1]
+    weights = 1.0 / phase_stddev2
+    weights *= len(weights) / np.sum(weights) # normalize
 
-    # Find outliers and set their weights to zero
-    outlier_ind = np.where(np.abs(phase_residual) > nsigma*phase_stddev)
+    # Find outliers and set their weights to zero. Outliers are times for which
+    # residual is more than the nsigma time mean stddev over all directions
+    outlier_ind = np.where(np.abs(phase_residual) > nsigma*mean_stddev)
     weights[outlier_ind] = 0.0
 
     outQueue.put([srcindx, weights])
@@ -530,7 +543,7 @@ def fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, time
                   times])
 
 
-def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6,
+def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=150e6,
     station_to_fit=None, niter = 3, nsigma = 3.0, nwindow = 15):
     """
     Fits a screen to TEC+CSP values.
@@ -555,7 +568,7 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
     outSolset : str
         Name of output solset in which to store the results as 'realscreen',
         'imagscreen', and 'phasescreen' soltabs
-    height : float
+    height : float, optional
         Height in m of screen. If 0, the RA and Dec values (projected on the
         image plane) are used instead for the screen pierce points
     order : int, optional
@@ -636,6 +649,7 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
     imag_residual = np.zeros((N_sources, N_stations, N_times))
     phase_screen = np.zeros((N_sources, N_stations, N_times))
     phase_residual = np.zeros((N_sources, N_stations, N_times))
+    weights = np.zeros((N_sources, N_stations, N_times))
 
     # Fit screens
     val_amp = 1.0
@@ -659,29 +673,31 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
         # 1. fit with uniform weights
         # 2. estimate weights and flag nsigma outliers
         # 3. refit with new weights
-        # 4. repeat for niter
+        # 4. repeat for niter iterations
         for iterindx in range(niter):
-            weights = np.zeros((N_piercepoints, N_piercepoints, N_times))
+            station_weights = np.zeros((N_piercepoints, N_piercepoints, N_times))
             if iterindx == 0:
                 # Use uniform weights to start
                 for t in range(N_times):
-                    weights[:, :, t] = np.eye(N_piercepoints, N_piercepoints)
+                    station_weights[:, :, t] = np.eye(N_piercepoints, N_piercepoints)
             else:
                 # Estimate weights for each pierce point
+                total_stddev = np.sqrt(np.sum(np.square(phase_residual[:, s, :]), axis=0) / N_piercepoints)
                 mpm = multiprocManager(ncpu, estimate_weights)
                 for srcindx in range(N_piercepoints):
-                    mpm.put([srcindx, phase_residual[srcindx, s, :], nsigma, nwindow])
+                    mpm.put([srcindx, phase_residual[srcindx, s, :], nsigma, nwindow, total_stddev])
                 mpm.wait()
                 for (srcindx, w) in mpm.get():
-                    weights[srcindx, srcindx, :] = w
+                    station_weights[srcindx, srcindx, :] = w
 
             # Now fit the screens
             mpm = multiprocManager(ncpu, fit_phase_screen)
             for tindx, t in enumerate(times):
                 mpm.put([[stat], source_names, pp[tindx, newaxis, :, :],
                     airmass[tindx, newaxis, :], rr[:, tindx, newaxis],
-                    weights[:, :, tindx, newaxis], [t], height, order, r_0, beta])
+                    station_weights[:, :, tindx, newaxis], [t], height, order, r_0, beta])
             mpm.wait()
+            weights[:, s, :] = np.dot(np.ones(N_piercepoints), station_weights)
             for (real_scr, real_res, imag_scr, imag_res, phase_scr, phase_res, t) in mpm.get():
                 i = times.tolist().index(t[0])
                 real_screen[:, s, i] = real_scr[0, :, 0]
@@ -711,10 +727,10 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
 
     # Store tecscreen values
     outSoltabs = ['realscreen', 'imagscreen', 'phasescreen']
+    weights = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
     for outSoltab in outSoltabs:
         if 'realscreen' in outSoltab:
-            vals = real_screen.transpose([0, 2, 1]) # order is now [dir, time, ant]
-            weights = np.ones(vals.shape)
+            vals = real_screen.transpose([0, 2, 1])
             screen_st = solset_out.makeSoltab('realscreen',
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
@@ -724,7 +740,6 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
                 ants_out], vals=vals, weights=weights)
         elif 'imagscreen' in outSoltab:
             vals = imag_screen.transpose([0, 2, 1])
-            weights = np.ones(vals.shape)
             screen_st = solset_out.makeSoltab('imagscreen',
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
@@ -734,7 +749,6 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
                 ants_out], vals=vals, weights=weights)
         elif 'phasescreen' in outSoltab:
             vals = phase_screen.transpose([0, 2, 1])
-            weights = np.ones(vals.shape)
             screen_st = solset_out.makeSoltab('phasescreen',
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
@@ -743,11 +757,12 @@ def run(H, solset, outSolset, height, order=12, beta=5.0/3.0, ncpu=0, freq=150e6
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
 
-        # Store beta, r_0, height, and order as attributes of the tecscreen
+        # Store beta, r_0, height, freq, and order as attributes of the tecscreen
         # soltab
         screen_st.obj._v_attrs['beta'] = beta
         screen_st.obj._v_attrs['r_0'] = r_0
         screen_st.obj._v_attrs['height'] = height
+        screen_st.obj._v_attrs['freq'] = freq
         screen_st.obj._v_attrs['order'] = order
         if height == 0.0:
             screen_st.obj._v_attrs['midra'] = midRA
