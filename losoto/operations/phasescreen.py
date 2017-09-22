@@ -421,25 +421,36 @@ def estimate_weights(srcindx, phase_residual, nsigma, N, total_stddev, outQueue)
     idx = np.arange(N) + np.arange(len(phase_residual)-N+1)[:, None]
     var = np.sum(np.square(phase_residual)[idx], axis=1)
     stddev2 = var / N
-
-    # Calculate sliding mean of total standard deviation over all directions
-    mean_stddev = np.zeros(phase_residual.shape)
-    mstddev2 = np.sum(np.square(total_stddev)[idx], axis=1)
-    mean_stddev[0:(N-1)/2] = np.sqrt(mstddev2)[0]
-    mean_stddev[(N-1)/2:-(N-1)/2] = np.sqrt(mstddev2)
-    mean_stddev[-(N-1)/2:] = np.sqrt(mstddev2)[-1]
-
-    # Calculate weights as 1 / stddev^2
     phase_stddev2 = np.zeros(phase_residual.shape)
     phase_stddev2[0:(N-1)/2] = stddev2[0]
     phase_stddev2[(N-1)/2:-(N-1)/2] = stddev2
     phase_stddev2[-(N-1)/2:] = stddev2[-1]
+
+    # Calculate weights as 1 / stddev^2
     weights = 1.0 / phase_stddev2
     weights *= len(weights) / np.sum(weights) # normalize
 
-    # Find outliers and set their weights to zero. Outliers are times for which
-    # residual is more than the nsigma time mean stddev over all directions
-    outlier_ind = np.where(np.abs(phase_residual) > nsigma*mean_stddev)
+    # Calculate sliding standard deviation with window of size 5
+    N = 5
+    idx = np.arange(N) + np.arange(len(phase_residual)-N+1)[:, None]
+    var = np.sum(np.square(phase_residual)[idx], axis=1)
+    stddev2 = var / N
+    phase_stddev2_5 = np.zeros(phase_residual.shape)
+    phase_stddev2_5[0:(N-1)/2] = stddev2[0]
+    phase_stddev2_5[(N-1)/2:-(N-1)/2] = stddev2
+    phase_stddev2_5[-(N-1)/2:] = stddev2[-1]
+
+    # Indetify outliers and set their weights to zero. Outliers are those points
+    # that lie more than nsigma above the stddev of the screen at that time
+    # (both smoothed a bit in time)
+    N = 5
+    idx = np.arange(N) + np.arange(len(total_stddev)-N+1)[:,None]
+    rmed = np.median(total_stddev[idx],axis=1)
+    med_total_stddev = np.zeros(phase_residual.shape)
+    med_total_stddev[0:(N-1)/2] = rmed[0]
+    med_total_stddev[(N-1)/2:-(N-1)/2] = rmed
+    med_total_stddev[-(N-1)/2:] = rmed[-1]
+    outlier_ind = np.where(np.sqrt(phase_stddev2_5) > nsigma*med_total_stddev)
     weights[outlier_ind] = 0.0
 
     outQueue.put([srcindx, weights])
@@ -544,7 +555,7 @@ def fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, time
 
 
 def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=150e6,
-    station_to_fit=None, niter = 3, nsigma = 3.0, nwindow = 15):
+    station_to_fit=None, niter=3, nsigma=3.0, nwindow=1000):
     """
     Fits a screen to TEC+CSP values.
 
@@ -682,7 +693,7 @@ def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=1
                     station_weights[:, :, t] = np.eye(N_piercepoints, N_piercepoints)
             else:
                 # Estimate weights for each pierce point
-                total_stddev = np.sqrt(np.sum(np.square(phase_residual[:, s, :]), axis=0) / N_piercepoints)
+                total_stddev = np.sqrt(np.sum(np.square(normalize(phase_residual[:, s, :])), axis=0) / N_piercepoints)
                 mpm = multiprocManager(ncpu, estimate_weights)
                 for srcindx in range(N_piercepoints):
                     mpm.put([srcindx, phase_residual[srcindx, s, :], nsigma, nwindow, total_stddev])
