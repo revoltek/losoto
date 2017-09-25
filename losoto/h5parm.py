@@ -204,6 +204,13 @@ class h5parm( object ):
         """
         Used to get readable information on the h5parm file.
 
+        Parameters
+        ----------
+        filter: str, optional
+            Solution set name to get info for
+        verbose: bool, optional
+            If True, return additional info on axes
+
         Returns
         -------
         str
@@ -275,26 +282,29 @@ class h5parm( object ):
             info += "\nSolution set '%s':\n" % solset.name
             info += "=" * len(solset.name) + "=" * 16 + "\n\n"
 
-            # Print direction (source) names
+            # Add direction (source) names
             sources = solset.getSou().keys()
             sources.sort()
             info += "Directions: "
-            for src_name in sources:
-                info += "%s\n            " % src_name
+            for src_name1, src_name2, src_name3 in grouper(3, sources):
+                info += "{0:<15s} {1:<15s} {2:<15s}\n            ".format(src_name1, src_name2, src_name3)
 
-            # Print station names
+            # Add station names
             antennas = solset.getAnt().keys()
             antennas.sort()
             info += "\nStations: "
             for ant1, ant2, ant3, ant4 in grouper(4, antennas):
                 info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
 
-            # For each table, print length of each axis and history of
+            # For each table, add length of each axis and history of
             # operations applied to the table.
             if verbose:
                 logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
                 f = file(self.fileName+'-axes_values.txt','a')
-            for soltab in solset.getSoltabs():
+            soltabs = solset.getSoltabs()
+            names = np.array([s.name for s in soltabs])
+            sorted_soltabs = [x for _, x in sorted(zip(names, soltabs))]
+            for soltab in sorted_soltabs:
                 try:
                     if verbose:
                         f.write("### /"+solset.name+"/"+soltab.name+"\n")
@@ -317,11 +327,24 @@ class h5parm( object ):
                             else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
                     info += "\nSolution table '%s' (type: %s): %s\n" % (soltab.name, soltab.getType(), ", ".join(axis_str_list))
                     weights = soltab.getValues(weight = True, retAxesVals = False)
-                    info += 'Flagged data %.3f%%\n' % (100.*np.sum(weights==0)/len(weights.flat))
+                    info += '    Flagged data: %.3f%%\n' % (100.*np.sum(weights==0)/len(weights.flat))
+
+                    # Add some extra attributes stored in screen-type tables
+                    if soltab.getType() == 'screen':
+                        attr_names = soltab.obj._v_attrs._v_attrnames
+                        add_head = True
+                        for n in attr_names:
+                            if n in ['beta', 'freq', 'height', 'order']:
+                                if add_head:
+                                    info += '    Screen attributes:\n'
+                                    add_head = False
+                                info += '        {0}: {1}\n'.format(n, soltab.obj._v_attrs[n])
+
+                    # Add history
                     history = soltab.getHistory()
                     if history != "":
-                        info += "\n" + 4*" " + "History:\n" + 4*" "
-                        joinstr =  "\n" + 4*" "
+                        info += 4*" " + "History: "
+                        joinstr =  13*" " + "\n"
                         info += joinstr.join(wrap(history)) + "\n"
                 except tables.exceptions.NoSuchNodeError:
                     info += "\nSolution table '%s': No valid data found\n" % (soltab.name)
@@ -364,7 +387,7 @@ class Solset( object ):
             weights=None, parmdbType=None):
         """
         Create a Soltab into this solset.
-        
+
         Parameters
         ----------
         soltype : str
@@ -435,7 +458,7 @@ class Solset( object ):
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
         return Soltab(soltab)
-    
+
 
     def _fisrtAvailSoltabName(self, soltype):
         """
@@ -500,7 +523,7 @@ class Solset( object ):
     def getSoltab(self, soltab, useCache=False, sel={}):
         """
         Get a soltab with a given name.
-        
+
         Parameters
         ----------
         soltab : str
@@ -600,7 +623,7 @@ class Soltab( object ):
         if self.useCache:
             logging.debug("Caching...")
             self.setCache(np.copy(self.obj.val), np.copy(self.obj.weight))
-            
+
 
     def delete(self):
         """
@@ -663,7 +686,7 @@ class Soltab( object ):
 
         Parameters
         ----------
-        **args : 
+        **args :
             Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
         """
         # create an initial selection which selects all values
@@ -770,7 +793,7 @@ class Soltab( object ):
     def getAxisLen(self, axis, ignoreSelection=False):
         """
         Return an axis lenght.
-        
+
         Parameters
         ----------
         axis : str
@@ -789,7 +812,7 @@ class Soltab( object ):
     def getAxisType(self, axis):
         """
         Return the axis dtype
-        
+
         Parameters
         ----------
         axis : str
@@ -957,7 +980,7 @@ class Soltab( object ):
             In case of phase solutions, reference to this station name. By default no reference.
         referencePol : str, optional
             In case of phase reference to selected pol of reference station. By default no reference.
-        
+
         Returns
         -------
         array
@@ -1058,7 +1081,7 @@ class Soltab( object ):
             In case of phase solutions, reference to this station name.
         referencePol : str
             In case of phase reference to selected pol of reference station.
-        
+
         Returns
         -------
         1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
