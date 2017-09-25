@@ -249,16 +249,19 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         ax.set_xlim(lower[0], upper[0])
         ax.set_ylim(lower[1], upper[1])
         ax.set_aspect('equal')
-        RAAxis = ax.coords['ra']
-        RAAxis.set_axislabel('RA', minpad=0.75)
-        RAAxis.set_major_formatter('hh:mm:ss')
-        DecAxis = ax.coords['dec']
-        DecAxis.set_axislabel('Dec', minpad=0.75)
-        DecAxis.set_major_formatter('dd:mm:ss')
-        ax.coords.grid(color='black', alpha=0.5, linestyle='solid')
-
-        plt.xlabel("RA")
-        plt.ylabel("Dec")
+        if hasWCSaxes:
+            RAAxis = ax.coords['ra']
+            RAAxis.set_axislabel('RA', minpad=0.75)
+            RAAxis.set_major_formatter('hh:mm:ss')
+            DecAxis = ax.coords['dec']
+            DecAxis.set_axislabel('Dec', minpad=0.75)
+            DecAxis.set_major_formatter('dd:mm:ss')
+            ax.coords.grid(color='black', alpha=0.5, linestyle='solid')
+            plt.xlabel("RA")
+            plt.ylabel("Dec")
+        else:
+            plt.xlabel("RA (arb. units)")
+            plt.ylabel("Dec (arb. units)")
     else:
         # Reverse the axis so that RA coord increases to left
         plt.xlim(upper[0], lower[0])
@@ -274,11 +277,10 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
     r_0, prefix='frame_', remove_gradient=True, show_source_names=False,
     min_val=None, max_val=None, is_phase=False, midRA=0.0, midDec=0.0, ncpu=0):
     """
-    Makes plots of TEC screens
+    Makes plots of screens
 
     Parameters
     ----------
-
     pp: array
         Array of piercepoint locations
     inscreen: array

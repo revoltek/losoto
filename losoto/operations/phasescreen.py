@@ -554,31 +554,25 @@ def fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, time
                   times])
 
 
-def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=150e6,
-    station_to_fit=None, niter=3, nsigma=3.0, nwindow=1000):
+def run(tecsoltab, scphsoltab, height=0.0, order=12, beta=5.0/3.0, ncpu=0,
+    freq=150e6, station_to_fit=None, niter=3, nsigma=3.0, nwindow=500):
     """
-    Fits a screen to TEC+CSP values.
+    Fits a screen to TEC + scalaraphase values.
 
-    The TEC+CSP values are read from the 'tec000' and 'scalarphase000' soltabs of
-    the specified solset.
+    The results of the fit are stored in the tecsoltab parent solset in the
+    'realscreenXXX', 'imagscreenXXX', and 'phasescreenXXX' soltabs. These values
+    are the screen phase values per station per pierce point per solution
+    interval. The pierce point locations are stored in an auxiliary array in the
+    output soltabs.
 
-    The results of the fit are stored in the specified screen solset in the 'realscreen', 'imagscreen', and
-    'phasescreen' soltabs.
-.
-    These values are the screen phase values per station per pierce point per
-    solution interval. The pierce point locations are stored in an auxiliary
-    array in the output soltabs.
-
-    TEC screens can be plotted with the PLOT operation by setting PlotType =
-    PlotScreen.
+    TEC screens can be plotted with the PLOTSCREEN operation.
 
     Parameters
     ----------
-    solset : solution set
-        Solset containing CSP and TEC soltabs as 'tec000' and 'scalarphase000'
-    outSolset : str
-        Name of output solset in which to store the results as 'realscreen',
-        'imagscreen', and 'phasescreen' soltabs
+    tecsoltab: solution table
+        Soltab containing TEC solutions
+    scphsoltab: solution table
+        Soltab containing scalar phase solutions
     height : float, optional
         Height in m of screen. If 0, the RA and Dec values (projected on the
         image plane) are used instead for the screen pierce points
@@ -612,20 +606,21 @@ def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=1
         ncpu = multiprocessing.cpu_count()
 
     # Load TEC and CSP values
-    logging.info('Using input solution set: {}'.format(solset.name))
-    logging.info('Using output solution set: {}'.format(outSolset))
-    tec_vals = np.array(solset.obj.tec000.val)
-    scphase_vals = np.array(solset.obj.scalarphase000.val)
-    times = np.array(solset.obj.scalarphase000.time)
+    logging.info('Using TEC solution table: {}'.format(tecsoltab.name))
+    logging.info('Using scalar phase solution table: {}'.format(scphsoltab.name))
+    tec_vals = np.array(tecsoltab.val)
+    scphase_vals = np.array(tecsoltab.val)
+    times = np.array(tecsoltab.time)
 
     # Collect station and source names and positions and times, making sure
     # that they are ordered correctly.
-    source_names = solset.obj.tec000.dir[:]
+    solset = tecsoltab.getSolset()
+    source_names = tecsoltab.dir[:]
     source_dict = solset.getSou()
     source_positions = []
     for source in source_names:
         source_positions.append(source_dict[source])
-    station_names = solset.obj.tec000.ant[:]
+    station_names = tecsoltab.ant[:]
     station_dict = solset.getAnt()
     station_positions = []
     for station in station_names:
@@ -723,53 +718,45 @@ def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=1
     times_out = times
     ants_out = station_names
 
-    # Make output tables
-    existing_solsets = [s.name for s in H.getSolsets()]
-    if not outSolset in existing_solsets:
-        solset_out = H.makeSolset(outSolset)
-        dirs_pos = source_positions
-        sourceTable = solset_out.obj._f_get_child('source')
-        sourceTable.append(zip(*(dirs_out, dirs_pos)))
-        ants_pos = station_positions
-        antennaTable = solset_out.obj._f_get_child('antenna')
-        antennaTable.append(zip(*(ants_out, ants_pos)))
-    else:
-        solset_out = H.getSolset(outSolset)
-
     # Store tecscreen values
     outSoltabs = ['realscreen', 'imagscreen', 'phasescreen']
     weights = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
     for outSoltab in outSoltabs:
         if 'realscreen' in outSoltab:
             vals = real_screen.transpose([0, 2, 1])
-            screen_st = solset_out.makeSoltab('realscreen',
+            name = solset._fisrtAvailSoltabName('realscreen')
+            screen_st = solset.makeSoltab('screen', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
             vals = real_residual.transpose([0, 2, 1])
-            resscreen_st = solset_out.makeSoltab('realscreenresid',
+            name = solset._fisrtAvailSoltabName('realscreenresid')
+            resscreen_st = solset.makeSoltab('real', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
         elif 'imagscreen' in outSoltab:
             vals = imag_screen.transpose([0, 2, 1])
-            screen_st = solset_out.makeSoltab('imagscreen',
+            name = solset._fisrtAvailSoltabName('imagscreen')
+            screen_st = solset.makeSoltab('screen', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
             vals = imag_residual.transpose([0, 2, 1])
-            resscreen_st = solset_out.makeSoltab('imagscreenresid',
+            name = solset._fisrtAvailSoltabName('imagscreenresid')
+            resscreen_st = solset.makeSoltab('imag', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
         elif 'phasescreen' in outSoltab:
             vals = phase_screen.transpose([0, 2, 1])
-            screen_st = solset_out.makeSoltab('phasescreen',
+            name = solset._fisrtAvailSoltabName('phasescreen')
+            screen_st = solset.makeSoltab('screen', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
             vals = phase_residual.transpose([0, 2, 1])
-            resscreen_st = solset_out.makeSoltab('phasescreenresid',
+            name = solset._fisrtAvailSoltabName('phasescreenresid')
+            resscreen_st = solset.makeSoltab('phase', name,
                 axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
                 ants_out], vals=vals, weights=weights)
 
-        # Store beta, r_0, height, freq, and order as attributes of the tecscreen
-        # soltab
+        # Store beta, r_0, height, and order as attributes of the screen soltabs
         screen_st.obj._v_attrs['beta'] = beta
         screen_st.obj._v_attrs['r_0'] = r_0
         screen_st.obj._v_attrs['height'] = height
@@ -779,14 +766,12 @@ def run(H, solset, outSolset, height=0.0, order=12, beta=5.0/3.0, ncpu=0, freq=1
             screen_st.obj._v_attrs['midra'] = midRA
             screen_st.obj._v_attrs['middec'] = midDec
 
-        # Add histories
-#         sw = solWriter(screen_st)
-#         sw.addHistory('CREATE (by PHASESCREEN operation)')
-
         # Store piercepoint table. Note that it does not conform to the axis
         # shapes, so we cannot use makeSoltab()
-        screen_solset = screen_st.obj._v_parent._v_name
-        H.H.create_array('/'+screen_solset+'/'+screen_st.obj._v_name,
+        solset.obj._v_file.create_array('/'+solset.name+'/'+screen_st.obj._v_name,
             'piercepoint', obj=pp)
+
+        screen_st.addHistory('CREATE (by PHASESCREEN operation)')
+        resscreen_st.addHistory('CREATE (by PHASESCREEN operation)')
 
     return 0

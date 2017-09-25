@@ -73,13 +73,16 @@ def calculate_phases(screen1, screen2, pp, directions, frequencies,
         phase2[i] = np.dot(c, f2)
 
     # Interpolate phases to desired frequencies:
-    # TEC = (ph1 - ph2) / (1/freq1 - 1/freq2) / -8.4479745e9
-    # scph = (freq1*ph1 - freq2*ph2) / (freq1 - freq2)
+    #   TEC = (ph1 - ph2) / (1/freq1 - 1/freq2) / -8.4479745e9
+    #   scph = (freq1*ph1 - freq2*ph2) / (freq1 - freq2)
     phase = np.zeros((len(x), len(frequencies)))
     for i, freq in enumerate(frequencies):
-        tec = (phase1 - phase2) / (1.0/freq1 - 1.0/freq2) / (-8.4479745e9)
-        scphase = (freq1*phase1 - freq2*phase2) / (freq1 - freq2)
-        phase[:, i] = -8.4479745e9 * tec/freq + scphase # order is [dir, freq]
+        if freq1 != freq2:
+            tec = (phase1 - phase2) / (1.0/freq1 - 1.0/freq2) / (-8.4479745e9)
+            scphase = (freq1*phase1 - freq2*phase2) / (freq1 - freq2)
+            phase[:, i] = -8.4479745e9 * tec/freq + scphase # order is [dir, freq]
+        else:
+            phase[:, i] = phase1 # order is [dir, freq]
 
     outQueue.put([k, phase])
 
@@ -100,7 +103,7 @@ def screen_to_phases(pp, screen1, screen2, directions, frequencies,
         Array of screen values at the piercepoints for freq2
     directions: list of arrays
         List of (RA, Dec) arrays in radians for which phases are desired
-    frequencies: array
+    frequencies: list or array
         Array of frequencies in Hz for which phases are desired
     times: array
         Array of times
@@ -167,7 +170,7 @@ def screen_to_phases(pp, screen1, screen2, directions, frequencies,
 
 def run(soltab1, soltab2, source_dict, frequencies, outsoltab, ncpu=0):
     """
-    Plot screens (one plot is made per time and per station)
+    Calculate phases from screens
 
     Parameters
     ----------
@@ -190,6 +193,9 @@ def run(soltab1, soltab2, source_dict, frequencies, outsoltab, ncpu=0):
 
     logging.info('Using input solution tables: {0} and {1}'.format(soltab1.name,
         soltab2.name))
+
+    # Sort frequencies
+    frequencies.sort()
 
     # Get values from soltabs
     solset = soltab1.getSolset()
@@ -216,6 +222,13 @@ def run(soltab1, soltab2, source_dict, frequencies, outsoltab, ncpu=0):
     r_0 = soltab1.obj._v_attrs['r_0']
     freq1 = soltab1.obj._v_attrs['freq']
     freq2 = soltab2.obj._v_attrs['freq']
+    if freq1 == freq2:
+        for f in frequencies:
+            if f != freq1:
+                logging.error('Screens have the same frequency: cannot calculate '
+                    'phases at frequency {0} Hz!'.format(f))
+                return 1
+
     pp = soltab1.obj.piercepoint
     midRA = soltab1.obj._v_attrs['midra']
     midDec = soltab1.obj._v_attrs['middec']
@@ -230,7 +243,7 @@ def run(soltab1, soltab2, source_dict, frequencies, outsoltab, ncpu=0):
     ants_out = station_names
     freqs_out = frequencies
     weights = np.ones(phases.shape)
-    st = solset.makeSoltab(outsoltab, axesNames=['dir', 'ant', 'freq', 'time'],
+    st = solset.makeSoltab('phase', outsoltab, axesNames=['dir', 'ant', 'freq', 'time'],
         axesVals=[dirs_out, ants_out, freqs_out, times_out], vals=phases,
         weights=weights)
 
