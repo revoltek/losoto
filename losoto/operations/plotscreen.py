@@ -98,7 +98,6 @@ def calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up
 
     xr = np.arange(lowerk[0], upperk[0], m_per_pixk)
     yr = np.arange(lowerk[1], upperk[1], m_per_pixk)
-
     D = np.resize(pp, (N_piercepoints, N_piercepoints, 3))
     D = np.transpose(D, (1, 0, 2)) - D
     D2 = np.sum(D**2, axis=2)
@@ -130,18 +129,18 @@ def calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up
 
 def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     upper, vmin, vmax, source_names, show_source_names, station_names, sindx,
-    root_dir, prestr, is_image_plane,  midRA, midDec, outQueue):
+    root_dir, prestr, is_image_plane,  midRA, midDec, order, outQueue):
     """
     Plots screen images
 
     Parameters
     ----------
     screen: array
-        Array of screen values at the piercepoints
+        Image of screen values
     fitted_phase1: array
         Array of fitted phase values
     residuals: array
-        Array of screen residuals at the piercepoints
+        Array of phase residuals at the piercepoints
     weights: array
         Array of weights at the piercepoints
     x: array
@@ -162,7 +161,8 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         List of source (direction) names
     show_source_names: bool
         label sources on screen plots
-    is_phase: bool
+    order: int
+        order of screen
 
     """
     if not 'matplotlib' in sys.modules:
@@ -204,11 +204,15 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
 
     s = []
     c = []
+    xf = []
+    yf = []
     for j in range(fitted_phase1.shape[0]):
         if weights[j] > 0.0:
-            s.append(max(10, 200*np.sqrt(weights[j]/np.median(weights))))
+            s.append(max(20, 200*np.sqrt(weights[j]/np.median(weights))))
         else:
-            s.append(10)
+            s.append(120)
+            xf.append(x[j])
+            yf.append(y[j])
         c.append(sm.to_rgba(fitted_phase1[j]))
 
     if is_image_plane:
@@ -236,15 +240,23 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     cbar.set_label('Value', rotation=270)
 
     ax.scatter(x, y, s=s, c=c)
+    if len(xf) > 0:
+        ax.scatter(xf, yf, s=120, c='k', marker='x')
     if show_source_names:
         labels = source_names
-        for label, xl, yl in zip(labels, x[0::N_stations], y[0::N_stations]):
+        for label, xl, yl in zip(labels, x, y):
             plt.annotate(
                 label,
                 xy = (xl, yl), xytext = (-2, 2),
                 textcoords = 'offset points', ha = 'right', va = 'bottom')
 
-    plt.title('Station {0} ({1}), Time {2}'.format(sindx, station_names[sindx], k))
+    nonflagged = np.where(weights > 0.0)
+    real_diff = np.cos(fitted_phase1[nonflagged]) - np.cos(fitted_phase1[nonflagged]-residuals[nonflagged])
+    imag_diff = np.sin(fitted_phase1[nonflagged]) - np.sin(fitted_phase1[nonflagged]-residuals[nonflagged])
+    c = real_diff + imag_diff*1j
+    nsrcs = residuals[nonflagged].shape[0]
+    redchi2 = np.sum(np.square(np.abs(c)) * weights[nonflagged]) / (nsrcs-order)
+    plt.title('Station {0}, Time {1} (red. chi2 = {2:0.3f})'.format(station_names[sindx], k, redchi2))
     if is_image_plane:
         ax.set_xlim(lower[0], upper[0])
         ax.set_ylim(lower[1], upper[1])
@@ -400,13 +412,15 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         residuals = inresiduals[:, :, sindx, newaxis].transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
         fitted_phase1 = np.zeros((N_piercepoints, N_times))
 
-        Nx = 24
-        Ny = 0
-        while Ny < 20:
-            pix_per_m = Nx / im_extent_m[0]
-            m_per_pix = 1.0 / pix_per_m
-            Ny = int(im_extent_m[1] * pix_per_m)
-            Nx += 1
+        Nx = 30 # set approximate number of pixels in screen
+        pix_per_m = Nx / im_extent_m[0]
+        m_per_pix = 1.0 / pix_per_m
+        xr = np.arange(lower[0], upper[0], m_per_pix)
+        yr = np.arange(lower[1], upper[1], m_per_pix)
+        Nx = len(xr)
+        Ny = len(yr)
+        lower = np.array([xr[0], yr[0]])
+        upper = np.array([xr[1], yr[1]])
 
         x = np.zeros((N_times, N_piercepoints)) # plot x pos of piercepoints
         y = np.zeros((N_times, N_piercepoints)) # plot y pos of piercepoints
@@ -449,7 +463,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
             mpm.put([screen[:, :, k], fitted_phase1[:, k], residuals[:, k],
             weights[:, k, sindx], x[k, :], y[k, :], k, lower, upper, vmin, vmax,
             source_names, show_source_names, station_names, sindx, root_dir,
-            prestr, is_image_plane, midRA, midDec])
+            prestr, is_image_plane, midRA, midDec, order])
         mpm.wait()
 
 
@@ -480,8 +494,8 @@ def fitPLaneLTSQ(XYZ):
     return (a, b, c)
 
 
-def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False,
-    is_phase=True, ncpu=0):
+def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False,
+    is_phase=True, show_source_names=False, ncpu=0):
     """
     Plot screens (one plot is made per time and per station)
 
@@ -489,7 +503,7 @@ def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False
     ----------
     soltab : solution table
         Soltab containing screen
-    ressoltab: solution table
+    ressoltab: solution table, optional
         Soltab containing the screen residuals
     minZ: float, optional
         Minimum value of colorbar scale
@@ -501,18 +515,27 @@ def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False
         If True, remove gradient before plotting
     is_phase: bool, optional
         If True, screen is a phase screen
+    show_source_names: bool, optional
+        If True, source names are overplotted
     ncpu: int, optional
         Number of CPUs to use. If 0, all are used
-
     """
-
     import os
     import numpy as np
 
-    logging.info('Using input solution table: {}'.format(soltab.name))
-
+    logging.info('Using input screen soltab: {}'.format(soltab.name))
+    
     # Get values from soltabs
-    solset = soltab.getSolset()
+    solset = soltab.getSolset()    
+    if ressoltab is None:
+        try:
+            # Look for residual soltab assuming standard naming conventions
+            ressoltab = solset.getSoltab(soltab.name+'resid')
+        except:
+            logging.error('Could not find the soltab with associated screen residuals. '
+                'Please specify it with the "ressoltab" argument.')
+            return 1
+    logging.info('Using input screen residual soltab: {}'.format(ressoltab.name))
     screen = np.array(soltab.val)
     weights = np.array(soltab.weight)
     residuals = np.array(ressoltab.val)
@@ -552,7 +575,7 @@ def run(soltab, ressoltab, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False
     make_screen_plots(pp, screen, residuals, weights, np.array(station_names),
         np.array(station_positions), np.array(source_names), times,
         height, order, beta_val, r_0, prefix=prefix,
-        remove_gradient=remove_gradient, show_source_names=False, min_val=min_val,
+        remove_gradient=remove_gradient, show_source_names=show_source_names, min_val=min_val,
         max_val=max_val, is_phase=is_phase, midRA=midRA, midDec=midDec, ncpu=ncpu)
 
     return 0
