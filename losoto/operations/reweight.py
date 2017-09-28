@@ -13,84 +13,94 @@ def run_parser(soltab, parser, step):
 	return run(soltab, weightVal, soltabImport, flagBad)
 
 
-def estimate_weights_median_window(soltab, Nstddev):
+def rolling_window_lastaxis(a, window):
+    """Directly taken from Erik Rigtorp's post to numpy-discussion.
+    <http://www.mail-archive.com/numpy-discussion@scipy.org/msg29450.html>"""
+    import numpy as np
+
+    if window < 1:
+       raise ValueError, "`window` must be at least 1."
+    if window > a.shape[-1]:
+       raise ValueError, "`window` is too long."
+    shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+    strides = a.strides + (a.strides[-1],)
+    return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
+
+def estimate_weights_window(sindx, vals, nshort, nlong, type, outQueue):
 	"""
 	Set weights using a median-filter method
-	
+
 	Parameters
 	----------
-	Nstddev: int
-		Size of window in number of timeslots to use to calculate standard deviation
+	sindx: int
+		Index of station
+	vals: array
+		Array of values
+	nshort: odd int
+		Size of short time window
+	nlong: odd int
+		Size of long time window
+	typ: str
+		Type of values (e.g., 'phase')
 
 	"""
 	import numpy as np
 
-	# Loop over directions
-	directions = soltab.dir[:]
-	freqs = soltab.freq[:]
-	stations = soltab.ant[:]
-	for d in directions:
-		for f in freqs:
-			for s in stations:
-				soltab.setSelection(dir=d, freq=f, ant=s)
-				phases = np.squeeze(soltab.val)
-				if np.all(phases == 0.0):
-					# If reference station, skip
-					continue
-		
-				# Change phase to real/imag
-				real = np.cos(phases)
-				imag = np.sin(phases)
+	pad_width = [(0, 0)] * len(vals.shape)
+	pad_width[-1] = ((nshort-1)/2, (nshort-1)/2)
+	if type == 'phase':
+		# Change phase to real/imag (N-1)/2
+		real = np.cos(vals)
+		imag = np.sin(vals)
+		pad_real = np.pad(real, pad_width, 'constant', constant_values=(np.nan,))
+		pad_imag = np.pad(imag, pad_width, 'constant', constant_values=(np.nan,))
 
-				# Smooth with short window and subtract
-				N = 3
-				idx = np.arange(N) + np.arange(len(phases)-N+1)[:, None]
-				med = np.median(real[idx], axis=1)
-				med_real = np.zeros(phases.shape)
-				med_real[0:(N-1)/2] = med[0]
-				med_real[(N-1)/2:-(N-1)/2] = med
-				med_real[-(N-1)/2:] = med[-1]
-				med = np.median(imag[idx], axis=1)
-				med_imag = np.zeros(phases.shape)
-				med_imag[0:(N-1)/2] = med[0]
-				med_imag[(N-1)/2:-(N-1)/2] = med
-				med_imag[-(N-1)/2:] = med[-1]
-				diff_real = real - med_real
-				diff_imag = imag - med_imag
-				c = diff_real + diff_imag*1j
+		# Median smooth with short window and subtract to de-trend
+		med_real = np.nanmedian(rolling_window_lastaxis(pad_real, nshort), axis=-1)
+		med_imag = np.nanmedian(rolling_window_lastaxis(pad_imag, nshort), axis=-1)
+		diff_real = real - med_real
+		diff_imag = imag - med_imag
+		c = diff_real + diff_imag*1j
+	else:
+		# Median smooth with short window and subtract to de-trend
+		pad_vals = np.pad(vals, pad_width, 'constant', constant_values=(np.nan,))
+		med = np.nanmedian(rolling_window_lastaxis(pad_vals, nshort), axis=-1)
+		c = vals - med
 
-				# Calculate standard deviation in larger window
-				N = Nstddev
-				idx = np.arange(N) + np.arange(len(phases)-N+1)[:, None]
-				mad = np.std(c[idx], axis=1)
-				mad_c = np.zeros(phases.shape)
-				mad_c[0:(N-1)/2] = mad[0]
-				mad_c[(N-1)/2:-(N-1)/2] = mad
-				mad_c[-(N-1)/2:] = mad[-1]
-				mad_c[mad_c == 0.0] = np.min(mad_c[mad_c > 0.0])
-				nzeros = np.where(c == 0.0)[0].shape[0]
-				if nzeros > 0:
-					corr_factor = 2.0 * float(phases.shape[0]) / float(nzeros) # compensate for reduction in scatter due to smoothing
-				else:
-					corr_factor = 1.0
-				weights = 1.0 / np.square(corr_factor*mad_c)
-				soltab.setValues(weights, weight=True)
+	# Calculate standard deviation in larger window
+	if np.any(c == 0.0):
+		c[np.where(np.abs(c) == 0.0)] = np.nan
+	pad_width[-1] = ((nlong-1)/2, (nlong-1)/2)
+	pad_c = np.pad(c, pad_width, 'constant', constant_values=(np.nan,))
+	stddev = np.nanstd(rolling_window_lastaxis(pad_c, nlong), axis=-1)
+	if np.any(stddev == 0.0):
+		stddev[np.where(stddev == 0.0)] = np.min(stddev[np.where(stddev > 0.0)])
 
-	return soltab
-	
+	# Fudge factor to compensate for reduction in scatter due to median
+	# and subtraction (i.e., noise remains in median version and is
+	# subtracted off)
+	corr_factor = 3.0
+	w = 1.0 / np.square(corr_factor*stddev)
 
-def run( soltab, method='uniform', weightVal=1., nwindow=250, soltabImport='', flagBad=False ):
+	outQueue.put([sindx, w])
+
+
+def run( soltab, method='uniform', weightVal=1., nshort=3, nlong=251,
+	soltabImport='', flagBad=False, ncpu=0 ):
 	"""
-	This operation reset the weight vals
+	This operation resets the weight vals
 
 	Parameters
 	----------
 	method : str, optional
-		One of 'uniform' or 'window'.
+		One of 'uniform' (single value) or 'window' (sliding window in time).
 	weightVal : float, optional
 		Set weights to this values (0=flagged), by default 1.
-	nwindow : int, optional
-		Window size in timeslots for 'window' method.
+	nshort : int, optional
+		Short window size in timeslots for 'window' method.
+	nlong : int, optional
+		Long window size in timeslots for 'window' method.
 	soltabImport : str, optional
 		Name of a soltab. Copy weights from this soltab, by default do not copy.
 	flagBad : bool, optional
@@ -118,13 +128,37 @@ def run( soltab, method='uniform', weightVal=1., nwindow=250, soltabImport='', f
 		if method == 'uniform':
 			weights = weightVal
 			soltab.addHistory('REWEIGHTED to '+str(weightVal)+'.')
-			soltab.setValues(weights, weight=True)
 		elif method == 'window':
-			if soltab.getType() != 'phase':
-				logging.error('Median-window weighting only works for phases')
+			if ncpu == 0:
+				import multiprocessing
+				ncpu = min(8, multiprocessing.cpu_count()) # can use a lot of memory, so don't use too many cores
+			if nshort % 2 == 0:
+				logging.error('nshort must be odd')
 				return 1
-			soltab = estimate_weights_median_window(soltab, nwindow)
-			soltab.addHistory('REWEIGHTED using sliding window of size {} timeslots'.format(nwindow))
+			if nlong % 2 == 0:
+				logging.error('nlong must be odd')
+				return 1
+
+			tindx = soltab.axesNames.index('time')
+			antindx = soltab.axesNames.index('ant')
+			vals = soltab.val[:].swapaxes(antindx, 0)
+			if tindx == 0:
+				tindx = antindx
+			mpm = multiprocManager(ncpu, estimate_weights_window)
+			for sindx, sval in enumerate(vals):
+				if np.all(sval == 0.0):
+					# skip reference station
+					continue
+				mpm.put([sindx, sval.swapaxes(tindx-1, -1), nshort, nlong, soltab.getType()])
+			mpm.wait()
+			weights = np.ones(vals.shape)
+			for (sindx, w) in mpm.get():
+				weights[sindx, :] = w.swapaxes(-1, tindx-1)
+			weights = weights.swapaxes(0, antindx)
+
+			soltab.addHistory('REWEIGHTED using sliding window with nshort={0} '
+				'and nlong={1} timeslots'.format(nshort, nlong))
+		soltab.setValues(weights, weight=True)
 
 	if flagBad:
 		weights = soltab.getValues(weight = True, retAxesVals = False)
