@@ -224,6 +224,13 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         extent_y = max_y - min_y
         lower = [min_x - 0.1 * extent_x, min_y - 0.1 * extent_y]
         upper = [max_x + 0.1 * extent_x, max_y + 0.1 * extent_y]
+        Nx = screen.shape[0]
+        pix_per_m = Nx / (upper[0] - lower[0])
+        m_per_pix = 1.0 / pix_per_m
+        xr = np.arange(lower[0], upper[0], m_per_pix)
+        yr = np.arange(lower[1], upper[1], m_per_pix)
+        lower = np.array([xr[0], yr[0]])
+        upper = np.array([xr[-1], yr[-1]])
     else:
         # convert from m to km
         lower /= 1000.0
@@ -420,7 +427,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         Nx = len(xr)
         Ny = len(yr)
         lower = np.array([xr[0], yr[0]])
-        upper = np.array([xr[1], yr[1]])
+        upper = np.array([xr[-1], yr[-1]])
 
         x = np.zeros((N_times, N_piercepoints)) # plot x pos of piercepoints
         y = np.zeros((N_times, N_piercepoints)) # plot y pos of piercepoints
@@ -524,9 +531,9 @@ def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=
     import numpy as np
 
     logging.info('Using input screen soltab: {}'.format(soltab.name))
-    
+
     # Get values from soltabs
-    solset = soltab.getSolset()    
+    solset = soltab.getSolset()
     if ressoltab is None:
         try:
             # Look for residual soltab assuming standard naming conventions
