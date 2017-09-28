@@ -457,7 +457,7 @@ def flag_outliers(srcindx, rr, weights, phase_residual, nsigma, N, screen_stddev
 
     """
     import numpy as np
-    
+
     # Convert to real/imag
     real_diff = np.cos(rr) - np.cos(rr-phase_residual)
     imag_diff = np.sin(rr) - np.sin(rr-phase_residual)
@@ -470,7 +470,7 @@ def flag_outliers(srcindx, rr, weights, phase_residual, nsigma, N, screen_stddev
     smooth_c[0:(N-1)/2] = c_sm[0]
     smooth_c[(N-1)/2:-(N-1)/2] = c_sm
     smooth_c[-(N-1)/2:] = c_sm[-1]
-    
+
     # Compare smoothed residuals to stddev of station and screen
     stddev = np.sqrt(1.0/weights)
     outlier_ind = np.where((smooth_c > nsigma*screen_stddev) & (smooth_c > nsigma*stddev))
@@ -578,8 +578,7 @@ def fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, time
 
 
 def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
-    beta=5.0/3.0, ncpu=0, station_to_fit=None, niter=3,
-    nsigma=3.0, nwindow=500):
+	beta=5.0/3.0, ncpu=0, station_to_fit=None, niter=3, nsigma=3.0):
     """
     Fits a screen to TEC + scalaraphase values.
 
@@ -615,8 +614,6 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
         Number of iterations to do when determining weights
     nsigma: float, optional
         Number of sigma above which directions are flagged
-    nwindow: int, optional
-        Size of sliding window in time samples
 
     """
     import numpy as np
