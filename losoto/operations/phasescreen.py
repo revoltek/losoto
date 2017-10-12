@@ -103,6 +103,8 @@ def calculate_piercepoints(station_positions, source_positions, times, height=20
             pbar.update(ipbar)
             ipbar += 1
         pbar.finish()
+        midRA = 0.0
+        midDec = 0.0
 
     return pp, airmass, midRA, midDec
 
@@ -458,22 +460,11 @@ def flag_outliers(srcindx, rr, weights, phase_residual, nsigma, N, screen_stddev
     """
     import numpy as np
 
-    # Convert to real/imag
-    real_diff = np.cos(rr) - np.cos(rr-phase_residual)
-    imag_diff = np.sin(rr) - np.sin(rr-phase_residual)
-    c = real_diff + imag_diff*1j
-
-    # Smooth a bit in time
-    idx = np.arange(N) + np.arange(len(phase_residual)-N+1)[:, None]
-    c_sm = np.mean(np.abs(c)[idx], axis=1)
-    smooth_c = np.zeros(phase_residual.shape)
-    smooth_c[0:(N-1)/2] = c_sm[0]
-    smooth_c[(N-1)/2:-(N-1)/2] = c_sm
-    smooth_c[-(N-1)/2:] = c_sm[-1]
-
     # Compare smoothed residuals to stddev of station and screen
     stddev = np.sqrt(1.0/weights)
-    outlier_ind = np.where((smooth_c > nsigma*screen_stddev) & (smooth_c > nsigma*stddev))
+    phase_residual = normalize(phase_residual)
+    outlier_ind = np.where(np.logical_or((phase_residual > nsigma*screen_stddev),
+        (phase_residual > nsigma*stddev)))
     weights[outlier_ind] = 0.0
 
     outQueue.put([srcindx, weights])
@@ -578,7 +569,7 @@ def fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, time
 
 
 def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
-	beta=5.0/3.0, ncpu=0, station_to_fit=None, niter=3, nsigma=3.0):
+    beta=5.0/3.0, ncpu=0, niter=3, nsigma=3.0):
     """
     Fits a screen to TEC + scalaraphase values.
 
@@ -588,7 +579,7 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
     pierce point per solution interval. The pierce point locations are stored in
     an auxiliary array in the output soltabs.
 
-    TEC screens can be plotted with the PLOTSCREEN operation.
+    Screens can be plotted with the PLOTSCREEN operation.
 
     Parameters
     ----------
@@ -606,10 +597,6 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
         turbulence)
     ncpu: int, optional
         Number of CPUs to use. If 0, all are used
-    freq: float, optional
-        Frequency in Hz for screen
-    station_to_fit: int or str, optional
-        Index or name of station to fit. If None, all stations are fit
     niter: int, optional
         Number of iterations to do when determining weights
     nsigma: float, optional
@@ -631,16 +618,17 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
     r = np.array(soltab.val)
     weights = soltab.weight[:]
     if len(r.shape) > 3:
-		# remove degenerate freq axis
-		r = np.squeeze(r)
-		weights = np.squeeze(weights)
+        # remove degenerate freq axis
+        freq_ind = soltab.getAxesNames().index('freq')
+        r = np.squeeze(r, axis=freq_ind)
+        weights = np.squeeze(weights, axis=freq_ind)
     r = r.transpose([2, 1, 0]) # order is now [dir, ant, time]
     weights = weights.transpose([2, 1, 0])
     times = np.array(soltab.time)
     freqs = soltab.freq[:]
     if len(freqs) > 1:
-    	logging.error('Screens can only be fit at a single frequency')
-    	return 1
+        logging.error('Screens can only be fit at a single frequency')
+        return 1
     freq = freqs[0]
 
     # Collect station and source names and positions and times, making sure
@@ -656,64 +644,119 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
     station_positions = []
     for station in station_names:
         station_positions.append(station_dict[station])
-
-    # Check if only a single station is to be fit
-    if station_to_fit is not None:
-        if type(station_to_fit) is int:
-            stat_indx = station_to_fit
-        else:
-            stat_indx = station_names.tolist().index(station_to_fit)
-        station_names = [station_names[stat_indx]]
-        station_positions = [station_positions[stat_indx]]
-        r = r[:, stat_indx, newaxis, :]
-        weights = weights[:, stat_indx, newaxis, :]
-
-    # Initialize various arrays
     N_sources = len(source_names)
     N_times = len(times)
     N_stations = len(station_names)
-    real_screen = np.zeros((N_sources, N_stations, N_times))
-    real_residual =np.zeros((N_sources, N_stations, N_times))
-    imag_screen = np.zeros((N_sources, N_stations, N_times))
-    imag_residual = np.zeros((N_sources, N_stations, N_times))
-    phase_screen = np.zeros((N_sources, N_stations, N_times))
-    phase_residual = np.zeros((N_sources, N_stations, N_times))
 
-    # Fit screens
-    val_amp = 1.0
-    r_0 = 100.0 # shouldn't matter what we choose
-    for s, stat in enumerate(station_names):
+    logging.info('Using height = {0} m and order = {1}'.format(height, order))
+    if height == 0.0:
+        # Fit station screens
+        logging.info("Using RA and Dec for pierce points")
 
-        N_piercepoints = N_sources
-        rr = np.reshape(r[:, s, :], [N_piercepoints, N_times])
+        # Initialize various arrays
+        real_screen = np.zeros((N_sources, N_stations, N_times))
+        real_residual =np.zeros((N_sources, N_stations, N_times))
+        imag_screen = np.zeros((N_sources, N_stations, N_times))
+        imag_residual = np.zeros((N_sources, N_stations, N_times))
+        phase_screen = np.zeros((N_sources, N_stations, N_times))
+        phase_residual = np.zeros((N_sources, N_stations, N_times))
+
+        # Fit screens
+        val_amp = 1.0
+        r_0 = 100 # shouldn't matter what we choose
+        for s, stat in enumerate(station_names):
+
+            N_piercepoints = N_sources
+            rr = np.reshape(r[:, s, :], [N_piercepoints, N_times])
+
+            # Find pierce points and airmass values for given screen height
+            pp, airmass, midRA, midDec = calculate_piercepoints(np.array([station_positions[s]]),
+                np.array(source_positions), np.array(times), height)
+
+            # Iterate:
+            # 2. flag nsigma outliers
+            # 3. refit with new weights
+            # 4. repeat for niter
+            station_weights = weights[:, s, :]
+            init_station_weights = weights[:, s, :].copy() # preserve initial weights
+            for iterindx in range(niter):
+                if iterindx > 0:
+                    # Flag outliers
+                    nonflagged = np.where(init_station_weights > 0.0)
+                    real_diff = np.cos(rr[nonflagged]) - np.cos(rr[nonflagged]-phase_residual[:, s, :][nonflagged])
+                    imag_diff = np.sin(rr[nonflagged]) - np.sin(rr[nonflagged]-phase_residual[:, s, :][nonflagged])
+                    stddev_real = np.sqrt(np.average(real_diff**2, weights=init_station_weights[nonflagged], axis=0))
+                    stddev_imag = np.sqrt(np.average(imag_diff**2, weights=init_station_weights[nonflagged], axis=0))
+                    total_stddev = np.arctan2(stddev_real, stddev_imag)
+                    mpm = multiprocManager(ncpu, flag_outliers)
+                    for srcindx in range(N_piercepoints):
+                        mpm.put([srcindx, rr[srcindx, :], init_station_weights[srcindx, :],
+                            phase_residual[srcindx, s, :], nsigma, 3, total_stddev])
+                    mpm.wait()
+                    for (srcindx, w) in mpm.get():
+                        station_weights[srcindx, :] = w
+
+                # Fit the screens
+                mpm = multiprocManager(ncpu, fit_phase_screen)
+                for tindx, t in enumerate(times):
+                    w = np.diag(station_weights[:, tindx])[:, :, newaxis]
+                    mpm.put([[stat], source_names, pp[tindx, newaxis, :, :],
+                        airmass[tindx, newaxis, :], rr[:, tindx, newaxis], w,
+                        [t], height, order, r_0, beta])
+                mpm.wait()
+                for (real_scr, real_res, imag_scr, imag_res, phase_scr, phase_res, t) in mpm.get():
+                    i = times.tolist().index(t[0])
+                    real_screen[:, s, i] = real_scr[0, :, 0]
+                    real_residual[:, s, i] = real_res[0, :, 0]
+                    imag_screen[:, s, i] = imag_scr[0, :, 0]
+                    imag_residual[:, s, i] = imag_res[0, :, 0]
+                    phase_screen[:, s, i] = phase_scr[0, :, 0]
+                    phase_residual[:, s, i] = phase_res[0, :, 0]
+            weights[:, s, :] = station_weights
+
+    else:
+        # Fit global screens
+        if height < 100e3:
+            logging.warning("Height is less than 100e3 m. This is likely too low.")
+
+        # Initialize various arrays
+        N_piercepoints = N_sources * N_stations
+        real_screen = np.zeros((N_sources, N_stations, N_times))
+        real_residual =np.zeros((N_sources, N_stations, N_times))
+        imag_screen = np.zeros((N_sources, N_stations, N_times))
+        imag_residual = np.zeros((N_sources, N_stations, N_times))
+        phase_screen = np.zeros((N_sources, N_stations, N_times))
+        phase_residual = np.zeros((N_sources, N_stations, N_times))
+
+        # Fit screens
+        val_amp = 1.0
+        r_0 = 100.0 # shouldn't matter what we choose
+        rr = np.reshape(r, [N_piercepoints, N_times])
 
         # Find pierce points and airmass values for given screen height
-        logging.info('Using height = {0} m and order = {1}'.format(height, order))
-        if height == 0.0:
-            logging.info("Using RA and Dec for pierce points")
-            r_0 = r_0 / 0.0005 # convert from degrees to pixels
-        elif height < 100e3:
-            logging.warning("Height is less than 100e3 m. This is likely too low.")
-        pp, airmass, midRA, midDec = calculate_piercepoints(np.array([station_positions[s]]),
+        pp, airmass, midRA, midDec = calculate_piercepoints(np.array(station_positions),
             np.array(source_positions), np.array(times), height)
 
         # Iterate:
         # 2. flag nsigma outliers
         # 3. refit with new weights
         # 4. repeat for niter
-        station_weights = weights[:, s, :]
-        init_station_weights = weights[:, s, :].copy() # preserve initial weights
+        station_weights = np.reshape(weights, [N_piercepoints, N_times])
+        init_station_weights = station_weights.copy() # preserve initial weights
         for iterindx in range(niter):
             if iterindx > 0:
                 # Flag outliers
-                real_diff = np.cos(rr) - np.cos(rr-phase_residual[:, s, :])
-                imag_diff = np.sin(rr) - np.sin(rr-phase_residual[:, s, :])
-                c = real_diff + imag_diff*1j
-                total_stddev = np.std(c, axis=0)
+                phase_residual_r = np.reshape(phase_residual, [N_piercepoints, N_times])
+                nonflagged = np.where(init_station_weights > 0.0)
+                real_diff = np.cos(rr[nonflagged]) - np.cos(rr[nonflagged]-phase_residual_r[nonflagged])
+                imag_diff = np.sin(rr[nonflagged]) - np.sin(rr[nonflagged]-phase_residual_r[nonflagged])
+                stddev_real = np.std(real_diff, axis=0)
+                stddev_imag = np.std(imag_diff, axis=0)
+                total_stddev = np.arctan2(stddev_real, stddev_imag)
                 mpm = multiprocManager(ncpu, flag_outliers)
                 for srcindx in range(N_piercepoints):
                     mpm.put([srcindx, rr[srcindx, :], init_station_weights[srcindx, :],
-                        phase_residual[srcindx, s, :], nsigma, 3, total_stddev])
+                        phase_residual_r[srcindx, :], nsigma, 3, total_stddev])
                 mpm.wait()
                 for (srcindx, w) in mpm.get():
                     station_weights[srcindx, :] = w
@@ -721,20 +764,20 @@ def run(soltab, outsoltab='phasescreen', height=0.0, order=12,
             # Fit the screens
             mpm = multiprocManager(ncpu, fit_phase_screen)
             for tindx, t in enumerate(times):
-            	w = np.diag(station_weights[:, tindx])[:, :, newaxis]
-                mpm.put([[stat], source_names, pp[tindx, newaxis, :, :],
+                w = np.diag(station_weights[:, tindx])[:, :, newaxis]
+                mpm.put([station_names, source_names, pp[tindx, newaxis, :, :],
                     airmass[tindx, newaxis, :], rr[:, tindx, newaxis], w,
                     [t], height, order, r_0, beta])
             mpm.wait()
             for (real_scr, real_res, imag_scr, imag_res, phase_scr, phase_res, t) in mpm.get():
                 i = times.tolist().index(t[0])
-                real_screen[:, s, i] = real_scr[0, :, 0]
-                real_residual[:, s, i] = real_res[0, :, 0]
-                imag_screen[:, s, i] = imag_scr[0, :, 0]
-                imag_residual[:, s, i] = imag_res[0, :, 0]
-                phase_screen[:, s, i] = phase_scr[0, :, 0]
-                phase_residual[:, s, i] = phase_res[0, :, 0]
-		weights[:, s, :] = station_weights
+                real_screen[:, :, i] = real_scr[0, :, :]
+                real_residual[:, :, i] = real_res[0, :, :]
+                imag_screen[:, :, i] = imag_scr[0, :, :]
+                imag_residual[:, :, i] = imag_res[0, :, :]
+                phase_screen[:, :, i] = phase_scr[0, :, :]
+                phase_residual[:, :, i] = phase_res[0, :, :]
+        weights = np.reshape(station_weights, (N_sources, N_stations, N_times))
 
     # Write the results to the output solset
     dirs_out = source_names
