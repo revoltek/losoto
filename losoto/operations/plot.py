@@ -6,7 +6,6 @@
 
 import logging
 from losoto.operations_lib import *
-import numpy.ma
 
 logging.debug('Loading PLOT module.')
 
@@ -79,7 +78,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     colorFlag = 'k'
 
                 vals = dataCube[Ntab][Ncol]
-                if numpy.ma.getmask(dataCube[Ntab][Ncol]).all():
+                if np.ma.getmask(dataCube[Ntab][Ncol]).all():
                     continue
 
                 # plotting
