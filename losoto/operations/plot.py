@@ -79,7 +79,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     colorFlag = 'k'
 
                 vals = dataCube[Ntab][Ncol]
-                if numpy.ma.getmask(dataCube[Ntab][Ncol]).all()
+                if numpy.ma.getmask(dataCube[Ntab][Ncol]).all():
                     continue
 
                 # plotting
