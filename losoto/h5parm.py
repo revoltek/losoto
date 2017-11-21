@@ -344,7 +344,7 @@ class h5parm( object ):
                     history = soltab.getHistory()
                     if history != "":
                         info += 4*" " + "History: "
-                        joinstr =  13*" " + "\n"
+                        joinstr = "\n" + 13*" "
                         info += joinstr.join(wrap(history)) + "\n"
                 except tables.exceptions.NoSuchNodeError:
                     info += "\nSolution table '%s': No valid data found\n" % (soltab.name)
