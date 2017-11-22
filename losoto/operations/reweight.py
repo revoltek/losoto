@@ -136,8 +136,10 @@ def estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
     if len(zero_scatter_ind[0]) > 0:
         good_ind = np.where(~np.logical_or(np.isnan(stddev), stddev == 0.0))
         stddev[zero_scatter_ind] = np.min(stddev[good_ind])
-        print(np.min(stddev[good_ind]))
-    fudge_factor = 2.0 # factor to compensate for smoothing
+    if nmedian > 0:
+        fudge_factor = 2.0 # factor to compensate for smoothing
+    else:
+        fudge_factor = 1.0
     w = 1.0 / np.square(stddev*fudge_factor)
     w[w > 65504.0] = 65504.0
 

@@ -11,12 +11,13 @@ logging.debug('Loading SCREENVALUES module.')
 
 
 def run_parser(soltab, parser, step):
-    inSoltab1 = parser.getarraystr( step, "inSoltab1" )
-    inSoltab2 = parser.getarraystr( step, "inSoltab2" )
-    outSoltab = parser.getarraystr( step, "outSoltab" )
+    inSoltab1 = parser.getstr( step, "inSoltab1" )
+    inSoltab2 = parser.getstr( step, "inSoltab2", None )
+    outSoltab = parser.getstr( step, "outSoltab" )
+    sourceDict = parser.getstr( step, "sourceDict" )
+    ncpu = parser.getint( step, "ncpu", 0 )
 
-    return run(inSoltab1, inSoltab2, sourceDict, frequencies, outSoltab, ncpu)
-
+    return run(inSoltab1, sourceDict, outSoltab, inSoltab2, ncpu)
 
 def calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
     r_0, freq1, freq2, midRA, midDec, outQueue):
@@ -177,7 +178,7 @@ def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
         mpm = multiprocManager(ncpu, calculate_tecsp)
         for tindx in range(N_times):
             mpm.put([screen1[:, tindx, sindx], screen2[:, tindx, sindx],
-                pp[tindx, :, :], directions, tindx, sindx, beta_val, r_0,
+                pp, directions, tindx, sindx, beta_val, r_0,
                 freq1, freq2, midRA, midDec])
         mpm.wait()
         for (tindx, t, s) in mpm.get():
@@ -257,7 +258,7 @@ def screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
                     inscreen = screen[:, tindx, :, sindx]
                 else:
                     inscreen = screen[:, tindx, :, sindx, pindx]
-                mpm.put([inscreen, pp[tindx, :, :], directions, tindx, sindx,
+                mpm.put([inscreen, pp, directions, tindx, sindx,
                     beta_val, r_0, midRA, midDec])
             mpm.wait()
             for (tindx, val) in mpm.get():
@@ -299,7 +300,10 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
         logging.info('Using input solution tables {0} and {1} to calculate '
             'TEC+scalarphase values'.format(soltab1.name, soltab2.name))
     else:
-        screen_type = soltab1.getType()
+        screen_type = soltab1.getType().split('screen')[0]
+        if screen_type not in ['phase', 'amplitude']:
+            logging.error('Values can only be derived for screens of type "phasescreen" or "amplitudescreen".')
+            return 1
         logging.info('Using input solution table {0} to calculate '
             '{1} values'.format(soltab1.name, screen_type))
 
@@ -351,7 +355,7 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
             logging.error('Screens have the same frequency: cannot calculate '
                 'TEC and scalarphase values!'.format(f))
             return 1
-    pp = soltab1.obj.piercepoint
+    pp = soltab1.obj.piercepoint[:]
     midRA = soltab1.obj._v_attrs['midra']
     midDec = soltab1.obj._v_attrs['middec']
 

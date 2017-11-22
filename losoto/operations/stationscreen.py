@@ -11,7 +11,7 @@ logging.debug('Loading STATIONSCREEN module.')
 
 
 def run_parser(soltab, parser, step):
-    outSoltab = parser.getarraystr( step, "outSoltab" )
+    outSoltab = parser.getstr( step, "outSoltab" )
     order = parser.getint( step, "Order", 5 )
     beta = parser.getfloat( step, "Beta", 5.0/3.0 )
     niter = parser.getint( step, "niter", 2 )
