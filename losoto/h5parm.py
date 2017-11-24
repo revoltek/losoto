@@ -376,10 +376,26 @@ class Solset( object ):
 
     def delete(self):
         """
-        Delete this solset
+        Delete this solset.
         """
         logging.info("Solset \""+self.name+"\" deleted.")
         self.obj._f_remove(recursive=True)
+
+
+    def rename(self, newname, overwrite=False):
+        """
+        Rename this solset.
+
+        Parameters
+        ----------
+        newname : str
+            New solution set name.
+        overwrite : bool, optional
+            Overwrite existing solset with same name.
+        """
+        self.obj._f_rename(newname, overwrite)
+        logging.info('Solset "'+self.name+'" renamed to "'+newname+'".')
+        self.name = self.obj._v_name
 
 
     def makeSoltab(self, soltype=None, soltabName=None,
@@ -630,6 +646,22 @@ class Soltab( object ):
         """
         logging.info("Soltab \""+self.name+"\" deleted.")
         self.obj._f_remove(recursive=True)
+
+
+    def rename(self, newname, overwrite=False):
+        """
+        Rename this soltab.
+
+        Parameters
+        ----------
+        newname : str
+            New solution table name.
+        overwrite : bool, optional
+            Overwrite existing soltab with same name.
+        """
+        self.obj._f_rename(newname, overwrite)
+        logging.info('Soltab "'+self.name+'" renamed to "'+newname+'".')
+        self.name = self.obj._v_name
 
 
     def setCache(self, val, weight):
