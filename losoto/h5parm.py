@@ -430,23 +430,22 @@ class Solset( object ):
             soltabName = self._fisrtAvailSoltabName(soltype)
 
         logging.info('Creating a new solution-table: '+soltabName+'.')
-        soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
-        soltab._v_attrs['parmdb_type'] = parmdbType
 
-        # create axes
+        # check input
         assert len(axesNames) == len(axesVals)
         dim = []
+        for i, axisName in enumerate(axesNames):
+            dim.append(len(axesVals[i]))
+        assert dim == list(vals.shape)
+        assert dim == list(weights.shape)
 
-#        newChunkShape = []
+        # if input is OK, create table
+        soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
+        soltab._v_attrs['parmdb_type'] = parmdbType
         for i, axisName in enumerate(axesNames):
             #axis = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, axisName,\
             #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
             axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
-            dim.append(len(axesVals[i]))
-
-        # check if the axes were in the proper order
-        assert dim == list(vals.shape)
-        assert dim == list(weights.shape)
 
         # create the val/weight Carrays
         #val = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
