@@ -113,7 +113,7 @@ def calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
 
 
 def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
-    times, beta_val, r_0, freq1, freq2, midRA=0.0, midDec=0.0, ncpu=0):
+    beta_val, r_0, freq1, freq2, midRA=0.0, midDec=0.0, ncpu=0):
     """
     Caculates phases from screens
 
@@ -127,8 +127,6 @@ def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
         Array of screen values at the piercepoints for freq2
     directions: list of arrays
         List of (RA, Dec) arrays in radians for which phases are desired
-    times: array
-        Array of times
     height: float
         Height of screen (m)
     r_0: float
@@ -164,9 +162,9 @@ def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
     directions = np.array([ra, dec]) * 180.0 / np.pi
 
     N_sources = len(ra)
-    N_times = len(times)
+    N_times = screen1.shape[1]
     N_freqs = 1
-    N_stations = station_positions.shape[0]
+    N_stations = screen1.shape[2]
     tec = np.zeros((N_times, N_stations, N_sources, N_freqs))
     scalarphase = np.zeros((N_times, N_stations, N_sources, N_freqs))
 
@@ -367,6 +365,27 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
         values = screen_to_val(pp, screen1, source_positions,
             np.array(station_positions), beta_val, r_0, midRA=midRA,
             midDec=midDec, ncpu=ncpu)
+
+    # Update solset source table if new sources are present
+    needs_update = False
+    for k, v in source_dict.iteritems():
+        if k not in solset.getSou():
+            needs_update = True
+            break
+    if needs_update:
+        solset.obj.source.remove()
+        descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
+        soltab = solset.obj._v_file.create_table(solset.obj, 'source', descriptor, title = 'Source names and directions', expectedrows = 25)
+        sourceTable = solset.obj._f_get_child('source')
+        names = []
+        positions = []
+        for k, v in source_dict.iteritems():
+            names.append(k)
+            if type(v) is list:
+                positions.append(v)
+            else:
+                positions.append(v.tolist())
+        sourceTable.append(zip(*(names, positions)))
 
     # Write the results to the output soltab(s)
     dirs_out = source_names
