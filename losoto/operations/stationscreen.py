@@ -263,48 +263,51 @@ def makeWCS(refRA, refDec):
     return w
 
 
-def flag_outliers(srcindx, weights, residual, nsigma, screen_stddev,
-    screen_type, outQueue):
+def flag_outliers(weights, residual, nsigma, screen_type):
     """
     Flags outliers
 
     Parameters
     ----------
-    srcindx : int
-        Index of direction
     weights : array
         Array of weights
     phase_residual : array
         Array of residual values from phase screen fitting (rad)
     nsigma : float
         Number of sigma above with outliers are clipped (= weight set to zero)
-    screen_stddev : float
-        Screen standard dev over all directions
     screen_type : str
         Type of screen: 'phase' or 'amplitude'
 
     Returns
     -------
-    srcindx : int
-        Index of direction
     weights : array
-        array of weights
+        array of weights, with flagged times set to 0
 
 
     """
     import numpy as np
+    from losoto.operations.reweight import nancircstd
 
-    # Compare residuals to stddev of station and screen
+    # Find stddev of the screen
     stddev = np.zeros(weights.shape)
+    flagged = np.where(weights == 0.0)
     nonflagged = np.where(weights > 0.0)
-    stddev[nonflagged] = np.sqrt(1.0/weights[nonflagged])
     if screen_type == 'phase':
-        residual = np.abs(normalize_phase(residual))
-    outlier_ind = np.where(np.logical_or((residual > nsigma*screen_stddev),
-        (residual > nsigma*stddev)))
+        # Use circular stddev
+        residual = normalize_phase(residual)
+        residual_nan = residual.copy()
+        residual_nan[flagged] = np.nan
+        screen_stddev = nancircstd(residual_nan, axis=0)
+    elif screen_type == 'amplitude':
+        # Use log residuals
+        screen_stddev = np.sqrt(np.average(residual[nonflagged]**2,
+            weights=weights[nonflagged], axis=0))
+
+    # Compare residuals to stddev of the screen
+    outlier_ind = np.where(np.abs(residual) > nsigma*screen_stddev)
     weights[outlier_ind] = 0.0
 
-    outQueue.put([srcindx, weights])
+    return weights
 
 
 def circ_chi2(samples, weights):
@@ -541,7 +544,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     from numpy import newaxis
     import re
     import os
-    from losoto.operations.reweight import nancircstd
     try:
         import progressbar
     except ImportError:
@@ -677,23 +679,13 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                         # Flag outliers
                         if screen_type == 'phase':
                             # Use circular stddev
-                            flagged = np.where(station_weights == 0.0)
-                            nanres = residual[:, s, :, freq_ind, pol_ind]
-                            nanres[flagged] = np.nan
-                            screen_stddev = nancircstd(nanres, axis=0)
-                        else:
-                            nonflagged = np.where(init_station_weights > 0.0)
-                            screen_diff = residual[:, s, :, freq_ind, pol_ind][nonflagged]
-                            screen_stddev = np.sqrt(np.average(screen_diff**2,
-                                weights=init_station_weights[nonflagged], axis=0))
-                        mpm = multiprocManager(ncpu, flag_outliers)
-                        for srcindx in range(N_piercepoints):
-                            mpm.put([srcindx, init_station_weights[srcindx, :],
-                                residual[srcindx, s, :, freq_ind, pol_ind], nsigma,
-                                screen_stddev, screen_type])
-                        mpm.wait()
-                        for (srcindx, w) in mpm.get():
-                            station_weights[srcindx, :] = w
+                            screen_diff = residual[:, s, :, freq_ind, pol_ind]
+                        elif screen_type == 'amplitude':
+                            # Use log residuals
+                            screen_diff = np.log10(rr) - np.log10(rr -
+                                residual[:, s, :, freq_ind, pol_ind])
+                        station_weights = flag_outliers(init_station_weights,
+                                screen_diff, nsigma, screen_type)
 
                     # Fit the screens
                     norderiter = 1
