@@ -373,18 +373,28 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
             needs_update = True
             break
     if needs_update:
+        source_dict_orig = solset.getSou()
         solset.obj.source.remove()
         descriptor = np.dtype([('name', np.str_, 128),('dir', np.float32, 2)])
         soltab = solset.obj._v_file.create_table(solset.obj, 'source', descriptor, title = 'Source names and directions', expectedrows = 25)
         sourceTable = solset.obj._f_get_child('source')
         names = []
         positions = []
-        for k, v in source_dict.iteritems():
+        for k, v in source_dict_orig.iteritems():
+            # Add sources from original dict
             names.append(k)
             if type(v) is list:
                 positions.append(v)
             else:
                 positions.append(v.tolist())
+        for k, v in source_dict.iteritems():
+            # Add any new sources
+            if k not in names:
+                names.append(k)
+                if type(v) is list:
+                    positions.append(v)
+                else:
+                    positions.append(v.tolist())
         sourceTable.append(zip(*(names, positions)))
 
     # Write the results to the output soltab(s)
