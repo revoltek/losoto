@@ -1,45 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Take absolute value. Needed before smooth if amplitudes are negative!
-# WEIGHT: no need to be weight compliant
-
-# Implemented by Martin Hardcastle based on clip/flag code
-
 import logging
 from losoto.operations_lib import *
 
 logging.debug('Loading ABS module.')
 
-def run( step, parset, H ):
+def run_parser(soltab, parser, step):
+    return run(soltab)
+
+def run( soltab ):
+    """
+    Take absolute value. Needed before smooth if amplitudes are negative!
+    WEIGHT: no need to be weight compliant
+
+    Parameters
+    ----------
+    soltab : soltab obj
+        Solution table.
+    """
 
     import numpy as np
-    from losoto.h5parm import solFetcher, solWriter
 
-    soltabs = getParSoltabs( step, parset, H )
+    logging.info("Taking ABSolute value of soltab: "+soltab.name)
 
-    for soltab in openSoltabs( H, soltabs ):
+    vals = soltab.getValues(retAxesVals = False)
+    count = np.count_nonzero(vals<0)
 
-        logging.info("Taking ABSolute value of soltab: "+soltab._v_name)
+    logging.info('Abs: %i points initially negative (%f %%)' % (count,100*float(count)/np.count_nonzero(vals)))
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab)
+    # writing back the solutions
+    soltab.setValues(np.abs(vals))
 
-        # axis selection
-        userSel = {}
-        for axis in sf.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        sf.setSelection(**userSel)
-
-        vals = sf.getValues(retAxesVals = False)
-        count = np.count_nonzero(vals<0)
-
-        logging.info('Abs: %i points initially negative (%f %%)' % (count,100*float(count)/np.count_nonzero(vals)))
-
-        # writing back the solutions
-        sw.setValues(np.abs(vals))
-
-        sw.addHistory('ABSolute value taken')
+    soltab.addHistory('ABSolute value taken')
         
     return 0
 

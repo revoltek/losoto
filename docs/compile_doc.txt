@@ -1,0 +1,7 @@
+# only first time
+sphinx-quickstart
+# to update the apidoc
+sphinx-apidoc -f -o source ~/phd/code/losoto/
+# to rebuild html files
+sphinx-build source/ ./
+

@@ -1,15 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This operation for LoSoTo implements basic plotting
-# WEIGHT: flag-only compliant
-
 import logging
 from losoto.operations_lib import *
 
 logging.debug('Loading PLOT module.')
 
-def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, outQueue):
+def run_parser(soltab, parser, step):
+    axesInPlot = parser.getarraystr( step, 'axesInPlot' ) # no default
+    axisInTable = parser.getstr( step, 'axisInTable', '' )
+    axisInCol = parser.getstr( step, 'axisInCol', '' )
+    axisDiff = parser.getstr( step, 'axisDiff', '' )
+    NColFig = parser.getint( step, 'NColFig', 0 )
+    figSize = parser.getarrayint( step, 'figSize', [] )
+    minmax = parser.getarrayfloat( step, 'minmax', [0,0] )
+    log = parser.getstr( step, 'log', '' )
+    plotFlag = parser.getbool( step, 'plotFlag', False )
+    doUnwrap = parser.getbool( step, 'doUnwrap', False )
+    refAnt = parser.getstr( step, 'refAnt', '' )
+    soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
+    makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
+    makeMovie = parser.getbool( step, 'makeMovie', False )
+    prefix = parser.getstr( step, 'prefix', '' )
+    ncpu = parser.getint( step, 'ncpu', 0 )
+    return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
+               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+
+
+def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
         import os
         from itertools import cycle, chain
         import numpy as np
@@ -110,7 +128,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                     ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
-                    if plotflag: 
+                    if plotFlag: 
                         ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=2, markeredgecolor='none') # plot flagged points
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
@@ -140,51 +158,92 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         plt.close()
 
 
-def run( step, parset, H ):
+def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[], minmax=[0,0], log='', \
+               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
+    """
+    This operation for LoSoTo implements basic plotting
+    WEIGHT: flag-only compliant, no need for weight
 
+    Parameters
+    ----------
+    axesInPlot : array of str
+        1- or 2-element array which says the coordinates to plot (2 for 3D plots).
+
+    axisInTable : str, optional
+        the axis to plot on a page - e.g. ant to get all antenna's on one file. By default ''.
+
+    axisInCol : str, optional
+        The axis to plot in different colours - e.g. pol to get correlations with different colors. By default ''.
+
+    axisDiff : str, optional
+        This must be a len=2 axis and the plot will have the differential value - e.g. 'pol' to plot XX-YY. By default ''.
+
+    NColFig : int, optional
+        Number of columns in a multi-table image. By default is automatically chosen.
+
+    figSize : array of int, optional
+        Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.
+
+    minmax : array of float, optional
+        Min max value for the independent variable (0 means automatic). By default 0.
+
+    log : bool, optional
+        Use Log='XYZ' to set which axes to put in Log. By default ''.
+
+    plotFlag : bool, optional
+        Whether to plot also flags as red points in 2D plots. By default False.
+    
+    doUnwrap : bool, optional
+        Unwrap phases. By default False.
+    
+    refAnt : str, optional
+        Reference antenna for phases. By default None.
+    
+    soltabsToAdd : str, optional
+        Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
+    
+    makeAntPlot : bool, optional
+        Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]. By default False.
+    
+    makeMovie : bool, optional
+        Make a movie summing up all the produced plots, by default False.
+    
+    prefix : str, optional
+        Prefix to add before the self-generated filename, by default None.
+    
+    ncpu : int, optional
+        Number of cpus, by default all available.
+    """
     import os, random
     import numpy as np
-    from losoto.h5parm import solFetcher, solHandler
 
-    def normalize(phase):
-        """
-        Normalize phase to the range [-pi, pi].
-        """
-        # Convert to range [-2*pi, 2*pi].
-        out = np.fmod(phase, 2.0 * np.pi)
-        # Remove nans
-        np.putmask(out, out!=out, 0)
-        # Convert to range [-pi, pi]
-        out[out < -np.pi] += 2.0 * np.pi
-        out[out > np.pi] -= 2.0 * np.pi
-        return out
+    logging.info("Plotting soltab: "+soltab.name)
 
-    soltabs = getParSoltabs( step, parset, H )
+    # input check
 
-    # 1- or 2-element array in form X, [Y]
-    axesInPlot = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), [] )
-    NColFig = parset.getInt('.'.join(["LoSoTo.Steps", step, "Columns"]), 0 )
-    figSize = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "FigSize"]), [0,0] )
-    minZ, maxZ = parset.getDoubleVector('.'.join(["LoSoTo.Steps", step, "MinMax"]), [0,0] )
-    if minZ == 0: minZ = None
-    if maxZ == 0: maxZ = None
-    axisInTable = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "TableAxis"]), [] )
-    axisInCol = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "ColorAxis"]), [] )
-    axisInDiff = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "DiffAxis"]), [] )
-    # log='XYZ' to set which axes to put in Log
-    log = parset.getString('.'.join(["LoSoTo.Steps", step, "Log"]), "" )
-    plotflag = parset.getBool('.'.join(["LoSoTo.Steps", step, "PlotFlag"]), False )
-    dounwrap = parset.getBool('.'.join(["LoSoTo.Steps", step, "Unwrap"]), False )
-    ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
-    tablesToAdd = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Add"]), [] )
-    makeAntPlot = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeAntPlot"]), False )
-    makeMovie = parset.getBool('.'.join(["LoSoTo.Steps", step, "MakeMovie"]), False )
-    prefix = parset.getString('.'.join(["LoSoTo.Steps", step, "Prefix"]), '' )
+    # str2list
+    if axisInTable == '': axisInTable = []
+    else: axisInTable = [axisInTable]
+    if axisInPlot == '': axisInPlot = []
+    else: axisInPlot = [axisInPlot]
+    if axisInCol == '': axisInCol = []
+    else: axisInCol = [axisInCol]
+    if axisInDiff == '': axisInDiff = []
+    else: axisInDiff = [axisInDiff]
 
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
+    if len(set(axisInTable+axesInPlot+axisInCol+axisDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
+        logging.error('Axis defined multiple times.')
+        return 1
+
+    # just because we use lists, check that they are 1-d
+    if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisDiff) > 1:
+        logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
+        return 1
+
+    for axis in axesInPlot:
+        if axis not in soltab.getAxesNames():
+            logging.error('Axis \"'+axis+'\" not found.')
+            return 1
 
     if makeMovie: 
         prefix = prefix+'__tmp__'
@@ -193,267 +252,250 @@ def run( step, parset, H ):
         logging.debug('Creating '+os.path.dirname(prefix)+'.')
         os.makedirs(os.path.dirname(prefix))
 
-    if ref == '': ref = None
-    sfsAdd = [ solFetcher(soltab) for soltab in openSoltabs(H, tablesToAdd) ]
+    if refAnt == '': refAnt = None
 
-    for soltab in openSoltabs( H, soltabs ):
+    minZ, maxZ = minmax
 
-        logging.info("Plotting soltab: "+soltab._v_name)
-        sf = solFetcher(soltab)
+    solset = soltab.getSolset()
+    soltabsToAdd = [ solset.getSoltab(soltabName) for soltabName in soltabsToAdd ]
 
-        # axis selection
-        userSel = {}
-        for axis in sf.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        sf.setSelection(**userSel)
+    if ncpu == 0:
+        import multiprocessing
+        ncpu = multiprocessing.cpu_count()
 
-        # some checks
-        for axis in axesInPlot:
-            if axis not in sf.getAxesNames():
-                logging.error('Axis \"'+axis+'\" not found.')
-                return 1
+    cmesh = False
+    if len(axesInPlot) == 2:
+        cmesh = True
+        # not color possible in 3D
+        axisInCol = []
+    elif len(axesInPlot) != 1:
+        logging.error('Axes must be a len 1 or 2 array.')
+        return 1
+    # end input check
 
-        cmesh = False
-        if len(axesInPlot) == 2:
-            cmesh = True
-            # not color possible in 3D
-            axisInCol = []
-        elif len(axesInPlot) != 1:
-            logging.error('Axes must be a len 1 or 2 array.')
+    # all axes that are not iterated by anything else
+    axesInFile = soltab.getAxesNames()
+    for axis in axisInTable+axesInPlot+axisInCol+axisDiff:
+        axesInFile.remove(axis)
+
+    # set subplots scheme
+    if axisInTable != []:
+        Nplots = soltab.getAxisLen(axisInTable[0])
+    else:
+        Nplots = 1
+
+    # prepare antennas coord in makeAntPlot case
+    if makeAntPlot:
+        if axesInPlot != ['ant']:
+            logging.error('If makeAntPlot is selected the "Axes" values must be "ant"')
             return 1
-
-        if len(set(axisInTable+axesInPlot+axisInCol+axisInDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
-            logging.error('Axis defined multiple times.')
-            return 1
-
-        # just because we use lists, check that they are 1-d
-        if len(axisInTable) > 1 or len(axisInCol) > 1 or len(axisInDiff) > 1:
-            logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
-            return 1
-
-        # all axes that are not iterated by anything else
-        axesInFile = sf.getAxesNames()
-        for axis in axisInTable+axesInPlot+axisInCol+axisInDiff:
-            axesInFile.remove(axis)
- 
-        # set subplots scheme
-        if axisInTable != []:
-            Nplots = sf.getAxisLen(axisInTable[0])
-        else:
-            Nplots = 1
-
-        # prepare antennas coord in makeAntPlot case
-        if makeAntPlot:
-            if axesInPlot != ['ant']:
-                logging.error('If makeAntPlot is selected the "Axes" values must be "ant"')
-                return 1
-            antCoords = [[],[]]
-            for ant in sf.getAxisValues('ant'): # select only user-selected antenna in proper order
-                antCoords[0].append(H.getAnt(sf.getAddress().split('/')[0])[ant][0])
-                antCoords[1].append(H.getAnt(sf.getAddress().split('/')[0])[ant][1])
-        else:
-            antCoords = []
-            
-        datatype = sf.getType()
-
-        # start processes for multi-thread
-        mpm = multiprocManager(ncpu, plot)
-
-        # cycle on files
-        if makeMovie: pngs = [] # store png filenames
-        for vals, coord, selection in sf.getValuesIter(returnAxes=axisInDiff+axisInTable+axisInCol+axesInPlot):
-           
-            # set filename
-            filename = ''
-            for axis in axesInFile:
-                filename += axis+str(coord[axis])+'_'
-            filename = filename[:-1] # remove last _
-
-            # axis vals (they are always the same, regulat arrays)
-            xvals = coord[axesInPlot[0]]
-            # if plotting antenna - convert to number
-            if axesInPlot[0] == 'ant':
-                xvals = np.arange(len(xvals))
-            
-            # if plotting time - convert in h/min/s
-            xlabelunit=''
-            if axesInPlot[0] == 'time':
-                if xvals[-1] - xvals[0] > 3600:
-                    xvals = (xvals-xvals[0])/3600.  # hrs
-                    xlabelunit = ' [hr]'
-                elif xvals[-1] - xvals[0] > 60:
-                    xvals = (xvals-xvals[0])/60.   # mins
-                    xlabelunit = ' [min]'
-                else:
-                    xvals = (xvals-xvals[0])  # sec
-                    xlabelunit = ' [s]'
-            # if plotting freq convert in MHz
-            elif axesInPlot[0] == 'freq': 
-                xvals = xvals/1.e6 # MHz
-                xlabelunit = ' [MHz]'
-
-            if cmesh:
-                # axis vals (they are always the same, regular arrays)
-                yvals = coord[axesInPlot[1]]
-                # same as above but for y-axis
-                if axesInPlot[1] == 'ant':
-                    yvals = np.arange(len(yvals))
-
-                if len(xvals) <= 1 or len(yvals) <=1:
-                    logging.error('3D plot must have more then one value per axes.')
-                    mpm.wait()
-                    return 1
-
-                ylabelunit=''
-                if axesInPlot[1] == 'time':
-                    if yvals[-1] - yvals[0] > 3600:
-                        yvals = (yvals-yvals[0])/3600.  # hrs
-                        ylabelunit = ' [hr]'
-                    elif yvals[-1] - yvals[0] > 60:
-                        yvals = (yvals-yvals[0])/60.   # mins
-                        ylabelunit = ' [min]'
-                    else:
-                        yvals = (yvals-yvals[0])  # sec
-                        ylabelunit = ' [s]'
-                elif axesInPlot[1] == 'freq':  # Mhz
-                    yvals = yvals/1.e6
-                    ylabelunit = ' [MHz]'
-            else: 
-                yvals = None
-                ylabelunit = None
-
-            sf2 = solFetcher(soltab)
-            sf2.selection = selection
-            # cycle on tables
-            titles = []
-            dataCube = []
-            weightCube = []
-            for Ntab, (vals, coord, selection) in enumerate(sf2.getValuesIter(returnAxes=axisInDiff+axisInCol+axesInPlot)):
-                dataCube.append([])
-                weightCube.append([])
-
-                # set tile
-                titles.append('')
-                for axis in coord:
-                    if axis in axesInFile+axesInPlot+axisInCol: continue
-                    titles[Ntab] += axis+':'+str(coord[axis])+' '
-                titles[Ntab] = titles[Ntab][:-1] # remove last ' '
-
-                sf3 = solFetcher(soltab)
-                sf3.selection = selection
-                # cycle on colors
-                
-                if not ref in sf.getAxisValues('ant') and not ref is None:
-                    logging.error('Reference antenna '+ref+' not found. Using: '+sf.getAxisValues('ant')[1])
-                    ref = sf.getAxisValues('ant')[1]
-
-                for Ncol, (vals, weight, coord, selection) in enumerate(sf3.getValuesIter(returnAxes=axisInDiff+axesInPlot, weight=True, reference=ref)):
-                    dataCube[Ntab].append([])
-                    weightCube[Ntab].append([])
+        antCoords = [[],[]]
+        for ant in soltab.getAxisValues('ant'): # select only user-selected antenna in proper order
+            antCoords[0].append(H.getAnt(soltab.getAddress().split('/')[0])[ant][0])
+            antCoords[1].append(H.getAnt(soltab.getAddress().split('/')[0])[ant][1])
+    else:
+        antCoords = []
         
-                    # differential plot
-                    if axisInDiff != []:
-                        # find ordered list of axis
-                        names = [axis for axis in sf.getAxesNames() if axis in axisInDiff+axesInPlot]
-                        if axisInDiff[0] not in names:
-                            logging.error("Axis to differentiate (%s) not found." % axisInDiff[0])
-                            mpm.wait()
-                            return 1
-                        if len(coord[axisInDiff[0]]) != 2:
-                            logging.error("Axis to differentiate (%s) has too many values, only 2 is allowed." % axisInDiff[0])
-                            mpm.wait()
-                            return 1
+    datatype = soltab.getType()
 
-                        # find position of interesting axis
-                        diff_idx = names.index(axisInDiff[0])
-                        # roll to first place
-                        vals = np.rollaxis(vals,diff_idx,0)
-                        vals = vals[0] - vals[1]
-                        weight = np.rollaxis(weight,diff_idx,0)
-                        weight = ((weight[0]==1) & (weight[1]==1))
-                        del coord[axisInDiff[0]]
- 
+    # start processes for multi-thread
+    mpm = multiprocManager(ncpu, plot)
 
-                    # add tables if required (e.g. phase/tec)
-                    for sfAdd in sfsAdd:
-                        newCoord = {}
-                        for axisName in coord.keys():
-                            if axisName in sfAdd.getAxesNames():
-                                if type(coord[axisName]) is np.ndarray:
-                                    newCoord[axisName] = coord[axisName]
-                                else:
-                                    newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
-                        sfAdd.setSelection(**newCoord)
-                        valsAdd = np.squeeze(sfAdd.getValues(retAxesVals=False, weight=False, reference=ref))
-                        if sfAdd.getType() == 'clock':
-                            valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
-                        elif sfAdd.getType() == 'tec':
-                            valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
-                        else:
-                            logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+sfAdd.getType()+'.')
-                            continue
+    # cycle on files
+    if makeMovie: pngs = [] # store png filenames
+    for vals, coord, selection in soltab.getValuesIter(returnAxes=axisDiff+axisInTable+axisInCol+axesInPlot):
+       
+        # set filename
+        filename = ''
+        for axis in axesInFile:
+            filename += axis+str(coord[axis])+'_'
+        filename = filename[:-1] # remove last _
 
-                        # If clock/tec are single pol then duplicate it (TODO)
-                        # There still a problem with commonscalarphase and pol-dependant clock/tec
-                        #but there's not easy way to combine them
-                        if not 'pol' in sfAdd.getAxesNames() and 'pol' in sf.getAxesNames():
-                            # find pol axis positions
-                            polAxisPos = sf.getAxesNames().key_idx('pol')
-                            # create a new axes for the table to add and duplicate the values
-                            valsAdd = np.addaxes(valsAdd, polAxisPos)
-
-                        if valsAdd.shape != vals.shape:
-                            logging.error('Cannot combine the table '+sfAdd.getType()+' with '+sf4.getType()+'. Wrong shape.')
-                            mpm.wait()
-                            return 1
-
-                        vals += valsAdd
-
-                    # normalize
-                    if (sf.getType() == 'phase' or sf.getType() == 'scalarphase'):
-                        vals = normalize(vals)
-
-                    # unwrap if required
-                    if (sf.getType() == 'phase' or sf.getType() == 'scalarphase') and dounwrap:
-                        vals = unwrap(vals)
-                    
-                    # is user requested axis in an order that is different from h5parm, we need to transpose
-                    if len(axesInPlot) == 2:
-                        if sf3.getAxesNames().index(axesInPlot[0]) < sf3.getAxesNames().index(axesInPlot[1]): vals = vals.T
-
-                    dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
-
-            # if dataCube too large (> 500 MB) do not go parallel
-            if np.array(dataCube).nbytes > 1024*1024*500: 
-                logging.debug('Big plot, parallel not possible.')
-                plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords, None)
+        # axis vals (they are always the same, regulat arrays)
+        xvals = coord[axesInPlot[0]]
+        # if plotting antenna - convert to number
+        if axesInPlot[0] == 'ant':
+            xvals = np.arange(len(xvals))
+        
+        # if plotting time - convert in h/min/s
+        xlabelunit=''
+        if axesInPlot[0] == 'time':
+            if xvals[-1] - xvals[0] > 3600:
+                xvals = (xvals-xvals[0])/3600.  # hrs
+                xlabelunit = ' [hr]'
+            elif xvals[-1] - xvals[0] > 60:
+                xvals = (xvals-xvals[0])/60.   # mins
+                xlabelunit = ' [min]'
             else:
-                mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotflag, makeMovie, antCoords])
-            if makeMovie: pngs.append(prefix+filename+'.png')
+                xvals = (xvals-xvals[0])  # sec
+                xlabelunit = ' [s]'
+        # if plotting freq convert in MHz
+        elif axesInPlot[0] == 'freq': 
+            xvals = xvals/1.e6 # MHz
+            xlabelunit = ' [MHz]'
 
-        mpm.wait()
+        if cmesh:
+            # axis vals (they are always the same, regular arrays)
+            yvals = coord[axesInPlot[1]]
+            # same as above but for y-axis
+            if axesInPlot[1] == 'ant':
+                yvals = np.arange(len(yvals))
 
-        if makeMovie:
-            def long_substr(strings):
-                """
-                Find longest common substring
-                """
-                substr = ''
-                if len(strings) > 1 and len(strings[0]) > 0:
-                    for i in range(len(strings[0])):
-                        for j in range(len(strings[0])-i+1):
-                            if j > len(substr) and all(strings[0][i:i+j] in x for x in strings):
-                                substr = strings[0][i:i+j]
-                return substr
-            movieName = long_substr(pngs)
-            assert movieName != '' # need a common prefix, use prefix keyword in case
-            logging.info('Making movie: '+movieName)
-            # make every movie last 20 sec, min one second per slide
-            fps = np.ceil(len(pngs)/200.)
-            ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
-                    "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
-            os.system(ss)
-            #print ss
-            for png in pngs: os.system('rm '+png)
+            if len(xvals) <= 1 or len(yvals) <=1:
+                logging.error('3D plot must have more then one value per axes.')
+                mpm.wait()
+                return 1
+
+            ylabelunit=''
+            if axesInPlot[1] == 'time':
+                if yvals[-1] - yvals[0] > 3600:
+                    yvals = (yvals-yvals[0])/3600.  # hrs
+                    ylabelunit = ' [hr]'
+                elif yvals[-1] - yvals[0] > 60:
+                    yvals = (yvals-yvals[0])/60.   # mins
+                    ylabelunit = ' [min]'
+                else:
+                    yvals = (yvals-yvals[0])  # sec
+                    ylabelunit = ' [s]'
+            elif axesInPlot[1] == 'freq':  # Mhz
+                yvals = yvals/1.e6
+                ylabelunit = ' [MHz]'
+        else: 
+            yvals = None
+            ylabelunit = None
+
+        soltab2 = solset.getSoltab(soltab.name) # a copy
+        soltab2.selection = selection
+        # cycle on tables
+        titles = []
+        dataCube = []
+        weightCube = []
+        for Ntab, (vals, coord, selection) in enumerate(soltab2.getValuesIter(returnAxes=axisDiff+axisInCol+axesInPlot)):
+            dataCube.append([])
+            weightCube.append([])
+
+            # set tile
+            titles.append('')
+            for axis in coord:
+                if axis in axesInFile+axesInPlot+axisInCol: continue
+                titles[Ntab] += axis+':'+str(coord[axis])+' '
+            titles[Ntab] = titles[Ntab][:-1] # remove last ' '
+
+            soltab3 = solset.getSoltab(soltab.name) # a copy
+            soltab3.selection = selection
+            # cycle on colors
+            
+            if not refAnt in soltab.getAxisValues('ant') and not refAnt is None:
+                logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+                refAnt = soltab.getAxisValues('ant')[1]
+
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab3.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
+                dataCube[Ntab].append([])
+                weightCube[Ntab].append([])
+    
+                # differential plot
+                if axisDiff != []:
+                    # find ordered list of axis
+                    names = [axis for axis in soltab.getAxesNames() if axis in axisDiff+axesInPlot]
+                    if axisDiff[0] not in names:
+                        logging.error("Axis to differentiate (%s) not found." % axisDiff[0])
+                        mpm.wait()
+                        return 1
+                    if len(coord[axisDiff[0]]) != 2:
+                        logging.error("Axis to differentiate (%s) has too many values, only 2 is allowed." % axisDiff[0])
+                        mpm.wait()
+                        return 1
+
+                    # find position of interesting axis
+                    diff_idx = names.index(axisDiff[0])
+                    # roll to first place
+                    vals = np.rollaxis(vals,diff_idx,0)
+                    vals = vals[0] - vals[1]
+                    weight = np.rollaxis(weight,diff_idx,0)
+                    weight = ((weight[0]==1) & (weight[1]==1))
+                    del coord[axisDiff[0]]
+
+
+                # add tables if required (e.g. phase/tec)
+                for soltabToAdd in soltabsToAdd:
+                    newCoord = {}
+                    for axisName in coord.keys():
+                        if axisName in soltabToAdd.getAxesNames():
+                            if type(coord[axisName]) is np.ndarray:
+                                newCoord[axisName] = coord[axisName]
+                            else:
+                                newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
+                    soltabToAdd.setSelection(**newCoord)
+                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
+                    if soltabToAdd.getType() == 'clock':
+                        valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
+                    elif soltabToAdd.getType() == 'tec':
+                        valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
+                    else:
+                        logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+soltabToAdd.getType()+'.')
+                        continue
+
+                    # If clock/tec are single pol then duplicate it (TODO)
+                    # There still a problem with commonscalarphase and pol-dependant clock/tec
+                    #but there's not easy way to combine them
+                    if not 'pol' in soltabToAdd.getAxesNames() and 'pol' in soltab.getAxesNames():
+                        # find pol axis positions
+                        polAxisPos = soltab.getAxesNames().key_idx('pol')
+                        # create a new axes for the table to add and duplicate the values
+                        valsAdd = np.addaxes(valsAdd, polAxisPos)
+
+                    if valsAdd.shape != vals.shape:
+                        logging.error('Cannot combine the table '+soltabToAdd.getType()+' with '+soltab.getType()+'. Wrong shape.')
+                        mpm.wait()
+                        return 1
+
+                    vals += valsAdd
+
+                # normalize
+                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
+                    vals = normalize_phase(vals)
+
+                # unwrap if required
+                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase') and doUnwrap:
+                    vals = unwrap(vals)
+                
+                # is user requested axis in an order that is different from h5parm, we need to transpose
+                if len(axesInPlot) == 2:
+                    if soltab3.getAxesNames().index(axesInPlot[0]) < soltab3.getAxesNames().index(axesInPlot[1]): vals = vals.T
+
+                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
+
+        # if dataCube too large (> 500 MB) do not go parallel
+        if np.array(dataCube).nbytes > 1024*1024*500: 
+            logging.debug('Big plot, parallel not possible.')
+            plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
+        else:
+            mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
+        if makeMovie: pngs.append(prefix+filename+'.png')
+
+    mpm.wait()
+
+    if makeMovie:
+        def long_substr(strings):
+            """
+            Find longest common substring
+            """
+            substr = ''
+            if len(strings) > 1 and len(strings[0]) > 0:
+                for i in range(len(strings[0])):
+                    for j in range(len(strings[0])-i+1):
+                        if j > len(substr) and all(strings[0][i:i+j] in x for x in strings):
+                            substr = strings[0][i:i+j]
+            return substr
+        movieName = long_substr(pngs)
+        assert movieName != '' # need a common prefix, use prefix keyword in case
+        logging.info('Making movie: '+movieName)
+        # make every movie last 20 sec, min one second per slide
+        fps = np.ceil(len(pngs)/200.)
+        ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
+                "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
+        os.system(ss)
+        #print ss
+        for png in pngs: os.system('rm '+png)
 
     return 0

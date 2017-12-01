@@ -1,19 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This operation for LoSoTo implement a flagging procedure
-# WEIGHT: flag-only compliant
-
 import logging
 from losoto.operations_lib import *
-import numpy as np
-import itertools
-from scipy.ndimage import generic_filter
-import scipy.interpolate
 
 logging.debug('Loading FLAG module.')
 
+def run_parser(soltab, parser, step):
+    axesToFlag = parser.getarraystr( step, 'axesToFlag') # no default
+    order = parser.getarrayint( step, 'order') # no default
+    maxCycles = parser.getint( step, 'maxCycles', 5)
+    maxRms = parser.getfloat( step, 'maxRms', 5.)
+    maxRmsNoise = parser.getfloat( step, 'maxRmsNoise', 0.)
+    fixRmsNoise = parser.getfloat( step, 'fixRmsNoise', 0.)
+    windowNoise = parser.getint( step, 'windowNoise', 11)
+    replace = parser.getbool( step, 'replace', False)
+    preflagzeros = parser.getbool( step, 'preflagzeros', False)
+    mode = parser.getstr( step, 'mode', 'smooth')
+    refAnt = parser.getstr( step, 'refAnt', '')
+    ncpu = parser.getint( '_general', 'ncpu', 0)
+    return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRmsNoise, windowNoise, replace, preflagzeros, mode, refAnt, ncpu )
+
+
 def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection, outQueue):
+    
+    import numpy as np
+    import itertools
+    from scipy.ndimage import generic_filter
+    import scipy.interpolate
     
     def rolling_rms(a, window):
         """
@@ -216,32 +230,12 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
             plt.savefig('test.png')
             #sys.exit(1)
 
-            # plot 2d
-            #import matplotlib as mpl
-            #mpl.use("Agg")
-            #import matplotlib.pyplot as plt
-            #plt.imshow(vals.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            #plt.colorbar()
-            #plt.savefig('test2d.png')
-            #plt.clf()
-            ##plt.imshow(polyval(axes[0], axes[1], m=fit_sol).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            ##plt.imshow(vals_smooth.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            #plt.imshow(spline(axes[0],axes[1]).T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1./5)
-            #plt.colorbar()
-            #plt.savefig('test2d-smooth.png')
-            #plt.clf()
-            #plt.imshow(vals_detrend.T, origin='lower', interpolation="none", cmap=plt.cm.rainbow, aspect=1/5.)
-            #plt.colorbar()
-            #plt.savefig('test2d-detrend.png')
-            #sys.exit(1)
-
         return weights, vals, rms
 
 
     def percentFlagged(w):
         return 100.*(weights.size-np.count_nonzero(weights))/float(weights.size)
     ########################################
-
 
     # check if everything flagged
     if (weights == 0).all() == True:
@@ -275,105 +269,114 @@ def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, ma
     else:
         weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
     
-    clean_coord = {key: coord[key] for key in coord if key not in axesToFlag}
     if percentFlagged(weights) == initPercentFlag:
-        logging.debug('Percentage of data flagged/replaced (%s): %.3f -> None' % (clean_coord, initPercentFlag))
+        logging.debug('Percentage of data flagged/replaced (%s): %.3f -> None' % ((removeKeys(coord, axesToFlag), initPercentFlag)))
     else: 
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
-            % (clean_coord, initPercentFlag, percentFlagged(weights), rms))
+            % ((removeKeys(coord, axesToFlag), initPercentFlag, percentFlagged(weights), rms)))
 
     outQueue.put([vals, weights, selection])
 #    return vals, weights, selection
         
             
-def run( step, parset, H ):
+def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixRmsNoise=0., windowNoise=11, replace=False, preflagzeros=False, mode='smooth', refAnt='', ncpu=0 ):
+    """
+    This operation for LoSoTo implement a flagging procedure
+    WEIGHT: compliant
 
-    from losoto.h5parm import solFetcher, solWriter
+    Parameters
+    ----------
+    axesToFlag : array of str
+        Axes along which to smooth+find outlier (e.g. ['time', 'freq']), max 2 values.
 
-    soltabs = getParSoltabs( step, parset, H )
+    order : array of int
+        Order of the function fitted during detrending. Array must have same size of axesToFlag. If mode=smooth these are the window of the running median (0=all axis).
 
-    #check_parset('Axes','MaxCycles','MaxRms','Order','Replace','PreFlagZeros')
-    axesToFlag = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "Axes"]), 'time' )
-    maxCycles = parset.getInt('.'.join(["LoSoTo.Steps", step, "MaxCycles"]), 5 )
-    maxRms = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRms"]), 5. )
-    maxRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "MaxRmsNoise"]), 0. )
-    fixRmsNoise = parset.getFloat('.'.join(["LoSoTo.Steps", step, "FixRmsNoise"]), 0. )
-    windowNoise = parset.getInt('.'.join(["LoSoTo.Steps", step, "WindowNoise"]), 11 )
-    order = parset.getIntVector('.'.join(["LoSoTo.Steps", step, "Order"]), 3 )
-    replace = parset.getBool('.'.join(["LoSoTo.Steps", step, "Replace"]), False )
-    preflagzeros = parset.getBool('.'.join(["LoSoTo.Steps", step, "PreFlagZeros"]), False )
-    mode = parset.getString('.'.join(["LoSoTo.Steps", step, "Mode"]), 'smooth' )
-    ref = parset.getString('.'.join(["LoSoTo.Steps", step, "Reference"]), '' )
-    ncpu = parset.getInt('.'.join(["LoSoTo.Ncpu"]), 0 )
+    maxCycles : int, optional
+        Max number of independent flagging cycles, by default 5.
+
+    maxRms : float, optional
+        Rms to clip outliers, by default 5.
+
+    maxRmsNoise : float, optional
+        Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, by default 0 (ignored).
+
+    fixRmsNoise : float, optional
+        Instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), by default 0 (ignored).
+
+    windowNoise : int, optional
+        Window size for the running rms, by default 11.
+
+    replace : bool, optional
+        Replace bad values with the interpolated ones, instead of flagging them. By default False.
+
+    preflagzeros : bool, optional
+        Flag zeros/ones (bad solutions in BBS/DPPP). They should be flagged at import time. By default False.
+
+    mode, str, optional
+        Detrending algorithm smooth / poly / spline. By default smooth.
+
+    refAnt : str, optional
+        Reference antenna, by default None.
+
+    ncpu : int, optional
+        Number of cpu to use, by default all available.
+    """
+
+    logging.info("Flag on soltab: "+soltab.name)
+
+    # input check
     if ncpu == 0:
         import multiprocessing
         ncpu = multiprocessing.cpu_count()
-
-    if ref == '': ref = None
-
+ 
+    if refAnt == '':
+        refAnt = None
+ 
     if axesToFlag == []:
         logging.error("Please specify axis to flag. It must be a single one.")
         return 1
-
-    if len(axesToFlag) != len(order):
+ 
+    if len(axesToFlag) != len(order) and (len(axesToFlag) != 1 or len(axesToFlag) != 2):
         logging.error("AxesToFlag and order must be both 1 or 2 values.")
         return 1
-
+ 
     if len(order) == 2: order = tuple(order)
-
+ 
     mode = mode.lower()
     if mode != 'smooth' and mode != 'poly' and mode != 'spline':
         logging.error('Mode must be smooth, poly or spline')
         return 1
 
-    for soltab in openSoltabs( H, soltabs ):
+    for axisToFlag in axesToFlag:
+        if axisToFlag not in soltab.getAxesNames():
+            logging.error('Axis \"'+axis+'\" not found.')
+            return 1
 
-        # start processes for multi-thread
-        mpm = multiprocManager(ncpu, flag)
+    # start processes for multi-thread
+    mpm = multiprocManager(ncpu, flag)
 
-        logging.info("Flagging soltab: "+soltab._v_name)
+    # reorder axesToFlag as axes in the table
+    axesToFlag_orig = axesToFlag
+    axesToFlag = [coord for coord in soltab.getAxesNames() if coord in axesToFlag]
+    if axesToFlag_orig != axesToFlag: order = order[::-1] # reverse order if we changed axesToFlag
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab, useCache=True) # remember to flush!
+    solType = soltab.getType()
 
-        # axis selection
-        userSel = {}
-        for axis in sf.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        sf.setSelection(**userSel)
+    # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, reference=refAnt):
+        mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection])
 
-        for axisToFlag in axesToFlag:
-            if axisToFlag not in sf.getAxesNames():
-                logging.error('Axis \"'+axis+'\" not found.')
-                mpm.wait()
-                return 1
-
-        # reorder axesToFlag as axes in the table
-        axesToFlag_orig = axesToFlag
-        axesToFlag = [coord for coord in sf.getAxesNames() if coord in axesToFlag]
-        if axesToFlag_orig != axesToFlag: order = order[::-1] # reverse order if we changed axesToFlag
-
-        solType = sf.getType()
-
-        # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes=axesToFlag, weight=True, reference=ref):
-            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection])
-
-        mpm.wait()
-        
-        for v, w, sel in mpm.get():
-            sw.selection = sel
-            if replace:
-                # rewrite solutions (flagged values are overwritten)
-                sw.setValues(v, weight=False)
-            else:
-                sw.setValues(w, weight=True)
-        
-        sw.flush()
-        sw.addHistory('FLAG (over %s with %s sigma cut)' % (axesToFlag, maxRms))
-
-        del sw
-        del sf
-        del soltab
+    mpm.wait()
+    
+    for v, w, sel in mpm.get():
+        if replace:
+            # rewrite solutions (flagged values are overwritten)
+            soltab.setValues(v, sel, weight=False)
+        else:
+            soltab.setValues(w, sel, weight=True)
+    
+    soltab.flush()
+    soltab.addHistory('FLAG (over %s with %s sigma cut)' % (axesToFlag, maxRms))
 
     return 0

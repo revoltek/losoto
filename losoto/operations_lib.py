@@ -5,7 +5,7 @@
 
 import sys
 import logging
-from losoto.h5parm import solFetcher
+from losoto.h5parm import h5parm
 import multiprocessing
 
 class multiprocManager(object):
@@ -83,180 +83,21 @@ class multiprocManager(object):
         self.inQueue.join()
 
 
-def getParSolsets( step, parset, H ):
-    """
-    Return the solution-set list for this parset.
-    The order is:
-    * local step (from the Soltab parameter)
-    * if nothing found, global value (from the Soltab parameter)
-    * restrict to global Solset var
-    * if nothing found use the global Solset var
-    * default = all
-    """
-    allSolsets = H.getSolsets().keys()
-
-    # local val from soltab
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
-    soltabs = parset.getStringVector( stepOptName, [] )
-    solsets = []
-    for soltab in soltabs:
-        solsets.append(soltab.split('/')[0])
-
-    # global value from soltab
-    if solsets == []:
-        for soltab in parset.getStringVector( "LoSoTo.Soltab", [] ):
-            solsets.append(soltab.split('/')[0])
-
-    # global value from solset
-    globalSolsets = parset.getStringVector( "LoSoTo.Solset", allSolsets )
-    if solsets != []:
-        solsets = list(set(solsets).intersection(set(globalSolsets)))
-    else:
-        solsets = globalSolsets
-
-    # default value
-    if solsets == []:
-        solsets = allSolsets
-
-    # sanity check
-    for solset in solsets[:]:
-        if solset not in allSolsets:
-            logging.warning("Solution-set \""+solset+"\" not found. Ignoring")
-            solsets.remove(solset)
-
-    return list(set(solsets))
-
-
-def getParSoltabs( step, parset, H ):
-    """
-    Return the solution-table list (in ["solset/soltab",...] form) for this step.
-        - compatible with the solset parameters
-        - compatible the soltype parameters
-    The order is:
-    * local step value
-    * global value
-    * default = all
-
-    This is what one wants to call to find out the tables the user wants to operate on
-    """
-
-    # local val
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "Soltab" ] )
-    ssst = parset.getStringVector( stepOptName, [] )
-
-    # global value
-    if ssst == []:
-        ssst = parset.getStringVector( "LoSoTo.Soltab", [] )
-
-    # default value
-    if ssst == []:
-        # add all the table in the available Solsets
-        for solset in getParSolsets( step, parset, H ):
-            for soltab in H.getSoltabs(solset).keys():
-                ssst.append(solset+'/'+soltab)
-
-    # sanity check
-    allawedSolTypes = getParSolTypes( step, parset, H )
-    for s in ssst[:]:
-        solset, soltab = s.split('/')
-        # check that soltab exists and that the declared solset is usable
-        if solset not in getParSolsets( step, parset, H ) or \
-                soltab not in H.getSoltabs(solset).keys():
-            logging.warning("Solution-table \""+ solset+"/"+soltab+"\" not found. Ignoring.")
-            ssst.remove(s)
-        # check if the soltab is compatible with the chosen solTypes
-        elif H.getSoltab(solset, soltab)._v_title not in allawedSolTypes and allawedSolTypes != []:
-            ssst.remove(s)
-
-    return ssst
-
-
-def getParSolTypes( step, parset, H ):
-    """
-    Return the SolType list for this step.
-    The order is:
-    * local step value
-    * global value
-    * default = [] (==all)
-    """
-
-    # local val
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, "SolType" ] )
-    solTypes = parset.getStringVector( stepOptName, [] )
-
-    # global val or default
-    if solTypes == []:
-        solTypes = parset.getStringVector( "LoSoTo.SolType", [] )
-
-    return solTypes
-
-
-def getParAxis( step, parset, H, axisName ):
-    """
-    Return the axis val array for this step.
-        - check if all the soltabs have this axis.
-    The order is:
-    * local
-    * local minmax
-    * global
-    * global minmax
-    * default = None (which keep all in setSelection)
-    """
-    stepOptName = '.'.join( [ "LoSoTo.Steps", step, axisName.lower() ] )
-
-    # local
-    axisVals = parset.getString( stepOptName, '' )
-    # if the user defined a vector, load it as a vector, otherwise keep string
-    if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
-        axisVals = parset.getStringVector( stepOptName, [] )
-    
-    # minmax - local
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getDoubleVector( stepOptName+'.minmax', [] )
-        if len(axisVals) == 2: axisVals.append(1) # assume no step if not given
-        if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
-
-    # global
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getString( "LoSoTo."+axisName.lower(), '' )
-        # if the user defined a vector, load it as a vector, otherwise keep string
-        if axisVals != '' and axisVals[0] == '[' and axisVals[-1] == ']':
-            axisVals = parset.getStringVector( "LoSoTo."+axisName.lower(), [] )
-
-    # minmax - global
-    if axisVals == '' or axisVals == []:
-        axisVals = parset.getDoubleVector( "LoSoTo."+axisName.lower()+'.minmax', [] )
-        if len(axisVals) == 2: axisVals.append(1)
-        if axisVals != []:
-            axisVals = {'min':axisVals[0],'max':axisVals[1],'step':axisVals[2]} 
-
-    # default val
-    if axisVals == '' or axisVals == []:
-        axisVals = None
-
-    return axisVals
-
-
-def openSoltabs( H, ss_sts ):
-    """
-    Return a list of soltab objects
-    Keyword arguments:
-    ss_sts -- 'solution-set/solution-tabs' list
-    """
-    soltabs = []
-    for ss_st in ss_sts:
-        ss, st = ss_st.split('/')
-        soltabs.append( H.getSoltab(ss, st) )
-
-    return soltabs
-
 def removeKeys( dic, keys = [] ):
     """
     Remove a list of keys from a dict and return a new one.
-    Keyword arguments:
-    dic -- the input dictionary
-    keys -- a list of arguments to remove or a string for single argument
+    
+    Parameters
+    ----------
+    dic : dcit
+        The input dictionary.
+    keys : list of str
+        A list of arguments to remove or a string for single argument.
+
+    Returns
+    -------
+    dict
+        Dictionary with removed keys.
     """
     dicCopy = dict(dic)
     if type(keys) is str: keys = [keys]
@@ -265,7 +106,32 @@ def removeKeys( dic, keys = [] ):
     return dicCopy
 
 
-# unwrap fft
+def normalize_phase(phase):
+    """
+    Normalize phase to the range [-pi, pi].
+    
+    Parameters
+    ----------
+    phase : array of float
+        Phase to normalize.
+    
+    Returns
+    -------
+    array of float
+        Normalized phases.
+    """
+    import numpy as np
+
+    # Convert to range [-2*pi, 2*pi].
+    out = np.fmod(phase, 2.0 * np.pi)
+    # Remove nans
+    np.putmask(out, out!=out, 0)
+    # Convert to range [-pi, pi]
+    out[out < -np.pi] += 2.0 * np.pi
+    out[out > np.pi] -= 2.0 * np.pi
+    return out
+
+
 def unwrap_fft(phase, iterations=3):
     """
     Unwrap phase using Fourier techniques.
@@ -311,7 +177,6 @@ def unwrap_fft(phase, iterations=3):
     return phase2D[:, 0]
 
 
-# unwrap windowed
 def unwrap(phase, window_size=5):
     """
     Unwrap phase by estimating the trend of the phase signal.
@@ -360,7 +225,6 @@ def unwrap(phase, window_size=5):
     return out
 
 
-# unwrap huib
 def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
     clip_range = [ 170., 180. ] ):
     """

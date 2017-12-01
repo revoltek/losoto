@@ -20,7 +20,6 @@ import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
 from losoto import _logging
-from losoto.h5parm import solWriter
 from losoto.h5parm import h5parm as h5parm_mod
 try:
     import progressbar
@@ -289,46 +288,46 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         pbar.finish()
         if solType == '*RotationAngle':
             np.putmask(weights, vals == 0., 0) # flag where val=0
-            h5parm.makeSoltab(solset, 'rotation', axesNames=['dir','ant','freq','time'], \
+            solset.makeSoltab('rotation', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         if solType == '*RotationMeasure':
             np.putmask(weights, vals == 0., 0) # flag where val=0
-            h5parm.makeSoltab(solset, 'rotationmeasure', axesNames=['dir','ant','freq','time'], \
+            solset.makeSoltab('rotationmeasure', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarPhase':
             np.putmask(weights, vals == 0., 0)
-            h5parm.makeSoltab(solset, 'scalarphase', axesNames=['dir','ant','freq','time'], \
+            solset.makeSoltab('scalarphase', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*ScalarAmplitude':
             np.putmask(weights, vals == 0., 0)
-            h5parm.makeSoltab(solset, 'scalaramplitude', axesNames=['dir','ant','freq','time'], \
+            solset.makeSoltab('scalaramplitude', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'Clock':
             np.putmask(weights, vals == 0., 0)
             # clock may be diag or scalar
             if len(pols) == 0:
-                h5parm.makeSoltab(solset, 'clock', axesNames=['ant','freq','time'], \
+                solset.makeSoltab('clock', axesNames=['ant','freq','time'], \
                     axesVals=[ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
             else:
-                h5parm.makeSoltab(solset, 'clock', axesNames=['pol','ant','freq','time'], \
+                solset.makeSoltab('clock', axesNames=['pol','ant','freq','time'], \
                     axesVals=[pol,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == 'TEC':
             np.putmask(weights, vals == 0., 0)
             # tec may be diag or scalar
             if len(pols) == 0:
-                h5parm.makeSoltab(solset, 'tec', axesNames=['dir','ant','freq','time'], \
+                solset.makeSoltab('tec', axesNames=['dir','ant','freq','time'], \
                     axesVals=[dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
             else:
-                h5parm.makeSoltab(solset, 'tec', axesNames=['pol','dir','ant','freq','time'], \
+                solset.makeSoltab('tec', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
             np.putmask(vals, vals == 0, 1) # nans were put to 0 before, set them to 1
             np.putmask(weights, vals == 1., 0) # flag where val=1
-            h5parm.makeSoltab(solset, 'amplitude', axesNames=['pol','dir','ant','freq','time'], \
+            solset.makeSoltab('amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
         elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
             np.putmask(weights, vals == 0., 0) # falg where val=0
-            h5parm.makeSoltab(solset, 'phase', axesNames=['pol','dir','ant','freq','time'], \
+            solset.makeSoltab('phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 
         logging.info('Flagged data: %.3f%%' % (100.*(len(weights.flat)-np.count_nonzero(weights))/len(weights.flat)))
@@ -426,13 +425,12 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")
 
     # Add CREATE entry to history and print summary of tables if verbose
-    soltabs = h5parm.getSoltabs(solset=solset)
+    soltabs = solset.getSoltabs()
     for st in soltabs:
-        sw = solWriter(soltabs[st])
         if globaldbFile is None:
-            sw.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), "manual list"))
+            st.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), "manual list"))
         else:
-            sw.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), globaldbFile))
+            st.addHistory('CREATE (by H5parm_importer.py from %s:%s/%s)' % (socket.gethostname(), os.path.abspath(''), globaldbFile))
     if verbose:
         logging.info(str(h5parm))
 

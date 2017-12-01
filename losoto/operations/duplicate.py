@@ -1,42 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This is a script for duplicate a table in LoSoTo
-
 import logging
 from losoto.operations_lib import *
 
 logging.debug('Loading DUPLICATE module.')
 
-def run( step, parset, H ):
+def run_parser(soltab, parser, step):
+    soltabOut = parser.getstr( step, 'soltabOut', '' )
+    return run(soltab, soltabOut)
+
+
+def run( soltab, soltabOut=''):
     """
-    Copy values from a table to another (of the same kind)
-    If tables have different sampling, then resample the values
+    Duplicate a table
+
+    Parameters
+    ----------
+    soltabOut : str, optional
+        Output table name. By default choose next available from table type.
     """
-    import numpy as np
-    from losoto.h5parm import solFetcher, solWriter
-    
-    inTable = parset.getString('.'.join(["LoSoTo.Steps", step, "InTable"]), '' ) # complete solset/soltab
-    outTable = parset.getString('.'.join(["LoSoTo.Steps", step, "OutTable"]), '' ) # complete solset/soltab or ''
 
-    if inTable == '':
-        logging.error('InTable is undefined.')
-        return 1
+    if soltabOut == '':
+        sosoltabOut = None
 
-    if outTable == '':
-        outSolsetName = inTable.split('/')[0]
-        outTableName = None
-    else:
-        outSolsetName = outTable.split('/')[0]
-        outTableName = outTable.split('/')[1]
+    solset = soltab.getSolset()
+    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
+        axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
+        vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False), parmdbType=soltab.obj._v_attrs['parmdb_type'])
 
-    ss, st = inTable.split('/')
-    sf = solFetcher(H.getSoltab(ss, st))
+    logging.info('Duplicate %s -> %s' % (soltab.name, soltabout.name) )
 
-    t = H.makeSoltab(solset = outSolsetName, soltype = sf.getType(), soltab = outTableName, axesNames=sf.getAxesNames(), \
-        axesVals=[sf.getAxisValues(axisName) for axisName in sf.getAxesNames()], \
-        vals=sf.getValues(retAxesVals = False), weights=sf.getValues(weight = True, retAxesVals = False), parmdbType=sf.t._v_attrs['parmdb_type'])
-
-    sw = solWriter(t)
-    sw.addHistory('DUPLICATE (from table %s)' % (inTable))
+    soltabout.addHistory('DUPLICATE (from table %s)' % (soltab.name))
     return 0

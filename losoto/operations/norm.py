@@ -1,59 +1,53 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This is an interpolation script for LoSoTo
-# WEIGHT: Weights compliant
-
 import logging
 from losoto.operations_lib import *
 
 logging.debug('Loading NORM module.')
 
-def run( step, parset, H ):
+def run_parser(soltab, parser, step):
+    axesToNorm = parser.getarraystr( step, 'axesToNorm' ) # no default
+    normVal = parser.getfloat( step, 'normVal', 1.)
+    return run(soltab, axesToNorm, normVal)
+
+def run( soltab, axesToNorm, normVal = 1. ):
     """
     Normalize the solutions to a given value
+    WEIGHT: Weights compliant
+
+    Parameters
+    ----------
+    axesToNorm : array of str
+        Axes along which compute the normalization.
+
+    normVal : float, optional
+        Number to normalize to vals = vals * (normVal/valsMean), by default 1.
     """
     import numpy as np
-    from losoto.h5parm import solFetcher, solWriter
     
-    soltabs = getParSoltabs( step, parset, H )
+    logging.info("Normalizing soltab: "+soltab.name)
 
-    normVal = parset.getFloat('.'.join(["LoSoTo.Steps", step, "NormVal"]), 1. )
-    normAxes = parset.getStringVector('.'.join(["LoSoTo.Steps", step, "NormAxes"]), ['time'] )
+    # input check
+    axesNames = soltab.getAxesNames()
+    for normAxis in axesToNorm:
+        if normAxis not in axesNames:
+            logging.error('Normalization axis '+normAxis+' not found.')
+            return 1
 
-    for soltab in openSoltabs( H, soltabs ):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToNorm, weight = True):
 
-        logging.info("Normalizing soltab: "+soltab._v_name)
+        # rescale solutions
+        if np.sum(weights) == 0: continue # skip flagged selections
+        valsMean = np.average(vals, weights=weights)
+        vals[weights != 0] *= normVal/valsMean
+        logging.debug(str(coord))
+        logging.debug("Rescaling by: "+str(normVal/valsMean))
 
-        tr = solFetcher(soltab)
-        tw = solWriter(soltab, useCache = True) # remember to flush!
+        # writing back the solutions
+        soltab.setValues(vals, selection)
 
-        axesNames = tr.getAxesNames()
-        for normAxis in normAxes:
-            if normAxis not in axesNames:
-                logging.error('Normalization axis '+normAxis+' not found.')
-                return 1
-
-        # axis selection
-        userSel = {}
-        for axis in tr.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        tr.setSelection(**userSel)
-
-        for vals, weights, coord, selection in tr.getValuesIter(returnAxes=normAxes, weight = True):
-
-            # rescale solutions
-            if np.sum(weights) == 0: continue # skip flagged selections
-            valsMean = np.average(vals, weights=weights)
-            vals[weights != 0] *= normVal/valsMean
-            logging.debug(str(coord))
-            logging.debug("Rescaling by: "+str(normVal/valsMean))
-
-            # writing back the solutions
-            tw.selection = selection
-            tw.setValues(vals)
-
-        tw.flush()
-        tw.addHistory('NORM (on axis %s)' % (normAxes))
+    soltab.flush()
+    soltab.addHistory('NORM (on axis %s)' % (axesToNorm))
 
     return 0

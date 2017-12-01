@@ -3,8 +3,8 @@ LoSoTo: LOFAR solutions tool
 
 Authors:
 * Francesco de Gasperin (main developer)
-* David Rafferty (h5parm exporter)
-* Maaijke Mevius (CT separation)
+* David Rafferty
+* Maaijke Mevius
 * Jose Sabater Montes
 * Martin Hardcastle
 * Andreas Horneffer
@@ -21,7 +21,7 @@ Install:
 * Install losoto by simply: python setup.py install --prefix=~/mydir/
 * Alternatively: pip install --allow-external --upgrade --user https://github.com/revoltek/losoto/archive/master.zip 
 * In cep3 use the copy of the code in ~fdg/scripts/losoto/ (source the tool/lofarinit.[c]sh file which is shipped with the code)
-* Prepare a parset starting from the parset/losoto.parset
+* Prepare a parset starting from the parset/losoto2.parset
 * in case of problems write to Francesco de Gasperin: astro@voo.it
 
 Flag:
@@ -31,11 +31,7 @@ Documentation:
 Documentation extracted from the LOFAR cookbook is present in the doc directory
 A detailed explanation of all the parameters for each operation is in: __parsets/losoto.parset__
 
-Used packages:
-* PyTables version:  3.2.2
-* HDF5 version:      1.8.4
-* NumPy version:     1.9.0
-* Python version:    2.6.5 (r265:79063, Apr 16 2010, 13:57:41) [GCC 4.4.3]
-* Platform:          linux2-x86_64
-* Byte-ordering:     little
-* Default encoding:  ascii
+Required packages:
+* PyTables version:  >3.0.0
+* HDF5 version:      >1.8.4
+* NumPy version:     >1.9.0

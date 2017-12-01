@@ -1,0 +1,1069 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>losoto.operations package &#8212; LoSoTo 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="losoto package" href="losoto.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="losoto.html" title="losoto package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="losoto-operations-package">
+<h1>losoto.operations package<a class="headerlink" href="#losoto-operations-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-losoto.operations.abs">
+<span id="losoto-operations-abs-module"></span><h2>losoto.operations.abs module<a class="headerlink" href="#module-losoto.operations.abs" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.abs.run_parser">
+<code class="descclassname">losoto.operations.abs.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.abs.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.abs.run">
+<code class="descclassname">losoto.operations.abs.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.abs.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take absolute value. Needed before smooth if amplitudes are negative!
+WEIGHT: no need to be weight compliant</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : soltab obj</p>
+<blockquote class="last">
+<div><p>Solution table.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.clip">
+<span id="losoto-operations-clip-module"></span><h2>losoto.operations.clip module<a class="headerlink" href="#module-losoto.operations.clip" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.clip.run_parser">
+<code class="descclassname">losoto.operations.clip.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clip.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.clip.run">
+<code class="descclassname">losoto.operations.clip.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToClip</em>, <em>clipLevel=5.0</em>, <em>log=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clip.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clip solutions around the median by a factor specified by the user.
+WEIGHT: flag compliant, putting weights into median is tricky</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToClip</strong> : list of str</p>
+<blockquote>
+<div><p>axes along which to calculate the median</p>
+</div></blockquote>
+<p><strong>clipLevel</strong> : float, optional</p>
+<blockquote>
+<div><p>factor above/below median at which to clip, by default 5</p>
+</div></blockquote>
+<p><strong>log</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>clip is done in log10 space, by default True</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.clocktec">
+<span id="losoto-operations-clocktec-module"></span><h2>losoto.operations.clocktec module<a class="headerlink" href="#module-losoto.operations.clocktec" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.clocktec.run_parser">
+<code class="descclassname">losoto.operations.clocktec.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clocktec.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.clocktec.run">
+<code class="descclassname">losoto.operations.clocktec.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>flagBadChannels=True</em>, <em>flagCut=5.0</em>, <em>chi2cut=3000.0</em>, <em>combinePol=False</em>, <em>removePhaseWraps=True</em>, <em>fit3rdorder=False</em>, <em>circular=False</em>, <em>reverse=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clocktec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate phase solutions into Clock and TEC.
+The Clock and TEC values are stored in the specified output soltab with type &#8216;clock&#8217;, &#8216;tec&#8217;, &#8216;tec3rd&#8217;.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>flagBadChannels</strong> : bool, optional</p>
+<blockquote>
+<div><p>Detect and remove bad channel before fitting, by default True.</p>
+</div></blockquote>
+<p><strong>flagCut</strong> : float, optional</p>
+<p><strong>chi2cut</strong> : float, optional</p>
+<p><strong>combinePol</strong> : bool, optional</p>
+<blockquote>
+<div><p>Find a combined polarization solution, by default False.</p>
+</div></blockquote>
+<p><strong>removePhaseWraps</strong> : bool, optional</p>
+<blockquote>
+<div><p>Detect and remove phase wraps, by default True.</p>
+</div></blockquote>
+<p><strong>fit3rdorder</strong> : bool, optional</p>
+<blockquote>
+<div><p>Fit a 3rd order ionospheric ocmponent (usefult &lt;40 MHz). By default False.</p>
+</div></blockquote>
+<p><strong>circular</strong> : bool, optional</p>
+<blockquote>
+<div><p>Assume circular polarization with FR not removed. By default False.</p>
+</div></blockquote>
+<p><strong>reverse</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Reverse the time axis. By default False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.crossdelay">
+<span id="losoto-operations-crossdelay-module"></span><h2>losoto.operations.crossdelay module<a class="headerlink" href="#module-losoto.operations.crossdelay" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.crossdelay.run_parser">
+<code class="descclassname">losoto.operations.crossdelay.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.crossdelay.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.crossdelay.run">
+<code class="descclassname">losoto.operations.crossdelay.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>smooth=0</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.crossdelay.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate cross-delay</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltabOut</strong> : str, optional</p>
+<blockquote>
+<div><p>output table name (same solset), by deault &#8220;phasediff&#8221;.</p>
+</div></blockquote>
+<p><strong>maxResidual</strong> : float, optional</p>
+<blockquote>
+<div><p>Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.</p>
+</div></blockquote>
+<p><strong>smooth</strong> : int, optional</p>
+<blockquote>
+<div><p>Median-smooth in time the resulting delays, number of timestamp for smoothing window. By default 0 (no smooth)</p>
+</div></blockquote>
+<p><strong>replace</strong> : bool, optional</p>
+<blockquote>
+<div><p>replace using smoothed value instead of flag bad data? Smooth must be active. By default, False</p>
+</div></blockquote>
+<p><strong>refAnt</strong> : str, optional</p>
+<blockquote class="last">
+<div><p>Reference antenna, by default the first.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.duplicate">
+<span id="losoto-operations-duplicate-module"></span><h2>losoto.operations.duplicate module<a class="headerlink" href="#module-losoto.operations.duplicate" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.duplicate.run_parser">
+<code class="descclassname">losoto.operations.duplicate.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.duplicate.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.duplicate.run">
+<code class="descclassname">losoto.operations.duplicate.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.duplicate.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Duplicate a table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltabOut</strong> : str, optional</p>
+<blockquote class="last">
+<div><p>Output table name. By default choose next available from table type.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.example">
+<span id="losoto-operations-example-module"></span><h2>losoto.operations.example module<a class="headerlink" href="#module-losoto.operations.example" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.example.run_parser">
+<code class="descclassname">losoto.operations.example.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.example.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.example.run">
+<code class="descclassname">losoto.operations.example.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, opt1, opt2=[1.0, 2.0, 3.0], opt3=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.example.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic unspecified step for easy expansion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>opt1</strong> : float</p>
+<blockquote>
+<div><p>Is a mandatory parameter.</p>
+</div></blockquote>
+<p><strong>opt2</strong> : list of float, optional</p>
+<blockquote>
+<div><p>Is optional, by default [1.,2.,3.]</p>
+</div></blockquote>
+<p><strong>opt2</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Is optional, by default 0.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.faraday">
+<span id="losoto-operations-faraday-module"></span><h2>losoto.operations.faraday module<a class="headerlink" href="#module-losoto.operations.faraday" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.faraday.run_parser">
+<code class="descclassname">losoto.operations.faraday.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.faraday.run">
+<code class="descclassname">losoto.operations.faraday.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>refAnt=''</em>, <em>maxResidual=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Faraday rotation extraction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>refAnt</strong> : str, optional</p>
+<blockquote>
+<div><p>Reference antenna, by default the first.</p>
+</div></blockquote>
+<p><strong>maxResidual</strong> : float, optional</p>
+<blockquote class="last">
+<div><p>Max average residual in radians before flagging datapoint, by default 1. If 0: no check.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.fitClockTEC">
+<span id="losoto-operations-fitclocktec-module"></span><h2>losoto.operations.fitClockTEC module<a class="headerlink" href="#module-losoto.operations.fitClockTEC" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.ClockTEC_3rdorder_func">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">ClockTEC_3rdorder_func</code><span class="sig-paren">(</span><em>xarray</em>, <em>par</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.ClockTEC_3rdorder_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>clock tec fitting withextra parameter for third order ionospheric effects at lowest frequencies</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.ClockTECfunc">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">ClockTECfunc</code><span class="sig-paren">(</span><em>xarray</em>, <em>par</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.ClockTECfunc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.ClockTECfuncAllStations">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">ClockTECfuncAllStations</code><span class="sig-paren">(</span><em>xarray</em>, <em>par</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.ClockTECfuncAllStations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.getInitClock">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">getInitClock</code><span class="sig-paren">(</span><em>data</em>, <em>freq</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.getInitClock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.unwrapSparsePhases">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">unwrapSparsePhases</code><span class="sig-paren">(</span><em>phases</em>, <em>freqs</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.unwrapSparsePhases" title="Permalink to this definition">¶</a></dt>
+<dd><p>unwrap phases, using frequency coverage</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.unwrapPhases">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">unwrapPhases</code><span class="sig-paren">(</span><em>phases</em>, <em>fitdata=None</em>, <em>maskrange=15</em>, <em>doFlag=True</em>, <em>flagfitdata=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.unwrapPhases" title="Permalink to this definition">¶</a></dt>
+<dd><p>unwrap phases, remove jumps and get best match with fitdata</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.getInitPar">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">getInitPar</code><span class="sig-paren">(</span><em>data</em>, <em>freqs</em>, <em>nrTEC=40</em>, <em>nrClock=40</em>, <em>nrthird=0</em>, <em>initsol=()</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.getInitPar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.getClockTECFit">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">getClockTECFit</code><span class="sig-paren">(</span><em>ph</em>, <em>freq</em>, <em>stations</em>, <em>initSol=[]</em>, <em>returnResiduals=True</em>, <em>chi2cut=100000000.0</em>, <em>fit3rdorder=False</em>, <em>double_search_space=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.getClockTECFit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.getPhaseWrapBase">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">getPhaseWrapBase</code><span class="sig-paren">(</span><em>freqs</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.getPhaseWrapBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>freqs: frequency grid of the data
+return the step size from a local minima (2pi phase wrap) to the others [0]: TEC, [1]: clock</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.getResidualPhaseWraps">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">getResidualPhaseWraps</code><span class="sig-paren">(</span><em>avgResiduals</em>, <em>freqs</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.getResidualPhaseWraps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.correctWrapsFromResiduals">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">correctWrapsFromResiduals</code><span class="sig-paren">(</span><em>residualarray</em>, <em>flags</em>, <em>freq</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.correctWrapsFromResiduals" title="Permalink to this definition">¶</a></dt>
+<dd><p>corrects solution jumps due to 2 pi phasewraps based on the average residuals</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.correctWraps">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">correctWraps</code><span class="sig-paren">(</span><em>tecarray</em>, <em>residualarray</em>, <em>freq</em>, <em>pos</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.correctWraps" title="Permalink to this definition">¶</a></dt>
+<dd><p>corrects solution jumps due to 2 pi phasewraps based on spatial correlations of averaged TEC solutions. Also returns average constant phase  offset per station</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.get_first_good">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">get_first_good</code><span class="sig-paren">(</span><em>data</em>, <em>axis=1</em>, <em>check=&lt;function &lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.get_first_good" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.fitClockTEC.doFit">
+<code class="descclassname">losoto.operations.fitClockTEC.</code><code class="descname">doFit</code><span class="sig-paren">(</span><em>phases</em>, <em>mask</em>, <em>freqs</em>, <em>stations</em>, <em>station_positions</em>, <em>axes</em>, <em>refstIdx='superterp'</em>, <em>flagBadChannels=True</em>, <em>flagcut=1.5</em>, <em>chi2cut=30000.0</em>, <em>removePhaseWraps=True</em>, <em>combine_pol=False</em>, <em>fit3rdorder=False</em>, <em>circular=False</em>, <em>initSol=[]</em>, <em>initoffsets=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.fitClockTEC.doFit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.flag">
+<span id="losoto-operations-flag-module"></span><h2>losoto.operations.flag module<a class="headerlink" href="#module-losoto.operations.flag" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.flag.run_parser">
+<code class="descclassname">losoto.operations.flag.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flag.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.flag.flag">
+<code class="descclassname">losoto.operations.flag.</code><code class="descname">flag</code><span class="sig-paren">(</span><em>vals</em>, <em>weights</em>, <em>coord</em>, <em>solType</em>, <em>order</em>, <em>mode</em>, <em>preflagzeros</em>, <em>maxCycles</em>, <em>maxRms</em>, <em>maxRmsNoise</em>, <em>windowNoise</em>, <em>fixRmsNoise</em>, <em>replace</em>, <em>axesToFlag</em>, <em>selection</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flag.flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.flag.run">
+<code class="descclassname">losoto.operations.flag.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToFlag</em>, <em>order</em>, <em>maxCycles=5</em>, <em>maxRms=5.0</em>, <em>maxRmsNoise=0.0</em>, <em>fixRmsNoise=0.0</em>, <em>windowNoise=11</em>, <em>replace=False</em>, <em>preflagzeros=False</em>, <em>mode='smooth'</em>, <em>refAnt=''</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flag.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation for LoSoTo implement a flagging procedure
+WEIGHT: compliant</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToFlag</strong> : array of str</p>
+<blockquote>
+<div><p>Axes along which to smooth+find outlier (e.g. [&#8216;time&#8217;, &#8216;freq&#8217;]), max 2 values.</p>
+</div></blockquote>
+<p><strong>order</strong> : array of int</p>
+<blockquote>
+<div><p>Order of the function fitted during detrending. Array must have same size of axesToFlag. If mode=smooth these are the window of the running median (0=all axis).</p>
+</div></blockquote>
+<p><strong>maxCycles</strong> : int, optional</p>
+<blockquote>
+<div><p>Max number of independent flagging cycles, by default 5.</p>
+</div></blockquote>
+<p><strong>maxRms</strong> : float, optional</p>
+<blockquote>
+<div><p>Rms to clip outliers, by default 5.</p>
+</div></blockquote>
+<p><strong>maxRmsNoise</strong> : float, optional</p>
+<blockquote>
+<div><p>Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, by default 0 (ignored).</p>
+</div></blockquote>
+<p><strong>fixRmsNoise</strong> : float, optional</p>
+<blockquote>
+<div><p>Instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), by default 0 (ignored).</p>
+</div></blockquote>
+<p><strong>windowNoise</strong> : int, optional</p>
+<blockquote>
+<div><p>Window size for the running rms, by default 11.</p>
+</div></blockquote>
+<p><strong>replace</strong> : bool, optional</p>
+<blockquote>
+<div><p>Replace bad values with the interpolated ones, instead of flagging them. By default False.</p>
+</div></blockquote>
+<p><strong>preflagzeros</strong> : bool, optional</p>
+<blockquote>
+<div><p>Flag zeros/ones (bad solutions in BBS/DPPP). They should be flagged at import time. By default False.</p>
+</div></blockquote>
+<p><strong>mode, str, optional</strong></p>
+<blockquote>
+<div><p>Detrending algorithm smooth / poly / spline. By default smooth.</p>
+</div></blockquote>
+<p><strong>refAnt</strong> : str, optional</p>
+<blockquote>
+<div><p>Reference antenna, by default None.</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of cpu to use, by default all available.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.flagextend">
+<span id="losoto-operations-flagextend-module"></span><h2>losoto.operations.flagextend module<a class="headerlink" href="#module-losoto.operations.flagextend" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.flagextend.run_parser">
+<code class="descclassname">losoto.operations.flagextend.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagextend.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.flagextend.flag">
+<code class="descclassname">losoto.operations.flagextend.</code><code class="descname">flag</code><span class="sig-paren">(</span><em>weights, coord, axesToExt, selection, percent=90, size=[0], maxCycles=3, outQueue=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagextend.flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flag data if surreounded by other flagged data
+weights = the weights to convert into flags
+percent = percent of surrounding flagged point to extend the flag</p>
+<p>return: flags array and final rms</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.flagextend.run">
+<code class="descclassname">losoto.operations.flagextend.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToExt</em>, <em>size</em>, <em>percent=50.0</em>, <em>maxCycles=3</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagextend.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation for LoSoTo implement a extend flag procedure
+It can work in multi dimensional space and for each datum check if the surrounding data are flagged to a certain %, then flag also that datum
+The size of the surrounding footprint can be tuned
+WEIGHT: compliant</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToExt</strong> : list of str</p>
+<blockquote>
+<div><p>Axes used to find close flags.</p>
+</div></blockquote>
+<p><strong>size</strong> : list of int</p>
+<blockquote>
+<div><p>Size of the window (diameter), per axis. If 0 is given then the entire length of the axis is assumed.
+Must be a vector of same length of Axes.</p>
+</div></blockquote>
+<p><strong>percent</strong> : float, optional</p>
+<blockquote>
+<div><p>Percent of flagged data around the point to flag it, by default 50.</p>
+</div></blockquote>
+<p><strong>maxCycles</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of independent cycles of flag expansion, by default 3.</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of CPU used, by default all available.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.interp">
+<span id="losoto-operations-interp-module"></span><h2>losoto.operations.interp module<a class="headerlink" href="#module-losoto.operations.interp" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.interp.run">
+<code class="descclassname">losoto.operations.interp.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.interp.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate the solutions from one table into a destination table</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.norm">
+<span id="losoto-operations-norm-module"></span><h2>losoto.operations.norm module<a class="headerlink" href="#module-losoto.operations.norm" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.norm.run_parser">
+<code class="descclassname">losoto.operations.norm.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.norm.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.norm.run">
+<code class="descclassname">losoto.operations.norm.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToNorm</em>, <em>normVal=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.norm.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize the solutions to a given value
+WEIGHT: Weights compliant</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToNorm</strong> : array of str</p>
+<blockquote>
+<div><p>Axes along which compute the normalization.</p>
+</div></blockquote>
+<p><strong>normVal</strong> : float, optional</p>
+<blockquote class="last">
+<div><p>Number to normalize to vals = vals * (normVal/valsMean), by default 1.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.plot">
+<span id="losoto-operations-plot-module"></span><h2>losoto.operations.plot module<a class="headerlink" href="#module-losoto.operations.plot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.plot.run_parser">
+<code class="descclassname">losoto.operations.plot.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plot.plot">
+<code class="descclassname">losoto.operations.plot.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>Nplots</em>, <em>NColFig</em>, <em>figSize</em>, <em>cmesh</em>, <em>axesInPlot</em>, <em>axisInTable</em>, <em>xvals</em>, <em>yvals</em>, <em>xlabelunit</em>, <em>ylabelunit</em>, <em>datatype</em>, <em>filename</em>, <em>titles</em>, <em>log</em>, <em>dataCube</em>, <em>minZ</em>, <em>maxZ</em>, <em>plotFlag</em>, <em>makeMovie</em>, <em>antCoords</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plot.run">
+<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[], minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation for LoSoTo implements basic plotting
+WEIGHT: flag-only compliant, no need for weight</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesInPlot</strong> : array of str</p>
+<blockquote>
+<div><p>1- or 2-element array which says the coordinates to plot (2 for 3D plots).</p>
+</div></blockquote>
+<p><strong>axisInTable</strong> : str, optional</p>
+<blockquote>
+<div><p>the axis to plot on a page - e.g. ant to get all antenna&#8217;s on one file. By default &#8216;&#8217;.</p>
+</div></blockquote>
+<p><strong>axisInCol</strong> : str, optional</p>
+<blockquote>
+<div><p>The axis to plot in different colours - e.g. pol to get correlations with different colors. By default &#8216;&#8217;.</p>
+</div></blockquote>
+<p><strong>axisDiff</strong> : str, optional</p>
+<blockquote>
+<div><p>This must be a len=2 axis and the plot will have the differential value - e.g. &#8216;pol&#8217; to plot XX-YY. By default &#8216;&#8217;.</p>
+</div></blockquote>
+<p><strong>NColFig</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of columns in a multi-table image. By default is automatically chosen.</p>
+</div></blockquote>
+<p><strong>figSize</strong> : array of int, optional</p>
+<blockquote>
+<div><p>Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.</p>
+</div></blockquote>
+<p><strong>minmax</strong> : array of float, optional</p>
+<blockquote>
+<div><p>Min max value for the independent variable (0 means automatic). By default 0.</p>
+</div></blockquote>
+<p><strong>log</strong> : bool, optional</p>
+<blockquote>
+<div><p>Use Log=&#8217;XYZ&#8217; to set which axes to put in Log. By default &#8216;&#8217;.</p>
+</div></blockquote>
+<p><strong>plotFlag</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to plot also flags as red points in 2D plots. By default False.</p>
+</div></blockquote>
+<p><strong>doUnwrap</strong> : bool, optional</p>
+<blockquote>
+<div><p>Unwrap phases. By default False.</p>
+</div></blockquote>
+<p><strong>refAnt</strong> : str, optional</p>
+<blockquote>
+<div><p>Reference antenna for phases. By default None.</p>
+</div></blockquote>
+<p><strong>soltabsToAdd</strong> : str, optional</p>
+<blockquote>
+<div><p>Tables to &#8220;add&#8221; (e.g. &#8216;sol000/tec000&#8217;), it works only for tec and clock to be added to phases. By default None.</p>
+</div></blockquote>
+<p><strong>makeAntPlot</strong> : bool, optional</p>
+<blockquote>
+<div><p>Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]. By default False.</p>
+</div></blockquote>
+<p><strong>makeMovie</strong> : bool, optional</p>
+<blockquote>
+<div><p>Make a movie summing up all the produced plots, by default False.</p>
+</div></blockquote>
+<p><strong>prefix</strong> : str, optional</p>
+<blockquote>
+<div><p>Prefix to add before the self-generated filename, by default None.</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of cpus, by default all available.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.plottecscreen">
+<span id="losoto-operations-plottecscreen-module"></span><h2>losoto.operations.plottecscreen module<a class="headerlink" href="#module-losoto.operations.plottecscreen" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.plottecscreen.make_tec_screen_plots">
+<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">make_tec_screen_plots</code><span class="sig-paren">(</span><em>pp</em>, <em>tec_screen</em>, <em>residuals</em>, <em>station_positions</em>, <em>source_names</em>, <em>times</em>, <em>height</em>, <em>order</em>, <em>beta_val</em>, <em>r_0</em>, <em>prefix='frame_'</em>, <em>remove_gradient=True</em>, <em>show_source_names=False</em>, <em>min_tec=None</em>, <em>max_tec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.make_tec_screen_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes plots of TEC screens</p>
+<p>Keyword arguments:
+pp &#8211; array of piercepoint locations
+tec_screen &#8211; array of TEC screen values at the piercepoints
+residuals &#8211; array of TEC screen residuals at the piercepoints
+source_names &#8211; array of source names
+times &#8211; array of times
+height &#8211; height of screen (m)
+order &#8211; order of screen (e.g., number of KL base vectors to keep)
+r_0 &#8211; scale size of phase fluctuations (m)
+beta_val &#8211; power-law index for phase structure function (5/3 =&gt;</p>
+<blockquote>
+<div>pure Kolmogorov turbulence)</div></blockquote>
+<p>prefix &#8211; prefix for output file names
+remove_gradient &#8211; fit and remove a gradient from each screen
+show_source_names &#8211; label sources on screen plots
+min_tec &#8211; minimum TEC value for plot range
+max_tec &#8211; maximum TEC value for plot range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plottecscreen.fitPLaneLTSQ">
+<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">fitPLaneLTSQ</code><span class="sig-paren">(</span><em>XYZ</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.fitPLaneLTSQ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a plane to an XYZ point cloud</p>
+<p>Returns (a, b, c), where Z = aX + bY + c</p>
+<p>Keyword arguments:
+XYZ &#8211; point cloud</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plottecscreen.run">
+<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.reset">
+<span id="losoto-operations-reset-module"></span><h2>losoto.operations.reset module<a class="headerlink" href="#module-losoto.operations.reset" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.reset.run_parser">
+<code class="descclassname">losoto.operations.reset.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reset.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.reset.run">
+<code class="descclassname">losoto.operations.reset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reset.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation reset all the selected amplitudes to 1
+and all other selected solution types to 0
+WEIGHT: flag compliant, no need for weight</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.residuals">
+<span id="losoto-operations-residuals-module"></span><h2>losoto.operations.residuals module<a class="headerlink" href="#module-losoto.operations.residuals" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.residuals.run_parser">
+<code class="descclassname">losoto.operations.residuals.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.residuals.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.residuals.run">
+<code class="descclassname">losoto.operations.residuals.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabsToSub</em>, <em>ratio=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.residuals.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract/divide two tables or a clock/tec/tec3rd/rm from a phase.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltabsToSub</strong> : list of str</p>
+<blockquote>
+<div><p>List of soltabs to subtract</p>
+</div></blockquote>
+<p><strong>ratio</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Return the ratio instead of subtracting, by default False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.reweight">
+<span id="losoto-operations-reweight-module"></span><h2>losoto.operations.reweight module<a class="headerlink" href="#module-losoto.operations.reweight" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.reweight.run_parser">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.reweight.run">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>weightVal=1.0</em>, <em>soltabImport=''</em>, <em>flagBad=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation reset the weight vals
+So far it sets weights to a specified number, in the future an algorithm to
+weight solutions properly should be implemented</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>weightVal</strong> : float, optional</p>
+<blockquote>
+<div><p>Set weights to this values (0=flagged), by default 1.</p>
+</div></blockquote>
+<p><strong>soltabImport</strong> : str, optional</p>
+<blockquote>
+<div><p>Name of a soltab. Copy weights from this soltab, by default do not copy.</p>
+</div></blockquote>
+<p><strong>flagBad</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Re-apply flags to bad values, by default False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.smooth">
+<span id="losoto-operations-smooth-module"></span><h2>losoto.operations.smooth module<a class="headerlink" href="#module-losoto.operations.smooth" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.smooth.run_parser">
+<code class="descclassname">losoto.operations.smooth.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.smooth.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.smooth.run">
+<code class="descclassname">losoto.operations.smooth.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToSmooth</em>, <em>size=[]</em>, <em>mode='runningmedian'</em>, <em>degree=1</em>, <em>replace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.smooth.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation for LoSoTo implement a smoothing function: running-median on an arbitrary number of axes, running polyfit on one axis, or set all solutions to mean/median value.
+WEIGHH: flag ready</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToSmooth</strong> : array of str</p>
+<blockquote>
+<div><p>Axes used to compute the smoothing function.</p>
+</div></blockquote>
+<p><strong>size</strong> : array of int, optional</p>
+<blockquote>
+<div><p>Window size for the runningmedian and runningpoly (array of same size of axesToSmooth), by default [].</p>
+</div></blockquote>
+<p><strong>mode</strong> : {&#8216;runningmedian&#8217;,&#8217;runningpoly&#8217;,&#8217;mean&#8217;,&#8217;median&#8217;}, optional</p>
+<blockquote>
+<div><p>Runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median), by default &#8220;runningmedian&#8221;.</p>
+</div></blockquote>
+<p><strong>degree</strong> : int, optional</p>
+<blockquote>
+<div><p>Degrees of the polynomia for the runningpoly, by default 1.</p>
+</div></blockquote>
+<p><strong>replace</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Flagged data are replaced with smoothed value and unflagged, by default False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.tecfit">
+<span id="losoto-operations-tecfit-module"></span><h2>losoto.operations.tecfit module<a class="headerlink" href="#module-losoto.operations.tecfit" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.tecfit.collect_solutions">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">collect_solutions</code><span class="sig-paren">(</span><em>H</em>, <em>dirs=None</em>, <em>freq_tol=1000000.0</em>, <em>solsets=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.collect_solutions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects and returns phase solutions, etc. needed for fitting</p>
+<p>Keyword arguments:
+H &#8211; H5parm object
+dirs &#8211; list of directions to use (None =&gt; all)
+freq_tol &#8211; tolerance for grouping of phase solutions into bands (Hz)
+solsets &#8211; list of solution sets in H to search (None =&gt; all)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecfit.interpolate_phase">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">interpolate_phase</code><span class="sig-paren">(</span><em>phase1</em>, <em>time1</em>, <em>time2</em>, <em>interpMethod='cubic'</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.interpolate_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates phase solutions from one time grid to another</p>
+<p>If time2 is a coarser grid, averaging is done instead.</p>
+<p>Keyword arguments:
+phase1 &#8211; array of phase solutions to average/interpolate
+time1 &#8211; array of times for phase1
+time2 &#8211; array of times to average/interpolate to
+interpMethod &#8211; interpolation method (see scipy.interpolate.griddata)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecfit.average_phase">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">average_phase</code><span class="sig-paren">(</span><em>phase</em>, <em>nslots</em>, <em>times=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.average_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages input phases over nslots time slots</p>
+<p>Keyword arguments:
+phase &#8211; array of phase solutions
+nslots &#8211; average over nslots
+times &#8211; array of times to average</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecfit.fit_tec_per_source_pair">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">fit_tec_per_source_pair</code><span class="sig-paren">(</span><em>phases</em>, <em>flags</em>, <em>mask</em>, <em>freqs</em>, <em>init_sols=None</em>, <em>init_sols_per_pair=False</em>, <em>propagate=False</em>, <em>nband_min=2</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.fit_tec_per_source_pair" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits TEC values to phase solutions per source pair</p>
+<p>Returns TEC solutions as array of shape (N_sources, N_times, N_stations)</p>
+<p>Keyword arguments:
+phases &#8211; array of phase solutions
+flags &#8211; phase solution flags (0 = use, 1 = flagged)
+mask &#8211; mask for sources and frequencies (0 = ignore, 1 = use)
+freqs &#8211; array of frequencies
+init_sols &#8211; solutions to use to initialize the fits
+init_sols_per_pair &#8211; init_sols are per source pair (not per source)
+propagate &#8211; propagate solutions from previous solution
+nband_min &#8211; min number of bands for a source to be used</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecfit.add_stations">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">add_stations</code><span class="sig-paren">(</span><em>station_selection</em>, <em>phases0</em>, <em>phases1</em>, <em>flags</em>, <em>mask</em>, <em>station_names</em>, <em>station_positions</em>, <em>source_names</em>, <em>source_selection</em>, <em>times</em>, <em>freqs</em>, <em>r</em>, <em>nband_min=2</em>, <em>soln_type='phase'</em>, <em>nstations_max=None</em>, <em>excluded_stations=None</em>, <em>t_step=5</em>, <em>tec_step1=5</em>, <em>tec_step2=21</em>, <em>search_full_tec_range=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.add_stations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds stations to TEC fitting using an iterative initial-guess search to
+ensure the global min is found</p>
+<p>Keyword arguments:
+station_selection &#8211; indices of stations to use in fitting
+phases0 &#8211; XX phase solutions
+phases1 &#8211; YY phase solutions
+flags &#8211; phase solution flags (0 = use, 1 = flagged)
+mask &#8211; mask for sources and frequencies (0 = ignore, 1 = use)
+station_names &#8211; array of station names
+source_names &#8211; array of source names
+source_selection &#8211; indices of sources to use in fitting
+times &#8211; array of times
+freqs &#8211; array of frequencies
+r &#8211; array of TEC solutions returned by fit_tec_per_source_pair()
+nband_min &#8211; min number of bands for a source to be used
+soln_type &#8211; type of phase solution: &#8216;phase&#8217; or &#8216;scalarphase&#8217;
+nstations_max &#8211; max number of stations to use
+excluded_stations &#8211; stations to exclude
+t_step &#8211; try full TEC range every t_step number of solution times
+tec_step1 &#8211; number of steps in TEC subrange (+/- last TEC fit value)
+tec_step2 &#8211; number of steps in full TEC range (-0.1 &#8211; 0.1)
+search_full_tec_range &#8211; always search the full TEC range (-0.1 &#8211; 0.1)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecfit.run">
+<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit phase solutions to obtain TEC values per direction.</p>
+<p>Phase solutions are assumed to be stored in solsets of the H5parm file, one
+solset per band per field. Only phase- or scalarphase-type solution tables
+are used. If direction-independent solutions are found (in addition to the
+direction-dependent ones), they are added, after averaging, to the
+corresponding direction-dependent ones. Phase solutions are automatically
+grouped by field and by band.</p>
+<p>The derived TEC values are stored in the specified output soltab of type
+&#8216;tec&#8217;, with one TEC value per station per direction per solution interval.
+The TEC values are derived using the <code class="docutils literal"><span class="pre">lofar.expion.baselinefitting.fit()</span></code>
+function to fit a TEC value to the phases. The term that is minimized
+includes all baselines, so there is no preferred reference station, and the
+residual is computed as the complex number 1.0 - exp(1i phasedifference),
+which is zero when the phase difference is a multiple of 2pi.</p>
+<p>The TEC solution table may be used to derive TEC screens using the
+TECSCREEN operation.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.tecjump">
+<span id="losoto-operations-tecjump-module"></span><h2>losoto.operations.tecjump module<a class="headerlink" href="#module-losoto.operations.tecjump" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.tecjump.run">
+<code class="descclassname">losoto.operations.tecjump.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecjump.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.tecscreen">
+<span id="losoto-operations-tecscreen-module"></span><h2>losoto.operations.tecscreen module<a class="headerlink" href="#module-losoto.operations.tecscreen" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.tecscreen.calculate_piercepoints">
+<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">calculate_piercepoints</code><span class="sig-paren">(</span><em>station_positions</em>, <em>source_positions</em>, <em>times</em>, <em>height=200000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.calculate_piercepoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array of piercepoint locations and airmass values for a
+screen at the given height (in m)</p>
+<p>Keyword arguments:
+station_positions &#8211; array of station positions
+source_positions &#8211; array of source positions
+times &#8211; array of times
+height &#8211; height of screen (m)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecscreen.calc_piercepoint">
+<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">calc_piercepoint</code><span class="sig-paren">(</span><em>pos</em>, <em>direction</em>, <em>height</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.calc_piercepoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates pierce point locations and airmass values for given station
+position, source direction, and height (in m)</p>
+<p>Keyword arguments:
+pos &#8211; array of station positions
+direction &#8211; array of source directions
+height &#8211; height of screen (m)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecscreen.fit_screen_to_tec">
+<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">fit_screen_to_tec</code><span class="sig-paren">(</span><em>station_names</em>, <em>source_names</em>, <em>pp</em>, <em>airmass</em>, <em>rr</em>, <em>times</em>, <em>height</em>, <em>order</em>, <em>r_0</em>, <em>beta</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.fit_screen_to_tec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a screen to given TEC values using Karhunen-Lo`eve base vectors</p>
+<p>Keyword arguments:
+station_names &#8211; array of station names
+source_names &#8211; array of source names
+pp &#8211; array of piercepoint locations
+airmass &#8211; array of airmass values
+rr &#8211; array of TEC solutions
+times &#8211; array of times
+height &#8211; height of screen (m)
+order &#8211; order of screen (i.e., number of KL base vectors to keep)
+r_0 &#8211; scale size of phase fluctuations (m)
+beta &#8211; power-law index for phase structure function (5/3 =&gt;</p>
+<blockquote>
+<div>pure Kolmogorov turbulence)</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.tecscreen.run">
+<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a screen to TEC values derived by the TECFIT operation.</p>
+<p>The TEC values are read from the specified tec soltab.</p>
+<p>The results of the fit are stored in the specified tecscreen solution table.
+These values are the screen TEC values per station per pierce point per
+solution interval. The pierce point locations are stored in an auxiliary
+array in the output solution table.</p>
+<p>TEC screens can be plotted with the PLOT operation by setting PlotType =
+TECScreen.</p>
+<p>The H5parm_exporter.py tool can be used to export the screen to a parmdb
+that BBS and the AWimager can use. Note, however, that the output screens
+are not normalized properly (any normalization was lost due to the use of
+source-to-source phase gradients in the TECFIT operation). Therefore, a
+direction-independent calibration must be done after exporting the screens
+to a parmdb file, with the following settings in the BBS solve step:</p>
+<blockquote>
+<div>Model.Ionosphere.Enable = T
+Model.Ionosphere.Type = EXPION</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-losoto.operations" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="losoto.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">losoto.operations package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.abs">losoto.operations.abs module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.clip">losoto.operations.clip module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.clocktec">losoto.operations.clocktec module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.crossdelay">losoto.operations.crossdelay module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.example">losoto.operations.example module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.faraday">losoto.operations.faraday module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.fitClockTEC">losoto.operations.fitClockTEC module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.flag">losoto.operations.flag module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.flagextend">losoto.operations.flagextend module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.interp">losoto.operations.interp module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.norm">losoto.operations.norm module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.plottecscreen">losoto.operations.plottecscreen module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.reset">losoto.operations.reset module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.smooth">losoto.operations.smooth module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.tecfit">losoto.operations.tecfit module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.tecjump">losoto.operations.tecjump module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.tecscreen">losoto.operations.tecscreen module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="losoto.html"
+                        title="previous chapter">losoto package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/losoto.operations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="losoto.html" title="losoto package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Francesco de Gasperin.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+    </div>
+  </body>
+</html>
