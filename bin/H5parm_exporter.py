@@ -5,7 +5,7 @@
 # existing parmdb instrument table(s).
 #
 # It handles Gain/DirectionalGain/RotationAngle/CommonRotationAngle/CommonScalarPhase solution types.
-_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl), David Rafferty (drafferty@hs.uni-hamburg.de)"
+_author = "Francesco de Gasperin (astro@voo.it), David Rafferty (drafferty@hs.uni-hamburg.de)"
 
 import sys, os, glob, re, time
 import numpy as np
@@ -324,7 +324,7 @@ if __name__=='__main__':
     import optparse
     opt = optparse.OptionParser(usage='%prog <H5parm filename> <output globaldb/SB filename>\n'+
         _author, version='%prog '+_version.__version__)
-    opt.add_option('-v', '--verbose', help='Go VeRbOsE!',
+    opt.add_option('-V', '--verbose', help='Go VeRbOsE!',
         action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Name of solution set to export '
         '(default=sol000)', type='string', default='sol000')

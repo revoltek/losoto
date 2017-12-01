@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This tool is used to merge multiple H5parm.
+# This tool is used to merge 2 H5parms.
+# Each h5parm solset will be copied into the last one.
 
-# Authors:
-# Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
+_author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, glob
 import numpy as np
@@ -21,7 +20,7 @@ if __name__=='__main__':
     import optparse
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm:solset> <H5parm:solset> \n'\
                             +_author, version='%prog '+_version.__version__)
-    opt.add_option('-v', '--verbose', help='Go VERBOSE! (default=False)', action='store_true', default=False)
+    opt.add_option('-V', '--verbose', help='Go VERBOSE! (default=False)', action='store_true', default=False)
     (options, args) = opt.parse_args()
 
     # Check options

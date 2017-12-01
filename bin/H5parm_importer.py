@@ -13,7 +13,7 @@ It handles Gain/DirectionalGain/RotationAngle/
 """
 # Authors:
 # Francesco de Gasperin
-_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
+_author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, glob
 import socket
@@ -28,7 +28,7 @@ if __name__=='__main__':
     import optparse
     opt = optparse.OptionParser(usage='%prog [-v] <H5parm> <globaldb/SBname> \n'\
                     +_author, version='%prog '+_version.__version__)
-    opt.add_option('-v', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
+    opt.add_option('-V', '--verbose', help='Go Vebose! (default=False)', action='store_true', default=False)
     opt.add_option('-s', '--solset', help='Solution-set name (default=sol###)', type='string', default=None)
     opt.add_option('-i', '--instrument', help='Name of the instrument table (default=instrument*)', type='string', default='instrument*')
     opt.add_option('-c', '--complevel', help='Compression level from 0 (no compression, fast) to 9 (max compression, slow) (default=5)', type='int', default='5')

@@ -14,6 +14,39 @@ if int(tables.__version__.split('.')[0]) < 3:
     logging.critical('pyTables version must be >= 3.0.0, found: '+tables.__version__)
     sys.exit(1)
 
+
+def openSoltab(h5parmFile, solsetName=None, soltabName=None, address=None, readonly=True):
+    """
+    Convenience function to get a soltab object from an h5parm file and an address like "solset000/phase000".
+
+    Parameters
+    ----------
+    h5parmFile : str
+        H5parm filename.
+    solsetName : str
+        solset name
+    soltabName : str
+        soltab name
+    address : str
+        solset/soltab name (to use in place of the parameters solset and soltab).
+    readonly : bool, optional
+        if True the table is open in readonly mode, by default True.
+
+    Returns
+    -------
+    Soltab obj
+        A solution table object.
+    """
+    h5 = h5parm(h5parmFile, readonly)
+    if solsetName is None or soltabName is None:
+        if address is None:
+            logging.error('Address must be specified if solsetName and soltabName are not given.')
+            sys.exit(1)
+        solsetName, soltabName = address.split('/')
+    solset = h5.getSolset(solsetName)
+    return solset.getSoltab(soltabName)
+
+
 class h5parm( object ):
     """
     Create an h5parm object.
@@ -21,13 +54,13 @@ class h5parm( object ):
     Parameters
     ----------
     h5parmFile : str
-        H5parm filename
+        H5parm filename.
     readonly : bool, optional
-        if True the table is open in readonly mode, by default True
+        if True the table is open in readonly mode, by default True.
     complevel : int, optional
-        compression level from 0 to 9 when creating the file, by default 5
+        compression level from 0 to 9 when creating the file, by default 5.
     complib : str, optional
-        library for compression: lzo, zlib, bzip2, by default zlib
+        library for compression: lzo, zlib, bzip2, by default zlib.
     """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
@@ -105,7 +138,7 @@ class h5parm( object ):
             logging.warning('Solution-set '+solsetName+' contains unsuported characters. Use [A-Za-z0-9_-]. Switching to default.')
             solsetName = None
 
-        if solsetName in self.getSolsetsNames():
+        if solsetName in self.getSolsetNames():
             logging.warning('Solution-set '+solsetName+' already present. Switching to default.')
             solsetName = None
 
@@ -147,7 +180,7 @@ class h5parm( object ):
         return solsets
 
 
-    def getSolsetsNames(self):
+    def getSolsetNames(self):
         """
         Get all solution set names.
 
@@ -176,7 +209,7 @@ class h5parm( object ):
         solset obj
             Return solset object.
         """
-        if not solset in self.getSolsetsNames():
+        if not solset in self.getSolsetNames():
             logging.critical("Cannot find solset: "+solset+".")
             raise Exception("Cannot find solset: "+solset+".")
 
@@ -193,7 +226,7 @@ class h5parm( object ):
             Solset name.
         """
         nums = []
-        for solsetName in self.getSolsetsNames():
+        for solsetName in self.getSolsetNames():
             if re.match(r'^sol[0-9][0-9][0-9]$', solsetName):
                 nums.append(int(solsetName[-3:]))
 
@@ -283,22 +316,18 @@ class h5parm( object ):
             info += "=" * len(solset.name) + "=" * 16 + "\n\n"
 
             # Add direction (source) names
-            try:
-                sources = solset.getSou().keys()
-                sources.sort()
-                info += "Directions: "
-                for src_name1, src_name2, src_name3 in grouper(3, sources):
-                    info += "{0:<15s} {1:<15s} {2:<15s}\n            ".format(src_name1, src_name2, src_name3)
-            except: pass
+            sources = solset.getSou().keys()
+            sources.sort()
+            info += "Directions: "
+            for src_name1, src_name2, src_name3 in grouper(3, sources):
+                info += "{0:<15s} {1:<15s} {2:<15s}\n            ".format(src_name1, src_name2, src_name3)
 
             # Add station names
-            try:
-                antennas = solset.getAnt().keys()
-                antennas.sort()
-                info += "\nStations: "
-                for ant1, ant2, ant3, ant4 in grouper(4, antennas):
-                    info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
-            except: pass
+            antennas = solset.getAnt().keys()
+            antennas.sort()
+            info += "\nStations: "
+            for ant1, ant2, ant3, ant4 in grouper(4, antennas):
+                info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
 
             # For each table, add length of each axis and history of
             # operations applied to the table.
@@ -576,8 +605,10 @@ class Solset( object ):
             Available antennas in the form {name1:[position coords], name2:[position coords], ...}.
         """
         ants = {}
-        for x in self.obj.antenna:
-            ants[x['name']] = x['position']
+        try:
+            for x in self.obj.antenna:
+                ants[x['name']] = x['position']
+        except: pass
 
         return ants
 
@@ -592,8 +623,10 @@ class Solset( object ):
             Available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}.
         """
         sources = {}
-        for x in self.obj.source:
-            sources[x['name']] = x['dir']
+        try:
+            for x in self.obj.source:
+                sources[x['name']] = x['dir']
+        except: pass
 
         return sources
 
@@ -602,8 +635,8 @@ class Soltab( object ):
     """
     Parameters
     ----------
-    soltab : pytables obj
-        Pytable object.
+    soltab : pytables Table obj
+        Pytable Table object.
     useCache : bool, optional
         Cache all data in memory, by default False.
     **args : optional

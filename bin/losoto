@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Authors:
-# Francesco de Gasperin
-# David Raffery
-# Cyril Tasse
-# Reinout van Weeren
-# Maaijke Mevius
-# Bas van der Tol
-_author = "Francesco de Gasperin (fdg@strw.leidenuniv.nl)"
+_author = "Francesco de Gasperin (astro@voo.it)"
 
 import os, sys, time, gc
 import atexit
 import tables
 import logging
-from losoto import _version
-from losoto import _logging
+from losoto import _version, _logging
 from losoto.h5parm import h5parm
 from losoto.losoto_lib import LosotoParser, getStepSoltabs
 
@@ -43,9 +35,9 @@ def my_close_open_files(verbose):
 if __name__=='__main__':
     # Options
     import argparse
-    parser = argparse.ArgumentParser(description='LoSoTo '+_version.__version__+' - '+_author)
+    parser = argparse.ArgumentParser(description='LoSoTo - '+_author, version=_version.__version__)
     parser.add_argument('--quiet', '-q', dest='quiet', help='Quiet', default=False, action='store_true')
-    parser.add_argument('--verbose', '-v', dest='verbose', help='Verbose', default=False, action='store_true')
+    parser.add_argument('--verbose', '-V', dest='verbose', help='Verbose', default=False, action='store_true')
     parser.add_argument('--filter', '-f', dest='filter', help='Filter to use with "-i" option to filter on solution set names (default=None)', default=None, type=str)
     parser.add_argument('--info', '-i', dest='info', help='List information about h5parm file (default=False). A filter on the solution set names can be specified with the "-f" option.', default=False, action='store_true')
     parser.add_argument('--delete', '-d', dest='delete', help='Specify a solution table to be deleted. Use the solset/soltab sintax.', default=None, type=str)
