@@ -22,7 +22,7 @@ def run( soltab, soltabOut=''):
     """
 
     if soltabOut == '':
-        sosoltabOut = None
+        soltabOut = None
 
     solset = soltab.getSolset()
     soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \

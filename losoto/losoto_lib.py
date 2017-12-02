@@ -8,6 +8,8 @@ import ast, re
 import logging
 from ConfigParser import RawConfigParser
 
+cacheSteps = ['clip','flag', 'norm', 'residuals', 'smooth'] # steps to use chaced data
+
 class LosotoParser(RawConfigParser):
     """
     A parser for losoto parset files.
@@ -140,8 +142,6 @@ def getParAxis( parser, step, axisName ):
     if axisOpt == '' or axisOpt == []:
         axisOpt = None
 
-    print axisOpt, axisName
- 
     return axisOpt
 
 
@@ -165,7 +165,6 @@ def getStepSoltabs(parser, step, H):
     list
         list of soltab obj with applied selection
     """
-    cacheSteps = ['clip','flag', 'norm', 'residuals', 'smooth'] # steps to use chaced data
 
     # selection on soltabs
     if parser.has_option(step, 'soltab'):
@@ -173,9 +172,9 @@ def getStepSoltabs(parser, step, H):
     elif parser.has_option('_global', 'soltab'):
         stsel = parser.getarraystr('_global', 'soltab')
     else:
-        stsel = '*/*' # select all
+        stsel = ['.*/.*'] # select all
     #if not type(stsel) is list: stsel = [stsel]
-    
+
     soltabs = []
     for solset in H.getSolsets():
         for soltabName in solset.getSoltabNames():
