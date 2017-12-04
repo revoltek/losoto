@@ -12,8 +12,8 @@ def run_parser(soltab, parser, step):
     axisInCol = parser.getstr( step, 'axisInCol', '' )
     axisDiff = parser.getstr( step, 'axisDiff', '' )
     NColFig = parser.getint( step, 'NColFig', 0 )
-    figSize = parser.getarrayint( step, 'figSize', [] )
-    minmax = parser.getarrayfloat( step, 'minmax', [0,0] )
+    figSize = parser.getarrayint( step, 'figSize', [0,0] )
+    minmax = parser.getarrayfloat( step, 'minmax', [0.,0.] )
     log = parser.getstr( step, 'log', '' )
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
@@ -39,7 +39,6 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
             #mpl.rc('figure.subplot',left=0.1, bottom=0.1, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
-
 
         autominZ = np.inf; automaxZ = -np.inf
 
@@ -140,11 +139,12 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
                             automaxZ = vals.max(fill_value=-np.inf)
 
         if not cmesh: 
-            if minZ is not None:
+            print autominZ, automaxZ, minZ, maxZ
+            if minZ != 0:
                 ax.set_ylim(ymin=minZ)
             else:
                 ax.set_ylim(ymin=autominZ)
-            if maxZ is not None:
+            if maxZ != 0:
                 ax.set_ylim(ymax=maxZ)
             else:
                 ax.set_ylim(ymax=automaxZ)
@@ -158,7 +158,7 @@ def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals,
         plt.close()
 
 
-def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[], minmax=[0,0], log='', \
+def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], minmax=[0,0], log='', \
                plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
@@ -224,14 +224,12 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     # str2list
     if axisInTable == '': axisInTable = []
     else: axisInTable = [axisInTable]
-    if axisInPlot == '': axisInPlot = []
-    else: axisInPlot = [axisInPlot]
     if axisInCol == '': axisInCol = []
     else: axisInCol = [axisInCol]
-    if axisInDiff == '': axisInDiff = []
-    else: axisInDiff = [axisInDiff]
+    if axisDiff == '': axisDiff = []
+    else: axisDiff = [axisDiff]
 
-    if len(set(axisInTable+axesInPlot+axisInCol+axisDiff)) != len(axisInTable+axesInPlot+axisInCol+axisInDiff):
+    if len(set(axisInTable+axesInPlot+axisInCol+axisDiff)) != len(axisInTable+axesInPlot+axisInCol+axisDiff):
         logging.error('Axis defined multiple times.')
         return 1
 
@@ -253,6 +251,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         os.makedirs(os.path.dirname(prefix))
 
     if refAnt == '': refAnt = None
+    elif not refAnt in soltab.getAxisValues('ant'):
+        logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+        refAnt = soltab.getAxisValues('ant')[1]
 
     minZ, maxZ = minmax
 
@@ -310,6 +311,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         for axis in axesInFile:
             filename += axis+str(coord[axis])+'_'
         filename = filename[:-1] # remove last _
+        if prefix+filename == '': filename = 'plot'
 
         # axis vals (they are always the same, regulat arrays)
         xvals = coord[axesInPlot[0]]
@@ -364,13 +366,13 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             yvals = None
             ylabelunit = None
 
-        soltab2 = solset.getSoltab(soltab.name) # a copy
-        soltab2.selection = selection
         # cycle on tables
+        soltab1Selection = soltab.selection # save global selection and subselect only axex to iterate
+        soltab.selection = selection
         titles = []
         dataCube = []
         weightCube = []
-        for Ntab, (vals, coord, selection) in enumerate(soltab2.getValuesIter(returnAxes=axisDiff+axisInCol+axesInPlot)):
+        for Ntab, (vals, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axisInCol+axesInPlot)):
             dataCube.append([])
             weightCube.append([])
 
@@ -381,18 +383,13 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 titles[Ntab] += axis+':'+str(coord[axis])+' '
             titles[Ntab] = titles[Ntab][:-1] # remove last ' '
 
-            soltab3 = solset.getSoltab(soltab.name) # a copy
-            soltab3.selection = selection
             # cycle on colors
-            
-            if not refAnt in soltab.getAxisValues('ant') and not refAnt is None:
-                logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
-                refAnt = soltab.getAxisValues('ant')[1]
-
-            for Ncol, (vals, weight, coord, selection) in enumerate(soltab3.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
+            soltab2Selection = soltab.selection
+            soltab.selection = selection
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
                 dataCube[Ntab].append([])
                 weightCube[Ntab].append([])
-    
+
                 # differential plot
                 if axisDiff != []:
                     # find ordered list of axis
@@ -461,9 +458,14 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 
                 # is user requested axis in an order that is different from h5parm, we need to transpose
                 if len(axesInPlot) == 2:
-                    if soltab3.getAxesNames().index(axesInPlot[0]) < soltab3.getAxesNames().index(axesInPlot[1]): vals = vals.T
+                    if soltab.getAxesNames().index(axesInPlot[0]) < soltab.getAxesNames().index(axesInPlot[1]):
+                        vals = vals.T
+                        weight = weight.T
 
-                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0))
+                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.))
+            
+            soltab.selection = soltab2Selection
+            ### end cycle on colors
 
         # if dataCube too large (> 500 MB) do not go parallel
         if np.array(dataCube).nbytes > 1024*1024*500: 
@@ -473,6 +475,8 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
         if makeMovie: pngs.append(prefix+filename+'.png')
 
+        soltab.selection = soltab1Selection
+        ### end cycle on tables
     mpm.wait()
 
     if makeMovie:

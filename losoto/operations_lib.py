@@ -3,10 +3,11 @@
 
 # Some utilities for operations
 
-import sys
+import sys, math
 import logging
 from losoto.h5parm import h5parm
 import multiprocessing
+import numpy as np
 
 class multiprocManager(object):
 
@@ -83,6 +84,31 @@ class multiprocManager(object):
         self.inQueue.join()
 
 
+def reorderAxes( a, oldAxes, newAxes ):
+    """
+    Reorder axis of an array to match a new name pattern.
+
+    Parameters
+    ----------
+    a : np array
+        The array to transpose.
+    oldAxes : list of str
+        A list like ['time','freq','pol'].
+        It can contain more axes than the new list, those are ignored.
+        This is to pass to oldAxis the soltab.getAxesNames() directly even on an array from getValuesIter()
+    newAxes : list of str
+        A list like ['time','pol','freq'].
+
+    Returns
+    -------
+    np array
+        With axis transposed to match the newAxes list.
+    """
+    oldAxes = [ax for ax in oldAxes if ax in newAxes]
+    idx = [ oldAxes.index(ax) for ax in newAxes ]
+    return np.transpose(a, idx)
+
+
 def removeKeys( dic, keys = [] ):
     """
     Remove a list of keys from a dict and return a new one.
@@ -120,15 +146,17 @@ def normalize_phase(phase):
     array of float
         Normalized phases.
     """
-    import numpy as np
 
     # Convert to range [-2*pi, 2*pi].
     out = np.fmod(phase, 2.0 * np.pi)
     # Remove nans
-    np.putmask(out, out!=out, 0)
+    nans = np.isnan(out)
+    np.putmask(out, nans, 0)
     # Convert to range [-pi, pi]
     out[out < -np.pi] += 2.0 * np.pi
     out[out > np.pi] -= 2.0 * np.pi
+    # Put nans back
+    np.putmask(out, nans, np.nan)
     return out
 
 
@@ -143,8 +171,6 @@ def unwrap_fft(phase, iterations=3):
     phase -- array of phase solutions
     iterations -- number of iterations to perform
     """
-    import numpy as np
-
     puRadius=lambda x : np.roll( np.roll(
           np.add.outer( np.arange(-x.shape[0]/2+1,x.shape[0]/2+1)**2.0,
                         np.arange(-x.shape[1]/2+1,x.shape[1]/2+1)**2.0 ),
@@ -181,19 +207,17 @@ def unwrap(phase, window_size=5):
     """
     Unwrap phase by estimating the trend of the phase signal.
     """
-    import numpy, math
-
     # Allocate result.
-    out = numpy.zeros(phase.shape)
+    out = np.zeros(phase.shape)
 
-    windowl = numpy.array([math.fmod(phase[0], 2.0 * math.pi)] * window_size)
+    windowl = np.array([math.fmod(phase[0], 2.0 * math.pi)] * window_size)
 
     delta = math.fmod(phase[1] - windowl[0], 2.0 * math.pi)
     if delta < -math.pi:
         delta += 2.0 * math.pi
     elif delta > math.pi:
         delta -= 2.0 * math.pi
-    windowu = numpy.array([windowl[0] + delta] * window_size)
+    windowu = np.array([windowl[0] + delta] * window_size)
 
     out[0] = windowl[0]
     out[1] = windowu[0]
@@ -230,7 +254,7 @@ def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
     """
     Unwrap the x array, if it is shorter than 2*window, use np.unwrap()
     """
-    import numpy as np
+    import np as np
 
     if len(x) < 2*window: return np.unwrap(x)
 

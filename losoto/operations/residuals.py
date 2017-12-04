@@ -38,9 +38,6 @@ def run( soltab, soltabsToSub, ratio=False ):
     for soltabToSub in soltabsToSub:
         soltabsub = solset.getSoltab(soltabToSub)
 
-        # selection
-        soltabsub.selection = soltab.selection
-
         if soltab.getType() != 'phase' and (soltabsub.getType() == 'tec' or soltabsub.getType() == 'clock' or soltabsub.getType() == 'rotationmeasure' or soltabsub.getType() == 'tec3rd'):
             logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
             return 1
@@ -48,15 +45,16 @@ def run( soltab, soltabsToSub, ratio=False ):
         logging.info('Subtracting table: '+soltabToSub)
 
         # a major speed up if tables are assumed with same axes, check that (should be the case in almost any case)
-        for axisName in soltabsub.getAxesNames():
-            assert all(soltabsub.getAxisValues(axisName) == soltab.getAxisValues(axisName))
+        dictSel = {}
+        for i, axisName in enumerate(soltabsub.getAxesNames()):
+            # also armonise selection by copying only the axes present in the outtable and in the right order
+            soltabsub.selection[i] = soltab.selection[soltab.getAxesNames().index(axisName)]
+            assert (soltabsub.getAxisValues(axisName) == soltab.getAxisValues(axisName)).all() # table not conform
     
-    if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'rotationmeasure':
-        # the only return axes is freq, slower but better code
-        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='freq', weight = True):
-
-            for soltabsub in allsoltabsub:
-
+    for soltabsub in allsoltabsub:
+        if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'rotationmeasure':
+            # the only return axes is freq, slower but better code
+            for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='freq', weight = True):
                 # restrict to have the same coordinates of phases
                 for i, axisName in enumerate(soltabsub.getAxesNames()):
                     soltabsub.selection[i] = selection[soltab.getAxesNames().index(axisName)]
@@ -86,8 +84,7 @@ def run( soltab, soltabsToSub, ratio=False ):
 
             soltab.setValues(vals, selection)
             soltab.setValues(weights, selection, weight = True)
-    else:
-        for soltabsub in allsoltabsub:
+        else:
             if ratio: soltab.setValues((soltab.getValues(retAxesVals=False)-soltabsub.getValues(retAxesVals=False))/soltabsub.getValues(retAxesVals=False))
             else: soltab.setValues(soltab.getValues(retAxesVals=False)-soltabsub.getValues(retAxesVals=False))
             weight = soltab.getValues(retAxesVals=False, weight=True)

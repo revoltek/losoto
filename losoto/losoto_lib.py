@@ -3,12 +3,11 @@
 
 # Some utilities for operations
 
-import os, sys
-import ast, re
+import os, sys, ast, re
 import logging
 from ConfigParser import RawConfigParser
 
-cacheSteps = ['clip','flag', 'norm', 'residuals', 'smooth'] # steps to use chaced data
+cacheSteps = ['plot','clip','flag','norm','residuals','smooth'] # steps to use chaced data
 
 class LosotoParser(RawConfigParser):
     """
@@ -66,7 +65,7 @@ class LosotoParser(RawConfigParser):
     def getarray(self, s, v, default=None):
         if self.has_option(s, v):
             try:
-                return self.getstr(s, v).replace(' ','').split(',') # split also turns str into 1-element lists
+                return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
             except:
                 logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...])' % (s, v))
         elif default is None:
@@ -179,7 +178,7 @@ def getStepSoltabs(parser, step, H):
     for solset in H.getSolsets():
         for soltabName in solset.getSoltabNames():
             if any(re.compile(this_stsel).match(solset.name+'/'+soltabName) for this_stsel in stsel):
-                if step in cacheSteps:
+                if parser.getstr(step, 'operation').lower() in cacheSteps:
                     soltabs.append( solset.getSoltab(soltabName, useCache=True) )
                 else:
                     soltabs.append( solset.getSoltab(soltabName, useCache=False) )

@@ -65,6 +65,10 @@ def run( soltab, refAnt='', maxResidual=1. ):
             logging.error('Faraday rotation estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
             return 1
 
+        # reorder axes
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
+        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','freq','time'] )
+
         fitrm = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
         fitrmguess = 0.001 # good guess
@@ -95,13 +99,14 @@ def run( soltab, refAnt='', maxResidual=1. ):
                     phase_rr  = vals[coord_rr,:,t][idx]
                     phase_ll  = vals[coord_ll,:,t][idx]
 
-                    if len(freq) < 10:
+                    if len(freq) < 30:
                         fitweights[t] = 0
                         logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant']+' at timestamp '+str(t))
                         continue
         
-                    if (len(idx) - len(freq))/len(freq) > 1/4.:
-                        logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(weights[0,:,t]) - len(idx)))
+                    # if more than 1/4 of chans are flagged
+                    if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
+                        logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
                     # RR-LL to be consistent with BBS/NDPPP
                     phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
@@ -109,7 +114,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
     
                     fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
                     # fractional residual
-                    residual = np.mean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff + np.pi, 2.*np.pi) - np.pi))
+                    residual = np.nanmean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff + np.pi, 2.*np.pi) - np.pi))
 
 #                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
 

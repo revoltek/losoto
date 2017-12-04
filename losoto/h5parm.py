@@ -668,13 +668,13 @@ class Soltab( object ):
         for axis in self.getAxesNames():
             self.axes[axis] = soltab._f_get_child(axis)
 
-        self.selection = []
+        # initialize selection
         self.setSelection(**args)
 
         self.useCache = useCache
         if self.useCache:
             logging.debug("Caching...")
-            self.setCache(np.copy(self.obj.val), np.copy(self.obj.weight))
+            self.setCache(self.obj.val, self.obj.weight)
 
 
     def delete(self):
@@ -710,8 +710,8 @@ class Soltab( object ):
         val : array
         weight : array
         """
-        self.cacheVal = val
-        self.cacheWeight = weight
+        self.cacheVal = np.copy(val)
+        self.cacheWeight = np.copy(weight)
 
 
     def getSolset(self):
@@ -758,9 +758,9 @@ class Soltab( object ):
             Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
         """
         # create an initial selection which selects all values
-        # any selection will modify only the slice relative to that axis
-        self.selection = [slice(0,self.getAxisLen(axisName, ignoreSelection=True)) \
-                                                for axisName in self.getAxesNames()]
+        #self.selection = [slice(None)] * len(self.getAxesNames())
+        self.selection = [ slice(0, self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames() ]
+        #thisSelection = [range(self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames()]
 
         for axis, selVal in args.iteritems():
             # if None continue and keep all the values
@@ -780,7 +780,7 @@ class Soltab( object ):
                     continue
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
 
-                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
+                # transform list of 1 element in a relative slice(), faster as it gets reference
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0],self.selection[idx][0]+1)
 
             # dict -> min max
@@ -796,15 +796,19 @@ class Soltab( object ):
 
                 if 'min' in selVal and 'max' in selVal:
                     self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0], np.where(axisVals <= selVal['max'])[0][-1]+1)
+                    #thisSelection[idx] = list(np.where((axisVals>=selVal['min']) & (axisVals<=selVal['max']))[0])
                 elif 'min' in selVal:
                     self.selection[idx] = slice(np.where(axisVals >= selVal['min'])[0][0], None)
+                    #thisSelection[idx] = list(np.where(axisVals>=selVal['min'])[0])
                 elif 'max' in selVal:
                     self.selection[idx] = slice(0, np.where(axisVals <= selVal['max'])[0][-1]+1)
+                    #thisSelection[idx] = list(np.where(axisVals<=selVal['max'])[0])
                 else:
                     logging.error("Selection with a dict must have 'min' and/or 'max' entry. Use all available values.")
                     continue
                 if 'step' in selVal:
                     self.selection[idx] = slice(self.selection[idx].start, self.selection[idx].stop, selVal['step'])
+                    #thisSelection[idx] = thisSelection[idx][::selVal['step']]
 
             # single val/list -> exact matching
             else:
@@ -819,9 +823,9 @@ class Soltab( object ):
                 else:
                     self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
 
-                # transform list of 1 element in a relative slice(), necessary when slicying and to always get an array back
+                # transform list of 1 element in a relative slice(), faster as it gets a reference
                 if len(self.selection[idx]) == 1: self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][0]+1)
-                # transform list of continuous numbers in slices (faster)
+                # transform list of continuous numbers in slices, faster as it gets a reference
                 elif len(self.selection[idx]) != 0 and len(self.selection[idx])-1 == self.selection[idx][-1] - self.selection[idx][0]:
                     self.selection[idx] = slice(self.selection[idx][0], self.selection[idx][-1]+1)
 
@@ -942,7 +946,7 @@ class Soltab( object ):
             return
 
         axisIdx = self.getAxesNames().index(axis)
-        self.axes[axis][self.selection[axisIdx]] = vals
+        self.axes[axis][ self.selection[axisIdx] ] = vals
 
 
     def setValues(self, vals, selection = None, weight = False):
@@ -1032,6 +1036,33 @@ class Soltab( object ):
             #return None
 
 
+    def _applyAdvSelection(self, data, selection):
+        # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
+        # Conversely, one can apply how many slices he wants.
+        # Single values/contigous values are converted in slices in h5parm.
+        # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
+        if np.sum( [1. for sel in selection if type(sel) is list] ) > 1 and \
+           ( type(data) is np.ndarray or \
+           np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
+        
+            logging.debug('Optimizing selection reading '+str(selection))
+            # for performances is important to minimize the fetched data
+            # convert all lists other then the first (pytables allowes one!) to slices
+            selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
+            firstSelection = selection[:]
+            for i in selectionListsIdx[1:]:
+                firstSelection[i] = slice(None)
+            # create a second selection using np.ix_
+            secondSelection = []
+            for i, sel in enumerate(selection):
+                if i == selectionListsIdx[0]: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
+                elif type(sel) is list: secondSelection.append(sel)
+                elif type(sel) is slice: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
+            return data[tuple(firstSelection)][np.ix_(*secondSelection)]
+        else:
+            return data[tuple(selection)]
+
+
     def getValues(self, retAxesVals=True, weight=False, reference=None, referencePol=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
@@ -1063,42 +1094,28 @@ class Soltab( object ):
             if weight: dataVals = self.obj.weight
             else: dataVals = self.obj.val
 
-        # apply the self.selection
-        # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
-        # Conversely, one can apply how many slices he wants.
-        # Single values/contigous values are converted in slices in h5parm.
-        # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
-        try:
-            dataVals = dataVals[tuple(self.selection)]
-        except:
-            logging.debug('Optimizing selection reading '+str(self.selection))
-            # for performances is important to minimize the fetched data
-            # convert all lists other then the first (pytables allowes one!) to slices
-            selectionListsIdx = [i for i, s in enumerate(self.selection) if type(s) is list]
-            firstSelection = self.selection[:]
-            for i in selectionListsIdx[1:]:
-                firstSelection[i] = slice(None)
-            # create a second selection using np.ix_
-            secondSelection = []
-            for i, sel in enumerate(self.selection):
-                if i == selectionListsIdx[0]: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
-                elif type(sel) is list: secondSelection.append(sel)
-                elif type(sel) is slice: secondSelection.append(xrange(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
-            dataVals = dataVals[tuple(firstSelection)][np.ix_(*secondSelection)]
+        dataVals = self._applyAdvSelection(dataVals, self.selection)
 
-        if reference is not None:
-            # TODO: flag when reference is flagged?
-            if self.getType() != 'phase' and self.getType() != 'scalarphase' and self.getType() != 'rotation' and self.getType() != 'tec' and self.getType() != 'clock' and self.getType() != 'tec3rd':
+        if not reference is None:
+            if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd']:
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, and rotation solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
             elif not reference in self.getAxisValues('ant', ignoreSelection = True):
                 logging.error('Cannot find antenna '+reference+'. Ignore referencing.')
             else:
-                selection_stored = np.copy(self.selection)
+
+                if self.useCache:
+                    if weight: dataValsRef = self.cacheWeight
+                    else: dataValsRef = self.cacheVal
+                else:
+                    if weight: dataValsRef = self.obj.weight
+                    else: dataValsRef = self.obj.val
+                refSelection = self.selection[:]
                 antAxis = self.getAxesNames().index('ant')
-                self.selection[antAxis] = [list(self.getAxisValues('ant', ignoreSelection=True)).index(reference)]
-                dataValsRef = self.getValues(retAxesVals=False, reference=None)
+                refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
+                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+
                 if referencePol is not None:
                     if not 'pol' in self.getAxesNames():
                         logging.error('Cannot find pol axis for referencing phases. Ignore pol referencing.')
@@ -1113,14 +1130,12 @@ class Soltab( object ):
                             dataValsRef[i] = dataValsRef[polValIdx]
                         # put pol axis back in place
                         dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
-                self.selection = selection_stored
-                dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                if not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
-                    # Convert to range [-2*pi, 2*pi].
-                    dataVals = np.fmod(dataVals, 2.0 * np.pi)
-                    # Convert to range [-pi, pi]
-                    dataVals[dataVals < -np.pi] += 2.0 * np.pi
-                    dataVals[dataVals > np.pi] -= 2.0 * np.pi
+                if weight: 
+                    dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
+                else:
+                    dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
+                    if not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
+                        dataVals = normalize_phase(dataVals)
 
         if not retAxesVals:
             return dataVals
@@ -1158,7 +1173,7 @@ class Soltab( object ):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         4) a selection which should be used to write this data back using a setValues()
         """
-        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=None)
+        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=reference)
         dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference, referencePol=referencePol)
 
         # get dimensions of non-returned axis (in correct order)
@@ -1176,21 +1191,26 @@ class Soltab( object ):
                 for j, axisName in enumerate(self.getAxesNames()):
                     if axisName in returnAxes:
                         thisAxesVals[axisName] = self.getAxisValues(axisName)
-                        # add a slice with all possible values (main selection will be preapplied)
-                        refSelection.append(slice(0,self.getAxisLen(axisName), None))
+                        # add a slice with all possible values (main selection is preapplied)
+                        refSelection.append(slice(None))
                         # for the return selection use the "main" selection for the return axes
                         returnSelection.append(self.selection[j])
                     else:
                         #TODO: the iteration axes are not into a 1 element array, is it a problem?
                         thisAxesVals[axisName] = self.getAxisValues(axisName)[axisIdx[i]]
                         # add this index to the refined selection, this will return a single value for this axis
+                        # an int is appended, this will remove an axis from the final data
                         refSelection.append(axisIdx[i])
                         # for the return selection use the complete axis and find the correct index
-                        returnSelection.append( list(np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0]) )
+                        #returnSelection.append( list(np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0]) )
+                        returnSelection.append( [self.getAxisValues(axisName, ignoreSelection=True).tolist().index(thisAxesVals[axisName])] )
                         i += 1
 
                 # costly command
+                print 'bug', dataVals.shape
+                print refSelection
                 data = dataVals[tuple(refSelection)]
+                print 'bug2', data.shape
                 if weight:
                     weights = weigthVals[tuple(refSelection)]
                     yield (data, weights, thisAxesVals, returnSelection)

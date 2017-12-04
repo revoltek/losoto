@@ -63,7 +63,7 @@ LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS).
 LoSoTo.Steps.flag.Mode = smooth # smooth / poly / spline
 LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
 
-operation = RESIDUALS
+operation = FARADAY
 maxResidual = 1. #  max average residual in rad before flagging datapoint# 0: no check
 refAnt = '' # a reference antenna
 
@@ -106,7 +106,8 @@ prefix = '' # name prefix for output file
 
 LoSoTo.Steps.reset.Operation = RESET
 
-soltabsToSub = [sol000/tec000,sol000/clock000] # tables to subtract (only clock and tec from a phase table)
+operation = RESIDUALS
+soltabsToSub = [tec000,clock000] # tables to subtract from the same solset (rotationmeasure, clock, tec, tec3rd can be subtracted only from a phase table)
 ratio = False # return the ratio instead of subtracting
 
 LoSoTo.Steps.reweight.Operation = REWEIGHT
