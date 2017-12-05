@@ -128,10 +128,15 @@ def getParAxis( parser, step, axisName ):
 
     if parser.has_option(step, axisName):
         axisOpt = parser.getarray(step, axisName)
+        print "wrong!"
     elif parser.has_option(step, axisName+'.regexp'):
         axisOpt = parser.getstr(step, axisName+'.regexp')
     elif parser.has_option(step, axisName+'.minmaxstep'):
         axisOpt = parser.getarray(step, axisName+'.minmaxstep')
+        if len(axisOpt) == 3:
+            axisOpt = {'min':float(axisOpt[0]), 'max':float(axisOpt[1]), 'step':int(axisOpt[2])}
+        else:
+            axisOpt = {'min':float(axisOpt[0]), 'max':float(axisOpt[1])}
 
     # global options
     elif parser.has_option('_global', axisName):
@@ -140,6 +145,10 @@ def getParAxis( parser, step, axisName ):
         axisOpt = parser.getstr('_global', axisName+'.regexp')
     elif parser.has_option('_global', axisName+'.minmaxstep'):
         axisOpt = parser.getarray('_global', axisName+'.minmaxstep')
+        if len(axisOpt) == 3:
+            axisOpt = {'min':float(axisOpt[0]), 'max':float(axisOpt[1]), 'step':int(axisOpt[2])}
+        else:
+            axisOpt = {'min':float(axisOpt[0]), 'max':float(axisOpt[1])}
 
     if axisOpt == '' or axisOpt == []:
         axisOpt = None

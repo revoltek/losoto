@@ -139,7 +139,6 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                             automaxZ = vals.max(fill_value=-np.inf)
 
         if not cmesh: 
-            print autominZ, automaxZ, minZ, maxZ
             if minZ != 0:
                 ax.set_ylim(ymin=minZ)
             else:
@@ -470,7 +469,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         # if dataCube too large (> 500 MB) do not go parallel
         if np.array(dataCube).nbytes > 1024*1024*500: 
             logging.debug('Big plot, parallel not possible.')
-            plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
+            _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
         else:
             mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
         if makeMovie: pngs.append(prefix+filename+'.png')

@@ -7,7 +7,7 @@ import logging
 logging.debug('Loading REWEIGHT module.')
 
 def _run_parser(soltab, parser, step):
-    method = parser.getstring( step, 'uniform' )
+    method = parser.getstr( step, 'method', 'uniform' )
     weightVal = parser.getfloat( step, 'weightVal', 1. )
     nmedian = parser.getint( step, 'nmedian', 3 )
     nstddev = parser.getint( step, 'nstddev', 251 )

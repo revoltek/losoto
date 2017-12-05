@@ -12,7 +12,7 @@ def _run_parser(soltab, parser, step):
     mode = parser.getstr( step, 'mode', 'runningmedian' )
     degree = parser.getint( step, 'degree', 1 )
     replace = parser.getbool( step, 'replace', False )
-    return run(soltab, soltabsToSub, ratio, mode, degree, replace)
+    return run(soltab, axesToSmooth, size, mode, degree, replace)
 
 def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False):
     """
@@ -56,7 +56,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
     logging.info("Smoothing soltab: "+soltab.name)
 
     for i, axis in enumerate(axesToSmooth[:]):
-        if axis not in sf.getAxesNames():
+        if axis not in soltab.getAxesNames():
             del axesToSmooth[i]
             del size[i]
             logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
@@ -104,11 +104,11 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
 
         # TODO: if phase use angular mean/median
         elif mode == 'median':
-            valsnew = np.median( vals[(weights!=0)] )
+            valsnew = np.nanmedian( vals[(weights!=0)] )
             if replace: weights[ weights == 0] = 1
 
         elif mode == 'mean':
-            valsnew = np.mean( vals[(weights!=0)] )
+            valsnew = np.nanmean( vals[(weights!=0)] )
             if replace: weights[ weights == 0] = 1
 
         else:

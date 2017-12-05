@@ -77,6 +77,10 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
 
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt, referencePol=pol):
 
+        # reorder axes
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
+        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','freq','time'] )
+
         fitdelayguess = 1.e-10 # good guess, do not use 0 as it seems the minimizer is unstable with that
 
         if 'RR' in coord['pol'] and 'LL' in coord['pol']:
@@ -103,14 +107,15 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 phase1    = vals[coord1,:,t][idx]
                 phase2    = vals[coord2,:,t][idx]
 
-                if len(freq) < 10:
+                if len(freq) < 30:
                     fit_weights.append(0.)
                     fit_delays.append(0.)
                     logging.debug('Not enough unflagged point for the timeslot '+str(t))
                     continue
     
-                if (len(idx) - len(freq))/len(freq) > 1/2.:
-                    logging.debug('High number of filtered out data points for the timeslot '+str(t)+': '+str(len(idx) - len(freq)))
+                # if more than 1/4 of chans are flagged
+                if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
+                    logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
     
                 phase_diff  = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi

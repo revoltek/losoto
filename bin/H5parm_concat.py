@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys, os, logging
 import numpy as np
 from itertools import chain
@@ -67,14 +68,21 @@ if args.insoltab is None:
 else:
     insoltabs = [args.insoltab]
 
+# open input
+h5s = []
+for h5parmFile in args.h5parmFiles:
+    logging.info("Reading "+h5parmFile)
+    h5 = h5parm(h5parmFile, readonly=True)
+    h5s.append(h5)
+# open output
 h5Out = h5parm(args.outh5parm, readonly = False)
+
 for insoltab in insoltabs:
     soltabs = []
     pointingNames = []; antennaNames = []
     pointingDirections = []; antennaPositions = []
-    for h5parmFile in args.h5parmFiles:
-        logging.info("Reading "+h5parmFile)
-        h5 = h5parm(h5parmFile, readonly=True)
+
+    for h5 in h5s:
         solset = h5.getSolset(insolset)
         soltab = Soltabr(solset.obj._f_get_child(insoltab)) # use inherited class 
         soltabs.append( soltab )
@@ -114,16 +122,16 @@ for insoltab in insoltabs:
     # every single time/freq valu for all tables is in these arrays (ordered)
     if times != []:
         timeResamp = np.array(sorted(list(set(chain(*times)))))
-        print 'len times:',
+        print('len times:', end='')
         for t in times:
-            print len(t),
-        print '- Will be:', len(timeResamp)
+            print(' %i' % len(t), end='')
+        print('Will be: %i' % len(timeResamp))
     if freqs != []:
         freqResamp = np.array(sorted(list(set(chain(*freqs)))))
-        print 'len freqs:',
+        print('len freqs:', end='')
         for f in freqs:
-            print len(f),
-        print '- Will be:', len(freqResamp)
+            print('%i ' % len(f), end='')
+        print('Will be: %i' % len(freqResamp))
     
     # resampling of time/freq values
     for soltab in soltabs:
@@ -209,3 +217,5 @@ try:
     sourceTable.append(zip(*(pointingNames,pointingDirections)))
 except:
     logging.warning('Couldnt fill source table.')
+
+for h5 in h5s: h5.close()

@@ -759,9 +759,8 @@ class Soltab( object ):
             Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
         """
         # create an initial selection which selects all values
-        #self.selection = [slice(None)] * len(self.getAxesNames())
-        self.selection = [ slice(0, self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames() ]
-        #thisSelection = [range(self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames()]
+        self.selection = [slice(None)] * len(self.getAxesNames())
+        #self.selection = [ slice(0, self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames() ]
 
         for axis, selVal in iter( args.items() ):
             # if None continue and keep all the values
@@ -1203,7 +1202,6 @@ class Soltab( object ):
                         # an int is appended, this will remove an axis from the final data
                         refSelection.append(axisIdx[i])
                         # for the return selection use the complete axis and find the correct index
-                        #returnSelection.append( list(np.where( self.getAxisValues(axisName, ignoreSelection=True) == thisAxesVals[axisName] )[0]) )
                         returnSelection.append( [self.getAxisValues(axisName, ignoreSelection=True).tolist().index(thisAxesVals[axisName])] )
                         i += 1
 
