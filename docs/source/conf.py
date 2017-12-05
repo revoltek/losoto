@@ -158,11 +158,3 @@ texinfo_documents = [
      author, 'LoSoTo', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-def remove_module_docstring(app, what, name, obj, options, lines):
-    print what, name
-    if what == "module" and name == "losoto.importer":
-        del lines[:]
-
-def setup(app):
-    app.connect("autodoc-process-docstring", remove_module_docstring)

@@ -923,7 +923,7 @@ class Soltab( object ):
             return None
 
         if ignoreSelection:
-            return self.axes[axis][:] # TODO: remove [:]
+            return np.copy(self.axes[axis])
         else:
             axisIdx = self.getAxesNames().index(axis)
             return self.axes[axis][ self.selection[axisIdx] ]
@@ -1207,10 +1207,7 @@ class Soltab( object ):
                         i += 1
 
                 # costly command
-                print 'bug', dataVals.shape
-                print refSelection
                 data = dataVals[tuple(refSelection)]
-                print 'bug2', data.shape
                 if weight:
                     weights = weigthVals[tuple(refSelection)]
                     yield (data, weights, thisAxesVals, returnSelection)

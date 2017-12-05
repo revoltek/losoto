@@ -1,11 +1,11 @@
 from __future__ import print_function
 from setuptools import setup, Command
+
 import os
 
 import losoto._version
 
-
-description = 'LOFAR solution tool'
+description = 'LOFAR Solution Tool'
 long_description = description
 if os.path.exists('README.md'):
     with open('README.md') as f:
@@ -22,7 +22,7 @@ class PyTest(Command):
 
     def run(self):
         import sys,subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
+        errno = subprocess.call([sys.executable, 'tools/losoto_test.py'])
         raise SystemExit(errno)
 
 
@@ -31,7 +31,7 @@ setup(
     version=losoto._version.__version__,
     url='http://github.com/revoltek/losoto/',
     author='Francesco de Gasperin',
-    author_email='fdg@voo.it',
+    author_email='astro@voo.it',
     description=description,
     long_description=long_description,
     platforms='any',

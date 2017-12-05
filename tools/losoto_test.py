@@ -38,7 +38,7 @@ ssdel = H5.makeSolset()
 logging.info("Delete solset")
 ssdel.delete()
 logging.info('Get all solsets:')
-print H5.getSolsetsNames()
+print H5.getSolsetNames()
 logging.info('Get a solset object')
 ss=H5.getSolset('ssTest')
 logging.info('Get ants')
@@ -107,14 +107,14 @@ st.setValues(v)
 logging.info('Get Vaues Iter (exp: 10)')
 i=0
 for matrix, coord, sel in st.getValuesIter(returnAxes=['axis3']):
-    print matrix.shape
     i += 1
+print matrix.shape
 print "Iterations:", i, "(expected: 2x4=8)"
 logging.info('Get Vaues Iter (exp: 4x10)')
 i=0
 for matrix, coord, sel in st.getValuesIter(returnAxes=['axis2','axis3']):
-    print matrix.shape
     i += 1
+print matrix.shape
 print "Iterations:", i, "(expected: 2)"
 
 
