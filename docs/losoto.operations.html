@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>losoto.operations package &#8212; LoSoTo 2.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -28,7 +25,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="losoto package" href="losoto.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -128,7 +125,7 @@ WEIGHT: flag compliant, putting weights into median is tricky</p>
 <dt id="losoto.operations.clocktec.run">
 <code class="descclassname">losoto.operations.clocktec.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>flagBadChannels=True</em>, <em>flagCut=5.0</em>, <em>chi2cut=3000.0</em>, <em>combinePol=False</em>, <em>removePhaseWraps=True</em>, <em>fit3rdorder=False</em>, <em>circular=False</em>, <em>reverse=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clocktec.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Separate phase solutions into Clock and TEC.
-The Clock and TEC values are stored in the specified output soltab with type &#8216;clock&#8217;, &#8216;tec&#8217;, &#8216;tec3rd&#8217;.</p>
+The Clock and TEC values are stored in the specified output soltab with type ‘clock’, ‘tec’, ‘tec3rd’.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -183,7 +180,7 @@ The Clock and TEC values are stored in the specified output soltab with type &#8
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltabOut</strong> : str, optional</p>
 <blockquote>
-<div><p>output table name (same solset), by deault &#8220;phasediff&#8221;.</p>
+<div><p>output table name (same solset), by deault “phasediff”.</p>
 </div></blockquote>
 <p><strong>maxResidual</strong> : float, optional</p>
 <blockquote>
@@ -401,7 +398,7 @@ WEIGHT: compliant</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axesToFlag</strong> : array of str</p>
 <blockquote>
-<div><p>Axes along which to smooth+find outlier (e.g. [&#8216;time&#8217;, &#8216;freq&#8217;]), max 2 values.</p>
+<div><p>Axes along which to smooth+find outlier (e.g. [‘time’, ‘freq’]), max 2 values.</p>
 </div></blockquote>
 <p><strong>order</strong> : array of int</p>
 <blockquote>
@@ -563,7 +560,7 @@ WEIGHT: Weights compliant</p>
 
 <dl class="function">
 <dt id="losoto.operations.plot.run">
-<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[], minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0, 0], minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements basic plotting
 WEIGHT: flag-only compliant, no need for weight</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -576,15 +573,15 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </div></blockquote>
 <p><strong>axisInTable</strong> : str, optional</p>
 <blockquote>
-<div><p>the axis to plot on a page - e.g. ant to get all antenna&#8217;s on one file. By default &#8216;&#8217;.</p>
+<div><p>the axis to plot on a page - e.g. ant to get all antenna’s on one file. By default ‘’.</p>
 </div></blockquote>
 <p><strong>axisInCol</strong> : str, optional</p>
 <blockquote>
-<div><p>The axis to plot in different colours - e.g. pol to get correlations with different colors. By default &#8216;&#8217;.</p>
+<div><p>The axis to plot in different colours - e.g. pol to get correlations with different colors. By default ‘’.</p>
 </div></blockquote>
 <p><strong>axisDiff</strong> : str, optional</p>
 <blockquote>
-<div><p>This must be a len=2 axis and the plot will have the differential value - e.g. &#8216;pol&#8217; to plot XX-YY. By default &#8216;&#8217;.</p>
+<div><p>This must be a len=2 axis and the plot will have the differential value - e.g. ‘pol’ to plot XX-YY. By default ‘’.</p>
 </div></blockquote>
 <p><strong>NColFig</strong> : int, optional</p>
 <blockquote>
@@ -600,7 +597,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </div></blockquote>
 <p><strong>log</strong> : bool, optional</p>
 <blockquote>
-<div><p>Use Log=&#8217;XYZ&#8217; to set which axes to put in Log. By default &#8216;&#8217;.</p>
+<div><p>Use Log=’XYZ’ to set which axes to put in Log. By default ‘’.</p>
 </div></blockquote>
 <p><strong>plotFlag</strong> : bool, optional</p>
 <blockquote>
@@ -616,7 +613,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </div></blockquote>
 <p><strong>soltabsToAdd</strong> : str, optional</p>
 <blockquote>
-<div><p>Tables to &#8220;add&#8221; (e.g. &#8216;sol000/tec000&#8217;), it works only for tec and clock to be added to phases. By default None.</p>
+<div><p>Tables to “add” (e.g. ‘sol000/tec000’), it works only for tec and clock to be added to phases. By default None.</p>
 </div></blockquote>
 <p><strong>makeAntPlot</strong> : bool, optional</p>
 <blockquote>
@@ -641,44 +638,332 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-losoto.operations.plottecscreen">
-<span id="losoto-operations-plottecscreen-module"></span><h2>losoto.operations.plottecscreen module<a class="headerlink" href="#module-losoto.operations.plottecscreen" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-losoto.operations.plotscreen">
+<span id="losoto-operations-plotscreen-module"></span><h2>losoto.operations.plotscreen module<a class="headerlink" href="#module-losoto.operations.plotscreen" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="losoto.operations.plottecscreen.make_tec_screen_plots">
-<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">make_tec_screen_plots</code><span class="sig-paren">(</span><em>pp</em>, <em>tec_screen</em>, <em>residuals</em>, <em>station_positions</em>, <em>source_names</em>, <em>times</em>, <em>height</em>, <em>order</em>, <em>beta_val</em>, <em>r_0</em>, <em>prefix='frame_'</em>, <em>remove_gradient=True</em>, <em>show_source_names=False</em>, <em>min_tec=None</em>, <em>max_tec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.make_tec_screen_plots" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes plots of TEC screens</p>
-<p>Keyword arguments:
-pp &#8211; array of piercepoint locations
-tec_screen &#8211; array of TEC screen values at the piercepoints
-residuals &#8211; array of TEC screen residuals at the piercepoints
-source_names &#8211; array of source names
-times &#8211; array of times
-height &#8211; height of screen (m)
-order &#8211; order of screen (e.g., number of KL base vectors to keep)
-r_0 &#8211; scale size of phase fluctuations (m)
-beta_val &#8211; power-law index for phase structure function (5/3 =&gt;</p>
-<blockquote>
-<div>pure Kolmogorov turbulence)</div></blockquote>
-<p>prefix &#8211; prefix for output file names
-remove_gradient &#8211; fit and remove a gradient from each screen
-show_source_names &#8211; label sources on screen plots
-min_tec &#8211; minimum TEC value for plot range
-max_tec &#8211; maximum TEC value for plot range</p>
+<dt id="losoto.operations.plotscreen.run_parser">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plotscreen.phase_cm">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">phase_cm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.phase_cm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns colormap for phase plots</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.plottecscreen.fitPLaneLTSQ">
-<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">fitPLaneLTSQ</code><span class="sig-paren">(</span><em>XYZ</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.fitPLaneLTSQ" title="Permalink to this definition">¶</a></dt>
+<dt id="losoto.operations.plotscreen.calculate_screen">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">calculate_screen</code><span class="sig-paren">(</span><em>inscreen</em>, <em>residuals</em>, <em>pp</em>, <em>N_piercepoints</em>, <em>k</em>, <em>east</em>, <em>north</em>, <em>up</em>, <em>T</em>, <em>Nx</em>, <em>Ny</em>, <em>sindx</em>, <em>height</em>, <em>beta_val</em>, <em>r_0</em>, <em>is_phase</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.calculate_screen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates screen images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>inscreen</strong> : array</p>
+<blockquote>
+<div><p>Array of screen values at the piercepoints</p>
+</div></blockquote>
+<p><strong>residuals</strong> : array</p>
+<blockquote>
+<div><p>Array of screen residuals at the piercepoints</p>
+</div></blockquote>
+<p><strong>pp</strong> : array</p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>N_piercepoints</strong> : int</p>
+<blockquote>
+<div><p>Number of pierce points</p>
+</div></blockquote>
+<p><strong>k</strong> : int</p>
+<blockquote>
+<div><p>Time index</p>
+</div></blockquote>
+<p><strong>east</strong> : array</p>
+<blockquote>
+<div><p>East array</p>
+</div></blockquote>
+<p><strong>north</strong> : array</p>
+<blockquote>
+<div><p>North array</p>
+</div></blockquote>
+<p><strong>up</strong> : array</p>
+<blockquote>
+<div><p>Up array</p>
+</div></blockquote>
+<p><strong>T</strong> : array</p>
+<blockquote>
+<div><p>T array</p>
+</div></blockquote>
+<p><strong>Nx</strong> : int</p>
+<blockquote>
+<div><p>Number of pixels in x for screen</p>
+</div></blockquote>
+<p><strong>Ny</strong> : int</p>
+<blockquote>
+<div><p>Number of pixels in y for screen</p>
+</div></blockquote>
+<p><strong>sindx</strong> : int</p>
+<blockquote>
+<div><p>Station index</p>
+</div></blockquote>
+<p><strong>height</strong> : float</p>
+<blockquote>
+<div><p>height of screen (m)</p>
+</div></blockquote>
+<p><strong>beta_val</strong> : float</p>
+<blockquote>
+<div><p>power-law index for phase structure function (5/3 =&gt;
+pure Kolmogorov turbulence)</p>
+</div></blockquote>
+<p><strong>r_0</strong> : float</p>
+<blockquote>
+<div><p>scale size of phase fluctuations</p>
+</div></blockquote>
+<p><strong>is_phase</strong> : bool</p>
+<blockquote class="last">
+<div><p>input screen is a phase screen</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plotscreen.plot_frame">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">plot_frame</code><span class="sig-paren">(</span><em>screen</em>, <em>fitted_phase1</em>, <em>residuals</em>, <em>weights</em>, <em>x</em>, <em>y</em>, <em>k</em>, <em>lower</em>, <em>upper</em>, <em>vmin</em>, <em>vmax</em>, <em>source_names</em>, <em>show_source_names</em>, <em>station_names</em>, <em>sindx</em>, <em>root_dir</em>, <em>prestr</em>, <em>is_image_plane</em>, <em>midRA</em>, <em>midDec</em>, <em>order</em>, <em>is_phase</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.plot_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots screen images</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>screen</strong> : array</p>
+<blockquote>
+<div><p>Image of screen values</p>
+</div></blockquote>
+<p><strong>fitted_phase1</strong> : array</p>
+<blockquote>
+<div><p>Array of fitted phase values</p>
+</div></blockquote>
+<p><strong>residuals</strong> : array</p>
+<blockquote>
+<div><p>Array of phase residuals at the piercepoints</p>
+</div></blockquote>
+<p><strong>weights</strong> : array</p>
+<blockquote>
+<div><p>Array of weights at the piercepoints</p>
+</div></blockquote>
+<p><strong>x</strong> : array</p>
+<blockquote>
+<div><p>Array of piercepoint x locations</p>
+</div></blockquote>
+<p><strong>y</strong> : array</p>
+<blockquote>
+<div><p>Array of piercepoint y locations</p>
+</div></blockquote>
+<p><strong>k</strong> : int</p>
+<blockquote>
+<div><p>Time index</p>
+</div></blockquote>
+<p><strong>lower</strong> : array</p>
+<blockquote>
+<div><p>Array of lower limits for plot</p>
+</div></blockquote>
+<p><strong>upper</strong> : array</p>
+<blockquote>
+<div><p>Array of upper limits for plot</p>
+</div></blockquote>
+<p><strong>vmin</strong> : float</p>
+<blockquote>
+<div><p>minimum value for plot range</p>
+</div></blockquote>
+<p><strong>vmax</strong> : float</p>
+<blockquote>
+<div><p>maximum value for plot range</p>
+</div></blockquote>
+<p><strong>source_names</strong> : list</p>
+<blockquote>
+<div><p>List of source (direction) names</p>
+</div></blockquote>
+<p><strong>show_source_names</strong> : bool</p>
+<blockquote>
+<div><p>label sources on screen plots</p>
+</div></blockquote>
+<p><strong>order</strong> : int</p>
+<blockquote>
+<div><p>order of screen</p>
+</div></blockquote>
+<p><strong>is_phase</strong> : bool</p>
+<blockquote class="last">
+<div><p>True if screens are phase screens</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plotscreen.make_screen_plots">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">make_screen_plots</code><span class="sig-paren">(</span><em>pp</em>, <em>inscreen</em>, <em>inresiduals</em>, <em>weights</em>, <em>station_names</em>, <em>station_positions</em>, <em>source_names</em>, <em>times</em>, <em>height</em>, <em>station_order</em>, <em>beta_val</em>, <em>r_0</em>, <em>prefix='frame_'</em>, <em>remove_gradient=True</em>, <em>show_source_names=False</em>, <em>min_val=None</em>, <em>max_val=None</em>, <em>is_phase=False</em>, <em>midRA=0.0</em>, <em>midDec=0.0</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.make_screen_plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes plots of screens</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pp</strong> : array</p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>inscreen</strong> : array</p>
+<blockquote>
+<div><p>Array of screen values at the piercepoints with order [dir, time, ant]</p>
+</div></blockquote>
+<p><strong>residuals</strong> : array</p>
+<blockquote>
+<div><p>Array of screen residuals at the piercepoints with order [dir, time, ant]</p>
+</div></blockquote>
+<p><strong>weights</strong> : array</p>
+<blockquote>
+<div><p>Array of weights for each piercepoint with order [dir, time, ant]</p>
+</div></blockquote>
+<p><strong>source_names: array</strong></p>
+<blockquote>
+<div><p>Array of source names</p>
+</div></blockquote>
+<p><strong>times</strong> : array</p>
+<blockquote>
+<div><p>Array of times</p>
+</div></blockquote>
+<p><strong>height</strong> : float</p>
+<blockquote>
+<div><p>Height of screen (m)</p>
+</div></blockquote>
+<p><strong>station_order</strong> : list</p>
+<blockquote>
+<div><p>List of order of screens per station (e.g., number of KL base vectors to keep)</p>
+</div></blockquote>
+<p><strong>r_0</strong> : float</p>
+<blockquote>
+<div><p>Scale size of phase fluctuations</p>
+</div></blockquote>
+<p><strong>beta_val</strong> : float</p>
+<blockquote>
+<div><p>Power-law index for phase structure function</p>
+</div></blockquote>
+<p><strong>prefix</strong> : str</p>
+<blockquote>
+<div><p>Prefix for output file names</p>
+</div></blockquote>
+<p><strong>remove_gradient</strong> : bool</p>
+<blockquote>
+<div><p>Fit and remove a gradient from each screen</p>
+</div></blockquote>
+<p><strong>show_source_names</strong> : bool</p>
+<blockquote>
+<div><p>Label sources on screen plots</p>
+</div></blockquote>
+<p><strong>min_val</strong> : float</p>
+<blockquote>
+<div><p>Minimum value for plot range</p>
+</div></blockquote>
+<p><strong>max_val</strong> : float</p>
+<blockquote>
+<div><p>Maximum value for plot range</p>
+</div></blockquote>
+<p><strong>is_phase</strong> : bool</p>
+<blockquote>
+<div><p>Input screen is a phase screen</p>
+</div></blockquote>
+<p><strong>midRA</strong> : float</p>
+<blockquote>
+<div><p>RA for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>midDec</strong> : float</p>
+<blockquote>
+<div><p>Dec for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of CPUs to use</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.plotscreen.fitPLaneLTSQ">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">fitPLaneLTSQ</code><span class="sig-paren">(</span><em>XYZ</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.fitPLaneLTSQ" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fits a plane to an XYZ point cloud</p>
 <p>Returns (a, b, c), where Z = aX + bY + c</p>
-<p>Keyword arguments:
-XYZ &#8211; point cloud</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>XYZ</strong> : array</p>
+<blockquote>
+<div><p>point cloud</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(a, b, c)</strong> : floats</p>
+<blockquote class="last">
+<div><p>plane parameters, where Z = aX + bY + c</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.plottecscreen.run">
-<code class="descclassname">losoto.operations.plottecscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plottecscreen.run" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="losoto.operations.plotscreen.run">
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>ressoltab=None</em>, <em>minZ=-3.2</em>, <em>maxZ=3.2</em>, <em>prefix=''</em>, <em>remove_gradient=False</em>, <em>show_source_names=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot screens (one plot is made per time and per station)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : solution table</p>
+<blockquote>
+<div><p>Soltab containing screen.</p>
+</div></blockquote>
+<p><strong>ressoltab</strong> : solution table, optional</p>
+<blockquote>
+<div><p>Soltab containing the screen residuals.</p>
+</div></blockquote>
+<p><strong>minZ</strong> : float, optional</p>
+<blockquote>
+<div><p>Minimum value of colorbar scale.</p>
+</div></blockquote>
+<p><strong>maxZ</strong> : float, optional</p>
+<blockquote>
+<div><p>Max value of colorbar scale.</p>
+</div></blockquote>
+<p><strong>prefix</strong> : str, optional</p>
+<blockquote>
+<div><p>String to prepend to output plots.</p>
+</div></blockquote>
+<p><strong>remove_gradient</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, remove gradient before plotting.</p>
+</div></blockquote>
+<p><strong>show_source_names</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, source names are overplotted.</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of CPUs to use. If 0, all are used.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 <div class="section" id="module-losoto.operations.reset">
@@ -735,18 +1020,107 @@ WEIGHT: flag compliant, no need for weight</p>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.reweight.run">
-<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>weightVal=1.0</em>, <em>soltabImport=''</em>, <em>flagBad=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>This operation reset the weight vals
-So far it sets weights to a specified number, in the future an algorithm to
-weight solutions properly should be implemented</p>
+<dt id="losoto.operations.reweight.rolling_window_lastaxis">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">rolling_window_lastaxis</code><span class="sig-paren">(</span><em>a</em>, <em>window</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.rolling_window_lastaxis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directly taken from Erik Rigtorp’s post to numpy-discussion.
+&lt;<a class="reference external" href="http://www.mail-archive.com/numpy-discussion&#64;scipy.org/msg29450.html">http://www.mail-archive.com/numpy-discussion&#64;scipy.org/msg29450.html</a>&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.reweight.nancircstd">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">nancircstd</code><span class="sig-paren">(</span><em>samples</em>, <em>axis=None</em>, <em>is_phase=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.nancircstd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the circular standard deviation</p>
+<p>Based on scipy.stats.circstd</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>weightVal</strong> : float, optional</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>imag</strong> : array_like</p>
+<blockquote>
+<div><p>Input array.</p>
+</div></blockquote>
+<p><strong>axis</strong> : int, optional</p>
+<blockquote>
+<div><p>Axis along which standard deviations are computed.  The default is
+to compute the standard deviation of the flattened array.</p>
+</div></blockquote>
+<p><strong>is_phase</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, samples are assumed to be phases. If False, they are assumed
+to be either real or imaginary values</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>circstd</strong> : float</p>
+<blockquote class="last">
+<div><p>Circular standard deviation.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.reweight.estimate_weights_window">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">estimate_weights_window</code><span class="sig-paren">(</span><em>sindx</em>, <em>vals</em>, <em>nmedian</em>, <em>nstddev</em>, <em>type</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.estimate_weights_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set weights using a median-filter method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sindx: int</strong></p>
+<blockquote>
+<div><p>Index of station</p>
+</div></blockquote>
+<p><strong>vals: array</strong></p>
+<blockquote>
+<div><p>Array of values</p>
+</div></blockquote>
+<p><strong>nmedian: odd int</strong></p>
+<blockquote>
+<div><p>Size of median time window</p>
+</div></blockquote>
+<p><strong>nstddev: odd int</strong></p>
+<blockquote>
+<div><p>Size of stddev time window</p>
+</div></blockquote>
+<p><strong>typ: str</strong></p>
+<blockquote class="last">
+<div><p>Type of values (e.g., ‘phase’)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.reweight.run">
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>method='uniform'</em>, <em>weightVal=1.0</em>, <em>nmedian=3</em>, <em>nstddev=251</em>, <em>soltabImport=''</em>, <em>flagBad=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This operation resets the weight vals</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>method</strong> : str, optional</p>
+<blockquote>
+<div><p>One of ‘uniform’ (single value) or ‘window’ (sliding window in time).</p>
+</div></blockquote>
+<p><strong>weightVal</strong> : float, optional</p>
 <blockquote>
 <div><p>Set weights to this values (0=flagged), by default 1.</p>
+</div></blockquote>
+<p><strong>nmedian</strong> : odd int, optional</p>
+<blockquote>
+<div><p>Median window size in number of timeslots for ‘window’ method.
+If nonzero, a median-smoothed version of the input values is
+subtracted to detrend them. If 0, no smoothing or subtraction is
+done.</p>
+</div></blockquote>
+<p><strong>nstddev</strong> : odd int, optional</p>
+<blockquote>
+<div><p>Standard deviation window size in number of timeslots for ‘window’ method.</p>
 </div></blockquote>
 <p><strong>soltabImport</strong> : str, optional</p>
 <blockquote>
@@ -755,6 +1129,217 @@ weight solutions properly should be implemented</p>
 <p><strong>flagBad</strong> : bool, optional</p>
 <blockquote class="last">
 <div><p>Re-apply flags to bad values, by default False.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.screenvalues">
+<span id="losoto-operations-screenvalues-module"></span><h2>losoto.operations.screenvalues module<a class="headerlink" href="#module-losoto.operations.screenvalues" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.screenvalues.run_parser">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.screenvalues.calculate_tecsp">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">calculate_tecsp</code><span class="sig-paren">(</span><em>screen1</em>, <em>screen2</em>, <em>pp</em>, <em>directions</em>, <em>k</em>, <em>sindx</em>, <em>beta_val</em>, <em>r_0</em>, <em>freq1</em>, <em>freq2</em>, <em>midRA</em>, <em>midDec</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.calculate_tecsp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates TEC and scalar phase from screens at two frequencies</p>
+<dl class="docutils">
+<dt>screen1: array</dt>
+<dd>Array of screen values at the piercepoints for freq1</dd>
+<dt>screen2: array</dt>
+<dd>Array of screen values at the piercepoints for freq2</dd>
+<dt>pp: array</dt>
+<dd>Array of piercepoint locations</dd>
+<dt>directions: array</dt>
+<dd>Array of RA, Dec in degrees for which phases are desired</dd>
+<dt>r_0: float</dt>
+<dd>Scale size of phase fluctuations</dd>
+<dt>beta_val: float</dt>
+<dd>Power-law index for phase structure function (5/3 =&gt;
+pure Kolmogorov turbulence)</dd>
+<dt>freq1: float</dt>
+<dd>Frequency of screen1 in Hz</dd>
+<dt>freq2: float</dt>
+<dd>Frequency of screen2 in Hz</dd>
+<dt>midRA <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>RA for WCS reference in degrees</dd>
+<dt>midDec <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Dec for WCS reference in degrees</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.screenvalues.calculate_val">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">calculate_val</code><span class="sig-paren">(</span><em>screen</em>, <em>pp</em>, <em>directions</em>, <em>k</em>, <em>sindx</em>, <em>beta_val</em>, <em>r_0</em>, <em>midRA</em>, <em>midDec</em>, <em>outQueue</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.calculate_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates values from screen</p>
+<dl class="docutils">
+<dt>screen: array</dt>
+<dd>Array of screen values at the piercepoints</dd>
+<dt>pp: array</dt>
+<dd>Array of piercepoint locations</dd>
+<dt>directions: array</dt>
+<dd>Array of RA, Dec in degrees for which phases are desired</dd>
+<dt>r_0: float</dt>
+<dd>Scale size of phase fluctuations</dd>
+<dt>beta_val: float</dt>
+<dd>Power-law index for phase structure function (5/3 =&gt;
+pure Kolmogorov turbulence)</dd>
+<dt>midRA <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>RA for WCS reference in degrees</dd>
+<dt>midDec <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Dec for WCS reference in degrees</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.screenvalues.screens_to_tecsp">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">screens_to_tecsp</code><span class="sig-paren">(</span><em>pp</em>, <em>screen1</em>, <em>screen2</em>, <em>directions</em>, <em>station_positions</em>, <em>beta_val</em>, <em>r_0</em>, <em>freq1</em>, <em>freq2</em>, <em>midRA=0.0</em>, <em>midDec=0.0</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.screens_to_tecsp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Caculates phases from screens</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pp: array</strong></p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>screen1: array</strong></p>
+<blockquote>
+<div><p>Array of screen values at the piercepoints for freq1</p>
+</div></blockquote>
+<p><strong>screen2: array</strong></p>
+<blockquote>
+<div><p>Array of screen values at the piercepoints for freq2</p>
+</div></blockquote>
+<p><strong>directions: list of arrays</strong></p>
+<blockquote>
+<div><p>List of (RA, Dec) arrays in radians for which phases are desired</p>
+</div></blockquote>
+<p><strong>height: float</strong></p>
+<blockquote>
+<div><p>Height of screen (m)</p>
+</div></blockquote>
+<p><strong>r_0: float</strong></p>
+<blockquote>
+<div><p>Scale size of phase fluctuations</p>
+</div></blockquote>
+<p><strong>beta_val: float</strong></p>
+<blockquote>
+<div><p>Power-law index for phase structure function (5/3 =&gt;
+pure Kolmogorov turbulence)</p>
+</div></blockquote>
+<p><strong>freq1: float</strong></p>
+<blockquote>
+<div><p>Frequency of screen1 in Hz</p>
+</div></blockquote>
+<p><strong>freq2: float</strong></p>
+<blockquote>
+<div><p>Frequency of screen2 in Hz</p>
+</div></blockquote>
+<p><strong>midRA</strong> : float</p>
+<blockquote>
+<div><p>RA for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>midDec</strong> : float</p>
+<blockquote>
+<div><p>Dec for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>ncpu: int</strong></p>
+<blockquote class="last">
+<div><p>Number of CPUs to use</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.screenvalues.screen_to_val">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">screen_to_val</code><span class="sig-paren">(</span><em>pp</em>, <em>screen</em>, <em>directions</em>, <em>station_positions</em>, <em>beta_val</em>, <em>r_0</em>, <em>midRA=0.0</em>, <em>midDec=0.0</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.screen_to_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Caculates phases from screens</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pp: array</strong></p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>screen: array</strong></p>
+<blockquote>
+<div><p>Array of screen values at the piercepoints with axes [dir_ind, time_ind,
+freq_ind, ant_ind, pol_ind]</p>
+</div></blockquote>
+<p><strong>directions: list of arrays</strong></p>
+<blockquote>
+<div><p>List of (RA, Dec) arrays in radians for which phases are desired</p>
+</div></blockquote>
+<p><strong>height: float</strong></p>
+<blockquote>
+<div><p>Height of screen (m)</p>
+</div></blockquote>
+<p><strong>r_0: float</strong></p>
+<blockquote>
+<div><p>Scale size of phase fluctuations</p>
+</div></blockquote>
+<p><strong>beta_val: float</strong></p>
+<blockquote>
+<div><p>Power-law index for phase structure function (5/3 =&gt;
+pure Kolmogorov turbulence)</p>
+</div></blockquote>
+<p><strong>midRA</strong> : float</p>
+<blockquote>
+<div><p>RA for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>midDec</strong> : float</p>
+<blockquote>
+<div><p>Dec for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>ncpu: int</strong></p>
+<blockquote class="last">
+<div><p>Number of CPUs to use</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.screenvalues.run">
+<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab1</em>, <em>source_dict</em>, <em>outsoltab</em>, <em>soltab2=None</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate phases from screens</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab1</strong> : solution table</p>
+<blockquote>
+<div><p>Soltab containing the screen at frequency 1</p>
+</div></blockquote>
+<p><strong>source_dict</strong> : dict</p>
+<blockquote>
+<div><p>Dictionary of source positions for which phases are desired</p>
+</div></blockquote>
+<p><strong>outsoltab</strong> : str</p>
+<blockquote>
+<div><p>Name of output solution table. If TEC+scalarphase solutions are desired,
+two solution tables are made: ‘tecoutsoltab’ and ‘scalarphaseoutsoltab’</p>
+</div></blockquote>
+<p><strong>soltab2</strong> : solution table, optional</p>
+<blockquote>
+<div><p>Soltab containing the screens at frequency 2 (needed for TEC+scalar
+phase)</p>
+</div></blockquote>
+<p><strong>ncpu</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of CPUs to use. If 0, all are used</p>
 </div></blockquote>
 </td>
 </tr>
@@ -787,9 +1372,9 @@ WEIGHH: flag ready</p>
 <blockquote>
 <div><p>Window size for the runningmedian and runningpoly (array of same size of axesToSmooth), by default [].</p>
 </div></blockquote>
-<p><strong>mode</strong> : {&#8216;runningmedian&#8217;,&#8217;runningpoly&#8217;,&#8217;mean&#8217;,&#8217;median&#8217;}, optional</p>
+<p><strong>mode</strong> : {‘runningmedian’,’runningpoly’,’mean’,’median’}, optional</p>
 <blockquote>
-<div><p>Runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median), by default &#8220;runningmedian&#8221;.</p>
+<div><p>Runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median), by default “runningmedian”.</p>
 </div></blockquote>
 <p><strong>degree</strong> : int, optional</p>
 <blockquote>
@@ -806,103 +1391,464 @@ WEIGHH: flag ready</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-losoto.operations.tecfit">
-<span id="losoto-operations-tecfit-module"></span><h2>losoto.operations.tecfit module<a class="headerlink" href="#module-losoto.operations.tecfit" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-losoto.operations.stationscreen">
+<span id="losoto-operations-stationscreen-module"></span><h2>losoto.operations.stationscreen module<a class="headerlink" href="#module-losoto.operations.stationscreen" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="losoto.operations.tecfit.collect_solutions">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">collect_solutions</code><span class="sig-paren">(</span><em>H</em>, <em>dirs=None</em>, <em>freq_tol=1000000.0</em>, <em>solsets=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.collect_solutions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Collects and returns phase solutions, etc. needed for fitting</p>
-<p>Keyword arguments:
-H &#8211; H5parm object
-dirs &#8211; list of directions to use (None =&gt; all)
-freq_tol &#8211; tolerance for grouping of phase solutions into bands (Hz)
-solsets &#8211; list of solution sets in H to search (None =&gt; all)</p>
+<dt id="losoto.operations.stationscreen.run_parser">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">run_parser</code><span class="sig-paren">(</span><em>soltab</em>, <em>parser</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.run_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.calculate_piercepoints">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">calculate_piercepoints</code><span class="sig-paren">(</span><em>station_positions</em>, <em>source_positions</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.calculate_piercepoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array of piercepoint locations</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>station_positions</strong> : array</p>
+<blockquote>
+<div><p>Array of station positions</p>
+</div></blockquote>
+<p><strong>source_positions</strong> : array</p>
+<blockquote>
+<div><p>Array of source positions</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pp</strong> : array</p>
+<blockquote>
+<div><p>Array of pierce points</p>
+</div></blockquote>
+<p><strong>midRA</strong> : float</p>
+<blockquote>
+<div><p>Reference RA for WCS system (deg)</p>
+</div></blockquote>
+<p><strong>midDec</strong> : float</p>
+<blockquote class="last">
+<div><p>Reference Dec for WCS system (deg)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.tecfit.interpolate_phase">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">interpolate_phase</code><span class="sig-paren">(</span><em>phase1</em>, <em>time1</em>, <em>time2</em>, <em>interpMethod='cubic'</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.interpolate_phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates phase solutions from one time grid to another</p>
-<p>If time2 is a coarser grid, averaging is done instead.</p>
-<p>Keyword arguments:
-phase1 &#8211; array of phase solutions to average/interpolate
-time1 &#8211; array of times for phase1
-time2 &#8211; array of times to average/interpolate to
-interpMethod &#8211; interpolation method (see scipy.interpolate.griddata)</p>
+<dt id="losoto.operations.stationscreen.get_ant_dist">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">get_ant_dist</code><span class="sig-paren">(</span><em>ant_xyz</em>, <em>ref_xyz</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.get_ant_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns distance between ant and ref in m</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ant_xyz</strong> : array</p>
+<blockquote>
+<div><p>Array of station position</p>
+</div></blockquote>
+<p><strong>ref_xyz</strong> : array</p>
+<blockquote>
+<div><p>Array of reference position</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dist</strong> : float</p>
+<blockquote class="last">
+<div><p>Distance between station and reference positions</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.tecfit.average_phase">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">average_phase</code><span class="sig-paren">(</span><em>phase</em>, <em>nslots</em>, <em>times=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.average_phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Averages input phases over nslots time slots</p>
-<p>Keyword arguments:
-phase &#8211; array of phase solutions
-nslots &#8211; average over nslots
-times &#8211; array of times to average</p>
+<dt id="losoto.operations.stationscreen.getxy">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">getxy</code><span class="sig-paren">(</span><em>RA</em>, <em>Dec</em>, <em>midRA=None</em>, <em>midDec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.getxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array of projected x and y values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>RA, Dec</strong> : list</p>
+<blockquote>
+<div><p>Lists of RA and Dec in degrees</p>
+</div></blockquote>
+<p><strong>midRA</strong> : float</p>
+<blockquote>
+<div><p>RA for WCS reference in degrees</p>
+</div></blockquote>
+<p><strong>midDec</strong> : float</p>
+<blockquote>
+<div><p>Dec for WCS reference in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>x, y</strong> : numpy array, numpy array, float, float</p>
+<blockquote class="last">
+<div><p>arrays of x and y values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.tecfit.fit_tec_per_source_pair">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">fit_tec_per_source_pair</code><span class="sig-paren">(</span><em>phases</em>, <em>flags</em>, <em>mask</em>, <em>freqs</em>, <em>init_sols=None</em>, <em>init_sols_per_pair=False</em>, <em>propagate=False</em>, <em>nband_min=2</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.fit_tec_per_source_pair" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fits TEC values to phase solutions per source pair</p>
-<p>Returns TEC solutions as array of shape (N_sources, N_times, N_stations)</p>
-<p>Keyword arguments:
-phases &#8211; array of phase solutions
-flags &#8211; phase solution flags (0 = use, 1 = flagged)
-mask &#8211; mask for sources and frequencies (0 = ignore, 1 = use)
-freqs &#8211; array of frequencies
-init_sols &#8211; solutions to use to initialize the fits
-init_sols_per_pair &#8211; init_sols are per source pair (not per source)
-propagate &#8211; propagate solutions from previous solution
-nband_min &#8211; min number of bands for a source to be used</p>
+<dt id="losoto.operations.stationscreen.radec2xy">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">radec2xy</code><span class="sig-paren">(</span><em>RA</em>, <em>Dec</em>, <em>refRA=None</em>, <em>refDec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.radec2xy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns x, y for input ra, dec.</p>
+<p>Note that the reference RA and Dec must be the same in calls to both
+radec2xy() and xy2radec() if matched pairs of (x, y) &lt;=&gt; (RA, Dec) are
+desired.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>RA</strong> : list</p>
+<blockquote>
+<div><p>List of RA values in degrees</p>
+</div></blockquote>
+<p><strong>Dec</strong> : list</p>
+<blockquote>
+<div><p>List of Dec values in degrees</p>
+</div></blockquote>
+<p><strong>refRA</strong> : float, optional</p>
+<blockquote>
+<div><p>Reference RA in degrees.</p>
+</div></blockquote>
+<p><strong>refDec</strong> : float, optional</p>
+<blockquote>
+<div><p>Reference Dec in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>x, y</strong> : list, list</p>
+<blockquote class="last">
+<div><p>Lists of x and y pixel values corresponding to the input RA and Dec
+values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.tecfit.add_stations">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">add_stations</code><span class="sig-paren">(</span><em>station_selection</em>, <em>phases0</em>, <em>phases1</em>, <em>flags</em>, <em>mask</em>, <em>station_names</em>, <em>station_positions</em>, <em>source_names</em>, <em>source_selection</em>, <em>times</em>, <em>freqs</em>, <em>r</em>, <em>nband_min=2</em>, <em>soln_type='phase'</em>, <em>nstations_max=None</em>, <em>excluded_stations=None</em>, <em>t_step=5</em>, <em>tec_step1=5</em>, <em>tec_step2=21</em>, <em>search_full_tec_range=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.add_stations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds stations to TEC fitting using an iterative initial-guess search to
-ensure the global min is found</p>
-<p>Keyword arguments:
-station_selection &#8211; indices of stations to use in fitting
-phases0 &#8211; XX phase solutions
-phases1 &#8211; YY phase solutions
-flags &#8211; phase solution flags (0 = use, 1 = flagged)
-mask &#8211; mask for sources and frequencies (0 = ignore, 1 = use)
-station_names &#8211; array of station names
-source_names &#8211; array of source names
-source_selection &#8211; indices of sources to use in fitting
-times &#8211; array of times
-freqs &#8211; array of frequencies
-r &#8211; array of TEC solutions returned by fit_tec_per_source_pair()
-nband_min &#8211; min number of bands for a source to be used
-soln_type &#8211; type of phase solution: &#8216;phase&#8217; or &#8216;scalarphase&#8217;
-nstations_max &#8211; max number of stations to use
-excluded_stations &#8211; stations to exclude
-t_step &#8211; try full TEC range every t_step number of solution times
-tec_step1 &#8211; number of steps in TEC subrange (+/- last TEC fit value)
-tec_step2 &#8211; number of steps in full TEC range (-0.1 &#8211; 0.1)
-search_full_tec_range &#8211; always search the full TEC range (-0.1 &#8211; 0.1)</p>
+<dt id="losoto.operations.stationscreen.xy2radec">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">xy2radec</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>refRA=0.0</em>, <em>refDec=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.xy2radec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns x, y for input ra, dec.</p>
+<p>Note that the reference RA and Dec must be the same in calls to both
+radec2xy() and xy2radec() if matched pairs of (x, y) &lt;=&gt; (RA, Dec) are
+desired.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : list</p>
+<blockquote>
+<div><p>List of x values in pixels</p>
+</div></blockquote>
+<p><strong>y</strong> : list</p>
+<blockquote>
+<div><p>List of y values in pixels</p>
+</div></blockquote>
+<p><strong>refRA</strong> : float, optional</p>
+<blockquote>
+<div><p>Reference RA in degrees</p>
+</div></blockquote>
+<p><strong>refDec</strong> : float, optional</p>
+<blockquote>
+<div><p>Reference Dec in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>RA, Dec</strong> : list, list</p>
+<blockquote class="last">
+<div><p>Lists of RA and Dec values corresponding to the input x and y pixel
+values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="losoto.operations.tecfit.run">
-<code class="descclassname">losoto.operations.tecfit.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecfit.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fit phase solutions to obtain TEC values per direction.</p>
-<p>Phase solutions are assumed to be stored in solsets of the H5parm file, one
-solset per band per field. Only phase- or scalarphase-type solution tables
-are used. If direction-independent solutions are found (in addition to the
-direction-dependent ones), they are added, after averaging, to the
-corresponding direction-dependent ones. Phase solutions are automatically
-grouped by field and by band.</p>
-<p>The derived TEC values are stored in the specified output soltab of type
-&#8216;tec&#8217;, with one TEC value per station per direction per solution interval.
-The TEC values are derived using the <code class="docutils literal"><span class="pre">lofar.expion.baselinefitting.fit()</span></code>
-function to fit a TEC value to the phases. The term that is minimized
-includes all baselines, so there is no preferred reference station, and the
-residual is computed as the complex number 1.0 - exp(1i phasedifference),
-which is zero when the phase difference is a multiple of 2pi.</p>
-<p>The TEC solution table may be used to derive TEC screens using the
-TECSCREEN operation.</p>
+<dt id="losoto.operations.stationscreen.makeWCS">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">makeWCS</code><span class="sig-paren">(</span><em>refRA</em>, <em>refDec</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.makeWCS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes simple WCS object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>refRA</strong> : float</p>
+<blockquote>
+<div><p>Reference RA in degrees</p>
+</div></blockquote>
+<p><strong>refDec</strong> : float</p>
+<blockquote>
+<div><p>Reference Dec in degrees</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>w</strong> : astropy.wcs.WCS object</p>
+<blockquote class="last">
+<div><p>A simple TAN-projection WCS object for specified reference position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.flag_outliers">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">flag_outliers</code><span class="sig-paren">(</span><em>weights</em>, <em>residual</em>, <em>nsigma</em>, <em>screen_type</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.flag_outliers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flags outliers</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>weights</strong> : array</p>
+<blockquote>
+<div><p>Array of weights</p>
+</div></blockquote>
+<p><strong>phase_residual</strong> : array</p>
+<blockquote>
+<div><p>Array of residual values from phase screen fitting (rad)</p>
+</div></blockquote>
+<p><strong>nsigma</strong> : float</p>
+<blockquote>
+<div><p>Number of sigma above with outliers are clipped (= weight set to zero)</p>
+</div></blockquote>
+<p><strong>screen_type</strong> : str</p>
+<blockquote>
+<div><p>Type of screen: ‘phase’ or ‘amplitude’</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weights</strong> : array</p>
+<blockquote class="last">
+<div><p>array of weights, with flagged times set to 0</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.circ_chi2">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">circ_chi2</code><span class="sig-paren">(</span><em>samples</em>, <em>weights</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.circ_chi2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the circular chi^2</p>
+<p>Based on scipy.stats.circstd</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples</strong> : array_like</p>
+<blockquote>
+<div><p>Input array.</p>
+</div></blockquote>
+<p><strong>weights</strong> : array_like</p>
+<blockquote>
+<div><p>Input array.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>chi2</strong> : float</p>
+<blockquote class="last">
+<div><p>Circular chi^2.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.calculate_svd">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">calculate_svd</code><span class="sig-paren">(</span><em>pp</em>, <em>r_0</em>, <em>beta</em>, <em>N_piercepoints</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.calculate_svd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns result (U) of svd for K-L vectors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>pp</strong> : array</p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>r_0: float</strong></p>
+<blockquote>
+<div><p>Scale size of amp fluctuations (m)</p>
+</div></blockquote>
+<p><strong>beta: float</strong></p>
+<blockquote>
+<div><p>Power-law index for amp structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</p>
+</div></blockquote>
+<p><strong>N_piercepoints</strong> : int</p>
+<blockquote>
+<div><p>Number of piercepoints</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>C</strong> : array</p>
+<blockquote>
+<div><p>C matrix</p>
+</div></blockquote>
+<p><strong>pinvC</strong> : array</p>
+<blockquote>
+<div><p>Inv(C) matrix</p>
+</div></blockquote>
+<p><strong>U</strong> : array</p>
+<blockquote class="last">
+<div><p>Unitary matrix</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.fit_screen">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">fit_screen</code><span class="sig-paren">(</span><em>station_names</em>, <em>source_names</em>, <em>full_matrices</em>, <em>pp</em>, <em>rr</em>, <em>weights</em>, <em>order</em>, <em>r_0</em>, <em>beta</em>, <em>screen_type</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.fit_screen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a screen to amplitudes or phases using Karhunen-Lo`eve base vectors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>station_names: array</strong></p>
+<blockquote>
+<div><p>Array of station names</p>
+</div></blockquote>
+<p><strong>source_names: array</strong></p>
+<blockquote>
+<div><p>Array of source names</p>
+</div></blockquote>
+<p><strong>full_matrices</strong> : list of arrays</p>
+<blockquote>
+<div><p>List of [C, pivC, U] matrices for all piercepoints</p>
+</div></blockquote>
+<p><strong>pp: array</strong></p>
+<blockquote>
+<div><p>Array of piercepoint locations</p>
+</div></blockquote>
+<p><strong>airmass: array</strong></p>
+<blockquote>
+<div><p>Array of airmass values (note: not currently used)</p>
+</div></blockquote>
+<p><strong>rr: array</strong></p>
+<blockquote>
+<div><p>Array of amp values to fit screen to</p>
+</div></blockquote>
+<p><strong>weights: array</strong></p>
+<blockquote>
+<div><p>Array of weights</p>
+</div></blockquote>
+<p><strong>order: int</strong></p>
+<blockquote>
+<div><p>Order of screen (i.e., number of KL base vectors to keep)</p>
+</div></blockquote>
+<p><strong>r_0: float</strong></p>
+<blockquote>
+<div><p>Scale size of amp fluctuations (m)</p>
+</div></blockquote>
+<p><strong>beta: float</strong></p>
+<blockquote>
+<div><p>Power-law index for amp structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</p>
+</div></blockquote>
+<p><strong>screen_type</strong> : str</p>
+<blockquote>
+<div><p>Type of screen: ‘phase’ or ‘amplitude’</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>screen_fit_white_all, screen_residual_all</strong> : array, array</p>
+<blockquote class="last">
+<div><p>Arrays of screen and residual (actual - screen) values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.stationscreen.run">
+<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>outsoltab</em>, <em>order=12</em>, <em>beta=1.6666666666666667</em>, <em>ncpu=0</em>, <em>niter=2</em>, <em>nsigma=5.0</em>, <em>refAnt=-1</em>, <em>scale_order=True</em>, <em>scale_dist=None</em>, <em>min_order=5</em>, <em>adjust_order=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits station screens to input soltab (type ‘phase’ or ‘amplitude’ only).</p>
+<p>The results of the fit are stored in the soltab parent solset in “outsoltab”
+and the residual values (actual - screen) are stored in “outsoltabresid”.
+These values are the screen amplitude values per station per pierce point
+per solution interval. The pierce point locations are stored in an auxiliary
+array in the output soltabs.</p>
+<p>Screens can be plotted with the PLOTSCREEN operation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab: solution table</strong></p>
+<blockquote>
+<div><p>Soltab containing amplitude solutions</p>
+</div></blockquote>
+<p><strong>outsoltab: str</strong></p>
+<blockquote>
+<div><p>Name of output soltab</p>
+</div></blockquote>
+<p><strong>order</strong> : int, optional</p>
+<blockquote>
+<div><p>Order of screen (i.e., number of KL base vectors to keep). If the order
+is scaled by dist (scale_order = True), the order is calculated as
+order * sqrt(dist/scale_dist)</p>
+</div></blockquote>
+<p><strong>beta: float, optional</strong></p>
+<blockquote>
+<div><p>Power-law index for amp structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</p>
+</div></blockquote>
+<p><strong>ncpu: int, optional</strong></p>
+<blockquote>
+<div><p>Number of CPUs to use. If 0, all are used</p>
+</div></blockquote>
+<p><strong>niter: int, optional</strong></p>
+<blockquote>
+<div><p>Number of iterations to do when determining weights</p>
+</div></blockquote>
+<p><strong>nsigma: float, optional</strong></p>
+<blockquote>
+<div><p>Number of sigma above which directions are flagged</p>
+</div></blockquote>
+<p><strong>refAnt: str or int, optional</strong></p>
+<blockquote>
+<div><p>Index (if int) or name (if str) of reference station (-1 =&gt; no ref)</p>
+</div></blockquote>
+<p><strong>scale_order</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, scale the screen order with sqrt of distance/scale_dist to the
+reference station</p>
+</div></blockquote>
+<p><strong>scale_dist</strong> : float, optional</p>
+<blockquote>
+<div><p>Distance used to normalize the distances used to scale the screen order.
+If None, the max distance is used</p>
+</div></blockquote>
+<p><strong>adjust_order</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, adjust the screen order to obtain a reduced chi^2 of approx.
+unity</p>
+</div></blockquote>
+<p><strong>min_order</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>The minimum allowed order if adjust_order = True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -912,73 +1858,6 @@ TECSCREEN operation.</p>
 <dt id="losoto.operations.tecjump.run">
 <code class="descclassname">losoto.operations.tecjump.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecjump.run" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-</div>
-<div class="section" id="module-losoto.operations.tecscreen">
-<span id="losoto-operations-tecscreen-module"></span><h2>losoto.operations.tecscreen module<a class="headerlink" href="#module-losoto.operations.tecscreen" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.tecscreen.calculate_piercepoints">
-<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">calculate_piercepoints</code><span class="sig-paren">(</span><em>station_positions</em>, <em>source_positions</em>, <em>times</em>, <em>height=200000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.calculate_piercepoints" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns array of piercepoint locations and airmass values for a
-screen at the given height (in m)</p>
-<p>Keyword arguments:
-station_positions &#8211; array of station positions
-source_positions &#8211; array of source positions
-times &#8211; array of times
-height &#8211; height of screen (m)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="losoto.operations.tecscreen.calc_piercepoint">
-<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">calc_piercepoint</code><span class="sig-paren">(</span><em>pos</em>, <em>direction</em>, <em>height</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.calc_piercepoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates pierce point locations and airmass values for given station
-position, source direction, and height (in m)</p>
-<p>Keyword arguments:
-pos &#8211; array of station positions
-direction &#8211; array of source directions
-height &#8211; height of screen (m)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="losoto.operations.tecscreen.fit_screen_to_tec">
-<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">fit_screen_to_tec</code><span class="sig-paren">(</span><em>station_names</em>, <em>source_names</em>, <em>pp</em>, <em>airmass</em>, <em>rr</em>, <em>times</em>, <em>height</em>, <em>order</em>, <em>r_0</em>, <em>beta</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.fit_screen_to_tec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fits a screen to given TEC values using Karhunen-Lo`eve base vectors</p>
-<p>Keyword arguments:
-station_names &#8211; array of station names
-source_names &#8211; array of source names
-pp &#8211; array of piercepoint locations
-airmass &#8211; array of airmass values
-rr &#8211; array of TEC solutions
-times &#8211; array of times
-height &#8211; height of screen (m)
-order &#8211; order of screen (i.e., number of KL base vectors to keep)
-r_0 &#8211; scale size of phase fluctuations (m)
-beta &#8211; power-law index for phase structure function (5/3 =&gt;</p>
-<blockquote>
-<div>pure Kolmogorov turbulence)</div></blockquote>
-</dd></dl>
-
-<dl class="function">
-<dt id="losoto.operations.tecscreen.run">
-<code class="descclassname">losoto.operations.tecscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecscreen.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fits a screen to TEC values derived by the TECFIT operation.</p>
-<p>The TEC values are read from the specified tec soltab.</p>
-<p>The results of the fit are stored in the specified tecscreen solution table.
-These values are the screen TEC values per station per pierce point per
-solution interval. The pierce point locations are stored in an auxiliary
-array in the output solution table.</p>
-<p>TEC screens can be plotted with the PLOT operation by setting PlotType =
-TECScreen.</p>
-<p>The H5parm_exporter.py tool can be used to export the screen to a parmdb
-that BBS and the AWimager can use. Note, however, that the output screens
-are not normalized properly (any normalization was lost due to the use of
-source-to-source phase gradients in the TECFIT operation). Therefore, a
-direction-independent calibration must be done after exporting the screens
-to a parmdb file, with the following settings in the BBS solve step:</p>
-<blockquote>
-<div>Model.Ionosphere.Enable = T
-Model.Ionosphere.Type = EXPION</div></blockquote>
-</dd></dl>
 
 </div>
 <div class="section" id="module-losoto.operations">
@@ -1009,14 +1888,14 @@ Model.Ionosphere.Type = EXPION</div></blockquote>
 <li><a class="reference internal" href="#module-losoto.operations.interp">losoto.operations.interp module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
-<li><a class="reference internal" href="#module-losoto.operations.plottecscreen">losoto.operations.plottecscreen module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.screenvalues">losoto.operations.screenvalues module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.smooth">losoto.operations.smooth module</a></li>
-<li><a class="reference internal" href="#module-losoto.operations.tecfit">losoto.operations.tecfit module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.stationscreen">losoto.operations.stationscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.tecjump">losoto.operations.tecjump module</a></li>
-<li><a class="reference internal" href="#module-losoto.operations.tecscreen">losoto.operations.tecscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations">Module contents</a></li>
 </ul>
 </li>
@@ -1063,7 +1942,7 @@ Model.Ionosphere.Type = EXPION</div></blockquote>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Francesco de Gasperin.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
     </div>
   </body>
 </html>

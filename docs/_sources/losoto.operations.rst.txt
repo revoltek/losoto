@@ -108,10 +108,10 @@ losoto\.operations\.plot module
     :undoc-members:
     :show-inheritance:
 
-losoto\.operations\.plottecscreen module
-----------------------------------------
+losoto\.operations\.plotscreen module
+-------------------------------------
 
-.. automodule:: losoto.operations.plottecscreen
+.. automodule:: losoto.operations.plotscreen
     :members:
     :undoc-members:
     :show-inheritance:
@@ -140,6 +140,14 @@ losoto\.operations\.reweight module
     :undoc-members:
     :show-inheritance:
 
+losoto\.operations\.screenvalues module
+---------------------------------------
+
+.. automodule:: losoto.operations.screenvalues
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 losoto\.operations\.smooth module
 ---------------------------------
 
@@ -148,10 +156,10 @@ losoto\.operations\.smooth module
     :undoc-members:
     :show-inheritance:
 
-losoto\.operations\.tecfit module
----------------------------------
+losoto\.operations\.stationscreen module
+----------------------------------------
 
-.. automodule:: losoto.operations.tecfit
+.. automodule:: losoto.operations.stationscreen
     :members:
     :undoc-members:
     :show-inheritance:
@@ -160,14 +168,6 @@ losoto\.operations\.tecjump module
 ----------------------------------
 
 .. automodule:: losoto.operations.tecjump
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-losoto\.operations\.tecscreen module
-------------------------------------
-
-.. automodule:: losoto.operations.tecscreen
     :members:
     :undoc-members:
     :show-inheritance:

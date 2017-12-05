@@ -1,16 +1,13 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
     <title>losoto package &#8212; LoSoTo 2.0 documentation</title>
-    
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -28,7 +25,7 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="losoto.operations package" href="losoto.operations.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -71,14 +68,14 @@
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.interp">losoto.operations.interp module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plot">losoto.operations.plot module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plottecscreen">losoto.operations.plottecscreen module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.screenvalues">losoto.operations.screenvalues module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.smooth">losoto.operations.smooth module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.tecfit">losoto.operations.tecfit module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.stationscreen">losoto.operations.stationscreen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.tecjump">losoto.operations.tecjump module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.tecscreen">losoto.operations.tecscreen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations">Module contents</a></li>
 </ul>
 </li>
@@ -90,6 +87,46 @@
 </div>
 <div class="section" id="module-losoto.h5parm">
 <span id="losoto-h5parm-module"></span><h2>losoto.h5parm module<a class="headerlink" href="#module-losoto.h5parm" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.h5parm.openSoltab">
+<code class="descclassname">losoto.h5parm.</code><code class="descname">openSoltab</code><span class="sig-paren">(</span><em>h5parmFile</em>, <em>solsetName=None</em>, <em>soltabName=None</em>, <em>address=None</em>, <em>readonly=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.openSoltab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience function to get a soltab object from an h5parm file and an address like “solset000/phase000”.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>h5parmFile</strong> : str</p>
+<blockquote>
+<div><p>H5parm filename.</p>
+</div></blockquote>
+<p><strong>solsetName</strong> : str</p>
+<blockquote>
+<div><p>solset name</p>
+</div></blockquote>
+<p><strong>soltabName</strong> : str</p>
+<blockquote>
+<div><p>soltab name</p>
+</div></blockquote>
+<p><strong>address</strong> : str</p>
+<blockquote>
+<div><p>solset/soltab name (to use in place of the parameters solset and soltab).</p>
+</div></blockquote>
+<p><strong>readonly</strong> : bool, optional</p>
+<blockquote>
+<div><p>if True the table is open in readonly mode, by default True.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Soltab obj</p>
+<blockquote class="last">
+<div><p>A solution table object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="losoto.h5parm.h5parm">
 <em class="property">class </em><code class="descclassname">losoto.h5parm.</code><code class="descname">h5parm</code><span class="sig-paren">(</span><em>h5parmFile</em>, <em>readonly=True</em>, <em>complevel=0</em>, <em>complib='zlib'</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.h5parm" title="Permalink to this definition">¶</a></dt>
@@ -101,19 +138,19 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>h5parmFile</strong> : str</p>
 <blockquote>
-<div><p>H5parm filename</p>
+<div><p>H5parm filename.</p>
 </div></blockquote>
 <p><strong>readonly</strong> : bool, optional</p>
 <blockquote>
-<div><p>if True the table is open in readonly mode, by default True</p>
+<div><p>if True the table is open in readonly mode, by default True.</p>
 </div></blockquote>
 <p><strong>complevel</strong> : int, optional</p>
 <blockquote>
-<div><p>compression level from 0 to 9 when creating the file, by default 5</p>
+<div><p>compression level from 0 to 9 when creating the file, by default 5.</p>
 </div></blockquote>
 <p><strong>complib</strong> : str, optional</p>
 <blockquote class="last">
-<div><p>library for compression: lzo, zlib, bzip2, by default zlib</p>
+<div><p>library for compression: lzo, zlib, bzip2, by default zlib.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -132,11 +169,11 @@
 <tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolset" title="losoto.h5parm.h5parm.getSolset"><code class="xref py py-obj docutils literal"><span class="pre">getSolset</span></code></a>(solset)</td>
 <td>Get a solution set with a given name.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsets" title="losoto.h5parm.h5parm.getSolsets"><code class="xref py py-obj docutils literal"><span class="pre">getSolsets</span></code></a>()</td>
-<td>Get all solution set objects.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsetsNames" title="losoto.h5parm.h5parm.getSolsetsNames"><code class="xref py py-obj docutils literal"><span class="pre">getSolsetsNames</span></code></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsetNames" title="losoto.h5parm.h5parm.getSolsetNames"><code class="xref py py-obj docutils literal"><span class="pre">getSolsetNames</span></code></a>()</td>
 <td>Get all solution set names.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsets" title="losoto.h5parm.h5parm.getSolsets"><code class="xref py py-obj docutils literal"><span class="pre">getSolsets</span></code></a>()</td>
+<td>Get all solution set objects.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.makeSolset" title="losoto.h5parm.h5parm.makeSolset"><code class="xref py py-obj docutils literal"><span class="pre">makeSolset</span></code></a>([solsetName,&nbsp;addTables])</td>
 <td>Create a new solset, if the provided name is not given or exists then it falls back on the first available sol###.</td>
@@ -200,8 +237,8 @@ then it falls back on the first available sol###.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="losoto.h5parm.h5parm.getSolsetsNames">
-<code class="descname">getSolsetsNames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.h5parm.getSolsetsNames" title="Permalink to this definition">¶</a></dt>
+<dt id="losoto.h5parm.h5parm.getSolsetNames">
+<code class="descname">getSolsetNames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.h5parm.getSolsetNames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all solution set names.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -249,7 +286,17 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filter: str, optional</strong></p>
+<blockquote>
+<div><p>Solution set name to get info for</p>
+</div></blockquote>
+<p><strong>verbose: bool, optional</strong></p>
+<blockquote>
+<div><p>If True, return additional info on axes</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
 <blockquote class="last">
 <div><p>Returns a string with info about H5parm contents.</p>
 </div></blockquote>
@@ -286,7 +333,7 @@ then it falls back on the first available sol###.</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.delete" title="losoto.h5parm.Solset.delete"><code class="xref py py-obj docutils literal"><span class="pre">delete</span></code></a>()</td>
-<td>Delete this solset</td>
+<td>Delete this solset.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.getAnt" title="losoto.h5parm.Solset.getAnt"><code class="xref py py-obj docutils literal"><span class="pre">getAnt</span></code></a>()</td>
 <td>Get the antenna subtable with antenna names and positions.</td>
@@ -303,15 +350,40 @@ then it falls back on the first available sol###.</p>
 <tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.getSou" title="losoto.h5parm.Solset.getSou"><code class="xref py py-obj docutils literal"><span class="pre">getSou</span></code></a>()</td>
 <td>Get the source subtable with direction names and coordinates.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.makeSoltab" title="losoto.h5parm.Solset.makeSoltab"><code class="xref py py-obj docutils literal"><span class="pre">makeSoltab</span></code></a>([soltype,&nbsp;soltabName,&nbsp;axesNames,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.makeSoltab" title="losoto.h5parm.Solset.makeSoltab"><code class="xref py py-obj docutils literal"><span class="pre">makeSoltab</span></code></a>([soltype,&nbsp;soltabName,&nbsp;axesNames,&nbsp;…])</td>
 <td>Create a Soltab into this solset.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.rename" title="losoto.h5parm.Solset.rename"><code class="xref py py-obj docutils literal"><span class="pre">rename</span></code></a>(newname[,&nbsp;overwrite])</td>
+<td>Rename this solset.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="losoto.h5parm.Solset.delete">
 <code class="descname">delete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Solset.delete" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete this solset</p>
+<dd><p>Delete this solset.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="losoto.h5parm.Solset.rename">
+<code class="descname">rename</code><span class="sig-paren">(</span><em>newname</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Solset.rename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename this solset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>newname</strong> : str</p>
+<blockquote>
+<div><p>New solution set name.</p>
+</div></blockquote>
+<p><strong>overwrite</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Overwrite existing solset with same name.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -455,7 +527,7 @@ then it falls back on the first available sol###.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
 <blockquote class="last">
-<div><p>Available antennas in the form {name1:[position coords], name2:[position coords], ...}.</p>
+<div><p>Available antennas in the form {name1:[position coords], name2:[position coords], …}.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -473,7 +545,7 @@ then it falls back on the first available sol###.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
 <blockquote class="last">
-<div><p>Available sources in the form {name1:[ra,dec], name2:[ra,dec], ...}.</p>
+<div><p>Available sources in the form {name1:[ra,dec], name2:[ra,dec], …}.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -491,9 +563,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : pytables obj</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : pytables Table obj</p>
 <blockquote>
-<div><p>Pytable object.</p>
+<div><p>Pytable Table object.</p>
 </div></blockquote>
 <p><strong>useCache</strong> : bool, optional</p>
 <blockquote>
@@ -506,7 +578,7 @@ Selections examples:
 axisName = None # to select all
 axisName = xxx # to select ONLY that value for an axis
 axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
-axisName = &#8216;xxx&#8217; # regular expression selection
+axisName = ‘xxx’ # regular expression selection
 axisName = {min: xxx} # to selct values grater or equal than xxx
 axisName = {max: yyy} # to selct values lower or equal than yyy
 axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy</p>
@@ -535,7 +607,7 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <td>Copy cached values into the table</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAddress" title="losoto.h5parm.Soltab.getAddress"><code class="xref py py-obj docutils literal"><span class="pre">getAddress</span></code></a>()</td>
-<td>Get the &#8220;solset000/soltab000&#8221; type string for this Soltab.</td>
+<td>Get the “solset000/soltab000” type string for this Soltab.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAxesNames" title="losoto.h5parm.Soltab.getAxesNames"><code class="xref py py-obj docutils literal"><span class="pre">getAxesNames</span></code></a>()</td>
 <td>Get axes names.</td>
@@ -558,22 +630,25 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getType" title="losoto.h5parm.Soltab.getType"><code class="xref py py-obj docutils literal"><span class="pre">getType</span></code></a>()</td>
 <td>Get the solution type of this Soltab.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValues" title="losoto.h5parm.Soltab.getValues"><code class="xref py py-obj docutils literal"><span class="pre">getValues</span></code></a>([retAxesVals,&nbsp;weight,&nbsp;reference,&nbsp;...])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValues" title="losoto.h5parm.Soltab.getValues"><code class="xref py py-obj docutils literal"><span class="pre">getValues</span></code></a>([retAxesVals,&nbsp;weight,&nbsp;reference,&nbsp;…])</td>
 <td>Creates a simple matrix of values.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValuesIter" title="losoto.h5parm.Soltab.getValuesIter"><code class="xref py py-obj docutils literal"><span class="pre">getValuesIter</span></code></a>([returnAxes,&nbsp;weight,&nbsp;...])</td>
+<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValuesIter" title="losoto.h5parm.Soltab.getValuesIter"><code class="xref py py-obj docutils literal"><span class="pre">getValuesIter</span></code></a>([returnAxes,&nbsp;weight,&nbsp;…])</td>
 <td>Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setAxisValues" title="losoto.h5parm.Soltab.setAxisValues"><code class="xref py py-obj docutils literal"><span class="pre">setAxisValues</span></code></a>(axis,&nbsp;vals)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.rename" title="losoto.h5parm.Soltab.rename"><code class="xref py py-obj docutils literal"><span class="pre">rename</span></code></a>(newname[,&nbsp;overwrite])</td>
+<td>Rename this soltab.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setAxisValues" title="losoto.h5parm.Soltab.setAxisValues"><code class="xref py py-obj docutils literal"><span class="pre">setAxisValues</span></code></a>(axis,&nbsp;vals)</td>
 <td>Set the value of a specific axis</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setCache" title="losoto.h5parm.Soltab.setCache"><code class="xref py py-obj docutils literal"><span class="pre">setCache</span></code></a>(val,&nbsp;weight)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setCache" title="losoto.h5parm.Soltab.setCache"><code class="xref py py-obj docutils literal"><span class="pre">setCache</span></code></a>(val,&nbsp;weight)</td>
 <td>Set cache values.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setSelection" title="losoto.h5parm.Soltab.setSelection"><code class="xref py py-obj docutils literal"><span class="pre">setSelection</span></code></a>(**args)</td>
+<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setSelection" title="losoto.h5parm.Soltab.setSelection"><code class="xref py py-obj docutils literal"><span class="pre">setSelection</span></code></a>(**args)</td>
 <td>Set a selection criteria.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setValues" title="losoto.h5parm.Soltab.setValues"><code class="xref py py-obj docutils literal"><span class="pre">setValues</span></code></a>(vals[,&nbsp;selection,&nbsp;weight])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setValues" title="losoto.h5parm.Soltab.setValues"><code class="xref py py-obj docutils literal"><span class="pre">setValues</span></code></a>(vals[,&nbsp;selection,&nbsp;weight])</td>
 <td>Save values in the val grid</td>
 </tr>
 </tbody>
@@ -582,6 +657,28 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <dt id="losoto.h5parm.Soltab.delete">
 <code class="descname">delete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete this soltab.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="losoto.h5parm.Soltab.rename">
+<code class="descname">rename</code><span class="sig-paren">(</span><em>newname</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.rename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename this soltab.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>newname</strong> : str</p>
+<blockquote>
+<div><p>New solution table name.</p>
+</div></blockquote>
+<p><strong>overwrite</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>Overwrite existing soltab with same name.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -621,7 +718,7 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <dl class="method">
 <dt id="losoto.h5parm.Soltab.getAddress">
 <code class="descname">getAddress</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getAddress" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the &#8220;solset000/soltab000&#8221; type string for this Soltab.</p>
+<dd><p>Get the “solset000/soltab000” type string for this Soltab.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -660,7 +757,7 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>**args :</strong></p>
 <blockquote class="last">
-<div><p>Valid axes names of the form: pol=&#8217;XX&#8217;, ant=[&#8216;CS001HBA&#8217;,&#8217;CS002HBA&#8217;], time={&#8216;min&#8217;:1234,&#8217;max&#8217;:&#8216;2345&#8217;,&#8217;step&#8217;:4}.</p>
+<div><p>Valid axes names of the form: pol=’XX’, ant=[‘CS001HBA’,’CS002HBA’], time={‘min’:1234,’max’:‘2345’,’step’:4}.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -852,7 +949,7 @@ Global seclection is restoread at the end of the function. This is used to set v
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>retAxisVals</strong> : bool, optional</p>
 <blockquote>
 <div><p>If true returns also the axes vals as a dict of:
-{&#8216;axisname1&#8217;:[axisvals1],&#8217;axisname2&#8217;:[axisvals2],...}.
+{‘axisname1’:[axisvals1],’axisname2’:[axisvals2],…}.
 By default True.</p>
 </div></blockquote>
 <p><strong>weight</strong> : bool, optional</p>
@@ -884,7 +981,7 @@ If selected, returns also the axes values</p>
 <dt id="losoto.h5parm.Soltab.getValuesIter">
 <code class="descname">getValuesIter</code><span class="sig-paren">(</span><em>returnAxes=[]</em>, <em>weight=False</em>, <em>reference=None</em>, <em>referencePol=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getValuesIter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
-E.g. if returnAxes are [&#8216;freq&#8217;,&#8217;time&#8217;], one gets a interetion over all the possible NxM
+E.g. if returnAxes are [‘freq’,’time’], one gets a interetion over all the possible NxM
 matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
 Note that all the data are fetched in memory before returning them one at a time. This is quicker.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -914,7 +1011,7 @@ Note that all the data are fetched in memory before returning them one at a time
 <li>(if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()</li>
 <li>a dict with axis values in the form:</li>
 </ol>
-<p>{&#8216;axisname1&#8217;:[axisvals1],&#8217;axisname2&#8217;:[axisvals2],...}</p>
+<p>{‘axisname1’:[axisvals1],’axisname2’:[axisvals2],…}</p>
 <ol class="last arabic simple" start="4">
 <li>a selection which should be used to write this data back using a setValues()</li>
 </ol>
@@ -1123,8 +1220,8 @@ history entry is stored in a separate attribute.</p>
 <code class="descclassname">losoto.losoto_lib.</code><code class="descname">getParAxis</code><span class="sig-paren">(</span><em>parser</em>, <em>step</em>, <em>axisName</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.losoto_lib.getParAxis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Axes values can be selected with:
 - an array of values
-- a string (reg exp): passed as axisName.regexp = ...
-- a min,max,step format: passed as axisName.minmaxstep = ...</p>
+- a string (reg exp): passed as axisName.regexp = …
+- a min,max,step format: passed as axisName.minmaxstep = …</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1299,6 +1396,40 @@ The join() should kill all the processes</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="losoto.operations_lib.reorderAxes">
+<code class="descclassname">losoto.operations_lib.</code><code class="descname">reorderAxes</code><span class="sig-paren">(</span><em>a</em>, <em>oldAxes</em>, <em>newAxes</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations_lib.reorderAxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorder axis of an array to match a new name pattern.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : np array</p>
+<blockquote>
+<div><p>The array to transpose.</p>
+</div></blockquote>
+<p><strong>oldAxes</strong> : list of str</p>
+<blockquote>
+<div><p>A list like [‘time’,’freq’,’pol’].
+It can contain more axes than the new list, those are ignored.
+This is to pass to oldAxis the soltab.getAxesNames() directly even on an array from getValuesIter()</p>
+</div></blockquote>
+<p><strong>newAxes</strong> : list of str</p>
+<blockquote>
+<div><p>A list like [‘time’,’pol’,’freq’].</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np array</p>
+<blockquote class="last">
+<div><p>With axis transposed to match the newAxes list.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="losoto.operations_lib.removeKeys">
 <code class="descclassname">losoto.operations_lib.</code><code class="descname">removeKeys</code><span class="sig-paren">(</span><em>dic</em>, <em>keys=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations_lib.removeKeys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove a list of keys from a dict and return a new one.</p>
@@ -1357,8 +1488,8 @@ The join() should kill all the processes</p>
 <p>For details, see:
 Marvin A. Schofield &amp; Yimei Zhu, Optics Letters, 28, 14 (2003)</p>
 <p>Keyword arguments:
-phase &#8211; array of phase solutions
-iterations &#8211; number of iterations to perform</p>
+phase – array of phase solutions
+iterations – number of iterations to perform</p>
 </dd></dl>
 
 <dl class="function">
@@ -1444,7 +1575,7 @@ iterations &#8211; number of iterations to perform</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Francesco de Gasperin.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.6.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
     </div>
   </body>
 </html>
