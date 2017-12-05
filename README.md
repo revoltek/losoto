@@ -28,7 +28,7 @@ Flag:
 LoSoTo has an internl flag system encoded in the weight column. Weights are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs by the H5parm_exporter.py
 
 Documentation:
-* Documentation of LoSoTo API is present __here: http://revoltek.github.io/losoto/losoto.html__
+* Documentation of LoSoTo API is at: __http://revoltek.github.io/losoto/losoto.html__
 * A detailed explanation of all the parameters is at: __http://revoltek.github.io/losoto/losoto.operations.html__
 * An example parset is in: __parsets/losoto2.parset__
 

@@ -9,7 +9,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading PLOTSCREEN module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
 
     minZ, maxZ = parser.getarray( step, "MinMax", [0.0, 0.0] )
     prefix = parser.getstr( step, "Prefix", '' )
@@ -19,7 +19,7 @@ def run_parser(soltab, parser, step):
     return run(soltab, minZ, maxZ, prefix, remove_gradient, show_source_names, ncpu)
 
 
-def phase_cm():
+def _phase_cm():
     """
     Returns colormap for phase plots
     """
@@ -445,7 +445,7 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
 
     # Set colormap
     if is_phase:
-        cmap = phase_cm()
+        cmap = _phase_cm()
     else:
         cmap = plt.cm.jet
     sm = plt.cm.ScalarMappable(cmap=cmap,

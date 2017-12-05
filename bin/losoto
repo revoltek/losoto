@@ -133,7 +133,7 @@ if __name__=='__main__':
         returncode = 0
         with operations.timer(logging, step, op) as t:
             for soltab in getStepSoltabs(parser, step, H):
-                returncode += ops[ op ].run_parser( soltab, parser, step )
+                returncode += ops[ op ]._run_parser( soltab, parser, step )
             if returncode != 0:
                logging.error("Step \'" + step + "\' incomplete. Try to continue anyway.")
             else:

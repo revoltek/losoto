@@ -20,7 +20,7 @@ import socket
 import logging
 from losoto import _version
 from losoto import _logging
-from losoto.importer import create_h5parm
+from losoto._importer import create_h5parm
 
     
 if __name__=='__main__':

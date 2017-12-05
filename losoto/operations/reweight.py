@@ -6,14 +6,14 @@ import logging
 
 logging.debug('Loading REWEIGHT module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     weightVal = parser.getfloat( step, 'weightVal', 1. )
     soltabImport = parser.getstr( step, 'soltabImport', '' )
     flagBad = parser.getbool( step, 'flagBad', False )
     return run(soltab, weightVal, soltabImport, flagBad)
 
 
-def rolling_window_lastaxis(a, window):
+def _rolling_window_lastaxis(a, window):
     """Directly taken from Erik Rigtorp's post to numpy-discussion.
     <http://www.mail-archive.com/numpy-discussion@scipy.org/msg29450.html>"""
     import numpy as np
@@ -27,7 +27,7 @@ def rolling_window_lastaxis(a, window):
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
 
 
-def nancircstd(samples, axis=None, is_phase=True):
+def _nancircstd(samples, axis=None, is_phase=True):
     """
     Compute the circular standard deviation
 
@@ -62,7 +62,7 @@ def nancircstd(samples, axis=None, is_phase=True):
     return np.sqrt(-2*np.log(R))
 
 
-def estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
+def _estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
     """
     Set weights using a median-filter method
 
@@ -91,14 +91,14 @@ def estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
             # Convert to real/imag
             real = np.cos(vals)
             pad_real = np.pad(real, pad_width, 'constant', constant_values=(np.nan,))
-            med_real = np.nanmedian(rolling_window_lastaxis(pad_real, nmedian), axis=-1)
+            med_real = np.nanmedian(_rolling_window_lastaxis(pad_real, nmedian), axis=-1)
             real -= med_real
             real[real < -1.0] = -1.0
             real[real > 1.0] = 1.0
 
             imag = np.sin(vals)
             pad_imag = np.pad(imag, pad_width, 'constant', constant_values=(np.nan,))
-            med_imag = np.nanmedian(rolling_window_lastaxis(pad_imag, nmedian), axis=-1)
+            med_imag = np.nanmedian(_rolling_window_lastaxis(pad_imag, nmedian), axis=-1)
             imag -= med_imag
             imag[imag < -1.0] = -1.0
             imag[imag > 1.0] = 1.0
@@ -106,9 +106,9 @@ def estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
             # Calculate standard deviations
             pad_width[-1] = ((nstddev-1)/2, (nstddev-1)/2)
             pad_real = np.pad(real, pad_width, 'constant', constant_values=(np.nan,))
-            stddev1 = nancircstd(rolling_window_lastaxis(pad_real, nstddev), axis=-1, is_phase=False)
+            stddev1 = _nancircstd(_rolling_window_lastaxis(pad_real, nstddev), axis=-1, is_phase=False)
             pad_imag = np.pad(imag, pad_width, 'constant', constant_values=(np.nan,))
-            stddev2 = nancircstd(rolling_window_lastaxis(pad_imag, nstddev), axis=-1, is_phase=False)
+            stddev2 = _nancircstd(_rolling_window_lastaxis(pad_imag, nstddev), axis=-1, is_phase=False)
             stddev = stddev1 + stddev2
         else:
             phase = normalize_phase(vals)
@@ -116,18 +116,18 @@ def estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
             # Calculate standard deviation
             pad_width[-1] = ((nstddev-1)/2, (nstddev-1)/2)
             pad_phase = np.pad(phase, pad_width, 'constant', constant_values=(np.nan,))
-            stddev = nancircstd(rolling_window_lastaxis(pad_phase, nstddev), axis=-1)
+            stddev = _nancircstd(_rolling_window_lastaxis(pad_phase, nstddev), axis=-1)
     else:
         # Median smooth and subtract to de-trend
         if nmedian > 0:
             pad_vals = np.pad(vals, pad_width, 'constant', constant_values=(np.nan,))
-            med = np.nanmedian(rolling_window_lastaxis(pad_vals, nmedian), axis=-1)
+            med = np.nanmedian(_rolling_window_lastaxis(pad_vals, nmedian), axis=-1)
             vals -= med
 
         # Calculate standard deviation in larger window
         pad_width[-1] = ((nstddev-1)/2, (nstddev-1)/2)
         pad_vals = np.pad(vals, pad_width, 'constant', constant_values=(np.nan,))
-        stddev = np.nanstd(rolling_window_lastaxis(pad_vals, nstddev), axis=-1)
+        stddev = np.nanstd(_rolling_window_lastaxis(pad_vals, nstddev), axis=-1)
 
     # Check for periods where standard deviation is zero or NaN and replace
     # with min value to prevent inf in the weights. Also limit weights to
@@ -207,7 +207,7 @@ def run( soltab, method='uniform', weightVal=1., nmedian=3, nstddev=251,
             vals = soltab.val[:].swapaxes(antindx, 0)
             if tindx == 0:
                 tindx = antindx
-            mpm = multiprocManager(ncpu, estimate_weights_window)
+            mpm = multiprocManager(ncpu, _estimate_weights_window)
             for sindx, sval in enumerate(vals):
                 if np.all(sval == 0.0):
                     # skip reference station

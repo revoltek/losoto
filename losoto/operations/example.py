@@ -9,7 +9,7 @@ from losoto.operations_lib import *
 logging.debug('Loading EXAMPLE module.')
 
 # this funct is called by losoto to set parameters and call the real run()
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     opt1 = parser.getfloat( step, 'opt1') # no default
     opt2 = parser.getarrayfloat( step, 'opt3', [1., 2., 3.])
     opt3 = parser.getint( step, 'opt2', 0 )

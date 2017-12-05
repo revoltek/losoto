@@ -95,32 +95,19 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>h5parmFile</strong> : str</p>
-<blockquote>
-<div><p>H5parm filename.</p>
-</div></blockquote>
-<p><strong>solsetName</strong> : str</p>
-<blockquote>
-<div><p>solset name</p>
-</div></blockquote>
-<p><strong>soltabName</strong> : str</p>
-<blockquote>
-<div><p>soltab name</p>
-</div></blockquote>
-<p><strong>address</strong> : str</p>
-<blockquote>
-<div><p>solset/soltab name (to use in place of the parameters solset and soltab).</p>
-</div></blockquote>
-<p><strong>readonly</strong> : bool, optional</p>
-<blockquote>
-<div><p>if True the table is open in readonly mode, by default True.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>h5parmFile</strong> (<em>str</em>) – H5parm filename.</li>
+<li><strong>solsetName</strong> (<em>str</em>) – solset name</li>
+<li><strong>soltabName</strong> (<em>str</em>) – soltab name</li>
+<li><strong>address</strong> (<em>str</em>) – solset/soltab name (to use in place of the parameters solset and soltab).</li>
+<li><strong>readonly</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True the table is open in readonly mode, by default True.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Soltab obj</p>
-<blockquote class="last">
-<div><p>A solution table object.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A solution table object.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Soltab obj</p>
 </td>
 </tr>
 </tbody>
@@ -136,50 +123,13 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>h5parmFile</strong> : str</p>
-<blockquote>
-<div><p>H5parm filename.</p>
-</div></blockquote>
-<p><strong>readonly</strong> : bool, optional</p>
-<blockquote>
-<div><p>if True the table is open in readonly mode, by default True.</p>
-</div></blockquote>
-<p><strong>complevel</strong> : int, optional</p>
-<blockquote>
-<div><p>compression level from 0 to 9 when creating the file, by default 5.</p>
-</div></blockquote>
-<p><strong>complib</strong> : str, optional</p>
-<blockquote class="last">
-<div><p>library for compression: lzo, zlib, bzip2, by default zlib.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>h5parmFile</strong> (<em>str</em>) – H5parm filename.</li>
+<li><strong>readonly</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True the table is open in readonly mode, by default True.</li>
+<li><strong>complevel</strong> (<em>int</em><em>, </em><em>optional</em>) – compression level from 0 to 9 when creating the file, by default 5.</li>
+<li><strong>complib</strong> (<em>str</em><em>, </em><em>optional</em>) – library for compression: lzo, zlib, bzip2, by default zlib.</li>
+</ul>
 </td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.close" title="losoto.h5parm.h5parm.close"><code class="xref py py-obj docutils literal"><span class="pre">close</span></code></a>()</td>
-<td>Close the open table.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolset" title="losoto.h5parm.h5parm.getSolset"><code class="xref py py-obj docutils literal"><span class="pre">getSolset</span></code></a>(solset)</td>
-<td>Get a solution set with a given name.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsetNames" title="losoto.h5parm.h5parm.getSolsetNames"><code class="xref py py-obj docutils literal"><span class="pre">getSolsetNames</span></code></a>()</td>
-<td>Get all solution set names.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.getSolsets" title="losoto.h5parm.h5parm.getSolsets"><code class="xref py py-obj docutils literal"><span class="pre">getSolsets</span></code></a>()</td>
-<td>Get all solution set objects.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.h5parm.makeSolset" title="losoto.h5parm.h5parm.makeSolset"><code class="xref py py-obj docutils literal"><span class="pre">makeSolset</span></code></a>([solsetName,&nbsp;addTables])</td>
-<td>Create a new solset, if the provided name is not given or exists then it falls back on the first available sol###.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.h5parm.printInfo" title="losoto.h5parm.h5parm.printInfo"><code class="xref py py-obj docutils literal"><span class="pre">printInfo</span></code></a>([filter,&nbsp;verbose])</td>
-<td>Used to get readable information on the h5parm file.</td>
 </tr>
 </tbody>
 </table>
@@ -198,20 +148,16 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>solset</strong> : str</p>
-<blockquote>
-<div><p>Name of the solution set.</p>
-</div></blockquote>
-<p><strong>addTables</strong> : bool, optional</p>
-<blockquote>
-<div><p>If True add antenna/direction/array tables, by default True.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>solset</strong> (<em>str</em>) – Name of the solution set.</li>
+<li><strong>addTables</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True add antenna/direction/array tables, by default True.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">solset obj</p>
-<blockquote class="last">
-<div><p>Newly created solset object.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Newly created solset object.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">solset obj</p>
 </td>
 </tr>
 </tbody>
@@ -226,11 +172,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>A list of all solsets objects.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of all solsets objects.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -244,11 +188,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>A list of str of all solsets names.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of str of all solsets names.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -262,17 +204,11 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>solset</strong> : str</p>
-<blockquote>
-<div><p>Name of the solution set.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>solset</strong> (<em>str</em>) – Name of the solution set.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">solset obj</p>
-<blockquote class="last">
-<div><p>Return solset object.</p>
-</div></blockquote>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Return solset object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">solset obj</td>
 </tr>
 </tbody>
 </table>
@@ -286,20 +222,16 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filter: str, optional</strong></p>
-<blockquote>
-<div><p>Solution set name to get info for</p>
-</div></blockquote>
-<p><strong>verbose: bool, optional</strong></p>
-<blockquote>
-<div><p>If True, return additional info on axes</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filter</strong> (<em>str</em><em>, </em><em>optional</em>) – Solution set name to get info for</li>
+<li><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, return additional info on axes</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
-<blockquote class="last">
-<div><p>Returns a string with info about H5parm contents.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns a string with info about H5parm contents.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
 </td>
 </tr>
 </tbody>
@@ -317,44 +249,7 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>solset</strong> : pytables group</p>
-<blockquote class="last">
-<div><p>The solution set pytables group object</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.delete" title="losoto.h5parm.Solset.delete"><code class="xref py py-obj docutils literal"><span class="pre">delete</span></code></a>()</td>
-<td>Delete this solset.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.getAnt" title="losoto.h5parm.Solset.getAnt"><code class="xref py py-obj docutils literal"><span class="pre">getAnt</span></code></a>()</td>
-<td>Get the antenna subtable with antenna names and positions.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.getSoltab" title="losoto.h5parm.Solset.getSoltab"><code class="xref py py-obj docutils literal"><span class="pre">getSoltab</span></code></a>(soltab[,&nbsp;useCache,&nbsp;sel])</td>
-<td>Get a soltab with a given name.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.getSoltabNames" title="losoto.h5parm.Solset.getSoltabNames"><code class="xref py py-obj docutils literal"><span class="pre">getSoltabNames</span></code></a>()</td>
-<td>Get all Soltab names in this Solset.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.getSoltabs" title="losoto.h5parm.Solset.getSoltabs"><code class="xref py py-obj docutils literal"><span class="pre">getSoltabs</span></code></a>([useCache,&nbsp;sel])</td>
-<td>Get all Soltabs in this Solset.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.getSou" title="losoto.h5parm.Solset.getSou"><code class="xref py py-obj docutils literal"><span class="pre">getSou</span></code></a>()</td>
-<td>Get the source subtable with direction names and coordinates.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Solset.makeSoltab" title="losoto.h5parm.Solset.makeSoltab"><code class="xref py py-obj docutils literal"><span class="pre">makeSoltab</span></code></a>([soltype,&nbsp;soltabName,&nbsp;axesNames,&nbsp;…])</td>
-<td>Create a Soltab into this solset.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Solset.rename" title="losoto.h5parm.Solset.rename"><code class="xref py py-obj docutils literal"><span class="pre">rename</span></code></a>(newname[,&nbsp;overwrite])</td>
-<td>Rename this solset.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>solset</strong> (<em>pytables group</em>) – The solution set pytables group object</td>
 </tr>
 </tbody>
 </table>
@@ -372,14 +267,10 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>newname</strong> : str</p>
-<blockquote>
-<div><p>New solution set name.</p>
-</div></blockquote>
-<p><strong>overwrite</strong> : bool, optional</p>
-<blockquote class="last">
-<div><p>Overwrite existing solset with same name.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>newname</strong> (<em>str</em>) – New solution set name.</li>
+<li><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Overwrite existing solset with same name.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -394,45 +285,23 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltype</strong> : str</p>
-<blockquote>
-<div><p>Solution-type (e.g. amplitude, phase)</p>
-</div></blockquote>
-<p><strong>soltabName</strong> : str, optional</p>
-<blockquote>
-<div><p>The solution-table name, if not specified is generated from the solution-type</p>
-</div></blockquote>
-<p><strong>axesNames</strong> : list</p>
-<blockquote>
-<div><p>List with the axes names</p>
-</div></blockquote>
-<p><strong>axesVals</strong> : list</p>
-<blockquote>
-<div><p>List with the axes values (each is a separate list)</p>
-</div></blockquote>
-<p><strong>chunkShape</strong> : list, optional</p>
-<blockquote>
-<div><p>List with the chunk shape</p>
-</div></blockquote>
-<p><strong>vals</strong> : numpy array</p>
-<blockquote>
-<div><p>Array with shape given by the axesVals lenghts</p>
-</div></blockquote>
-<p><strong>weights</strong> : numpy array</p>
-<blockquote>
-<div><p>Same shape of the vals array
-0-&gt;FLAGGED, 1-&gt;MAX_WEIGHT</p>
-</div></blockquote>
-<p><strong>parmdbType</strong> : str</p>
-<blockquote>
-<div><p>Original parmdb solution type</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>soltype</strong> (<em>str</em>) – Solution-type (e.g. amplitude, phase)</li>
+<li><strong>soltabName</strong> (<em>str</em><em>, </em><em>optional</em>) – The solution-table name, if not specified is generated from the solution-type</li>
+<li><strong>axesNames</strong> (<em>list</em>) – List with the axes names</li>
+<li><strong>axesVals</strong> (<em>list</em>) – List with the axes values (each is a separate list)</li>
+<li><strong>chunkShape</strong> (<em>list</em><em>, </em><em>optional</em>) – List with the chunk shape</li>
+<li><strong>vals</strong> (<em>numpy array</em>) – Array with shape given by the axesVals lenghts</li>
+<li><strong>weights</strong> (<em>numpy array</em>) – Same shape of the vals array
+0-&gt;FLAGGED, 1-&gt;MAX_WEIGHT</li>
+<li><strong>parmdbType</strong> (<em>str</em>) – Original parmdb solution type</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">soltab obj</p>
-<blockquote class="last">
-<div><p>Newly created soltab object</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Newly created soltab object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">soltab obj</p>
 </td>
 </tr>
 </tbody>
@@ -447,20 +316,16 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>useCache</strong> : bool, optional</p>
-<blockquote>
-<div><p>soltabs obj will use cache, by default False</p>
-</div></blockquote>
-<p><strong>sel</strong> : dict, optional</p>
-<blockquote>
-<div><p>selection dict, by default no selection</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>useCache</strong> (<em>bool</em><em>, </em><em>optional</em>) – soltabs obj will use cache, by default False</li>
+<li><strong>sel</strong> (<em>dict</em><em>, </em><em>optional</em>) – selection dict, by default no selection</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>List of solution tables objects for all available soltabs in this solset</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of solution tables objects for all available soltabs in this solset</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -475,11 +340,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>List of str for all available soltabs in this solset.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of str for all available soltabs in this solset.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -493,24 +356,17 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : str</p>
-<blockquote>
-<div><p>A solution table name.</p>
-</div></blockquote>
-<p><strong>useCache</strong> : bool, optional</p>
-<blockquote>
-<div><p>Soltabs obj will use cache, by default False.</p>
-</div></blockquote>
-<p><strong>sel</strong> : dict, optional</p>
-<blockquote>
-<div><p>Selection dict, by default no selection.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>soltab</strong> (<em>str</em>) – A solution table name.</li>
+<li><strong>useCache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Soltabs obj will use cache, by default False.</li>
+<li><strong>sel</strong> (<em>dict</em><em>, </em><em>optional</em>) – Selection dict, by default no selection.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">soltab obj</p>
-<blockquote class="last">
-<div><p>A solution table obj.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A solution table obj.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">soltab obj</p>
 </td>
 </tr>
 </tbody>
@@ -525,11 +381,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
-<blockquote class="last">
-<div><p>Available antennas in the form {name1:[position coords], name2:[position coords], …}.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Available antennas in the form {name1:[position coords], name2:[position coords], …}.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
 </tbody>
 </table>
@@ -543,11 +397,9 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
-<blockquote class="last">
-<div><p>Available sources in the form {name1:[ra,dec], name2:[ra,dec], …}.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Available sources in the form {name1:[ra,dec], name2:[ra,dec], …}.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
 </tbody>
 </table>
@@ -563,17 +415,10 @@ then it falls back on the first available sol###.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>soltab</strong> : pytables Table obj</p>
-<blockquote>
-<div><p>Pytable Table object.</p>
-</div></blockquote>
-<p><strong>useCache</strong> : bool, optional</p>
-<blockquote>
-<div><p>Cache all data in memory, by default False.</p>
-</div></blockquote>
-<p><strong>**args</strong> : optional</p>
-<blockquote class="last">
-<div><p>Used to create a selection.
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>soltab</strong> (<em>pytables Table obj</em>) – Pytable Table object.</li>
+<li><strong>useCache</strong> (<em>bool</em><em>, </em><em>optional</em>) – Cache all data in memory, by default False.</li>
+<li><strong>**args</strong> (<em>optional</em>) – Used to create a selection.
 Selections examples:
 axisName = None # to select all
 axisName = xxx # to select ONLY that value for an axis
@@ -581,75 +426,9 @@ axisName = [xxx, yyy, zzz] # to selct ONLY those values for an axis
 axisName = ‘xxx’ # regular expression selection
 axisName = {min: xxx} # to selct values grater or equal than xxx
 axisName = {max: yyy} # to selct values lower or equal than yyy
-axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy</p>
-</div></blockquote>
+axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and lower or equal than yyy</li>
+</ul>
 </td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.addHistory" title="losoto.h5parm.Soltab.addHistory"><code class="xref py py-obj docutils literal"><span class="pre">addHistory</span></code></a>(entry)</td>
-<td>Adds entry to the table history with current date and time</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.clearSelection" title="losoto.h5parm.Soltab.clearSelection"><code class="xref py py-obj docutils literal"><span class="pre">clearSelection</span></code></a>()</td>
-<td>Clear selection, all values are now considered.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.delete" title="losoto.h5parm.Soltab.delete"><code class="xref py py-obj docutils literal"><span class="pre">delete</span></code></a>()</td>
-<td>Delete this soltab.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.flush" title="losoto.h5parm.Soltab.flush"><code class="xref py py-obj docutils literal"><span class="pre">flush</span></code></a>()</td>
-<td>Copy cached values into the table</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAddress" title="losoto.h5parm.Soltab.getAddress"><code class="xref py py-obj docutils literal"><span class="pre">getAddress</span></code></a>()</td>
-<td>Get the “solset000/soltab000” type string for this Soltab.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAxesNames" title="losoto.h5parm.Soltab.getAxesNames"><code class="xref py py-obj docutils literal"><span class="pre">getAxesNames</span></code></a>()</td>
-<td>Get axes names.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAxisLen" title="losoto.h5parm.Soltab.getAxisLen"><code class="xref py py-obj docutils literal"><span class="pre">getAxisLen</span></code></a>(axis[,&nbsp;ignoreSelection])</td>
-<td>Return an axis lenght.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAxisType" title="losoto.h5parm.Soltab.getAxisType"><code class="xref py py-obj docutils literal"><span class="pre">getAxisType</span></code></a>(axis)</td>
-<td>Return the axis dtype</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getAxisValues" title="losoto.h5parm.Soltab.getAxisValues"><code class="xref py py-obj docutils literal"><span class="pre">getAxisValues</span></code></a>(axis[,&nbsp;ignoreSelection])</td>
-<td>Get the values of a given axis.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getHistory" title="losoto.h5parm.Soltab.getHistory"><code class="xref py py-obj docutils literal"><span class="pre">getHistory</span></code></a>()</td>
-<td>Get the soltab history.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getSolset" title="losoto.h5parm.Soltab.getSolset"><code class="xref py py-obj docutils literal"><span class="pre">getSolset</span></code></a>()</td>
-<td>This is used to obtain the parent solset object to e.g.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getType" title="losoto.h5parm.Soltab.getType"><code class="xref py py-obj docutils literal"><span class="pre">getType</span></code></a>()</td>
-<td>Get the solution type of this Soltab.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValues" title="losoto.h5parm.Soltab.getValues"><code class="xref py py-obj docutils literal"><span class="pre">getValues</span></code></a>([retAxesVals,&nbsp;weight,&nbsp;reference,&nbsp;…])</td>
-<td>Creates a simple matrix of values.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.getValuesIter" title="losoto.h5parm.Soltab.getValuesIter"><code class="xref py py-obj docutils literal"><span class="pre">getValuesIter</span></code></a>([returnAxes,&nbsp;weight,&nbsp;…])</td>
-<td>Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.rename" title="losoto.h5parm.Soltab.rename"><code class="xref py py-obj docutils literal"><span class="pre">rename</span></code></a>(newname[,&nbsp;overwrite])</td>
-<td>Rename this soltab.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setAxisValues" title="losoto.h5parm.Soltab.setAxisValues"><code class="xref py py-obj docutils literal"><span class="pre">setAxisValues</span></code></a>(axis,&nbsp;vals)</td>
-<td>Set the value of a specific axis</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setCache" title="losoto.h5parm.Soltab.setCache"><code class="xref py py-obj docutils literal"><span class="pre">setCache</span></code></a>(val,&nbsp;weight)</td>
-<td>Set cache values.</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setSelection" title="losoto.h5parm.Soltab.setSelection"><code class="xref py py-obj docutils literal"><span class="pre">setSelection</span></code></a>(**args)</td>
-<td>Set a selection criteria.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.h5parm.Soltab.setValues" title="losoto.h5parm.Soltab.setValues"><code class="xref py py-obj docutils literal"><span class="pre">setValues</span></code></a>(vals[,&nbsp;selection,&nbsp;weight])</td>
-<td>Save values in the val grid</td>
 </tr>
 </tbody>
 </table>
@@ -667,14 +446,10 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>newname</strong> : str</p>
-<blockquote>
-<div><p>New solution table name.</p>
-</div></blockquote>
-<p><strong>overwrite</strong> : bool, optional</p>
-<blockquote class="last">
-<div><p>Overwrite existing soltab with same name.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>newname</strong> (<em>str</em>) – New solution table name.</li>
+<li><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Overwrite existing soltab with same name.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -689,8 +464,10 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>val</strong> : array</p>
-<p class="last"><strong>weight</strong> : array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>val</strong> (<em>array</em>) – </li>
+<li><strong>weight</strong> (<em>array</em>) – </li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -705,11 +482,9 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">solset obj</p>
-<blockquote class="last">
-<div><p>A solset obj.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A solset obj.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">solset obj</td>
 </tr>
 </tbody>
 </table>
@@ -723,11 +498,9 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
-<blockquote class="last">
-<div><p>The solset/soltab address of self.obj as a string.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The solset/soltab address of self.obj as a string.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -755,11 +528,7 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>**args :</strong></p>
-<blockquote class="last">
-<div><p>Valid axes names of the form: pol=’XX’, ant=[‘CS001HBA’,’CS002HBA’], time={‘min’:1234,’max’:‘2345’,’step’:4}.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>**args</strong> – Valid axes names of the form: pol=’XX’, ant=[‘CS001HBA’,’CS002HBA’], time={‘min’:1234,’max’:‘2345’,’step’:4}.</td>
 </tr>
 </tbody>
 </table>
@@ -773,11 +542,9 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
-<blockquote class="last">
-<div><p>Return the type of the solution-tables (e.g. amplitude).</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Return the type of the solution-tables (e.g. amplitude).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -791,12 +558,10 @@ axisName = {min: xxx, max: yyy} # to selct values greater or equal than xxx and 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>A list with all the axis names in the correct order for
-slicing the getValuesGrid() reurned matrix.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list with all the axis names in the correct order for
+slicing the getValuesGrid() reurned matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -810,20 +575,16 @@ slicing the getValuesGrid() reurned matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axis</strong> : str</p>
-<blockquote>
-<div><p>The name of the axis.</p>
-</div></blockquote>
-<p><strong>ignoreSelection</strong> : bool, optional</p>
-<blockquote>
-<div><p>If True returns the axis lenght without any selection active, by default False.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>axis</strong> (<em>str</em>) – The name of the axis.</li>
+<li><strong>ignoreSelection</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True returns the axis lenght without any selection active, by default False.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
-<blockquote class="last">
-<div><p>The axis lenght.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The axis lenght.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
 </td>
 </tr>
 </tbody>
@@ -838,17 +599,11 @@ slicing the getValuesGrid() reurned matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axis</strong> : str</p>
-<blockquote>
-<div><p>The name of the axis.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>axis</strong> (<em>str</em>) – The name of the axis.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dtype</p>
-<blockquote class="last">
-<div><p>The axis dtype.</p>
-</div></blockquote>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The axis dtype.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dtype</td>
 </tr>
 </tbody>
 </table>
@@ -862,20 +617,16 @@ slicing the getValuesGrid() reurned matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axis</strong> : str</p>
-<blockquote>
-<div><p>The name of the axis.</p>
-</div></blockquote>
-<p><strong>ignoreSelection</strong> : bool, optional</p>
-<blockquote>
-<div><p>If True returns the axis values without any selection active, by default False.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>axis</strong> (<em>str</em>) – The name of the axis.</li>
+<li><strong>ignoreSelection</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True returns the axis values without any selection active, by default False.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>A copy of all values present along a specific axis.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A copy of all values present along a specific axis.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -890,14 +641,10 @@ slicing the getValuesGrid() reurned matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>axis</strong> : str</p>
-<blockquote>
-<div><p>The name of the axis.</p>
-</div></blockquote>
-<p><strong>vals</strong> : array</p>
-<blockquote class="last">
-<div><p>Values</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>axis</strong> (<em>str</em>) – The name of the axis.</li>
+<li><strong>vals</strong> (<em>array</em>) – Values</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -912,20 +659,13 @@ slicing the getValuesGrid() reurned matrix.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vals</strong> : array, float</p>
-<blockquote>
-<div><p>values to write as an n-dimentional array which match the selection dimention
-if a float is passed or the selected data are set to that value</p>
-</div></blockquote>
-<p><strong>selection</strong> : selection format, optional</p>
-<blockquote>
-<div><p>To set only a subset of data, overriding global selectioan, by default use global selection.
-Global seclection is restoread at the end of the function. This is used to set values in a loop of getValueIter().</p>
-</div></blockquote>
-<p><strong>weight</strong> : bool, optional</p>
-<blockquote class="last">
-<div><p>If true store in the weights instead that in the vals, by default False</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vals</strong> (<em>array</em><em>, </em><em>float</em>) – values to write as an n-dimentional array which match the selection dimention
+if a float is passed or the selected data are set to that value</li>
+<li><strong>selection</strong> (<em>selection format</em><em>, </em><em>optional</em>) – To set only a subset of data, overriding global selectioan, by default use global selection.
+Global seclection is restoread at the end of the function. This is used to set values in a loop of getValueIter().</li>
+<li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true store in the weights instead that in the vals, by default False</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -946,31 +686,21 @@ Global seclection is restoread at the end of the function. This is used to set v
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>retAxisVals</strong> : bool, optional</p>
-<blockquote>
-<div><p>If true returns also the axes vals as a dict of:
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>retAxisVals</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true returns also the axes vals as a dict of:
 {‘axisname1’:[axisvals1],’axisname2’:[axisvals2],…}.
-By default True.</p>
-</div></blockquote>
-<p><strong>weight</strong> : bool, optional</p>
-<blockquote>
-<div><p>If true get the weights instead that the vals, by defaul False.</p>
-</div></blockquote>
-<p><strong>reference</strong> : str, optional</p>
-<blockquote>
-<div><p>In case of phase solutions, reference to this station name. By default no reference.</p>
-</div></blockquote>
-<p><strong>referencePol</strong> : str, optional</p>
-<blockquote>
-<div><p>In case of phase reference to selected pol of reference station. By default no reference.</p>
-</div></blockquote>
+By default True.</li>
+<li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true get the weights instead that the vals, by defaul False.</li>
+<li><strong>reference</strong> (<em>str</em><em>, </em><em>optional</em>) – In case of phase solutions, reference to this station name. By default no reference.</li>
+<li><strong>referencePol</strong> (<em>str</em><em>, </em><em>optional</em>) – In case of phase reference to selected pol of reference station. By default no reference.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array</p>
-<blockquote class="last">
-<div><p>A numpy ndarrey (values or weights depending on parameters)
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A numpy ndarrey (values or weights depending on parameters)
 If selected, returns also the axes values</p>
-</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
 </td>
 </tr>
 </tbody>
@@ -988,33 +718,22 @@ Note that all the data are fetched in memory before returning them one at a time
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>returnAxes</strong> : list</p>
-<blockquote>
-<div><p>Axes of the returned array, all _others_ will be cycled on each element combinations.</p>
-</div></blockquote>
-<p><strong>weight</strong> : bool, optional</p>
-<blockquote>
-<div><p>If true return also the weights, by default False.</p>
-</div></blockquote>
-<p><strong>reference</strong> : str</p>
-<blockquote>
-<div><p>In case of phase solutions, reference to this station name.</p>
-</div></blockquote>
-<p><strong>referencePol</strong> : str</p>
-<blockquote>
-<div><p>In case of phase reference to selected pol of reference station.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>returnAxes</strong> (<em>list</em>) – Axes of the returned array, all _others_ will be cycled on each element combinations.</li>
+<li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true return also the weights, by default False.</li>
+<li><strong>reference</strong> (<em>str</em>) – In case of phase solutions, reference to this station name.</li>
+<li><strong>referencePol</strong> (<em>str</em>) – In case of phase reference to selected pol of reference station.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ol class="first arabic simple">
-<li>data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()</li>
-<li>(if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()</li>
-<li>a dict with axis values in the form:</li>
-</ol>
-<p>{‘axisname1’:[axisvals1],’axisname2’:[axisvals2],…}</p>
-<ol class="last arabic simple" start="4">
-<li>a selection which should be used to write this data back using a setValues()</li>
-</ol>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()</em></li>
+<li><em>2) (if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()</em></li>
+<li><em>3) a dict with axis values in the form</em></li>
+<li><strong>{‘axisname1’</strong> (<em>[axisvals1],’axisname2’:[axisvals2],…}</em>)</li>
+<li><em>4) a selection which should be used to write this data back using a setValues()</em></li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -1031,11 +750,7 @@ history entry is stored in a separate attribute.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>entry</strong> : str</p>
-<blockquote class="last">
-<div><p>entry to add to history list</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entry</strong> (<em>str</em>) – entry to add to history list</td>
 </tr>
 </tbody>
 </table>
@@ -1049,11 +764,9 @@ history entry is stored in a separate attribute.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
-<blockquote class="last">
-<div><p>The table history as a string with each entry separated by newlines.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The table history as a string with each entry separated by newlines.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
 </tr>
 </tbody>
 </table>
@@ -1061,9 +774,6 @@ history entry is stored in a separate attribute.</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="losoto-importer-module">
-<h2>losoto.importer module<a class="headerlink" href="#losoto-importer-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-losoto.losoto_lib">
 <span id="losoto-losoto-lib-module"></span><h2>losoto.losoto_lib module<a class="headerlink" href="#module-losoto.losoto_lib" title="Permalink to this headline">¶</a></h2>
@@ -1076,95 +786,7 @@ history entry is stored in a separate attribute.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parsetFile</strong> : str</p>
-<blockquote class="last">
-<div><p>Name of the parset file.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">add_section</span></code>(section)</td>
-<td>Create a new section in the configuration.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">defaults</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get</span></code>(section,&nbsp;option)</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getarray" title="losoto.losoto_lib.LosotoParser.getarray"><code class="xref py py-obj docutils literal"><span class="pre">getarray</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getarraybool" title="losoto.losoto_lib.LosotoParser.getarraybool"><code class="xref py py-obj docutils literal"><span class="pre">getarraybool</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getarrayfloat" title="losoto.losoto_lib.LosotoParser.getarrayfloat"><code class="xref py py-obj docutils literal"><span class="pre">getarrayfloat</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getarrayint" title="losoto.losoto_lib.LosotoParser.getarrayint"><code class="xref py py-obj docutils literal"><span class="pre">getarrayint</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getarraystr" title="losoto.losoto_lib.LosotoParser.getarraystr"><code class="xref py py-obj docutils literal"><span class="pre">getarraystr</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getbool" title="losoto.losoto_lib.LosotoParser.getbool"><code class="xref py py-obj docutils literal"><span class="pre">getbool</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">getboolean</span></code>(section,&nbsp;option)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getfloat" title="losoto.losoto_lib.LosotoParser.getfloat"><code class="xref py py-obj docutils literal"><span class="pre">getfloat</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getint" title="losoto.losoto_lib.LosotoParser.getint"><code class="xref py py-obj docutils literal"><span class="pre">getint</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.losoto_lib.LosotoParser.getstr" title="losoto.losoto_lib.LosotoParser.getstr"><code class="xref py py-obj docutils literal"><span class="pre">getstr</span></code></a>(s,&nbsp;v[,&nbsp;default])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">has_option</span></code>(section,&nbsp;option)</td>
-<td>Check for the existence of a given option in a given section.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">has_section</span></code>(section)</td>
-<td>Indicate whether the named section is present in the configuration.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">items</span></code>(section)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">options</span></code>(section)</td>
-<td>Return a list of option names for the given section name.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">optionxform</span></code>(optionstr)</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">read</span></code>(filenames)</td>
-<td>Read and parse a filename or a list of filenames.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">readfp</span></code>(fp[,&nbsp;filename])</td>
-<td>Like read() but the argument must be a file-like object.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">remove_option</span></code>(section,&nbsp;option)</td>
-<td>Remove an option.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">remove_section</span></code>(section)</td>
-<td>Remove a file section.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">sections</span></code>()</td>
-<td>Return a list of section names, excluding [DEFAULT]</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set</span></code>(section,&nbsp;option[,&nbsp;value])</td>
-<td>Set an option.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">write</span></code>(fp)</td>
-<td>Write an .ini-format representation of the configuration state.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parsetFile</strong> (<em>str</em>) – Name of the parset file.</td>
 </tr>
 </tbody>
 </table>
@@ -1226,24 +848,17 @@ history entry is stored in a separate attribute.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parser</strong> : parser obj</p>
-<blockquote>
-<div><p>configuration file</p>
-</div></blockquote>
-<p><strong>step</strong> : str</p>
-<blockquote>
-<div><p>this step</p>
-</div></blockquote>
-<p><strong>axisName</strong> : str</p>
-<blockquote>
-<div><p>an axis name</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>parser</strong> (<em>parser obj</em>) – configuration file</li>
+<li><strong>step</strong> (<em>str</em>) – this step</li>
+<li><strong>axisName</strong> (<em>str</em>) – an axis name</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str, dict or list</p>
-<blockquote class="last">
-<div><p>a selection criteria</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a selection criteria</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str, dict or list</p>
 </td>
 </tr>
 </tbody>
@@ -1258,24 +873,17 @@ history entry is stored in a separate attribute.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parser</strong> : parser obj</p>
-<blockquote>
-<div><p>configuration file</p>
-</div></blockquote>
-<p><strong>step</strong> : str</p>
-<blockquote>
-<div><p>current step</p>
-</div></blockquote>
-<p><strong>H</strong> : h5parm obj</p>
-<blockquote>
-<div><p>the h5parm object</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>parser</strong> (<em>parser obj</em>) – configuration file</li>
+<li><strong>step</strong> (<em>str</em>) – current step</li>
+<li><strong>H</strong> (<em>h5parm obj</em>) – the h5parm object</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
-<blockquote class="last">
-<div><p>list of soltab obj with applied selection</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of soltab obj with applied selection</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -1289,84 +897,12 @@ history entry is stored in a separate attribute.</p>
 <dt id="losoto.operations_lib.multiprocManager">
 <em class="property">class </em><code class="descclassname">losoto.operations_lib.</code><code class="descname">multiprocManager</code><span class="sig-paren">(</span><em>procs=1</em>, <em>funct=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations_lib.multiprocManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.operations_lib.multiprocManager.get" title="losoto.operations_lib.multiprocManager.get"><code class="xref py py-obj docutils literal"><span class="pre">get</span></code></a>()</td>
-<td>Return all the results as an iterator</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.operations_lib.multiprocManager.multiThread" title="losoto.operations_lib.multiprocManager.multiThread"><code class="xref py py-obj docutils literal"><span class="pre">multiThread</span></code></a>(inQueue,&nbsp;outQueue,&nbsp;funct)</td>
-<td>This class is a working thread which load parameters from a queue and</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.operations_lib.multiprocManager.put" title="losoto.operations_lib.multiprocManager.put"><code class="xref py py-obj docutils literal"><span class="pre">put</span></code></a>(args)</td>
-<td>Parameters to give to the next jobs sent into queue</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#losoto.operations_lib.multiprocManager.wait" title="losoto.operations_lib.multiprocManager.wait"><code class="xref py py-obj docutils literal"><span class="pre">wait</span></code></a>()</td>
-<td>Send poison pills to jobs and wait for them to finish</td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt id="losoto.operations_lib.multiprocManager.multiThread">
 <em class="property">class </em><code class="descname">multiThread</code><span class="sig-paren">(</span><em>inQueue</em>, <em>outQueue</em>, <em>funct</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations_lib.multiprocManager.multiThread" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">multiprocessing.process.Process</span></code></p>
 <p>This class is a working thread which load parameters from a queue and
 return in the output queue</p>
-<p class="rubric">Attributes</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">authkey</span></code></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">daemon</span></code></td>
-<td>Return whether process is a daemon</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">exitcode</span></code></td>
-<td>Return exit code of process or <cite>None</cite> if it has yet to stop</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">ident</span></code></td>
-<td>Return identifier (PID) of process or <cite>None</cite> if it has yet to start</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">name</span></code></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">pid</span></code></td>
-<td>Return identifier (PID) of process or <cite>None</cite> if it has yet to start</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">is_alive</span></code>()</td>
-<td>Return whether process is alive</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">join</span></code>([timeout])</td>
-<td>Wait until child process terminates</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#losoto.operations_lib.multiprocManager.multiThread.run" title="losoto.operations_lib.multiprocManager.multiThread.run"><code class="xref py py-obj docutils literal"><span class="pre">run</span></code></a>()</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">start</span></code>()</td>
-<td>Start child process</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">terminate</span></code>()</td>
-<td>Terminate process; sends SIGTERM signal or uses TerminateProcess()</td>
-</tr>
-</tbody>
-</table>
 <dl class="method">
 <dt id="losoto.operations_lib.multiprocManager.multiThread.run">
 <code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations_lib.multiprocManager.multiThread.run" title="Permalink to this definition">¶</a></dt>
@@ -1403,26 +939,19 @@ The join() should kill all the processes</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : np array</p>
-<blockquote>
-<div><p>The array to transpose.</p>
-</div></blockquote>
-<p><strong>oldAxes</strong> : list of str</p>
-<blockquote>
-<div><p>A list like [‘time’,’freq’,’pol’].
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>np array</em>) – The array to transpose.</li>
+<li><strong>oldAxes</strong> (<em>list of str</em>) – A list like [‘time’,’freq’,’pol’].
 It can contain more axes than the new list, those are ignored.
-This is to pass to oldAxis the soltab.getAxesNames() directly even on an array from getValuesIter()</p>
-</div></blockquote>
-<p><strong>newAxes</strong> : list of str</p>
-<blockquote>
-<div><p>A list like [‘time’,’pol’,’freq’].</p>
-</div></blockquote>
+This is to pass to oldAxis the soltab.getAxesNames() directly even on an array from getValuesIter()</li>
+<li><strong>newAxes</strong> (<em>list of str</em>) – A list like [‘time’,’pol’,’freq’].</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">np array</p>
-<blockquote class="last">
-<div><p>With axis transposed to match the newAxes list.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">With axis transposed to match the newAxes list.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np array</p>
 </td>
 </tr>
 </tbody>
@@ -1437,20 +966,16 @@ This is to pass to oldAxis the soltab.getAxesNames() directly even on an array f
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dic</strong> : dcit</p>
-<blockquote>
-<div><p>The input dictionary.</p>
-</div></blockquote>
-<p><strong>keys</strong> : list of str</p>
-<blockquote>
-<div><p>A list of arguments to remove or a string for single argument.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dic</strong> (<em>dcit</em>) – The input dictionary.</li>
+<li><strong>keys</strong> (<em>list of str</em>) – A list of arguments to remove or a string for single argument.</li>
+</ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
-<blockquote class="last">
-<div><p>Dictionary with removed keys.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary with removed keys.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -1465,17 +990,11 @@ This is to pass to oldAxis the soltab.getAxesNames() directly even on an array f
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>phase</strong> : array of float</p>
-<blockquote>
-<div><p>Phase to normalize.</p>
-</div></blockquote>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>phase</strong> (<em>array of float</em>) – Phase to normalize.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">array of float</p>
-<blockquote class="last">
-<div><p>Normalized phases.</p>
-</div></blockquote>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Normalized phases.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array of float</td>
 </tr>
 </tbody>
 </table>
@@ -1521,14 +1040,9 @@ iterations – number of iterations to perform</p>
 <li><a class="reference internal" href="#">losoto package</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-losoto.h5parm">losoto.h5parm module</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#losoto-importer-module">losoto.importer module</a></li>
+<li><a class="reference internal" href="#module-losoto.h5parm">losoto.h5parm module</a></li>
 <li><a class="reference internal" href="#module-losoto.losoto_lib">losoto.losoto_lib module</a></li>
-<li><a class="reference internal" href="#module-losoto.operations_lib">losoto.operations_lib module</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#module-losoto.operations_lib">losoto.operations_lib module</a></li>
 <li><a class="reference internal" href="#module-losoto">Module contents</a></li>
 </ul>
 </li>

@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading CLIP module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesToClip = parser.getarraystr( step, 'axesToClip' ) # no default
     clipLevel = parser.getfloat( step, 'clipLevel', 5. )
     log = parser.getbool( step, 'log', True )

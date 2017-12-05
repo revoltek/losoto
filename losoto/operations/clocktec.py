@@ -8,7 +8,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading CLOCKTEC module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     flagBadChannels = parser.getbool( step, 'flagBadChannels', True )
     flagCut = parser.getfloat( step, 'flagCut', 5. )
     chi2cut = parser.getfloat( step, 'chi2cut', 3000. )

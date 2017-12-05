@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading CROSSDELAY module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'phasediff' )
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
     smooth = parser.getint( step, 'smooth', 0 )

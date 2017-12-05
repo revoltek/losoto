@@ -6,7 +6,7 @@ import logging
 
 logging.debug('Loading RESET module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     return run(soltab)
 
 def run( soltab ):

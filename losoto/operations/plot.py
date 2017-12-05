@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading PLOT module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesInPlot = parser.getarraystr( step, 'axesInPlot' ) # no default
     axisInTable = parser.getstr( step, 'axisInTable', '' )
     axisInCol = parser.getstr( step, 'axisInCol', '' )
@@ -27,7 +27,7 @@ def run_parser(soltab, parser, step):
                plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 
-def plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
+def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
         import os
         from itertools import cycle, chain
         import numpy as np
@@ -300,7 +300,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     datatype = soltab.getType()
 
     # start processes for multi-thread
-    mpm = multiprocManager(ncpu, plot)
+    mpm = multiprocManager(ncpu, _plot)
 
     # cycle on files
     if makeMovie: pngs = [] # store png filenames

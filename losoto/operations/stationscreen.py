@@ -10,7 +10,7 @@ from losoto.operations_lib import *
 logging.debug('Loading STATIONSCREEN module.')
 
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     outSoltab = parser.getstr( step, "outSoltab" )
     order = parser.getint( step, "Order", 5 )
     beta = parser.getfloat( step, "Beta", 5.0/3.0 )
@@ -26,7 +26,7 @@ def run_parser(soltab, parser, step):
         refAnt, scale_order, scale_dist, min_order, adjust_order)
 
 
-def calculate_piercepoints(station_positions, source_positions):
+def _calculate_piercepoints(station_positions, source_positions):
     """
     Returns array of piercepoint locations
 
@@ -63,7 +63,7 @@ def calculate_piercepoints(station_positions, source_positions):
     xyz = np.zeros((N_sources, 3))
     ra_deg = source_positions.T[0] * 180.0 / np.pi
     dec_deg = source_positions.T[1] * 180.0 / np.pi
-    xy, midRA, midDec = getxy(ra_deg, dec_deg)
+    xy, midRA, midDec = _getxy(ra_deg, dec_deg)
     xyz[:, 0] = xy[0]
     xyz[:, 1] = xy[1]
     pp_idx = 0
@@ -75,7 +75,7 @@ def calculate_piercepoints(station_positions, source_positions):
     return pp, midRA, midDec
 
 
-def get_ant_dist(ant_xyz, ref_xyz):
+def _get_ant_dist(ant_xyz, ref_xyz):
     """
     Returns distance between ant and ref in m
 
@@ -97,7 +97,7 @@ def get_ant_dist(ant_xyz, ref_xyz):
     return np.sqrt((ref_xyz[0] - ant_xyz[0])**2 + (ref_xyz[1] - ant_xyz[1])**2 + (ref_xyz[2] - ant_xyz[2])**2)
 
 
-def getxy(RA, Dec, midRA=None, midDec=None):
+def _getxy(RA, Dec, midRA=None, midDec=None):
     """
     Returns array of projected x and y values.
 
@@ -119,7 +119,7 @@ def getxy(RA, Dec, midRA=None, midDec=None):
     import numpy as np
 
     if midRA is None or midDec is None:
-        x, y  = radec2xy(RA, Dec)
+        x, y  = _radec2xy(RA, Dec)
 
         # Refine x and y using midpoint
         if len(x) > 1:
@@ -132,7 +132,7 @@ def getxy(RA, Dec, midRA=None, midDec=None):
                 midyind = np.where(np.array(y)[yind] > ymid)[0][0]
                 midRA = RA[xind[midxind]]
                 midDec = Dec[yind[midyind]]
-                x, y  = radec2xy(RA, Dec, midRA, midDec)
+                x, y  = _radec2xy(RA, Dec, midRA, midDec)
             except IndexError:
                 midRA = RA[0]
                 midDec = Dec[0]
@@ -140,17 +140,17 @@ def getxy(RA, Dec, midRA=None, midDec=None):
             midRA = RA[0]
             midDec = Dec[0]
 
-    x, y  = radec2xy(RA, Dec, refRA=midRA, refDec=midDec)
+    x, y  = _radec2xy(RA, Dec, refRA=midRA, refDec=midDec)
 
     return np.array([x, y]), midRA, midDec
 
 
-def radec2xy(RA, Dec, refRA=None, refDec=None):
+def _radec2xy(RA, Dec, refRA=None, refDec=None):
     """
     Returns x, y for input ra, dec.
 
     Note that the reference RA and Dec must be the same in calls to both
-    radec2xy() and xy2radec() if matched pairs of (x, y) <=> (RA, Dec) are
+    _radec2xy() and _xy2radec() if matched pairs of (x, y) <=> (RA, Dec) are
     desired.
 
     Parameters
@@ -181,7 +181,7 @@ def radec2xy(RA, Dec, refRA=None, refDec=None):
         refDec = Dec[0]
 
     # Make wcs object to handle transformation from ra and dec to pixel coords.
-    w = makeWCS(refRA, refDec)
+    w = _makeWCS(refRA, refDec)
 
     for ra_deg, dec_deg in zip(RA, Dec):
         ra_dec = np.array([[ra_deg, dec_deg]])
@@ -191,12 +191,12 @@ def radec2xy(RA, Dec, refRA=None, refDec=None):
     return x, y
 
 
-def xy2radec(x, y, refRA=0.0, refDec=0.0):
+def _xy2radec(x, y, refRA=0.0, refDec=0.0):
     """
     Returns x, y for input ra, dec.
 
     Note that the reference RA and Dec must be the same in calls to both
-    radec2xy() and xy2radec() if matched pairs of (x, y) <=> (RA, Dec) are
+    _radec2xy() and _xy2radec() if matched pairs of (x, y) <=> (RA, Dec) are
     desired.
 
     Parameters
@@ -223,7 +223,7 @@ def xy2radec(x, y, refRA=0.0, refDec=0.0):
     Dec = []
 
     # Make wcs object to handle transformation from ra and dec to pixel coords.
-    w = makeWCS(refRA, refDec)
+    w = _makeWCS(refRA, refDec)
 
     for xp, yp in zip(x, y):
         x_y = np.array([[xp, yp]])
@@ -233,7 +233,7 @@ def xy2radec(x, y, refRA=0.0, refDec=0.0):
     return RA, Dec
 
 
-def makeWCS(refRA, refDec):
+def _makeWCS(refRA, refDec):
     """
     Makes simple WCS object.
 
@@ -263,7 +263,7 @@ def makeWCS(refRA, refDec):
     return w
 
 
-def flag_outliers(weights, residual, nsigma, screen_type):
+def _flag_outliers(weights, residual, nsigma, screen_type):
     """
     Flags outliers
 
@@ -310,7 +310,7 @@ def flag_outliers(weights, residual, nsigma, screen_type):
     return weights
 
 
-def circ_chi2(samples, weights):
+def _circ_chi2(samples, weights):
     """
     Compute the circular chi^2
 
@@ -343,7 +343,7 @@ def circ_chi2(samples, weights):
     return var * sumw
 
 
-def calculate_svd(pp, r_0, beta, N_piercepoints):
+def _calculate_svd(pp, r_0, beta, N_piercepoints):
     """
     Returns result (U) of svd for K-L vectors
 
@@ -382,7 +382,7 @@ def calculate_svd(pp, r_0, beta, N_piercepoints):
     return C, pinvC, U
 
 
-def fit_screen(station_names, source_names, full_matrices, pp, rr, weights, order, r_0, beta,
+def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, order, r_0, beta,
     screen_type):
     """
     Fits a screen to amplitudes or phases using Karhunen-Lo`eve base vectors
@@ -442,7 +442,7 @@ def fit_screen(station_names, source_names, full_matrices, pp, rr, weights, orde
         C, pinvC, U = full_matrices
     else:
         # Recalculate for unflagged directions
-        C, pinvC, U = calculate_svd(pp, r_0, beta, N_piercepoints)
+        C, pinvC, U = _calculate_svd(pp, r_0, beta, N_piercepoints)
     invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(w, U)[:, :order]), rcond=1e-3)
 
     # Fit screen to unflagged directions
@@ -619,7 +619,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
             station_order = [order] * N_stations
         else:
             for s in range(len(station_names)):
-                dist.append(get_ant_dist(station_positions[s], station_positions[refAnt]))
+                dist.append(_get_ant_dist(station_positions[s], station_positions[refAnt]))
             if scale_dist is None:
                 scale_dist = max(dist)
             logging.info('Using variable order (with max order = {0} '
@@ -642,10 +642,10 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     pp_list = []
     full_matrices = []
     for s in range(N_stations):
-        pp_s, midRA, midDec = calculate_piercepoints(np.array([station_positions[s]]),
+        pp_s, midRA, midDec = _calculate_piercepoints(np.array([station_positions[s]]),
             np.array(source_positions))
         pp_list.append(pp_s)
-        full_matrices.append(calculate_svd(pp_s, r_0, beta, N_piercepoints))
+        full_matrices.append(_calculate_svd(pp_s, r_0, beta, N_piercepoints))
 
     # Fit station screens
     N_total = N_freqs * N_pols * N_stations * niter * N_times
@@ -684,7 +684,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                             # Use log residuals
                             screen_diff = np.log10(rr) - np.log10(rr -
                                 residual[:, s, :, freq_ind, pol_ind])
-                        station_weights = flag_outliers(init_station_weights,
+                        station_weights = _flag_outliers(init_station_weights,
                                 screen_diff, nsigma, screen_type)
 
                     # Fit the screens
@@ -712,7 +712,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                                         # Skip the fit for first iteration, as it is the same as the prev one
                                         skip_fit = True
                             if not np.all(station_weights[:, tindx] == 0.0) and not skip_fit:
-                                scr, res = fit_screen([stat], source_names, full_matrices[s],
+                                scr, res = _fit_screen([stat], source_names, full_matrices[s],
                                     pp[:, :], rr[:, tindx], station_weights[:, tindx],
                                     screen_order[s, tindx, freq_ind, pol_ind], r_0, beta, screen_type)
                                 screen[:, s, tindx, freq_ind, pol_ind] = scr[:, 0]
@@ -723,7 +723,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
 
                             if adjust_order and iterindx > 0:
                                 if screen_type == 'phase':
-                                    redchi2 =  circ_chi2(residual[:, s, tindx, freq_ind, pol_ind],
+                                    redchi2 =  _circ_chi2(residual[:, s, tindx, freq_ind, pol_ind],
                                         station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
                                 else:
                                     redchi2 = np.sum(np.square(residual[:, s, tindx, freq_ind, pol_ind]) *

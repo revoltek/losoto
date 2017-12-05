@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading FLAGEXTEND module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesToExt = parser.getarraystr( step, 'axesToExt') # no default
     size = parser.getarrayint( step, 'size' ) # no default
     percent = parser.getfloat( step, 'percent', 50. )
@@ -15,7 +15,7 @@ def run_parser(soltab, parser, step):
     return run(soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0)
 
 
-def flag(weights, coord, axesToExt, selection, percent=90, size=[0], maxCycles=3, outQueue=None):
+def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=3, outQueue=None):
         """
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
@@ -99,7 +99,7 @@ def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
         return 1
 
     # start processes for multi-thread
-    mpm = multiprocManager(ncpu, flag)
+    mpm = multiprocManager(ncpu, _flag)
 
     for axisToExt in axesToExt:
         if axisToExt not in soltab.getAxesNames():

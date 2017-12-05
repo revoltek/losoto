@@ -20,14 +20,6 @@ losoto\.h5parm module
     :undoc-members:
     :show-inheritance:
 
-losoto\.importer module
------------------------
-
-.. automodule:: losoto.importer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 losoto\.losoto\_lib module
 --------------------------
 

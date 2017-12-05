@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading FLAG module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesToFlag = parser.getarraystr( step, 'axesToFlag') # no default
     order = parser.getarrayint( step, 'order') # no default
     maxCycles = parser.getint( step, 'maxCycles', 5)
@@ -22,7 +22,7 @@ def run_parser(soltab, parser, step):
     return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRmsNoise, windowNoise, replace, preflagzeros, mode, refAnt, ncpu )
 
 
-def flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection, outQueue):
+def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection, outQueue):
     
     import numpy as np
     import itertools
@@ -354,7 +354,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
             return 1
 
     # start processes for multi-thread
-    mpm = multiprocManager(ncpu, flag)
+    mpm = multiprocManager(ncpu, _flag)
 
     # reorder axesToFlag as axes in the table
     axesToFlag_orig = axesToFlag

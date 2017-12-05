@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading FARADAY module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '')
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
     return run(soltab, refAnt, maxResidual)

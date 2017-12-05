@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading NORM module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesToNorm = parser.getarraystr( step, 'axesToNorm' ) # no default
     normVal = parser.getfloat( step, 'normVal', 1.)
     return run(soltab, axesToNorm, normVal)

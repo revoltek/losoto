@@ -6,7 +6,7 @@ from losoto.operations_lib import *
 
 logging.debug('Loading SMOOTH module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     axesToSmooth = parser.getarraystr( step, 'axesToSmooth' ) # no default
     size = parser.getarrayint( step, 'size', [] )
     mode = parser.getstr( step, 'mode', 'runningmedian' )

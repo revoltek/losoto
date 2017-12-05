@@ -6,10 +6,9 @@ from losoto.operations_lib import *
 
 logging.debug('Loading DUPLICATE module.')
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', '' )
     return run(soltab, soltabOut)
-
 
 def run( soltab, soltabOut=''):
     """

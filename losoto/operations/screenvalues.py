@@ -10,7 +10,7 @@ from losoto.operations_lib import *
 logging.debug('Loading SCREENVALUES module.')
 
 
-def run_parser(soltab, parser, step):
+def _run_parser(soltab, parser, step):
     inSoltab1 = parser.getstr( step, "inSoltab1" )
     inSoltab2 = parser.getstr( step, "inSoltab2", None )
     outSoltab = parser.getstr( step, "outSoltab" )
@@ -19,7 +19,7 @@ def run_parser(soltab, parser, step):
 
     return run(inSoltab1, sourceDict, outSoltab, inSoltab2, ncpu)
 
-def calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
+def _calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
     r_0, freq1, freq2, midRA, midDec, outQueue):
     """
     Calculates TEC and scalar phase from screens at two frequencies
@@ -70,7 +70,7 @@ def calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
     outQueue.put([k, tec, scalarphase])
 
 
-def calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
+def _calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
     midDec, outQueue):
     """
     Calculates values from screen
@@ -112,7 +112,7 @@ def calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
     outQueue.put([k, values])
 
 
-def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
+def _screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
     beta_val, r_0, freq1, freq2, midRA=0.0, midDec=0.0, ncpu=0):
     """
     Caculates phases from screens
@@ -173,7 +173,7 @@ def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
     pbar = progressbar.ProgressBar(maxval=N_total).start()
     ipbar = 0
     for sindx in range(N_stations):
-        mpm = multiprocManager(ncpu, calculate_tecsp)
+        mpm = multiprocManager(ncpu, _calculate_tecsp)
         for tindx in range(N_times):
             mpm.put([screen1[:, tindx, sindx], screen2[:, tindx, sindx],
                 pp, directions, tindx, sindx, beta_val, r_0,
@@ -189,7 +189,7 @@ def screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
     return (tec, scalarphase)
 
 
-def screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
+def _screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
     midRA=0.0, midDec=0.0, ncpu=0):
     """
     Caculates phases from screens
@@ -250,7 +250,7 @@ def screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
     ipbar = 0
     for sindx in range(N_stations):
         for pindx in range(N_pols):
-            mpm = multiprocManager(ncpu, calculate_val)
+            mpm = multiprocManager(ncpu, _calculate_val)
             for tindx in range(N_times):
                 if len(screen.shape) == 4:
                     inscreen = screen[:, tindx, :, sindx]
@@ -358,11 +358,11 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
     midDec = soltab1.obj._v_attrs['middec']
 
     if screen_type == 'tecsp':
-        tecs, scalarphases = screens_to_tecsp(pp, screen1, screen2,
+        tecs, scalarphases = _screens_to_tecsp(pp, screen1, screen2,
             source_positions, np.array(station_positions), beta_val, r_0,
             freq1, freq2, midRA=midRA, midDec=midDec, ncpu=ncpu)
     else:
-        values = screen_to_val(pp, screen1, source_positions,
+        values = _screen_to_val(pp, screen1, source_positions,
             np.array(station_positions), beta_val, r_0, midRA=midRA,
             midDec=midDec, ncpu=ncpu)
 
