@@ -5,12 +5,15 @@
 
 # this are the global values
 soltab = [.*/.*] # can use wildecards, e.g. [sol000/.*,sol001/phase001]
-# string used for regex selections, vectors for complete names (equal for 'pol' and 'dir')
-# to exclude stations, use ^((?!string1|string2|string3).)*$
-# with names containing string1, string2, or string3
 ant = []
 pol = [XX, YY]
 dir = [pointing]
+# any axis can be also restricted to certain values using minmax and regexp
+# string used for regex selections, vectors for complete names (equal for 'pol' and 'dir')
+# to exclude stations, use ^((?!string1|string2|string3).)*$
+# with names containing string1, string2, or string3
+axisName.minmax = [0,10,2]
+axisName.regexp = RS*
 Ncpu = 0 # number of cpus in multithread operations, if 0 use all available cpus
 
 # parameters available in every step to overwrite the global selection
@@ -45,47 +48,44 @@ maxRes = 1. # maximum acceptable rms of the residuals in radians before flagging
 smooth = 0 # median-smooth in time the resulting delays, number of timestamp for smoothing window
 replace = False # replace using smoothed value instead of flag bad data?
 
-[duplicat]
+[duplicate]
 operation = DUPLICATE
 soltabOut = '' # a "solset/soltab" string
 
+[flag]
 # PARALLEL
-LoSoTo.Steps.flag.Operation = FLAG
-LoSoTo.Steps.flag.Axes = time # axes along which to smooth/find outlier (e.g. 'time' or [time, freq]), max 2 values
-LoSoTo.Steps.flag.MaxCycles = 5 # number of flagging cycles
-LoSoTo.Steps.flag.MaxRms = 5. # rms to clip outliers
-LoSoTo.Steps.flag.MaxRmsNoise = 0 # Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, if 0 ignored
-LoSoTo.Steps.flag.FixRmsNoise = 0 # instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), if 0 ignored
-LoSoTo.Steps.flag.WindowNoise = 11 # window for the running rms
-LoSoTo.Steps.flag.Order = 3  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median (0=all axis).
-LoSoTo.Steps.flag.Reaplce = False # replace bad values with the interpolated ones, instead of flagging them
-LoSoTo.Steps.flag.PreFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
-LoSoTo.Steps.flag.Mode = smooth # smooth / poly / spline
-LoSoTo.Steps.flag.Reference = '' # antenna name for referencing phases
+operation = FLAG
+axesToFlag = time # axes along which to smooth/find outlier (e.g. 'time' or [time, freq]), max 2 values
+order = 3  # order of the function fitted during trend removal. If 2 values are given in axes, then 2 values must be given here. If mode=smooth these are the window of the running median (0=all axis).
+maxCycles = 5 # number of flagging cycles
+maxRms = 5. # rms to clip outliers
+maxRmsNoise = 0 # Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, if 0 ignored
+fixRmsNoise = 0 # instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), if 0 ignored
+windowNoise = 11 # window for the running rms
+reaplce = False # replace bad values with the interpolated ones, instead of flagging them
+preFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
+mode = smooth # smooth / poly / spline
+refAnt = '' # antenna name for referencing phases
 
+[faraday]
 operation = FARADAY
 maxResidual = 1. #  max average residual in rad before flagging datapoint# 0: no check
 refAnt = '' # a reference antenna
 
+[flagextend]
 # PARALLEL
-LoSoTo.Steps.flagextend.Operation = FLAGEXTEND
-LoSoTo.Steps.flagextend.Axes = ['freq','time'] # axes used to find close flags
-LoSoTo.Steps.flagextend.Percent = 90 # percent of flagged data around the point to flag it
-LoSoTo.Steps.flagextend.Size = [11,11] # size of the window (diameter, per axis), if 0 is given then the entire length of the axis is assumed, must be a vector of same length of Axes
-LoSoTo.Steps.flagextend.Cycles = 3 # number of independent cycles of expansion
+operation = FLAGEXTEND
+axesToExt = ['freq','time'] # axes used to find close flags
+size = [11,11] # size of the window (diameter, per axis), if 0 is given then the entire length of the axis is assumed, must be a vector of same length of Axes
+percent = 90 # percent of flagged data around the point to flag it
+maxCycles = 3 # number of independent cycles of expansion
 
-LoSoTo.Steps.interp.Operation = INTERP
-LoSoTo.Steps.interp.CalSoltab = ''
-LoSoTo.Steps.interp.CalDir = '' # use a specific dir instead that the same of the tgt
-LoSoTo.Steps.interp.InterpAxes = [time, freq]
-LoSoTo.Steps.interp.InterpMethod = linear # nearest, linear, cubic
-LoSoTo.Steps.interp.Rescale = False
-LoSoTo.Steps.interp.MedAxis = '' # rescale the median of this axis
+[norm]
+operation = NORM
+normVal = 1.
+axesToNorm = [time,ant]
 
-LoSoTo.Steps.norm.Operation = NORM
-LoSoTo.Steps.norm.NormVal = 1.
-LoSoTo.Steps.norm.NormAxes = [time,ant]
-
+[plot]
 # PARALLEL
 operation = PLOT
 axesInPlot = # 1- or 2-element array which says the coordinates to plot (2 for 3D plots)
@@ -101,33 +101,29 @@ doUnwrap = False
 refAnt = '' # antenna name for referencing phases
 soltabToAdd = [] # tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases
 makeAntPlot = False # Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]
-MakeMovie = False # make a movie summing up all the produced plots
+makeMovie = False # make a movie summing up all the produced plots
 prefix = '' # name prefix for output file
 
-LoSoTo.Steps.reset.Operation = RESET
+[reset]
+operation = RESET
 
+[residuals]
 operation = RESIDUALS
 soltabsToSub = [tec000,clock000] # tables to subtract from the same solset (rotationmeasure, clock, tec, tec3rd can be subtracted only from a phase table)
 ratio = False # return the ratio instead of subtracting
 
-LoSoTo.Steps.reweight.Operation = REWEIGHT
-LoSoTo.Steps.reweight.WeightVal = 1. # Set weights to this values
-LoSoTo.Steps.reweight.FlagBad = False # re-flag bad values
+[reweight]
+operation = REWEIGHT
+weightVal = 1. # Set weights to this values
+nmedian = 1
+nstddev = 251
+soltabImport = sol000/amplitude000
+flagBad = False # re-flag bad values
 
-LoSoTo.Steps.smooth.Operation = SMOOTH # running median on an arbitrary number of axes - running polyfit on 1 axis or set all solutions to mean/median value
-LoSoTo.Steps.smooth.Size = [10, 5] # window size for the runningmedian and runningpoly
-LoSoTo.Steps.smooth.Axes = [freq, time] # axes to smooth
-LoSoTo.Steps.smooth.Degree = 1 # degrees of the polynomia for the runningpoly
-LoSoTo.Steps.smooth.Mode = runningmedian # runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median)
-LoSoTo.Steps.smooth.Replace = False # Flagged data are replaced with smoothed value and unflagged
-
-LoSoTo.Steps.tecfit.Operation = TECFIT
-LoSoTo.Steps.tecfit.Algorithm = sourcediff # only "sourcediff" available for now
-LoSoTo.Steps.tecfit.MinBands = 4
-LoSoTo.Steps.tecfit.MaxStations = 26 # Limit to MaxStations number of stations closest to core
-LoSoTo.Steps.tecfit.OutSoltab = ion000/tec000
-
-LoSoTo.Steps.tecscreen.Operation = TECSCREEN
-LoSoTo.Steps.tecscreen.Height = 200e3
-LoSoTo.Steps.tecscreen.Order = 15
-LoSoTo.Steps.tecscreen.OutSoltab = [ion000/tecscreen000]
+[smooth]
+operation = SMOOTH # running median on an arbitrary number of axes - running polyfit on 1 axis or set all solutions to mean/median value
+axesToSmooth = [freq, time] # axes to smooth
+size = [10, 5] # window size for the runningmedian and runningpoly
+mode = runningmedian # runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median)
+degree = 1 # degrees of the polynomia for the runningpoly
+replace = False # Flagged data are replaced with smoothed value and unflagged
