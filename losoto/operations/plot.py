@@ -22,7 +22,7 @@ def _run_parser(soltab, parser, step):
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
-    ncpu = parser.getint( step, 'ncpu', 0 )
+    ncpu = parser.getint( '_global', 'ncpu', 0 )
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
                plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 

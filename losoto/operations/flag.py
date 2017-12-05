@@ -18,7 +18,7 @@ def _run_parser(soltab, parser, step):
     preflagzeros = parser.getbool( step, 'preflagzeros', False)
     mode = parser.getstr( step, 'mode', 'smooth')
     refAnt = parser.getstr( step, 'refAnt', '')
-    ncpu = parser.getint( '_general', 'ncpu', 0)
+    ncpu = parser.getint( '_global', 'ncpu', 0)
     return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRmsNoise, windowNoise, replace, preflagzeros, mode, refAnt, ncpu )
 
 

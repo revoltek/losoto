@@ -11,7 +11,7 @@ def _run_parser(soltab, parser, step):
     size = parser.getarrayint( step, 'size' ) # no default
     percent = parser.getfloat( step, 'percent', 50. )
     maxCycles = parser.getint( step, 'maxCycles', 3 )
-    ncpu = parser.getint( '_general', 'ncpu', 0 )
+    ncpu = parser.getint( '_global', 'ncpu', 0 )
     return run(soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0)
 
 

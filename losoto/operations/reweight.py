@@ -7,10 +7,15 @@ import logging
 logging.debug('Loading REWEIGHT module.')
 
 def _run_parser(soltab, parser, step):
+    method = parser.getstring( step, 'uniform' )
     weightVal = parser.getfloat( step, 'weightVal', 1. )
+    nmedian = parser.getint( step, 'nmedian', 3 )
+    nstddev = parser.getint( step, 'nstddev', 251 )
     soltabImport = parser.getstr( step, 'soltabImport', '' )
     flagBad = parser.getbool( step, 'flagBad', False )
-    return run(soltab, weightVal, soltabImport, flagBad)
+    ncpu = parser.getint( '_global', 'ncpu', 0 )
+
+    return run(soltab, method, weightVal, nmedian, nstddev, soltabImport, flagBad, ncpu)
 
 
 def _rolling_window_lastaxis(a, window):
