@@ -7,7 +7,7 @@ import os, sys, re, itertools
 import numpy as np
 import tables
 import logging
-import _version
+import losoto._version
 
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:
@@ -147,7 +147,7 @@ class h5parm( object ):
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
         solset = self.H.create_group("/", solsetName)
-        solset._f_setattr('h5parm_version', _version.__h5parmVersion__)
+        solset._f_setattr('h5parm_version', losoto._version.__h5parmVersion__)
 
         if addTables:
             # add antenna table
@@ -190,7 +190,7 @@ class h5parm( object ):
             A list of str of all solsets names.
         """
         solsetNames = []
-        for solsetName in self.H.root._v_groups.iterkeys():
+        for solsetName in iter( self.H.root._v_groups.keys() ):
             solsetNames.append(solsetName)
         return solsetNames
 
@@ -249,7 +249,10 @@ class h5parm( object ):
         str
             Returns a string with info about H5parm contents.
         """
-        from itertools import izip_longest
+        if (sys.version_info > (3, 0)):
+            from itertools import zip_longest
+        else:
+            from itertools import izip_longest as zip_longest
 
         def grouper(n, iterable, fillvalue=' '):
             """
@@ -269,7 +272,7 @@ class h5parm( object ):
             grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
             """
             args = [iter(iterable)] * n
-            return izip_longest(fillvalue=fillvalue, *args)
+            return zip_longest(fillvalue=fillvalue, *args)
 
         def wrap(text, width=80):
             """
@@ -316,15 +319,13 @@ class h5parm( object ):
             info += "=" * len(solset.name) + "=" * 16 + "\n\n"
 
             # Add direction (source) names
-            sources = solset.getSou().keys()
-            sources.sort()
+            sources = sorted( solset.getSou().keys() )
             info += "Directions: "
             for src_name1, src_name2, src_name3 in grouper(3, sources):
                 info += "{0:<15s} {1:<15s} {2:<15s}\n            ".format(src_name1, src_name2, src_name3)
 
             # Add station names
-            antennas = solset.getAnt().keys()
-            antennas.sort()
+            antennas = sorted( solset.getAnt().keys() )
             info += "\nStations: "
             for ant1, ant2, ant3, ant4 in grouper(4, antennas):
                 info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
@@ -563,7 +564,7 @@ class Solset( object ):
             List of str for all available soltabs in this solset.
         """
         soltabNames = []
-        for soltabName in self.obj._v_groups.iterkeys():
+        for soltabName in iter( self.obj._v_groups.keys() ):
             soltabNames.append(soltabName)
         return soltabNames
 
@@ -762,7 +763,7 @@ class Soltab( object ):
         self.selection = [ slice(0, self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames() ]
         #thisSelection = [range(self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames()]
 
-        for axis, selVal in args.iteritems():
+        for axis, selVal in iter( args.items() ):
             # if None continue and keep all the values
             if selVal is None: continue
 
@@ -989,7 +990,7 @@ class Soltab( object ):
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
             subSelection = selection[:]
             # create a subSelection also for the "vals" array
-            subSelectionForVals = [slice(None) for i in xrange(len(subSelection))]
+            subSelectionForVals = [slice(None) for i in range(len(subSelection))]
             # cycle across lists and save data index by index
             for selectionListValsIter in itertools.product(*[selection[selectionListIdx] for selectionListIdx in selectionListsIdx[1:]]):
                 for i, selectionListIdx in enumerate(selectionListsIdx[1:]):

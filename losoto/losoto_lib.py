@@ -5,7 +5,10 @@
 
 import os, sys, ast, re
 import logging
-from ConfigParser import RawConfigParser
+if (sys.version_info > (3, 0)):
+    from configparser import RawConfigParser
+else:
+    from ConfigParser import RawConfigParser
 
 cacheSteps = ['plot','clip','flag','norm','residuals','smooth'] # steps to use chaced data
 
