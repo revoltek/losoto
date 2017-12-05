@@ -286,7 +286,7 @@ def _phase_cm():
     return cm
 
 
-def calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up,
+def _calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up,
     T, Nx, Ny, sindx, height, beta_val, r_0, is_phase, outQueue):
     """
     Calculates screen images
@@ -380,7 +380,7 @@ def calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, up
     outQueue.put([k, fitted_tec, screen, x, y])
 
 
-def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
+def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     upper, vmin, vmax, source_names, show_source_names, station_names, sindx,
     root_dir, prestr, is_image_plane,  midRA, midDec, order, is_phase, outQueue):
     """
@@ -554,7 +554,7 @@ def plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     plt.close(fig)
 
 
-def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
+def _make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
     station_positions, source_names, times, height, station_order, beta_val,
     r_0, prefix='frame_', remove_gradient=True, show_source_names=False,
     min_val=None, max_val=None, is_phase=False, midRA=0.0, midDec=0.0, ncpu=0):
@@ -693,7 +693,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         for sindx in range(station_positions.shape[0]):
             logging.info('Calculating screen images...')
             residuals = inresiduals[:, :, sindx, newaxis].transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
-            mpm = multiprocManager(ncpu, calculate_screen)
+            mpm = multiprocManager(ncpu, _calculate_screen)
             for k in range(N_times):
                 mpm.put([inscreen[:, k, sindx], residuals[:, k], pp,
                     N_piercepoints, k, east, north, up, T, Nx, Ny, sindx, height,
@@ -724,7 +724,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
                 vmax = max_val
 
             logging.info('Plotting screens...')
-            mpm = multiprocManager(ncpu, plot_frame)
+            mpm = multiprocManager(ncpu, _plot_frame)
             for k in range(N_times):
                 mpm.put([screen[:, :, k], fitted_phase1[:, k], residuals[:, k],
                 weights[:, k, sindx], x[k, :], y[k, :], k, lower, upper, vmin, vmax,
@@ -735,7 +735,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         logging.info('Calculating screen images...')
         residuals = inresiduals.transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
         weights = weights.transpose([0, 2, 1]).reshape(N_piercepoints, N_times)
-        mpm = multiprocManager(ncpu, calculate_screen)
+        mpm = multiprocManager(ncpu, _calculate_screen)
         for k in range(N_times):
             mpm.put([inscreen[:, k, :], residuals[:, k], pp[k, :, :],
                 N_piercepoints, k, east, north, up, T, Nx, Ny, -1, height,
@@ -773,7 +773,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
                     pp_names.append('{0}_{1}'.format(src, stat))
         else:
             pp_names = source_names
-        mpm = multiprocManager(ncpu, plot_frame)
+        mpm = multiprocManager(ncpu, _plot_frame)
         for k in range(N_times):
             order = station_order[0]
             mpm.put([screen[:, :, k], fitted_phase1[:, k], residuals[:, k],
@@ -783,7 +783,7 @@ def make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         mpm.wait()
 
 
-def fitPLaneLTSQ(XYZ):
+def _fitPLaneLTSQ(XYZ):
     """
     Fits a plane to an XYZ point cloud
 
@@ -918,7 +918,7 @@ def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=
         min_val = minZ
         max_val = maxZ
 
-    make_screen_plots(pp, screen, residuals, weights, np.array(station_names),
+    _make_screen_plots(pp, screen, residuals, weights, np.array(station_names),
         np.array(station_positions), np.array(source_names), times,
         height, orders, beta_val, r_0, prefix=prefix,
         remove_gradient=remove_gradient, show_source_names=show_source_names, min_val=min_val,
