@@ -18,13 +18,14 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
+    refPol = parser.getstr( step, 'refPol', '' )
     soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
-               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+               plotFlag, doUnwrap, refAnt, refPol, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 
 def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
@@ -198,6 +199,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     refAnt : str, optional
         Reference antenna for phases. By default None.
     
+    refPol : str, optional
+        Reference polarisation for phases. By default None.
+
     soltabsToAdd : str, optional
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
     
@@ -253,6 +257,11 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     elif not refAnt in soltab.getAxisValues('ant'):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
+
+    if refPol == '': refPol = None
+    elif not refPol in soltab.getAxisValues('pol'):
+        logging.error('Reference polarisation '+refPol+' not found. Using: '+soltab.getAxisValues('pol')[1])
+        refPol = soltab.getAxisValues('pol')[1]
 
     minZ, maxZ = minmax
 
@@ -385,7 +394,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             # cycle on colors
             soltab2Selection = soltab.selection
             soltab.selection = selection
-            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt, referencePol=refPol)):
                 dataCube[Ntab].append([])
                 weightCube[Ntab].append([])
 
@@ -422,7 +431,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                             else:
                                 newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
                     soltabToAdd.setSelection(**newCoord)
-                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
+                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt, referencePol=refPol))
                     if soltabToAdd.getType() == 'clock':
                         valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
                     elif soltabToAdd.getType() == 'tec':
