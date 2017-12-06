@@ -28,14 +28,6 @@ losoto\.operations\.clocktec module
     :undoc-members:
     :show-inheritance:
 
-losoto\.operations\.crossdelay module
--------------------------------------
-
-.. automodule:: losoto.operations.crossdelay
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 losoto\.operations\.duplicate module
 ------------------------------------
 
@@ -112,6 +104,14 @@ losoto\.operations\.plotscreen module
 -------------------------------------
 
 .. automodule:: losoto.operations.plotscreen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.operations\.polalign module
+-----------------------------------
+
+.. automodule:: losoto.operations.polalign
     :members:
     :undoc-members:
     :show-inheritance:
