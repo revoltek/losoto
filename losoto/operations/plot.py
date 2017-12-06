@@ -159,7 +159,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
 
 
 def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], minmax=[0,0], log='', \
-               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
+               plotFlag=False, doUnwrap=False, refAnt='', refPol='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
     WEIGHT: flag-only compliant, no need for weight
