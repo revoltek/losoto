@@ -18,14 +18,13 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
-    refPol = parser.getstr( step, 'refPol', '' )
     soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
-               plotFlag, doUnwrap, refAnt, refPol, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 
 def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
@@ -102,7 +101,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                 # plotting
                 if cmesh:
                     # setting min max
-                    if minZ == None and maxZ == None: 
+                    if minZ == 0 and maxZ == 0: 
                         autominZ = np.mean(vals) - 3*np.std(vals)
                         automaxZ = np.mean(vals) + 3*np.std(vals)
                     else:
@@ -112,10 +111,10 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if 'Z' in log:
-                        if minZ != None:
-                            minZ = np.log10(minZ)
-                        if maxZ != None:
-                            maxZ = np.log10(maxZ)
+                        if minZ > 0: autominZ = np.log10(minZ)
+                        else: autominZ = None
+                        if maxZ > 0: automaxZ = np.log10(maxZ)
+                        else: autominZ = None
                         vals = np.log10(vals)
                     ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=autominZ, vmax=automaxZ)
                 # make an antenna plot
@@ -159,7 +158,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
 
 
 def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], minmax=[0,0], log='', \
-               plotFlag=False, doUnwrap=False, refAnt='', refPol='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
+               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
     WEIGHT: flag-only compliant, no need for weight
@@ -199,9 +198,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     refAnt : str, optional
         Reference antenna for phases. By default None.
     
-    refPol : str, optional
-        Reference polarisation for phases. By default None.
-
     soltabsToAdd : str, optional
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
     
@@ -257,11 +253,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     elif not refAnt in soltab.getAxisValues('ant'):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
-
-    if refPol == '': refPol = None
-    elif not refPol in soltab.getAxisValues('pol'):
-        logging.error('Reference polarisation '+refPol+' not found. Using: '+soltab.getAxisValues('pol')[1])
-        refPol = soltab.getAxisValues('pol')[1]
 
     minZ, maxZ = minmax
 
@@ -394,7 +385,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             # cycle on colors
             soltab2Selection = soltab.selection
             soltab.selection = selection
-            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt, referencePol=refPol)):
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
                 dataCube[Ntab].append([])
                 weightCube[Ntab].append([])
 
@@ -417,9 +408,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                     vals = np.rollaxis(vals,diff_idx,0)
                     vals = vals[0] - vals[1]
                     weight = np.rollaxis(weight,diff_idx,0)
-                    weight = ((weight[0]==1) & (weight[1]==1))
+                    weight[0][ weight[1]==0 ] = 0
+                    weight = weight[0]
                     del coord[axisDiff[0]]
-
 
                 # add tables if required (e.g. phase/tec)
                 for soltabToAdd in soltabsToAdd:
@@ -431,7 +422,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                             else:
                                 newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
                     soltabToAdd.setSelection(**newCoord)
-                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt, referencePol=refPol))
+                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
                     if soltabToAdd.getType() == 'clock':
                         valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
                     elif soltabToAdd.getType() == 'tec':

@@ -1063,7 +1063,7 @@ class Soltab( object ):
             return data[tuple(selection)]
 
 
-    def getValues(self, retAxesVals=True, weight=False, reference=None, referencePol=None):
+    def getValues(self, retAxesVals=True, weight=False, reference=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
 
@@ -1077,8 +1077,6 @@ class Soltab( object ):
             If true get the weights instead that the vals, by defaul False.
         reference : str, optional
             In case of phase solutions, reference to this station name. By default no reference.
-        referencePol : str, optional
-            In case of phase reference to selected pol of reference station. By default no reference.
 
         Returns
         -------
@@ -1116,21 +1114,21 @@ class Soltab( object ):
                 refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
                 dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
-                if referencePol is not None:
-                    if not 'pol' in self.getAxesNames():
-                        logging.error('Cannot find pol axis for referencing phases. Ignore pol referencing.')
-                    else:
-                        polAxis = self.getAxesNames().index('pol')
-                        # put pol axis at the beginning
-                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
-                        # find reference pol index
-                        polValIdx = list(self.getAxisValues('pol')).index(referencePol)
-                        # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
-                        for i in xrange(len(self.getAxisValues('pol'))):
-                            dataValsRef[i] = dataValsRef[polValIdx]
-                        # put pol axis back in place
-                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
-                if weight: 
+#                if referencePol is not None:
+#                    if not 'pol' in self.getAxesNames():
+#                        logging.error('Cannot find pol axis for referencing phases. Ignore pol referencing.')
+#                    else:
+#                        polAxis = self.getAxesNames().index('pol')
+#                        # put pol axis at the beginning
+#                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
+#                        # find reference pol index
+#                        polValIdx = list(self.getAxisValues('pol')).index(referencePol)
+#                        # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
+#                        for i in xrange(len(self.getAxisValues('pol'))):
+#                            dataValsRef[i] = dataValsRef[polValIdx]
+#                        # put pol axis back in place
+#                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
+                if weight:
                     dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                 else:
                     dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
@@ -1147,7 +1145,7 @@ class Soltab( object ):
         return dataVals, axisVals
 
 
-    def getValuesIter(self, returnAxes=[], weight=False, reference=None, referencePol=None):
+    def getValuesIter(self, returnAxes=[], weight=False, reference=None):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
@@ -1162,8 +1160,6 @@ class Soltab( object ):
             If true return also the weights, by default False.
         reference : str
             In case of phase solutions, reference to this station name.
-        referencePol : str
-            In case of phase reference to selected pol of reference station.
 
         Returns
         -------
@@ -1174,7 +1170,7 @@ class Soltab( object ):
         4) a selection which should be used to write this data back using a setValues()
         """
         if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=reference)
-        dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference, referencePol=referencePol)
+        dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference)
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]

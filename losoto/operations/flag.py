@@ -40,20 +40,6 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         strides = a.strides + (a.strides[-1],)
         return np.sqrt(np.var(np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides), -1)) 
 
-    def normalize(phase):
-        """
-        Normalize phase to the range [-pi, pi].
-        """
-        # Convert to range [-2*pi, 2*pi].
-        out = np.fmod(phase, 2.0 * np.pi)
-        # Remove nans
-        np.putmask(out, out!=out, 0)
-        # Convert to range [-pi, pi]
-        out[out < -np.pi] += 2.0 * np.pi
-        out[out > np.pi] -= 2.0 * np.pi
-        return out
-
-
     def polyfit(x=None, y=None, z=None, w=None, order=None):
         """Two-dimensional polynomial fit.
     
@@ -258,9 +244,9 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         # remove mean of vals
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
-        vals = normalize(vals - mean)
+        vals = normalize_phase(vals - mean)
         weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
-        vals = normalize(vals + mean)
+        vals = normalize_phase(vals + mean)
 
     elif solType == 'amplitude':
         weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)

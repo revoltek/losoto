@@ -75,7 +75,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
         logging.error('Cannot reference to known polarisation.')
         return 1
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt, referencePol=pol):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt):
 
         # reorder axes
         vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
@@ -193,6 +193,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 weights[coord1,:,t] = fit_weights[t]
                 weights[coord2,:,t] = fit_weights[t]
 
+        print vals
         soltabout.setSelection(**coord)
         soltabout.setValues( vals )
         soltabout.setValues( weights, weight=True )
