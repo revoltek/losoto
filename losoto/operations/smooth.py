@@ -116,7 +116,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             return 1
 
         soltab.setValues(valsnew, selection)
-        if replace: soltab.setValues(weights, seleciton, weight=True)
+        if replace: soltab.setValues(weights, selection, weight=True)
 
     soltab.flush()
     soltab.addHistory('SMOOTH (over %s with mode = %s)' % (axesToSmooth, mode))

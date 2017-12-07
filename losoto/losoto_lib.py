@@ -10,7 +10,7 @@ if (sys.version_info > (3, 0)):
 else:
     from ConfigParser import RawConfigParser
 
-cacheSteps = ['plot','clip','flag','norm','residuals','smooth'] # steps to use chaced data
+cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
 
 class LosotoParser(RawConfigParser):
     """
