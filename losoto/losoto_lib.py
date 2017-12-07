@@ -128,7 +128,6 @@ def getParAxis( parser, step, axisName ):
 
     if parser.has_option(step, axisName):
         axisOpt = parser.getarray(step, axisName)
-        print "wrong!"
     elif parser.has_option(step, axisName+'.regexp'):
         axisOpt = parser.getstr(step, axisName+'.regexp')
     elif parser.has_option(step, axisName+'.minmaxstep'):

@@ -193,7 +193,9 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 weights[coord1,:,t] = fit_weights[t]
                 weights[coord2,:,t] = fit_weights[t]
 
-        print vals
+        # reorder axes back to the original order, needed for setValues
+        vals = reorderAxes( vals, ['pol','freq','time'], [ax for ax in soltab.getAxesNames() if ax in ['pol','freq','time']] )
+        weights = reorderAxes( weights, ['pol','freq','time'], [ax for ax in soltab.getAxesNames() if ax in ['pol','freq','time']] )
         soltabout.setSelection(**coord)
         soltabout.setValues( vals )
         soltabout.setValues( weights, weight=True )

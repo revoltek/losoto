@@ -926,7 +926,7 @@ class Soltab( object ):
             return np.copy(self.axes[axis])
         else:
             axisIdx = self.getAxesNames().index(axis)
-            return self.axes[axis][ self.selection[axisIdx] ]
+            return np.copy(self.axes[axis][ self.selection[axisIdx] ])
 
 
     def setAxisValues(self, axis, vals):
