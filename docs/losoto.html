@@ -58,7 +58,6 @@
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.abs">losoto.operations.abs module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.clip">losoto.operations.clip module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.clocktec">losoto.operations.clocktec module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.crossdelay">losoto.operations.crossdelay module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.example">losoto.operations.example module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.faraday">losoto.operations.faraday module</a></li>
@@ -69,6 +68,7 @@
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plot">losoto.operations.plot module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.polalign">losoto.operations.polalign module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
@@ -680,7 +680,7 @@ Global seclection is restoread at the end of the function. This is used to set v
 
 <dl class="method">
 <dt id="losoto.h5parm.Soltab.getValues">
-<code class="descname">getValues</code><span class="sig-paren">(</span><em>retAxesVals=True</em>, <em>weight=False</em>, <em>reference=None</em>, <em>referencePol=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getValues" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getValues</code><span class="sig-paren">(</span><em>retAxesVals=True</em>, <em>weight=False</em>, <em>reference=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a simple matrix of values. Fetching a copy of all selected rows into memory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -692,7 +692,6 @@ Global seclection is restoread at the end of the function. This is used to set v
 By default True.</li>
 <li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true get the weights instead that the vals, by defaul False.</li>
 <li><strong>reference</strong> (<em>str</em><em>, </em><em>optional</em>) – In case of phase solutions, reference to this station name. By default no reference.</li>
-<li><strong>referencePol</strong> (<em>str</em><em>, </em><em>optional</em>) – In case of phase reference to selected pol of reference station. By default no reference.</li>
 </ul>
 </td>
 </tr>
@@ -709,7 +708,7 @@ If selected, returns also the axes values</p>
 
 <dl class="method">
 <dt id="losoto.h5parm.Soltab.getValuesIter">
-<code class="descname">getValuesIter</code><span class="sig-paren">(</span><em>returnAxes=[]</em>, <em>weight=False</em>, <em>reference=None</em>, <em>referencePol=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getValuesIter" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getValuesIter</code><span class="sig-paren">(</span><em>returnAxes=[]</em>, <em>weight=False</em>, <em>reference=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab.getValuesIter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
 E.g. if returnAxes are [‘freq’,’time’], one gets a interetion over all the possible NxM
 matrix where N are the freq and M the time dimensions. The other axes are iterated in the getAxesNames() order.
@@ -722,7 +721,6 @@ Note that all the data are fetched in memory before returning them one at a time
 <li><strong>returnAxes</strong> (<em>list</em>) – Axes of the returned array, all _others_ will be cycled on each element combinations.</li>
 <li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true return also the weights, by default False.</li>
 <li><strong>reference</strong> (<em>str</em>) – In case of phase solutions, reference to this station name.</li>
-<li><strong>referencePol</strong> (<em>str</em>) – In case of phase reference to selected pol of reference station.</li>
 </ul>
 </td>
 </tr>

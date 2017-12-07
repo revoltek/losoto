@@ -128,30 +128,6 @@ The Clock and TEC values are stored in the specified output soltab with type ‘
 </dd></dl>
 
 </div>
-<div class="section" id="module-losoto.operations.crossdelay">
-<span id="losoto-operations-crossdelay-module"></span><h2>losoto.operations.crossdelay module<a class="headerlink" href="#module-losoto.operations.crossdelay" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.crossdelay.run">
-<code class="descclassname">losoto.operations.crossdelay.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>smooth=0</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.crossdelay.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate cross-delay</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “phasediff”.</li>
-<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.</li>
-<li><strong>smooth</strong> (<em>int</em><em>, </em><em>optional</em>) – Median-smooth in time the resulting delays, number of timestamp for smoothing window. By default 0 (no smooth)</li>
-<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – replace using smoothed value instead of flag bad data? Smooth must be active. By default, False</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
 <div class="section" id="module-losoto.operations.duplicate">
 <span id="losoto-operations-duplicate-module"></span><h2>losoto.operations.duplicate module<a class="headerlink" href="#module-losoto.operations.duplicate" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -446,6 +422,30 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-losoto.operations.polalign">
+<span id="losoto-operations-polalign-module"></span><h2>losoto.operations.polalign module<a class="headerlink" href="#module-losoto.operations.polalign" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.polalign.run">
+<code class="descclassname">losoto.operations.polalign.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>smooth=0</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate polarization alignment as delay</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “phasediff”.</li>
+<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.</li>
+<li><strong>smooth</strong> (<em>int</em><em>, </em><em>optional</em>) – Median-smooth in time the resulting delays, number of timestamp for smoothing window. By default 0 (no smooth)</li>
+<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – replace using smoothed value instead of flag bad data? Smooth must be active. By default, False</li>
+<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="module-losoto.operations.reset">
 <span id="losoto-operations-reset-module"></span><h2>losoto.operations.reset module<a class="headerlink" href="#module-losoto.operations.reset" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -626,7 +626,6 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.abs">losoto.operations.abs module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clip">losoto.operations.clip module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clocktec">losoto.operations.clocktec module</a></li>
-<li><a class="reference internal" href="#module-losoto.operations.crossdelay">losoto.operations.crossdelay module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.example">losoto.operations.example module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.faraday">losoto.operations.faraday module</a></li>
@@ -637,6 +636,7 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.polalign">losoto.operations.polalign module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
