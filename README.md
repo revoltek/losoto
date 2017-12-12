@@ -1,13 +1,10 @@
 LoSoTo: LOFAR solutions tool
 ============================
 
-Authors:
+Main authors:
 * Francesco de Gasperin (main developer)
 * David Rafferty
 * Maaijke Mevius
-* Jose Sabater Montes
-* Martin Hardcastle
-* Andreas Horneffer
 
 Contents:
 * __doc/__: documentation
@@ -23,6 +20,9 @@ Install:
 * In cep3 use the copy of the code in ~fdg/scripts/losoto/ (source the tool/lofarinit.[c]sh file which is shipped with the code)
 * Prepare a parset starting from the parset/losoto2.parset
 * in case of problems write to Francesco de Gasperin: astro@voo.it
+
+Cite:
+If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
 
 Flag:
 LoSoTo has an internl flag system encoded in the weight column. Weights are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs by the H5parm_exporter.py
