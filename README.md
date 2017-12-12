@@ -22,10 +22,7 @@ Install:
 * in case of problems write to Francesco de Gasperin: astro@voo.it
 
 Cite:
-If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
-
-Flag:
-LoSoTo has an internl flag system encoded in the weight column. Weights are not currently used but some tasks set them to 0 to "flag" a datapoint. Flagged datapoints are then saved as NaNs by the H5parm_exporter.py
+* If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
 
 Documentation:
 * Documentation of LoSoTo API is at: __http://revoltek.github.io/losoto/losoto.html__
