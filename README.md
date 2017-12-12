@@ -1,17 +1,18 @@
 LoSoTo: LOFAR solutions tool
 ============================
 
-Main authors:
-* Francesco de Gasperin (main developer)
+Main developer:
+* Francesco de Gasperin
+
+Contributed code:
 * David Rafferty
 * Maaijke Mevius
+* Jose Sabater Montes
+* Martin Hardcastle
+* Andreas Horneffer
 
-Contents:
-* __doc/__: documentation
-* __examples/__: some examples h5parm to use with validation/test parsets
-* __operations/__: containts all the modules for operations
-* __parsets/__: some examples parsets
-* __tools/__: contains some tools, mostly to convert back and forward from parmdb to h5parm
+Cite:
+* If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
 
 Install:
 * Get LoSoTo from https://github.com/revoltek/losoto 
@@ -21,13 +22,18 @@ Install:
 * Prepare a parset starting from the parset/losoto2.parset
 * in case of problems write to Francesco de Gasperin: astro@voo.it
 
-Cite:
-* If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
-
 Documentation:
 * Documentation of LoSoTo API is at: __http://revoltek.github.io/losoto/losoto.html__
 * A detailed explanation of all the parameters is at: __http://revoltek.github.io/losoto/losoto.operations.html__
 * An example parset is in: __parsets/losoto2.parset__
+
+Contents:
+* __bin/__: the losoto executable and some manipulators for H5parms
+* __docs/__: documentation
+* __examples/__: some examples h5parm to use with validation/test parsets
+* __losoto/operations/__: containts all the modules for operations
+* __parsets/__: some examples parsets
+* __tools/__: contains some external tools
 
 Required packages:
 * PyTables version:  >3.0.0
