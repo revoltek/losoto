@@ -361,6 +361,9 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
             soltab.setValues(v, sel, weight=False)
         else:
             soltab.setValues(w, sel, weight=True)
+            # TODO: temporary waiting for DPPP fix
+            v[w == 0] = np.nan
+            soltab.setValues(v, sel, weight=False)
     
     soltab.flush()
     soltab.addHistory('FLAG (over %s with %s sigma cut)' % (axesToFlag, maxRms))

@@ -337,7 +337,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     antennaNames = antennaTable.getcol('NAME')
     antennaPositions = antennaTable.getcol('POSITION')
     antennaTable.close()
-    antennaTable = solset._f_get_child('antenna')
+    antennaTable = solset.obj._f_get_child('antenna')
     antennaTable.append(zip(*(antennaNames,antennaPositions)))
 
     logging.info('Collecting information from the FIELD table.')
@@ -346,13 +346,13 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     pointing = phaseDir[0, 0, :]
     fieldTable.close()
 
-    sourceTable = solset._f_get_child('source')
+    sourceTable = solset.obj._f_get_child('source')
     # add the field centre, that is also the direction for Gain and Common*
     sourceTable.append([('pointing',pointing)])
 
     dirs = []
-    for tab in solset._v_children:
-        c = solset._f_get_child(tab)
+    for tab in solset.obj._v_children:
+        c = solset.obj._f_get_child(tab)
         if c._v_name != 'antenna' and c._v_name != 'source':
             if c.__contains__('dir'):
                 dirs.extend(list(set(c.dir)))

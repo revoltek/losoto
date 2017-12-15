@@ -71,7 +71,6 @@ else:
 # open input
 h5s = []
 for h5parmFile in args.h5parmFiles:
-    logging.info("Reading "+h5parmFile)
     h5 = h5parm(h5parmFile, readonly=True)
     h5s.append(h5)
 # open output
@@ -219,3 +218,5 @@ except:
     logging.warning('Couldnt fill source table.')
 
 for h5 in h5s: h5.close()
+logging.info(str(h5Out))
+h5Out.close()
