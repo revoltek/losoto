@@ -21,8 +21,8 @@ parser.add_argument('--verbose', '-V', dest='verbose', action='store_true', help
 parser.add_argument('--concataxis', '-c', dest='concataxis', help='Axis to concatenate (e.g. time)')
 args = parser.parse_args()
 
-if len(args.h5parmFiles) < 2:
-    argparse.print_help()
+if len(args.h5parmFiles) < 1:
+    parser.print_help()
     sys.exit()
 
 if args.verbose: _logging.setLevel("debug")
@@ -32,7 +32,7 @@ if args.verbose: _logging.setLevel("debug")
 class Soltabr(Soltab):
     def __init__(self, soltab, useCache = False, args = {}):
         Soltab.__init__(self, soltab, useCache = False, args = {})
-        
+
     def resample(self, axisValsNew, axisName):
         """
         axisValsNew : new sampling values of the axis
@@ -56,6 +56,12 @@ def equalArr(arr):
         if not np.array_equal(a, arr[0]):
             return False
     return True
+
+# check input
+if len(args.h5parmFiles) == 1 and ',' in args.h5parmFiles[0]:
+    # Treat input as a string with comma-separated values
+    args.h5parmFiles = args.h5parmFiles[0].strip('[]').split(',')
+    args.h5parmFiles  = [f.strip() for f in args.h5parmFiles]
 
 # read all tables
 insolset = args.insolset
@@ -83,17 +89,17 @@ for insoltab in insoltabs:
 
     for h5 in h5s:
         solset = h5.getSolset(insolset)
-        soltab = Soltabr(solset.obj._f_get_child(insoltab)) # use inherited class 
+        soltab = Soltabr(solset.obj._f_get_child(insoltab)) # use inherited class
         soltabs.append( soltab )
         # collect pointings
         sous = solset.getSou()
-        pointingNames.append(sous.keys())
-        pointingDirections.append(sous.values())
+        pointingNames.extend(sous.keys())
+        pointingDirections.extend(sous.values())
         # collect anntennas
         ants = solset.getAnt()
         [antennaNames.append(k) for k in ants.keys() if not k in antennaNames]
         [antennaPositions.append(v) for v in ants.values() if not any((v == x).all() for x in antennaPositions)]
-    
+
     # combine tables
     logging.info('Ordering data...')
     times = []
@@ -109,14 +115,14 @@ for insoltab in insoltabs:
             times.append(soltab.getAxisValues('time'))
         if 'freq' in soltab.getAxesNames():
             freqs.append(soltab.getAxisValues('freq'))
-    
+
     axes = soltabs[0].getAxesNames()
     typ = soltabs[0].getType()
-    
+
     if not args.concataxis in axes:
         logging.critical('Axis %s not found.' % args.concataxis)
         sys.exit(1)
-    
+
     # resampled time/freq axes values
     # every single time/freq valu for all tables is in these arrays (ordered)
     if times != []:
@@ -131,7 +137,7 @@ for insoltab in insoltabs:
         for f in freqs:
             print('%i ' % len(f), end='')
         print('Will be: %i' % len(freqResamp))
-    
+
     # resampling of time/freq values
     for soltab in soltabs:
         if 'time' in axes and len(timeResamp) != len(soltab.getAxisValues('time')) and args.concataxis != 'time':
@@ -139,26 +145,26 @@ for insoltab in insoltabs:
         # first resample in time, then in freq
         if 'freq' in axes and len(freqResamp) != len(soltab.getAxisValues('freq')) and args.concataxis != 'freq':
             soltab.resample(freqResamp, 'freq')
-    
+
     # sort tables based on the first value of the concatAxis
     logging.info('Sorting tables...')
     firstValsConcatAxis = [soltab.getAxisValues(args.concataxis)[0] for soltab in soltabs]
     idxToSort = [i[0] for i in sorted(enumerate(firstValsConcatAxis), key=lambda x:x[1])]
     #print 'idxToSort', idxToSort
     soltabs = [soltabs[i] for i in idxToSort]
-    
+
     # re-order dirs (if concatenating in directions)
     if args.concataxis == 'dir':
         pointingNames = [pointingNames[i] for i in idxToSort]
         pointingDirections = [pointingDirections[i] for i in idxToSort]
-    
+
     # get all vals/weights to concatenate
     logging.info('Allocate final data...')
     valsAll = []; weightsAll = []
     for soltab in soltabs:
         valsAll.append( soltab.obj.val )
         weightsAll.append( soltab.obj.weight )
-    
+
     # creating concatenated table
     logging.info('Concatenate final dataset...')
     axesVals = []; vals = []; weights = []
@@ -172,11 +178,11 @@ for insoltab in insoltabs:
                 pointingNames[i] = 'pointing-%03i' % i
             else:
                 axisValsAll.append( val )
-    
+
         # check if all elements of the axis are equal
         if equalArr(axisValsAll):
             axesVals.append(axisValsAll[0])
-    
+
         elif axis == args.concataxis:
             # check intersection is empty
             if len( set.intersection(*map(set,axisValsAll)) ) > 0:
@@ -184,22 +190,22 @@ for insoltab in insoltabs:
             axesVals.append( np.array( [item for sublist in axisValsAll for item in sublist] ) ) # flatten list of lists
             vals = np.concatenate(valsAll, axis=a)
             weights = np.concatenate(weightsAll, axis=a)
-    
+
         else:
             # TODO: check missing axis values (e.g. missing antenna) and add flagged data
-            logging.critical('Axis %s is not the same for all h5parm.' % axis)
+            logging.critical('Axis %s is not the same for all h5parms.' % axis)
             sys.exit(1)
-    
+
     logging.info('Writing output...')
     solsetOutName = args.insolset
     soltabOutName = args.insoltab
-    
+
     # create solset (and add all antennas and directions of other solsets)
     if solsetOutName in h5Out.getSolsetNames():
         solsetOut = h5Out.getSolset(solsetOutName)
     else:
         solsetOut = h5Out.makeSolset(solsetOutName)
-    
+
     # create soltab
     weights[ np.isnan(vals) ] = 0. # to be sure, can be removed when DPPP does it properly
     logging.debug( "Set weight to 0 for %i values." % np.sum(np.isnan(vals)) )
