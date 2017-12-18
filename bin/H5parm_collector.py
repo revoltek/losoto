@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 import sys, os, logging
+import codecs
 import numpy as np
 from itertools import chain
 from losoto.h5parm import h5parm, Soltab
@@ -19,6 +20,8 @@ parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Inp
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', dest='verbose', action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--concataxis', '-c', dest='concataxis', help='Axis to concatenate (e.g. time)')
+parser.add_argument('--resampaxes', '-r', nargs='*', dest='resampaxes', default=['time','freq'], help='Axes to resanple (default: time,freq)') # nargs=* means 0 or more
+parser.add_argument('--fillaxes', '-f', nargs='*', dest='fillaxes', default=['ant'], help='Axes to fill with flagged data for missing values (default: ant)')
 args = parser.parse_args()
 
 if len(args.h5parmFiles) < 1:
@@ -33,19 +36,41 @@ class Soltabr(Soltab):
     def __init__(self, soltab, useCache = False, args = {}):
         Soltab.__init__(self, soltab, useCache = False, args = {})
 
-    def resample(self, axisValsNew, axisName):
+    def resample(self, axisValsNew, axisName, flag=False):
         """
+        Get a list of axis values for an axisName and resample with neearest interpolation the values of the table
         axisValsNew : new sampling values of the axis
         axisName : name of the axis to resample
-        Get a list of axis values for an axisName and resample with neearest interpolation the values of the table
+        flag: if True the expanded values are flagged
         """
-        logging.info('Resampling...')
+        logging.info('Resampling: %s...' % axisName)
         axisIdx = self.getAxesNames().index(axisName)
         from scipy.interpolate import interp1d
-        self.obj.val = interp1d(self.getAxisValues(axisName), self.obj.val, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
-        self.obj.weight = interp1d(self.getAxisValues(axisName), self.obj.weight, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
-        # update axis vals
+
+        # get axis values and update them
+        axisVals = self.getAxisValues(axisName)
         self.axes[axisName] = axisValsNew
+
+        # transform str axis into numbers, this is needed e.g. for antennas
+        if isinstance(axisValsNew[0], str):
+            axisValsNew = [int(codecs.encode(s, 'hex'), 16) for s in axisValsNew]
+            axisVals = [int(codecs.encode(s, 'hex'), 16) for s in axisVals]
+
+        self.obj.val = interp1d(axisVals, self.obj.val, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
+        self.obj.weight = interp1d(axisVals, self.obj.weight, axis=axisIdx, kind='nearest', fill_value='extrapolate')(axisValsNew)
+
+        # flag all resampled data
+        if flag:
+            # move relevant axis at the end
+            vals = np.swapaxes(self.obj.val, axisIdx, 0)
+            weights = np.swapaxes(self.obj.weight, axisIdx, 0)
+            for i, val in enumerate(axisValsNew):
+                if not val in axisVals:
+                    weights[i] = 0.
+                    vals[i] = np.nan
+            self.obj.val = np.swapaxes(vals, axisIdx, 0)
+            self.obj.weight = np.swapaxes(weights, axisIdx, 0)
+
         self.setSelection() # reset selection to empty since values are different
 
 def equalArr(arr):
@@ -62,6 +87,9 @@ if len(args.h5parmFiles) == 1 and ',' in args.h5parmFiles[0]:
     # Treat input as a string with comma-separated values
     args.h5parmFiles = args.h5parmFiles[0].strip('[]').split(',')
     args.h5parmFiles  = [f.strip() for f in args.h5parmFiles]
+
+if args.resampaxes is None: args.resampaxes = []
+if args.fillaxes is None: args.fillaxes = []
 
 # read all tables
 insolset = args.insolset
@@ -102,8 +130,7 @@ for insoltab in insoltabs:
 
     # combine tables
     logging.info('Ordering data...')
-    times = []
-    freqs = []
+    resamp = {axis:[] for axis in args.fillaxes+args.resampaxes} # dict to store+compute resamp/fill axis values
     for soltab in soltabs:
         if soltab.getAxesNames() != soltabs[0].getAxesNames():
             logging.critical('Input soltabs have different axes.')
@@ -111,10 +138,10 @@ for insoltab in insoltabs:
         if soltab.getType() != soltabs[0].getType():
             logging.critical('Input soltabs have different types.')
             sys.exit(1)
-        if 'time' in soltab.getAxesNames():
-            times.append(soltab.getAxisValues('time'))
-        if 'freq' in soltab.getAxesNames():
-            freqs.append(soltab.getAxisValues('freq'))
+        # concatenate axis values inside the resamp dict
+        for axis in soltab.getAxesNames():
+            if axis in resamp.keys():
+                resamp[axis].append(soltab.getAxisValues(axis))
 
     axes = soltabs[0].getAxesNames()
     typ = soltabs[0].getType()
@@ -123,28 +150,23 @@ for insoltab in insoltabs:
         logging.critical('Axis %s not found.' % args.concataxis)
         sys.exit(1)
 
-    # resampled time/freq axes values
-    # every single time/freq valu for all tables is in these arrays (ordered)
-    if times != []:
-        timeResamp = np.array(sorted(list(set(chain(*times)))))
-        print('len times:', end='')
-        for t in times:
-            print(' %i' % len(t), end='')
-        print('Will be: %i' % len(timeResamp))
-    if freqs != []:
-        freqResamp = np.array(sorted(list(set(chain(*freqs)))))
-        print('len freqs:', end='')
-        for f in freqs:
-            print('%i ' % len(f), end='')
-        print('Will be: %i' % len(freqResamp))
+    # all arrays in each entry of the resamp dict are combined in a single one
+    # this array has all values, not repeated and sorted
+    for axis, allAxisVals in iter(resamp.items()):
+        resamp[axis] = np.array(sorted(list(set(chain(*allAxisVals)))))
+        print('len %s:' % axis, end='')
+        for axisVals in allAxisVals:
+            print(' %i' % len(axisVals), end='')
+        print('Will be: %i' % len(resamp[axis]))
 
-    # resampling of time/freq values
+    # resampling/filling of values
     for soltab in soltabs:
-        if 'time' in axes and len(timeResamp) != len(soltab.getAxisValues('time')) and args.concataxis != 'time':
-            soltab.resample(timeResamp, 'time')
-        # first resample in time, then in freq
-        if 'freq' in axes and len(freqResamp) != len(soltab.getAxisValues('freq')) and args.concataxis != 'freq':
-            soltab.resample(freqResamp, 'freq')
+        for axis in soltab.getAxesNames():
+            if axis in resamp.keys():
+                if axis in args.resampaxes and len(resamp[axis]) != len(soltab.getAxisValues(axis)) and args.concataxis != axis:
+                    soltab.resample(resamp[axis], axis, flag=False)
+                elif axis in args.fillaxes and len(resamp[axis]) != len(soltab.getAxisValues(axis)) and args.concataxis != axis:
+                    soltab.resample(resamp[axis], axis, flag=True)
 
     # sort tables based on the first value of the concatAxis
     logging.info('Sorting tables...')
