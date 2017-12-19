@@ -434,7 +434,7 @@ class Solset( object ):
 
     def makeSoltab(self, soltype=None, soltabName=None,
             axesNames = [], axesVals = [], chunkShape=None, vals=None,
-            weights=None, parmdbType=None):
+            weights=None, parmdbType=''):
         """
         Create a Soltab into this solset.
 
