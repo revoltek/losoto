@@ -112,6 +112,8 @@ if __name__=='__main__':
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
+                   "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
+                   "XYOFFSET": operations.XYoffset,
                    #"SMOOTHCLOCK": operations.smoothclock,
                    #"TECFIT": operations.tecfit,
                    #"TECJUMP": operations.tecjump,
@@ -133,6 +135,7 @@ if __name__=='__main__':
 
         returncode = 0
         with operations.timer(logging, step, op) as t:
+            # global+local selection on axes are applied by this function
             for soltab in getStepSoltabs(parser, step, H):
                 returncode += ops[ op ]._run_parser( soltab, parser, step )
             if returncode != 0:
