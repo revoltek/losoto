@@ -4,7 +4,7 @@
 import logging
 from losoto.operations_lib import *
 
-logging.debug('Loading XYOFFSET module.')
+logging.debug('Loading PREFACTOR_XYOFFSET module.')
 
 def _run_parser(soltab, parser, step):
     return run(soltab)
@@ -78,7 +78,7 @@ def run( soltab):
                              axesNames=['freq', 'ant', 'pol'], axesVals=[freq_per_sb, soltab.ant, ['XX','YY']],
                              vals=global_stat_offsets_smoothed,
                              weights=np.ones_like(global_stat_offsets_smoothed,dtype=np.float16))
-    new_soltab.addHistory('CREATE (by XYOFFSET operation)')
+    new_soltab.addHistory('CREATE (by PREFACTOR_XYOFFSET operation)')
 
     return 0
 

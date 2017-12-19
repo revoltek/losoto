@@ -113,7 +113,7 @@ if __name__=='__main__':
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
                    "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
-                   "XYOFFSET": operations.XYoffset,
+                   "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,
                    #"SMOOTHCLOCK": operations.smoothclock,
                    #"TECFIT": operations.tecfit,
                    #"TECJUMP": operations.tecjump,
