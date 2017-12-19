@@ -133,6 +133,7 @@ if __name__=='__main__':
 
         returncode = 0
         with operations.timer(logging, step, op) as t:
+            # global+local selection on axes are applied by this function
             for soltab in getStepSoltabs(parser, step, H):
                 returncode += ops[ op ]._run_parser( soltab, parser, step )
             if returncode != 0:

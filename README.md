@@ -25,8 +25,7 @@ Install:
 Documentation:
 * Documentation of LoSoTo API is at: __http://revoltek.github.io/losoto/losoto.html__
 * A detailed explanation of all the parameters is at: __http://revoltek.github.io/losoto/losoto.operations.html__
-* A few articles/how-to are on the github wiki: __https://github.com/revoltek/losoto/wiki__
-* An example parset is in: __parsets/losoto2.parset__
+* A few important articles/how-to are on the github wiki: __https://github.com/revoltek/losoto/wiki__
 
 Contents:
 * __bin/__: the losoto executable and some manipulators for H5parms
