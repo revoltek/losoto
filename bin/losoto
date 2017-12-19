@@ -112,6 +112,8 @@ if __name__=='__main__':
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
+                   "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
+                   "XYOFFSET": operations.XYoffset,
                    #"SMOOTHCLOCK": operations.smoothclock,
                    #"TECFIT": operations.tecfit,
                    #"TECJUMP": operations.tecjump,
