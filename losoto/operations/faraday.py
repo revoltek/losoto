@@ -142,7 +142,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
 
                         fig = plt.figure()
                         fig.subplots_adjust(wspace=0)
-                        ax = fig.add_subplot(110)
+                        ax = fig.add_subplot(111)
 
                         # plot rm fit
                         plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
