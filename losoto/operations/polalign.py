@@ -38,6 +38,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
     """
     import numpy as np
     import scipy.optimize
+    from scipy import stats
     from scipy.ndimage import generic_filter
 
     logging.info("Finding polarization align for soltab: "+soltab.name)
@@ -117,8 +118,9 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
                     logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
     
-                phase_diff  = (phase1 - phase2)
+                phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
+                phase_diff -= stats.circmean(phase_diff, low=-np.pi, high=+np.pi)
 
                 fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                 # fractional residual
