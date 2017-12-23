@@ -44,6 +44,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
     logging.info("Finding polarization align for soltab: "+soltab.name)
 
     delaycomplex = lambda d, freq, y: abs(np.cos(d[0]*freq)  - np.cos(y)) + abs(np.sin(d[0]*freq)  - np.sin(y))
+    #delaycomplex = lambda d, freq, y: abs(d[0]*freq  - y)
 
     # input check
     if smooth != 0 and smooth % 2 == 0:
@@ -82,7 +83,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
         vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
         weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','freq','time'] )
 
-        fitdelayguess = 1.e-10 # good guess, do not use 0 as it seems the minimizer is unstable with that
+        fitdelayguess = -1.e-9 # good guess, do not use 0 as it seems the minimizer is unstable with that
 
         if 'RR' in coord['pol'] and 'LL' in coord['pol']:
             coord1 = np.where(coord['pol'] == 'RR')[0][0]
@@ -120,7 +121,10 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
     
                 phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
-                phase_diff -= stats.circmean(phase_diff, low=-np.pi, high=+np.pi)
+                phase_diff = np.unwrap(phase_diff, discont = 1.)
+
+                #A = np.reshape(freq, (-1,1))
+                #fitresultdelay = np.dot(1./(np.dot(A.T,A)), np.dot(A.T,phase_diff.T)).flatten() 
 
                 fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                 # fractional residual
@@ -138,8 +142,8 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     fit_weights.append(0.)
 
                 # Debug plot
-                doplot = True
-                if doplot and t%500==0 and coord['ant'] == 'RS310LBA':
+                doplot = False
+                if doplot and t%250==0 and coord['ant'] == 'RS310LBA':
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('font',size =8 )
@@ -153,18 +157,20 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
 
                     # plot rm fit
                     plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
-                    ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
+                    #ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
+                    ax.plot(freq, fitresultdelay[0]*freq, "-", color='purple')
 
                     ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
                     ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
-                    ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
+                    #ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi, '.', color='purple' )                           
+                    ax.plot(freq, phase_diff, '.', color='purple' )                           
  
                     residual = np.mod(plotdelay(fitresultdelay[0], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
                     ax.plot(freq, residual, '.', color='yellow')
     
                     ax.set_xlabel('freq')
                     ax.set_ylabel('phase')
-                    ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+                    #ax.set_ylim(ymin=-np.pi, ymax=np.pi)
 
                     logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
                     plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
