@@ -123,18 +123,25 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
                 phase_diff = np.unwrap(phase_diff, discont = 1.)
 
+                A = np.vstack([freq, np.ones(len(freq))]).T
+                fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
+                # get the closest n*(2pi) to the intercept and refit with only 1 parameter
+                numjumps = np.around(fitresultdelay[1]/(2*np.pi))
+                A = np.reshape(freq, (-1,1)) # no b
+                fitresultdelay = np.linalg.lstsq(A, (phase_diff - numjumps * 2 * np.pi).T)[0]
+
                 #A = np.reshape(freq, (-1,1))
                 #fitresultdelay = np.dot(1./(np.dot(A.T,A)), np.dot(A.T,phase_diff.T)).flatten() 
 
-                fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
+                #fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                 # fractional residual
                 residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
 
                 #print "t:", t, "result:", fitresultdelay, "residual:", residual
 
-                fit_delays.append(fitresultdelay[0])
+                fit_delays.append(fitresultdelay)
                 if maxResidual == 0 or residual < maxResidual:
-                    fitdelayguess = fitresultdelay[0]
+                    fitdelayguess = fitresultdelay
                     fit_weights.append(1.)
                 else:       
                     # high residual, flag
@@ -142,7 +149,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     fit_weights.append(0.)
 
                 # Debug plot
-                doplot = False
+                doplot = True
                 if doplot and t%250==0 and coord['ant'] == 'RS310LBA':
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
@@ -165,7 +172,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     #ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi, '.', color='purple' )                           
                     ax.plot(freq, phase_diff, '.', color='purple' )                           
  
-                    residual = np.mod(plotdelay(fitresultdelay[0], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
+                    residual = np.mod(plotdelay(fitresultdelay, freq)-phase_diff + np.pi,2.*np.pi)-np.pi
                     ax.plot(freq, residual, '.', color='yellow')
     
                     ax.set_xlabel('freq')
