@@ -121,14 +121,15 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
     
                 phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
-                phase_diff = np.unwrap(phase_diff, discont = 1.)
+                phase_diff = np.unwrap(phase_diff)
 
                 A = np.vstack([freq, np.ones(len(freq))]).T
                 fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
                 # get the closest n*(2pi) to the intercept and refit with only 1 parameter
                 numjumps = np.around(fitresultdelay[1]/(2*np.pi))
                 A = np.reshape(freq, (-1,1)) # no b
-                fitresultdelay = np.linalg.lstsq(A, (phase_diff - numjumps * 2 * np.pi).T)[0]
+                phase_diff = phase_diff - numjumps * 2 * np.pi
+                fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
 
                 #A = np.reshape(freq, (-1,1))
                 #fitresultdelay = np.dot(1./(np.dot(A.T,A)), np.dot(A.T,phase_diff.T)).flatten() 
@@ -149,7 +150,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     fit_weights.append(0.)
 
                 # Debug plot
-                doplot = True
+                doplot = False
                 if doplot and t%250==0 and coord['ant'] == 'RS310LBA':
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
