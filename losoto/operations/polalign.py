@@ -129,7 +129,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 numjumps = np.around(fitresultdelay[1]/(2*np.pi))
                 A = np.reshape(freq, (-1,1)) # no b
                 phase_diff = phase_diff - numjumps * 2 * np.pi
-                fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
+                fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0][0]
 
                 #A = np.reshape(freq, (-1,1))
                 #fitresultdelay = np.dot(1./(np.dot(A.T,A)), np.dot(A.T,phase_diff.T)).flatten() 
