@@ -1046,7 +1046,6 @@ class Soltab( object ):
            np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
         
             logging.debug('Optimizing selection reading '+str(selection))
-            print data.shape
             # for performances is important to minimize the fetched data
             # move all slices at the first selection and lists afterwards (first list is allowd in firstselection)
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
@@ -1060,10 +1059,10 @@ class Soltab( object ):
                 if i == selectionListsIdx[0]: secondSelection.append(range(len(sel)))
                 elif type(sel) is list: secondSelection.append(sel)
                 elif type(sel) is slice: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
-            print firstSelection
-            print secondSelection
-            print data[tuple(firstSelection)].shape
-            print data[tuple(firstSelection)][np.ix_(*secondSelection)].shape
+            #print firstSelection
+            #print secondSelection
+            #print data[tuple(firstSelection)].shape
+            #print data[tuple(firstSelection)][np.ix_(*secondSelection)].shape
             return data[tuple(firstSelection)][np.ix_(*secondSelection)]
         else:
             return data[tuple(selection)]

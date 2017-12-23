@@ -117,7 +117,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
                     logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
     
-                phase_diff  = (phase1 - phase2)
+                phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
 
                 fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
@@ -136,8 +136,8 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     fit_weights.append(0.)
 
                 # Debug plot
-                doplot = False
-                if doplot and t%500==0 and coord['ant'] == 'CS004LBA':
+                doplot = True
+                if doplot and t%500==0 and coord['ant'] == 'RS310LBA':
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('font',size =8 )
