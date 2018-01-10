@@ -104,7 +104,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
             for t, time in enumerate(times):
 
                 # apply flags
-                idx       = ((weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.))
+                idx       = ( (weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.) & (coord['freq'] > 40.e6) )
                 freq      = np.copy(coord['freq'])[idx]
                 phase1    = vals[coord1,:,t][idx]
                 phase2    = vals[coord2,:,t][idx]
@@ -116,12 +116,12 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     continue
     
                 # if more than 1/4 of chans are flagged
-                if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
+                if (len(idx) - len(freq))/float(len(idx)) > 1/2.:
                     logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
     
                 phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
-                phase_diff = np.unwrap(phase_diff)
+                #phase_diff = np.unwrap(phase_diff)
 
                 A = np.vstack([freq, np.ones(len(freq))]).T
                 fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
@@ -130,9 +130,6 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 A = np.reshape(freq, (-1,1)) # no b
                 phase_diff = phase_diff - numjumps * 2 * np.pi
                 fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0][0]
-
-                #A = np.reshape(freq, (-1,1))
-                #fitresultdelay = np.dot(1./(np.dot(A.T,A)), np.dot(A.T,phase_diff.T)).flatten() 
 
                 #fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                 # fractional residual
@@ -166,7 +163,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                     # plot rm fit
                     plotdelay = lambda delay, freq: np.mod( delay*freq + np.pi, 2.*np.pi) - np.pi
                     #ax.plot(freq, plotdelay(fitresultdelay[0], freq), "-", color='purple')
-                    ax.plot(freq, fitresultdelay[0]*freq, "-", color='purple')
+                    ax.plot(freq, fitresultdelay*freq, "-", color='purple')
 
                     ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
                     ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )

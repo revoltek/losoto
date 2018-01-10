@@ -101,6 +101,7 @@ if __name__=='__main__':
                    "CLOCKTEC": operations.clocktec,
                    "POLALIGN": operations.polalign,
                    "DUPLICATE": operations.duplicate,
+                   "DELAY": operations.delay,
                    "FARADAY": operations.faraday,
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
