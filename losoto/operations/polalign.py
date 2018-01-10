@@ -92,8 +92,6 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
             coord1 = np.where(coord['pol'] == 'XX')[0][0]
             coord2 = np.where(coord['pol'] == 'YY')[0][0]
 
-        logging.debug('Working on ant: '+coord['ant']+'...')
-
         if (weights == 0.).all() == True:
             logging.warning('Skipping flagged antenna: '+coord['ant'])
             weights[:] = 0
@@ -121,19 +119,19 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
     
                 phase_diff = (phase1 - phase2)
                 phase_diff = np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi
-                #phase_diff = np.unwrap(phase_diff)
+                phase_diff = np.unwrap(phase_diff)
 
                 A = np.vstack([freq, np.ones(len(freq))]).T
                 fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0]
                 # get the closest n*(2pi) to the intercept and refit with only 1 parameter
                 numjumps = np.around(fitresultdelay[1]/(2*np.pi))
                 A = np.reshape(freq, (-1,1)) # no b
-                phase_diff = phase_diff - numjumps * 2 * np.pi
+                phase_diff -= numjumps * 2 * np.pi
                 fitresultdelay = np.linalg.lstsq(A, phase_diff.T)[0][0]
 
                 #fitresultdelay, success = scipy.optimize.leastsq(delaycomplex, [fitdelayguess], args=(freq, phase_diff))
                 # fractional residual
-                residual = np.mean(np.abs(np.mod(fitresultdelay*freq-phase_diff + np.pi, 2.*np.pi) - np.pi))
+                residual = np.mean(np.abs( fitresultdelay*freq-phase_diff ))
 
                 #print "t:", t, "result:", fitresultdelay, "residual:", residual
 
@@ -148,7 +146,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
 
                 # Debug plot
                 doplot = False
-                if doplot and t%250==0 and coord['ant'] == 'RS310LBA':
+                if doplot and t%100==0 and coord['ant'] == 'RS310LBA':
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('font',size =8 )
@@ -196,7 +194,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., smooth=0, replace=False,
                 else:
                     fit_delays[ fit_weights == 0 ] = fit_delays_bkp
 
-            logging.debug('Average delay: %f ns' % (np.mean(fit_delays)*1e9))
+            logging.debug('%s: average delay: %f ns' % ( coord['ant'], np.mean(fit_delays)*1e9))
             for t, time in enumerate(times):
                 #vals[:,:,t] = 0.
                 #vals[coord1,:,t] = fit_delays[t]*np.array(coord['freq'])/2.

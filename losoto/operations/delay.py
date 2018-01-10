@@ -32,7 +32,8 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
     import numpy as np
     import scipy.optimize
 
-    dcomplex = lambda d, freq, y: abs(np.cos(2.*d[0]*freq)  - np.cos(y)) + abs(np.sin(2.*d[0]*freq)  - np.sin(y))
+    dcomplex = lambda d, freq, y: abs(np.cos(d[0]*freq)  - np.cos(y)) + abs(np.sin(d[0]*freq)  - np.sin(y))
+    #dcomplex2 = lambda d, freq, y: abs(np.cos(d[0]*freq + d[1])  - np.cos(y)) + abs(np.sin(d[0]*freq + d[1])  - np.sin(y))
 
     logging.info("Find DELAY for soltab: "+soltab.name)
 
@@ -83,7 +84,6 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
             return 1
 
         if not coord['ant'] == refAnt:
-            logging.debug('Working on ant: '+coord['ant']+'...')
 
             if (weights == 0.).all() == True:
                 logging.warning('Skipping flagged antenna: '+coord['ant'])
@@ -91,7 +91,6 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
             else:
 
                 for t, time in enumerate(times):
-                    if t < 3000: continue
 
                     # apply flags
                     idx       = ((weights[coord_rr,:,t] != 0.) & (weights[coord_ll,:,t] != 0.))
@@ -110,27 +109,34 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
 
                     # RR-LL to be consistent with BBS/NDPPP
                     phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+                    phase_diff = np.unwrap(phase_diff)
     
-                    fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitdguess], args=(freq, phase_diff))
-                    # fractional residual
-                    residual = np.nanmean(np.abs(np.mod((2.*fitresultd*freq)-phase_diff + np.pi, 2.*np.pi) - np.pi))
+                    #fitresultd2, success = scipy.optimize.leastsq(dcomplex2, [fitdguess,-1.], args=(freq, phase_diff))
+                    #numjumps = np.around(fitresultd2[1]/(2*np.pi))
+                    #if numjumps > 0: print fitresultd, numjumps
+                    #phase_diff += numjumps * 2*np.pi
 
-#                    print "t:", t, "result:", fitresultrm_wav, "residual:", residual
+                    best_residual = np.inf
+                    for jump in [-2,-1,0,1,2]:
+                        fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitdguess], args=(freq, phase_diff - jump * 2*np.pi))
+                        # fractional residual
+                        residual = np.nanmean(np.abs( (fitresultd[0]*freq) - phase_diff - jump * 2*np.pi ) )
+                        if residual < best_residual:
+                            best_residual = residual
+                            fitd[t] = fitresultd[0]
+                            best_jump = jump
 
-                    if maxResidual == 0 or residual < maxResidual:
+                    if maxResidual == 0 or best_residual < maxResidual:
+                        fitweights[t] = 1
                         fitdguess = fitresultd[0]
-                        weight = 1
                     else:       
                         # high residual, flag
-                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
-                        weight = 0
-
-                    fitd[t] = fitresultd[0]
-                    fitweights[t] = weight
+                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(best_residual)+').')
+                        fitweights[t] = 0
 
                     # Debug plot
-                    doplot = False
-                    if doplot and coord['ant'] == 'RS310LBA' and t%100==0:
+                    doplot = True
+                    if doplot and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'RS210LBA') and t%100==0:
                         print "Plotting"
                         if not 'matplotlib' in sys.modules:
                             import matplotlib as mpl
@@ -144,14 +150,14 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
                         ax = fig.add_subplot(111)
 
                         # plot rm fit
-                        plotd = lambda d, freq: np.mod( (2.*d*freq) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
-                        ax.plot(freq, plotd(fitresultd, freq[:]), "-", color='purple')
+                        plotd = lambda d, freq: d*freq # notice the factor of 2
+                        ax.plot(freq, plotd(fitd[t], freq[:]), "-", color='purple')
 
                         ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
                         ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
-                        ax.plot(freq, phase_diff , '.', color='purple' )                           
+                        ax.plot(freq, phase_diff - best_jump * 2*np.pi , '.', color='purple' )                           
      
-                        residual = np.mod(plotd(fitresultd, freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
+                        residual = np.mod(plotd(fitd[t], freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
                         ax.plot(freq, residual, '.', color='yellow')
         
                         ax.set_xlabel('freq')
@@ -162,7 +168,7 @@ def run( soltab, soltabOut='delay', refAnt='', maxResidual=1. ):
                         plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
                         del fig
 
-                logging.debug('Average delay: %f ns' % (np.mean(fitd)*1e9))
+                logging.debug('%s: average delay: %f ns' % (coord['ant'], np.mean(2*fitd)*1e9))
                 for t, time in enumerate(times):
                     #vals[:,:,t] = 0.
                     #vals[coord1,:,t] = fitd[t]*np.array(coord['freq'])/2.
