@@ -98,7 +98,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
             for t, time in enumerate(times):
 
                 # apply flags
-                idx       = ( (weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.) & (coord['freq'] > 40.e6) & (coord['freq'] < 70.e6) )
+                idx       = ( (weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.) & (coord['freq'] > 45.e6) & (coord['freq'] < 70.e6) )
                 freq      = np.copy(coord['freq'])[idx]
                 phase1    = vals[coord1,:,t][idx]
                 phase2    = vals[coord2,:,t][idx]
@@ -179,7 +179,6 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
             # avg in time
             if average:
-                print fit_delays, fit_offset, fit_weights
                 fit_delays_bkp = fit_delays[ fit_weights == 0 ]
                 fit_offset_bkp = fit_offset[ fit_weights == 0 ]
                 np.putmask(fit_delays, fit_weights == 0, np.nan)
