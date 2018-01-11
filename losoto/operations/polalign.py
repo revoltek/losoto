@@ -106,6 +106,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                 if len(freq) < 30:
                     fit_weights.append(0.)
                     fit_delays.append(0.)
+                    fit_offset.append(0.)
                     logging.debug('Not enough unflagged point for the timeslot '+str(t))
                     continue
     
