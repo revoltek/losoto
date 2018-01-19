@@ -54,7 +54,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             if makeMovie: figSize[1]=4+1*Nr
             else: figSize[1]=8+2*Nr
         
-        figgrid, axa = plt.subplots(Nr, Nc, figsize=figSize, sharex=True, sharey=True)
+        figgrid, axa = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=figSize)
 
         if Nplots == 1: axa = np.array([axa])
         figgrid.subplots_adjust(hspace=0, wspace=0)
@@ -74,10 +74,22 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             else:
                 [ax.set_ylabel(datatype, fontsize=20) for ax in axa[:,0]]
 
+        # if gaps in time, collapse and add a black vertical line on separation points
+        if axesInPlot[0] == 'time' and cmesh == False:
+            delta = np.abs(xvals[:-1] - xvals[1:])
+            jumps = np.where( delta > 100*np.min(delta) )[0] # jump if larger than 100 times the minimum step
+            # remove jumps
+            for j in jumps: xvals[j+1:] -= delta[j]
+
         for Ntab, title in enumerate(titles):
            
             ax = axa.flatten()[Ntab]
             ax.text(.5, .9, title, horizontalalignment='center', fontsize=14, transform=ax.transAxes)
+
+            # add vertical lines and numbers at jumps (numbers are the jump sizes)
+            if axesInPlot[0] == 'time' and cmesh == False:
+                [ ax.axvline(xvals[j], color='k') for j in jumps ]
+                [ ax.text( xvals[j], np.min(dataCube[Ntab])+np.abs(np.min(dataCube[Ntab]))*0.01, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
            
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')
