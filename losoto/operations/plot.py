@@ -91,7 +91,9 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             # add vertical lines and numbers at jumps (numbers are the jump sizes)
             if axesInPlot[0] == 'time' and cmesh == False and not np.all(np.isnan(dataCube[Ntab])):
                 [ ax.axvline(xvals[j]+gap/2., color='k') for j in jumps ]
-                [ ax.text( xvals[j]+gap/2., np.nanmin(dataCube[Ntab])+np.abs(np.nanmin(dataCube[Ntab]))*0.01, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
+                if minZ != 0: texty = minZ + np.abs(np.nanmin(dataCube[Ntab]))*0.01
+                else: texty = np.nanmin(dataCube[Ntab]) + np.abs(np.nanmin(dataCube[Ntab]))*0.01
+                [ ax.text( xvals[j]+gap/2., texty, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
            
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')
