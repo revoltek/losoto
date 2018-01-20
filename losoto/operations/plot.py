@@ -80,6 +80,8 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             jumps = np.where( delta > 100*np.min(delta) )[0] # jump if larger than 100 times the minimum step
             # remove jumps
             for j in jumps: xvals[j+1:] -= delta[j]
+            gap = xvals[-1] / 100 # 1%
+            for j in jumps: xvals[j+1:] += gap
 
         for Ntab, title in enumerate(titles):
            
@@ -88,8 +90,8 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
 
             # add vertical lines and numbers at jumps (numbers are the jump sizes)
             if axesInPlot[0] == 'time' and cmesh == False and not np.all(np.isnan(dataCube[Ntab])):
-                [ ax.axvline(xvals[j], color='k') for j in jumps ]
-                [ ax.text( xvals[j], np.nanmin(dataCube[Ntab])+np.abs(np.nanmin(dataCube[Ntab]))*0.01, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
+                [ ax.axvline(xvals[j]+gap/2., color='k') for j in jumps ]
+                [ ax.text( xvals[j]+gap/2., np.nanmin(dataCube[Ntab])+np.abs(np.nanmin(dataCube[Ntab]))*0.01, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
            
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')
