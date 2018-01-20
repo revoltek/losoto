@@ -87,7 +87,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             ax.text(.5, .9, title, horizontalalignment='center', fontsize=14, transform=ax.transAxes)
 
             # add vertical lines and numbers at jumps (numbers are the jump sizes)
-            if axesInPlot[0] == 'time' and cmesh == False:
+            if axesInPlot[0] == 'time' and cmesh == False and not np.all(np.isnan(dataCube[Ntab])):
                 [ ax.axvline(xvals[j], color='k') for j in jumps ]
                 [ ax.text( xvals[j], np.nanmin(dataCube[Ntab])+np.abs(np.nanmin(dataCube[Ntab]))*0.01, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
            
