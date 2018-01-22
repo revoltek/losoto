@@ -116,6 +116,22 @@ losoto\.operations\.polalign module
     :undoc-members:
     :show-inheritance:
 
+losoto\.operations\.prefactor\_XYoffset module
+----------------------------------------------
+
+.. automodule:: losoto.operations.prefactor_XYoffset
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.operations\.prefactor\_bandpass module
+----------------------------------------------
+
+.. automodule:: losoto.operations.prefactor_bandpass
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 losoto\.operations\.reset module
 --------------------------------
 
