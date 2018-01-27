@@ -194,6 +194,9 @@ def getStepSoltabs(parser, step, H):
                 else:
                     soltabs.append( solset.getSoltab(soltabName, useCache=False) )
 
+    if soltabs == []:
+        logging.warning('No soltabs selected for step %s.' % step)
+
     # axes selection
     for soltab in soltabs:
         userSel = {}

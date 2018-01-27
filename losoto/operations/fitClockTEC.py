@@ -5,6 +5,7 @@ import numpy.ma as ma
 import sys
 import logging
 try:
+    import casacore.tables # must be loaded before expion - used in other operations as lofarbeam
     from lofar.expion import baselinefitting as fitting
 except:
     logging.error('No lofar.expion present, clock/tec separation not active.')

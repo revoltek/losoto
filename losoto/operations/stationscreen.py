@@ -47,7 +47,7 @@ def _calculate_piercepoints(station_positions, source_positions):
         Reference Dec for WCS system (deg)
 
     """
-    import pyrap.measures
+    import casacore.measures
     import numpy as np
     try:
         import progressbar

@@ -14,7 +14,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, refAnt='', maxResidual=1. ):
     """
-    Faraday rotation extraction.
+    Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).
 
     Parameters
     ----------
@@ -35,8 +35,22 @@ def run( soltab, refAnt='', maxResidual=1. ):
 
     # input check
     solType = soltab.getType()
-    if solType != 'phase':
-       logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
+    if solType == 'phase':
+        returnAxes = ['pol','freq','time']
+        if 'RR' in soltab.getAxisValues('pol') and 'LL' in soltab.getAxisValues('pol'):
+            coord_rr = np.where(soltab.getAxisValues('pol') == 'RR')[0][0]
+            coord_ll = np.where(soltab.getAxisValues('pol') == 'LL')[0][0]
+        elif 'XX' in soltab.getAxisValues('pol') and 'YY' in soltab.getAxisValues('pol'):
+            logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
+            coord_rr = np.where(soltab.getAxisValues('pol') == 'XX')[0][0]
+            coord_ll = np.where(soltab.getAxisValues('pol') == 'YY')[0][0]
+        else:
+            logging.error("Cannot proceed with Faraday estimation with polarizations: "+str(coord['pol']))
+            return 1
+    elif solType == 'rotation':
+        returnAxes = ['freq','time']
+    else:
+       logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase or rotation. Ignoring.")
        return 1
 
     ants = soltab.getAxisValues('ant')
@@ -44,9 +58,6 @@ def run( soltab, refAnt='', maxResidual=1. ):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
         refAnt = ants[0]
     if refAnt == '': refAnt = ants[0]
-
-    if 'XX' in soltab.getAxisValues('pol') and 'YY' in soltab.getAxisValues('pol'):
-        logging.warning('Linear polarization detected, LoSoTo assumes XX->RR and YY->LL.')
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')
@@ -58,30 +69,20 @@ def run( soltab, refAnt='', maxResidual=1. ):
                              vals=np.zeros((len(ants),len(times))),
                              weights=np.ones((len(ants),len(times))))
     soltabout.addHistory('Created by FARADAY operation.')
-        
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt):
+
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, reference=refAnt):
 
         if len(coord['freq']) < 10:
             logging.error('Faraday rotation estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
             return 1
 
         # reorder axes
-        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
-        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','freq','time'] )
+        vals = reorderAxes( vals, soltab.getAxesNames(), returnAxes )
+        weights = reorderAxes( weights, soltab.getAxesNames(), returnAxes )
 
         fitrm = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
         fitrmguess = 0.001 # good guess
-
-        if 'RR' in coord['pol'] and 'LL' in coord['pol']:
-            coord_rr = np.where(coord['pol'] == 'RR')[0][0]
-            coord_ll = np.where(coord['pol'] == 'LL')[0][0]
-        elif 'XX' in coord['pol'] and 'YY' in coord['pol']:
-            coord_rr = np.where(coord['pol'] == 'XX')[0][0]
-            coord_ll = np.where(coord['pol'] == 'YY')[0][0]
-        else:
-            logging.error("Cannot proceed with Faraday estimation with polarizations: "+str(coord['pol']))
-            return 1
 
         if not coord['ant'] == refAnt:
             logging.debug('Working on ant: '+coord['ant']+'...')
@@ -93,11 +94,17 @@ def run( soltab, refAnt='', maxResidual=1. ):
 
                 for t, time in enumerate(times):
 
-                    # apply flags
-                    idx       = ((weights[coord_rr,:,t] != 0.) & (weights[coord_ll,:,t] != 0.))
-                    freq      = np.copy(coord['freq'])[idx]
-                    phase_rr  = vals[coord_rr,:,t][idx]
-                    phase_ll  = vals[coord_ll,:,t][idx]
+                    if solType == 'phase':
+                        idx       = ((weights[coord_rr,:,t] != 0.) & (weights[coord_ll,:,t] != 0.))
+                        freq      = np.copy(coord['freq'])[idx]
+                        phase_rr  = vals[coord_rr,:,t][idx]
+                        phase_ll  = vals[coord_ll,:,t][idx]
+                        # RR-LL to be consistent with BBS/NDPPP
+                        phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+                    else: # rotation table
+                        idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
+                        freq       = np.copy(coord['freq'])[idx]
+                        phase_diff = -2.*vals[:,t][idx]
 
                     if len(freq) < 30:
                         fitweights[t] = 0
@@ -108,8 +115,6 @@ def run( soltab, refAnt='', maxResidual=1. ):
                     if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
                         logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
-                    # RR-LL to be consistent with BBS/NDPPP
-                    phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
                     wav = c/freq
     
                     fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
@@ -148,8 +153,9 @@ def run( soltab, refAnt='', maxResidual=1. ):
                         plotrm = lambda RM, wav: np.mod( (2.*RM*wav*wav) + np.pi, 2.*np.pi) - np.pi # notice the factor of 2
                         ax.plot(freq, plotrm(fitresultrm_wav, c/freq[:]), "-", color='purple')
 
-                        ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                        ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
+                        if solType == 'phase':
+                            ax.plot(freq, np.mod(phase_rr + np.pi, 2.*np.pi) - np.pi, 'ob' )
+                            ax.plot(freq, np.mod(phase_ll + np.pi, 2.*np.pi) - np.pi, 'og' )
                         ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi , '.', color='purple' )                           
      
                         residual = np.mod(plotrm(fitresultrm_wav, c/freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
