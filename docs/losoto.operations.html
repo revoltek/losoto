@@ -426,7 +426,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <span id="losoto-operations-polalign-module"></span><h2>losoto.operations.polalign module<a class="headerlink" href="#module-losoto.operations.polalign" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="losoto.operations.polalign.run">
-<code class="descclassname">losoto.operations.polalign.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>smooth=0</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.polalign.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>fitOffset=False</em>, <em>average=False</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate polarization alignment as delay</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -435,8 +435,9 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “phasediff”.</li>
 <li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.</li>
-<li><strong>smooth</strong> (<em>int</em><em>, </em><em>optional</em>) – Median-smooth in time the resulting delays, number of timestamp for smoothing window. By default 0 (no smooth)</li>
-<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – replace using smoothed value instead of flag bad data? Smooth must be active. By default, False</li>
+<li><strong>fitOffset</strong> (<em>bool</em><em>, </em><em>optional</em>) – Assume that together with a delay each station has also a differential phase offset (important for old LBA observations). By default False.</li>
+<li><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – Mean-average in time the resulting delays/offset. By default False.</li>
+<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – replace using smoothed value instead of flag bad data? Smooth must be active. By default, False.</li>
 <li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
 </ul>
 </td>
@@ -444,6 +445,100 @@ WEIGHT: flag-only compliant, no need for weight</p>
 </tbody>
 </table>
 </dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.prefactor_XYoffset">
+<span id="losoto-operations-prefactor-xyoffset-module"></span><h2>losoto.operations.prefactor_XYoffset module<a class="headerlink" href="#module-losoto.operations.prefactor_XYoffset" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.prefactor_XYoffset.normalize">
+<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize phase to the range [-pi, pi].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.prefactor_XYoffset.run">
+<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.prefactor_bandpass">
+<span id="losoto-operations-prefactor-bandpass-module"></span><h2>losoto.operations.prefactor_bandpass module<a class="headerlink" href="#module-losoto.operations.prefactor_bandpass" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.prefactor_bandpass.savitzky_golay">
+<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">savitzky_golay</code><span class="sig-paren">(</span><em>y</em>, <em>window_size</em>, <em>order</em>, <em>deriv=0</em>, <em>rate=1</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.savitzky_golay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
+The Savitzky-Golay filter removes high frequency noise from data.
+It has the advantage of preserving the original shape and
+features of the signal better than other types of filtering
+approaches, such as moving averages techniques.
+:param y: the values of the time history of the signal.
+:type y: array_like, shape (N,)
+:param window_size: the length of the window. Must be an odd integer number.
+:type window_size: int
+:param order: the order of the polynomial used in the filtering.</p>
+<blockquote>
+<div>Must be less then <cite>window_size</cite> - 1.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>deriv</strong> (<em>int</em>) – the order of the derivative to compute (default = 0 means only smoothing)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>ys</strong> – the smoothed signal (or it’s n-th derivative).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray, shape (N)</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The Savitzky-Golay is a type of low-pass filter, particularly
+suited for smoothing noisy data. The main idea behind this
+approach is to make for each point a least-square fit with a
+polynomial of high order over a odd-sized window centered at
+the point.</p>
+<p class="rubric">Examples</p>
+<p>t = np.linspace(-4, 4, 500)
+y = np.exp( -t**2 ) + np.random.normal(0, 0.05, t.shape)
+ysg = savitzky_golay(y, window_size=31, order=4)
+import matplotlib.pyplot as plt
+plt.plot(t, y, label=’Noisy signal’)
+plt.plot(t, np.exp(-t**2), ‘k’, lw=1.5, label=’Original signal’)
+plt.plot(t, ysg, ‘r’, label=’Filtered signal’)
+plt.legend()
+plt.show()</p>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>A. Savitzky, M. J. E. Golay, Smoothing and Differentiation of
+Data by Simplified Least Squares Procedures. Analytical
+Chemistry, 1964, 36 (8), pp 1627-1639.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>Numerical Recipes 3rd Edition: The Art of Scientific Computing
+W.H. Press, S.A. Teukolsky, W.T. Vetterling, B.P. Flannery
+Cambridge University Press ISBN-13: 9780521880688</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.prefactor_bandpass.median_window_filter">
+<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">median_window_filter</code><span class="sig-paren">(</span><em>ampl</em>, <em>half_window</em>, <em>threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.median_window_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.prefactor_bandpass.running_median">
+<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">running_median</code><span class="sig-paren">(</span><em>ampl</em>, <em>half_window</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.running_median" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="losoto.operations.prefactor_bandpass.run">
+<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>BadSBList=''</em>, <em>n_chan=4</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-losoto.operations.reset">
@@ -637,6 +732,8 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.polalign">losoto.operations.polalign module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.prefactor_XYoffset">losoto.operations.prefactor_XYoffset module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.prefactor_bandpass">losoto.operations.prefactor_bandpass module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
