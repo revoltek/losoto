@@ -10,7 +10,7 @@ import tables
 import logging
 from losoto import _version, _logging
 from losoto.h5parm import h5parm
-from losoto.losoto_lib import LosotoParser, getStepSoltabs
+from losoto.lib_losoto import LosotoParser, getStepSoltabs
 
 def my_close_open_files(verbose):
     open_files = tables.file._open_files

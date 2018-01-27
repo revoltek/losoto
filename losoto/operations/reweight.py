@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from losoto.operations_lib import *
+from losoto.lib_operations import *
 import logging
 
 logging.debug('Loading REWEIGHT module.')

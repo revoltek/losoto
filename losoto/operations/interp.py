@@ -5,7 +5,7 @@
 # WEIGHT: not ready
 
 import logging
-from losoto.operations_lib import *
+from losoto.lib_operations import *
 
 logging.debug('Loading INTERP module.')
 

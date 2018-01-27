@@ -7,7 +7,7 @@
 # Operation is flag-only capable
 
 import logging
-from losoto.operations_lib import *
+from losoto.lib_operations import *
 
 logging.debug('Loading RESIDUALS module.')
 

@@ -4,7 +4,7 @@
 # This is an example operation for LoSoTo
 
 import logging
-from losoto.operations_lib import *
+from losoto.lib_operations import *
 
 logging.debug('Loading EXAMPLE module.')
 
