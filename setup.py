@@ -48,7 +48,7 @@ setup(
     install_requires=['numpy>=1.9','cython','numexpr>=2.0','tables>=3.0'],
     scripts = ['bin/losoto', 'bin/H5parm_benchmark.py',
                'bin/H5parm_exporter.py', 'bin/H5parm_importer.py',
-               'bin/H5parm_merge.py',],
+               'bin/H5parm_collector.py','bin/H5parm_copy.py'],
     packages=['losoto','losoto.operations','losoto.progressbar'],
     test_suite='test',
     cmdclass = {'test': PyTest},
