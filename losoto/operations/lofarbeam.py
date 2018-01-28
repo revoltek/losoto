@@ -4,7 +4,7 @@
 # Fill a solution table with beam response
 
 import logging
-from losoto.operations_lib import *
+from losoto.lib_operations import *
 
 logging.debug('Loading LOFARBEAM module.')
 
