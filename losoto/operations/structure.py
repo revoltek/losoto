@@ -28,6 +28,9 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
     plotName : str, optional
         Plot file name, by default no plot.
 
+    ndiv : int, optional
+        
+
     """
     import numpy as np
     from losoto.lib_unwrap import unwrap, unwrap_2d
@@ -68,8 +71,9 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
         # unwrap
         if doUnwrap:
             for a, ant in enumerate(coord['ant']):
-                logging.debug('Unwrapping: '+ant)
-                vals[a,:,:] = unwrap_2d(vals[a,:,:], flags[a,:,:], coord['freq'], coord['time'])
+                if not (flags[a,:,:] == True).all():
+                    logging.debug('Unwrapping: '+ant)
+                    vals[a,:,:] = unwrap_2d(vals[a,:,:], flags[a,:,:], coord['freq'], coord['time'])
         
         logging.debug('Normilising...')
         t1 = np.ma.array( vals, mask=flags ) # mask flagged data
@@ -116,11 +120,13 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             ax = fig.add_subplot(111)
             
             for i, variance in enumerate(variances):
-                color = plt.cm.jet(i/float(len(variances)-1)) # from 0 to 1
+                if len(variances) > 1:
+                    color = plt.cm.jet(i/float(len(variances)-1)) # from 0 to 1
+                else: color = 'black'
                 ax.plot(D2[myselect]/1.e3,variance[myselect],marker='o',linestyle='',color=color, markeredgecolor='none', label='T')
     
-            ax.set_xlabel('Distance [km]')
-            ax.set_ylabel('Structure function []')
+            ax.set_xlabel('Distance (km)')
+            ax.set_ylabel(r'Phase variance @150 MHz (rad$^2$)')
             ax.set_xscale('log')
             ax.set_yscale('log')
             ax.set_xlim(xmin=0.1,xmax=3)
