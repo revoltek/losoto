@@ -746,7 +746,7 @@ class Soltab( object ):
         self.setSelection()
 
 
-    def setSelection(self, **args):
+    def setSelection(self, update=False, **args):
         """
         Set a selection criteria. For each axes there can be a:
             * string: regexp
@@ -757,10 +757,14 @@ class Soltab( object ):
         ----------
         **args :
             Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
+        
+        update : bool
+            Only update axes passed as arguments, the rest is maintained. Default: False.
+            
         """
         # create an initial selection which selects all values
-        self.selection = [slice(None)] * len(self.getAxesNames())
-        #self.selection = [ slice(0, self.getAxisLen(axis, ignoreSelection=True)) for axis in self.getAxesNames() ]
+        if not update:
+            self.selection = [slice(None)] * len(self.getAxesNames())
 
         for axis, selVal in iter( args.items() ):
             # if None continue and keep all the values

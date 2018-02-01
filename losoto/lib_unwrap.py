@@ -4,6 +4,8 @@
 #from __future__ import division
 import numpy as np
 import scipy.fftpack as fft
+import logging
+import itertools
 
 def unwrap_fft(phase, iterations=3):
     """
@@ -146,13 +148,13 @@ def dct2(arr, inverse=False):
 # Laplace operator and inverse
 def laplacian(arr, inverse=False):
     # precompute Fourier domain coordinates for the Laplacians of phase_wrapped
-    m = np.arange(arr.shape[0])
-    n = np.arange(arr.shape[1])
+    m = np.arange(arr.shape[1])
+    n = np.arange(arr.shape[0])
     m,n = np.meshgrid(m,n)
     m = m.astype(float)
     n = n.astype(float)
-    m[:,0] = 1/np.sqrt(M)
-    n[0,:] = 1/np.sqrt(N)
+    m[:,0] = 1/np.sqrt(arr.shape[1])
+    n[0,:] = 1/np.sqrt(arr.shape[0])
     coord = m*m+n*n
     m = n = None
 
@@ -162,10 +164,24 @@ def laplacian(arr, inverse=False):
         return dct2(dct2(arr)*coord, inverse=True) # factor -4*pi**2/M/N omitted
 
 # phase unwrapping, see DOI: 10.3390/jimaging1010031
-def unwrap_2d(arr):
+def unwrap_2d(arr, flags = None, coord_x = None, coord_y = None):
+    """
+    if flags are specified do interp
+    """
+    if not flags is None:
+        import scipy.interpolate
+        if coord_x is None or coord_y is None:
+            logging.error('Cannot unwrap with flags and no coordinates.')
+            return
+        shapeOrig = arr.shape
+        grid = np.array([x for x in itertools.product(coord_x,coord_y)])
+        arr = np.ndarray.flatten(arr)
+        flags = np.ndarray.flatten(flags)
+        arr[flags] = scipy.interpolate.griddata(grid[~flags], arr[~flags], grid[flags], 'nearest')
+        arr = arr.reshape(shapeOrig)
     return arr + np.round( ( laplacian( np.cos(arr)*laplacian(np.sin(arr)) - np.sin(arr)*laplacian(np.cos(arr)), inverse=True ) - arr ) / 2/np.pi ) * 2*np.pi
 
-if __name__="__main__":
+if __name__ == "__main__":
 
     import matplotlib.pyplot as pl
     from time import time

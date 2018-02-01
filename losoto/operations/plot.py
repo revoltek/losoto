@@ -231,6 +231,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     """
     import os, random
     import numpy as np
+    from losoto.lib_unwrap import unwrap, unwrap_2d
 
     logging.info("Plotting soltab: "+soltab.name)
 
@@ -467,16 +468,21 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
                     vals = normalize_phase(vals)
 
-                # unwrap if required
-                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase') and doUnwrap:
-                    vals = unwrap(vals)
-                
                 # is user requested axis in an order that is different from h5parm, we need to transpose
                 if len(axesInPlot) == 2:
                     if soltab.getAxesNames().index(axesInPlot[0]) < soltab.getAxesNames().index(axesInPlot[1]):
                         vals = vals.T
                         weight = weight.T
 
+                # unwrap if required
+                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase') and doUnwrap:
+                    if len(axesInPlot) == 1:
+                        vals = unwrap(vals)
+                    else:
+                        flags = np.array((weight == 0), dtype=bool)
+                        if not (flags == True).all():
+                            vals = unwrap_2d(vals, flags, coord[axesInPlot[0]], coord[axesInPlot[1]])
+                
                 dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.))
             
             soltab.selection = soltab2Selection

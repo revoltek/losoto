@@ -31,9 +31,10 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
     """
     import numpy as np
     import scipy.optimize
+    from losoto.lib_unwrap import unwrap_2d
 
-    dcomplex = lambda d, freq, y: abs(np.cos(-8.44797245e9*d[0]/freq)  - np.cos(y)) + abs(np.sin(-8.44797245e9*d[0]/freq)  - np.sin(y))
-    dcomplex2 = lambda d, freq, y: abs(np.cos(-8.44797245e9*d[0]/freq + d[1])  - np.cos(y)) + abs(np.sin(-8.44797245e9*d[0]/freq + d[1])  - np.sin(y))
+    dcomplex = lambda d, freq, y: -8.44797245e9*d[0]/freq - y
+    dcomplex2 = lambda d, freq, y: -8.44797245e9*d[0]/freq + d[1] - y
 
     logging.info("Find TEC for soltab: "+soltab.name)
 
@@ -72,7 +73,7 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
 
         fitd = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
-        fitdguess = -0. # good guess
+        fitdguess = 0.01 # good guess
 
         if not coord['ant'] == refAnt:
 
@@ -85,13 +86,16 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                 valscomb = np.ma.cos(vals) + 1.j * np.ma.sin(vals)
                 valscomb = np.ma.sum(valscomb, axis=0)
                 valscomb = np.ma.arctan2(np.imag(valscomb), np.real(valscomb))  # np.angle doesnot yet return masked array!!
+                # unwrap 2d timexfreq
+                flags = np.array((weights[0,...] == 0) | (weights[1,...] == 0), dtype=bool)
+                valscomb = unwrap_2d(valscomb, flags, coord['freq'], coord['time'])
 
                 for t, time in enumerate(times):
 
                     # apply flags
                     idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
                     freq      = np.copy(coord['freq'])[idx]
-                    phase_diff  = valscomb[idx,t]
+                    phaseComb  = valscomb[idx,t]
 
                     if len(freq) < 30:
                         fitweights[t] = 0
@@ -102,30 +106,30 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                     if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
                         logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
-                    fitresultd2, success = scipy.optimize.leastsq(dcomplex2, [fitdguess,0.], args=(freq, phase_diff))
+                    fitresultd2, success = scipy.optimize.leastsq(dcomplex2, [fitdguess,0.], args=(freq, phaseComb))
                     print fitresultd2
                     numjumps = np.around(fitresultd2[1]/(2*np.pi))
                     print 'best jumps:', numjumps
-                    phase_diff += numjumps * 2*np.pi
-                    fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitresultd2[0]], args=(freq, phase_diff))
+                    phaseComb -= numjumps * 2*np.pi
+                    fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitresultd2[0]], args=(freq, phaseComb))
                     print fitresultd
-                    best_residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phase_diff ) )
+                    best_residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
                     #best_residual = np.inf
                     #for jump in [-2,-1,0,1,2]:
-                    #    fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitdguess], args=(freq, phase_diff - jump * 2*np.pi))
+                    #    fitresultd, success = scipy.optimize.leastsq(dcomplex, [fitdguess], args=(freq, phaseComb - jump * 2*np.pi))
                     #    print fitresultd
                     #    # fractional residual
-                    #    residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phase_diff - jump * 2*np.pi ) )
+                    #    residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phaseComb - jump * 2*np.pi ) )
                     #    if residual < best_residual:
                     #        best_residual = residual
                     #        fitd[t] = fitresultd[0]
                     #        best_jump = jump
 
-                    fitd[t] = fitresultd[0]
+                    fitd[t] = fitresultd2[0]
                     if maxResidual == 0 or best_residual < maxResidual:
                         fitweights[t] = 1
-                        #fitdguess = fitresultd[0]
+                        fitdguess = fitresultd[0]
                     else:       
                         # high residual, flag
                         logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(best_residual)+').')
@@ -148,14 +152,15 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
 
                         # plot rm fit
                         plotd = lambda d, freq: -8.44797245e9*d/freq # notice the factor of 2
-                        ax.plot(freq, np.mod(plotd(fitd[0], freq[:])+np.pi,2.*np.pi)-np.pi, "-", color='purple')
-                        ax.plot(freq, np.mod(plotd(fitresultd2[0], freq[:])+fitresultd2[1]+np.pi,2.*np.pi)-np.pi, ":", color='purple')
+                        ax.plot(freq, plotd(fitd[0], freq[:]), "-", color='purple')
+                        ax.plot(freq, plotd(fitresultd2[0], freq[:])+fitresultd2[1], ":", color='purple')
 
-                        ax.plot(freq, np.mod(vals[0,idx,t] + np.pi, 2.*np.pi) - np.pi, '.ob' )
+                        ax.plot(freq, np.mod(vals[0,idx,t] + np.pi, 2.*np.pi) - np.pi, '.b' )
                         ax.plot(freq, np.mod(vals[1,idx,t] + np.pi, 2.*np.pi) - np.pi, '.g' )
-                        ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi, 'o', color='purple' )                           
+                        ax.plot(freq, phaseComb + numjumps * 2*np.pi, 'x', color='purple' )                           
+                        ax.plot(freq, phaseComb, 'o', color='purple' )                           
      
-                        residual = np.mod(plotd(fitd[t], freq[:])-phase_diff+np.pi,2.*np.pi)-np.pi
+                        residual = plotd(fitd[t], freq[:])-phaseComb
                         ax.plot(freq, residual, '.', color='orange')
         
                         ax.set_xlabel('freq')
