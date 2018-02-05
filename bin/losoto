@@ -63,7 +63,7 @@ if __name__=='__main__':
         sys.exit(1)
 
     if not tables.is_hdf5_file(args.h5parm):
-        logging.critical('File \"%s\" is not a valid HDF5-file!'%(h5parmFile))
+        logging.critical('File \"%s\" is not a valid HDF5-file!'%(args.h5parm))
         sys.exit(1)
 
     # do actions that do not require a parset

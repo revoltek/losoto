@@ -46,8 +46,10 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
     ants = soltab.getAxisValues('ant')
     if refAnt != '' and not refAnt in ants:
         logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[0]
-    if refAnt == '': refAnt = ants[0]
+        refAnt = ants[1]
+    if refAnt == '' and doUnwrap:
+        logging.error('Unwrap requires reference antenna. Using: '+ants[1])
+        refAnt = ants[1]
 
     soltab.setSelection(ant='CS*', update=True)
 
@@ -74,6 +76,8 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
                 if not (flags[a,:,:] == True).all():
                     logging.debug('Unwrapping: '+ant)
                     vals[a,:,:] = unwrap_2d(vals[a,:,:], flags[a,:,:], coord['freq'], coord['time'])
+                    # center at 0
+                    vals[a] -= np.nanmean(vals[a])
         
         logging.debug('Normilising...')
         t1 = np.ma.array( vals, mask=flags ) # mask flagged data
@@ -81,9 +85,9 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
         D = pos[np.newaxis]-pos[:,np.newaxis] # ant x ant x 3
         D2 = np.triu(np.sqrt(np.sum(D**2,axis=-1))) # calc distance and keep only uppoer triangle larger than 0
         myselect = D2>0
-        dph = np.remainder(dph+np.pi,2*np.pi)-np.pi #center around 0
-        
+
         if not doUnwrap:
+            dph = np.remainder(dph+np.pi,2*np.pi)-np.pi #center around 0
             logging.debug('Re-normalising...')
             avgdph = np.ma.average(dph, axis=2) # avg in freq (can do because is between -pi and pi)
             #one extra step to remove most(all) phase wraps, phase wraps disturbe the averaging...
