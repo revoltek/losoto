@@ -4,13 +4,17 @@ import numpy as np
 import numpy.ma as ma
 import sys
 import logging
+has_fitting=True
 try:
     import casacore.tables # must be loaded before expion - used in other operations as lofarbeam
     from lofar.expion import baselinefitting as fitting
 except:
-    logging.error('No lofar.expion present, clock/tec separation not active.')
-
+#    logging.error('No lofar.expion present, clock/tec separation not active.')
+    logging.debug('No lofar.expion present, clock/tec separation maybe not optimal')
+    has_fitting=False
+light_speed=299792458.
 # from pylab import *
+
 def ClockTEC_3rdorder_func(xarray, par):
     """clock tec fitting withextra parameter for third order ionospheric effects at lowest frequencies"""
     delay = np.array([par[1] * 1e-9]).flatten()  # in ns, array has dimension 1, even if scalar
@@ -18,7 +22,7 @@ def ClockTEC_3rdorder_func(xarray, par):
     TEC = np.array([par[0]]).flatten()  # dTEC in TECU
     drefract = -8.4479745e9 * TEC[:, np.newaxis] / xarray
     TEC3rd = np.array([par[2]]).flatten()  # 3rd_order
-    d3rd = 1e21* TEC3rd[:, np.newaxis] / xarray**3
+    d3rd = light_speed**3* TEC3rd[:, np.newaxis] / xarray**3
 
     return drefract[:, np.newaxis,np.newaxis, :] + delayfact[np.newaxis,:,np.newaxis, :]+d3rd[np.newaxis,np.newaxis,:, :]
 
@@ -400,7 +404,8 @@ def getResidualPhaseWraps(avgResiduals, freqs):
     basef[np.logical_not(tmpflags)] = tmpbasef
     basef = basef.reshape((-1, 1))
     data = avgResiduals[:, :]
-    wraps = fitting.fit(data, basef, wraps, flags).flatten()
+    if has_fitting:
+        wraps = fitting.fit(data, basef, wraps, flags).flatten()
     return (wraps, steps)
 
 
