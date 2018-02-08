@@ -79,7 +79,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
                     # center at 0
                     vals[a] -= np.nanmean(vals[a])
         
-        logging.debug('Normilising...')
+        logging.debug('Normalising...')
         t1 = np.ma.array( vals, mask=flags ) # mask flagged data
         dph = t1[np.newaxis]-t1[:,np.newaxis] # ant x ant x freq x time
         D = pos[np.newaxis]-pos[:,np.newaxis] # ant x ant x 3

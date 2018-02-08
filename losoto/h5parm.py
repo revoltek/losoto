@@ -1026,8 +1026,6 @@ class Soltab( object ):
         axis : str
             The axis name.
         """
-        if not axis in self.getAxesNames() and (axis != 'val' and axis != 'weight'):
-            logging.error('Axis \"'+axis+'\" not found.')
         if axis == 'val':
             return self.getValues(retAxesVals=False)
         elif axis == 'weight':

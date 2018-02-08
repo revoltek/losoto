@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
     """
-    TEC extraction.
+    Bruteforce TEC extraction from phase solutions.
 
     Parameters
     ----------

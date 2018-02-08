@@ -17,7 +17,7 @@ def _run_parser(soltab, parser, step):
 def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False):
     """
     This operation for LoSoTo implement a smoothing function: running-median on an arbitrary number of axes, running polyfit on one axis, or set all solutions to mean/median value.
-    WEIGHH: flag ready
+    WEIGHH: flag ready.
 
     Parameters
     ----------
