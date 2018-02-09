@@ -7,7 +7,7 @@ import logging
 logging.debug('Loading REWEIGHT module.')
 
 def _run_parser(soltab, parser, step):
-    method = parser.getstr( step, 'method', 'uniform' )
+    mode = parser.getstr( step, 'mode', 'uniform' )
     weightVal = parser.getfloat( step, 'weightVal', 1. )
     nmedian = parser.getint( step, 'nmedian', 3 )
     nstddev = parser.getint( step, 'nstddev', 251 )
@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
     flagBad = parser.getbool( step, 'flagBad', False )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
-    return run(soltab, method, weightVal, nmedian, nstddev, soltabImport, flagBad, ncpu)
+    return run(soltab, mode, weightVal, nmedian, nstddev, soltabImport, flagBad, ncpu)
 
 
 def _rolling_window_lastaxis(a, window):
@@ -151,35 +151,38 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
     outQueue.put([sindx, w])
 
 
-def run( soltab, method='uniform', weightVal=1., nmedian=3, nstddev=251,
+def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
     soltabImport='', flagBad=False, ncpu=0 ):
     """
-    This operation resets the weight vals
+    Change the the weight values.
 
     Parameters
     ----------
-    method : str, optional
-        One of 'uniform' (single value) or 'window' (sliding window in time).
+    mode : str, optional
+        One of 'uniform' (single value), 'window' (sliding window in time), or 'copy' (copy from another table), by default 'uniform'.
     weightVal : float, optional
         Set weights to this values (0=flagged), by default 1.
     nmedian : odd int, optional
-        Median window size in number of timeslots for 'window' method.
+        Median window size in number of timeslots for 'window' mode.
         If nonzero, a median-smoothed version of the input values is
         subtracted to detrend them. If 0, no smoothing or subtraction is
-        done.
+        done, by default 3.
     nstddev : odd int, optional
-        Standard deviation window size in number of timeslots for 'window' method.
+        Standard deviation window size in number of timeslots for 'window' mode, by default 251.
     soltabImport : str, optional
-        Name of a soltab. Copy weights from this soltab, by default do not copy.
+        Name of a soltab. Copy weights from this soltab (must have same axes shape), by default none.
     flagBad : bool, optional
-        Re-apply flags to bad values, by default False.
+        Re-apply flags to bad values (1 for amp, 0 for other tables), by default False.
     """
 
     import numpy as np
 
     logging.info("Reweighting soltab: "+soltab.name)
 
-    if soltabImport != '':
+    if mode == 'copy':
+        if soltabImport == '': 
+            logging.error('In copy mode a soltabImport must be specified.')
+            return 1
         solset = soltab.getSolset()
         soltabI = solset.getSoltab(soltabImport)
         soltabI.selection = soltab.selection
@@ -187,45 +190,46 @@ def run( soltab, method='uniform', weightVal=1., nmedian=3, nstddev=251,
         weights, axes = soltab.getValues(weight = True)
         weightsI, axesI = soltabI.getValues(weight = True)
         if axes.keys() != axesI.keys() or weights.shape != weightsI.shape:
-            logging.error('Impossible to merge two tables with different axes values')
+            logging.error('Impossible to merge: two tables have with different axes values.')
             return 1
         weightsI[ np.where(weights == 0) ] = 0.
         soltab.setValues(weightsI, weight=True)
         soltab.addHistory('WEIGHT imported from '+soltabI.name+'.')
-    else:
-        if method == 'uniform':
-            weights = weightVal
-            soltab.addHistory('REWEIGHTED to '+str(weightVal)+'.')
-        elif method == 'window':
-            if ncpu == 0:
-                import multiprocessing
-                ncpu = multiprocessing.cpu_count()
-            if nmedian !=0 and nmedian % 2 == 0:
-                logging.error('nmedian must be odd')
-                return 1
-            if nstddev % 2 == 0:
-                logging.error('nstddev must be odd')
-                return 1
 
-            tindx = soltab.axesNames.index('time')
-            antindx = soltab.axesNames.index('ant')
-            vals = soltab.val[:].swapaxes(antindx, 0)
-            if tindx == 0:
-                tindx = antindx
-            mpm = multiprocManager(ncpu, _estimate_weights_window)
-            for sindx, sval in enumerate(vals):
-                if np.all(sval == 0.0):
-                    # skip reference station
-                    continue
-                mpm.put([sindx, sval.swapaxes(tindx-1, -1), nmedian, nstddev, soltab.getType()])
-            mpm.wait()
-            weights = np.ones(vals.shape)
-            for (sindx, w) in mpm.get():
-                weights[sindx, :] = w.swapaxes(-1, tindx-1)
-            weights = weights.swapaxes(0, antindx)
+    elif mode == 'uniform':
+        soltab.addHistory('REWEIGHTED to '+str(weightVal)+'.')
+        soltab.setValues(weightVal, weight=True)
 
-            soltab.addHistory('REWEIGHTED using sliding window with nmedian={0} '
-                'and nstddev={1} timeslots'.format(nmedian, nstddev))
+    elif mode == 'window':
+        if ncpu == 0:
+            import multiprocessing
+            ncpu = multiprocessing.cpu_count()
+        if nmedian !=0 and nmedian % 2 == 0:
+            logging.error('nmedian must be odd')
+            return 1
+        if nstddev % 2 == 0:
+            logging.error('nstddev must be odd')
+            return 1
+
+        tindx = soltab.axesNames.index('time')
+        antindx = soltab.axesNames.index('ant')
+        vals = soltab.val[:].swapaxes(antindx, 0)
+        if tindx == 0:
+            tindx = antindx
+        mpm = multiprocManager(ncpu, _estimate_weights_window)
+        for sindx, sval in enumerate(vals):
+            if np.all(sval == 0.0):
+                # skip reference station
+                continue
+            mpm.put([sindx, sval.swapaxes(tindx-1, -1), nmedian, nstddev, soltab.getType()])
+        mpm.wait()
+        weights = np.ones(vals.shape)
+        for (sindx, w) in mpm.get():
+            weights[sindx, :] = w.swapaxes(-1, tindx-1)
+        weights = weights.swapaxes(0, antindx)
+
+        soltab.addHistory('REWEIGHTED using sliding window with nmedian={0} '
+            'and nstddev={1} timeslots'.format(nmedian, nstddev))
         soltab.setValues(weights, weight=True)
 
     if flagBad:

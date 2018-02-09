@@ -66,13 +66,13 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             if cmesh:
                 axa[0].set_ylabel(axesInPlot[1]+ylabelunit, fontsize=20)
             else:
-                axa[0].set_ylabel(datatype, fontsize=20)
+                axa[0].set_ylabel(datatype+ylabelunit, fontsize=20)
         else:
             [ax.set_xlabel(axesInPlot[0]+xlabelunit, fontsize=20) for ax in axa[-1,:]]
             if cmesh:
                 [ax.set_ylabel(axesInPlot[1]+ylabelunit, fontsize=20) for ax in axa[:,0]]
             else:
-                [ax.set_ylabel(datatype, fontsize=20) for ax in axa[:,0]]
+                [ax.set_ylabel(datatype+ylabelunit, fontsize=20) for ax in axa[:,0]]
 
         # if gaps in time, collapse and add a black vertical line on separation points
         if axesInPlot[0] == 'time' and cmesh == False:
@@ -218,7 +218,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
     
     makeAntPlot : bool, optional
-        Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]. By default False.
+        Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.
     
     makeMovie : bool, optional
         Make a movie summing up all the produced plots, by default False.
@@ -380,7 +380,16 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 ylabelunit = ' [MHz]'
         else: 
             yvals = None
-            ylabelunit = None
+            if datatype == 'clock':
+                ylabelunit = ' (s)'
+            elif datatype == 'tec':
+                ylabelunit = ' (TECU)'
+            elif datatype == 'rotationmeasure':
+                ylabelunit = r' (rad m$^{-2}$)'
+            elif datatype == 'tec3rd':
+                ylabelunit = r' (rad m$^{-3}$)'
+            else:
+                ylabelunit = ''
 
         # cycle on tables
         soltab1Selection = soltab.selection # save global selection and subselect only axex to iterate

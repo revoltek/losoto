@@ -18,7 +18,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average=False, replace=False, refAnt='' ):
     """
-    Estimate polarization alignment as delay
+    Estimate polarization misalignment as delay.
 
     Parameters
     ----------
