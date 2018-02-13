@@ -50,6 +50,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
     if refAnt == '' and doUnwrap:
         logging.error('Unwrap requires reference antenna. Using: '+ants[1])
         refAnt = ants[1]
+    if refAnt == '': refAnt = None
 
     soltab.setSelection(ant='CS*', update=True)
 
@@ -84,11 +85,11 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
         dph = t1[np.newaxis]-t1[:,np.newaxis] # ant x ant x freq x time
         D = pos[np.newaxis]-pos[:,np.newaxis] # ant x ant x 3
         D2 = np.triu(np.sqrt(np.sum(D**2,axis=-1))) # calc distance and keep only uppoer triangle larger than 0
-        myselect = D2>0
+        myselect = (D2>0)
 
         if not doUnwrap:
-            dph = np.remainder(dph+np.pi,2*np.pi)-np.pi #center around 0
             logging.debug('Re-normalising...')
+            dph = np.remainder(dph+np.pi,2*np.pi)-np.pi #center around 0
             avgdph = np.ma.average(dph, axis=2) # avg in freq (can do because is between -pi and pi)
             #one extra step to remove most(all) phase wraps, phase wraps disturbe the averaging...
             dph = np.remainder(dph - np.ma.average(avgdph,axis=-1)[:,:,np.newaxis,np.newaxis]+np.pi,2*np.pi) + np.ma.average(avgdph,axis=-1)[:,:,np.newaxis,np.newaxis]-np.pi #center around the avg value
@@ -102,11 +103,14 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             variance = np.ma.var(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
 
             # linear regression
-            A = np.ones((2,D2[myselect].shape[0]),dtype=float)
-            A[1,:] = np.log10(D2[myselect])
-            par = np.dot(np.linalg.inv(np.dot(A,A.T)),np.dot(A,np.log10(variance[myselect])))
-            S0 = 10**(-1*np.array(par)[0]/np.array(par)[1])
-            logging.info(r't%i: $\beta=%.2f$ - $R_{diff}=%.2f$ km' % (i, par[1], S0/1.e3))
+            #A = np.ones((2,D2[myselect].shape[0]),dtype=float)
+            #A[1,:] = np.log10(D2[myselect][~variance.mask])
+            #par = np.dot(np.linalg.inv(np.dot(A,A.T)),np.dot(A,np.log10(variance[myselect])))
+            mask = variance[myselect].mask
+            A = np.vstack([np.log10(D2[myselect][~mask]), np.ones(len(D2[myselect][~mask]))])
+            par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) )[0] 
+            S0 = 10**(-1*par[1]/par[0])
+            logging.info(r't%i: $\beta=%.2f$ - $R_{diff}=%.2f$ km' % (i, par[0], S0/1.e3))
             variances.append(variance)
 
         if plotName != '':
@@ -122,18 +126,28 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             fig = plt.figure()
             fig.subplots_adjust(wspace=0)
             ax = fig.add_subplot(111)
+            ax1 = ax.twinx()
             
             for i, variance in enumerate(variances):
                 if len(variances) > 1:
                     color = plt.cm.jet(i/float(len(variances)-1)) # from 0 to 1
                 else: color = 'black'
                 ax.plot(D2[myselect]/1.e3,variance[myselect],marker='o',linestyle='',color=color, markeredgecolor='none', label='T')
+
+            # regression
+            x = D2[myselect]
+            ax1.plot(x.flatten()/1.e3, par[0]*np.log10(x.flatten()) + par[1], '-k')
     
             ax.set_xlabel('Distance (km)')
             ax.set_ylabel(r'Phase variance @150 MHz (rad$^2$)')
             ax.set_xscale('log')
             ax.set_yscale('log')
+
+            ymin = np.min(variance[myselect])
+            ymax = 100*np.max(variance[myselect])
             ax.set_xlim(xmin=0.1,xmax=3)
+            ax.set_ylim(ymin,ymax)
+            ax1.set_ylim(np.log10(ymin),np.log10(ymax))
         
             logging.warning('Save pic: %s' % plotName)
             plt.savefig(plotName, bbox_inches='tight')

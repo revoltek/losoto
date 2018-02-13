@@ -139,8 +139,12 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                     ax.set_ylabel('')
                     ax.axes.get_xaxis().set_ticks([])
                     ax.axes.get_yaxis().set_ticks([])
-                    areas = 15 + np.pi * (10 * ( vals+np.abs(np.min(vals)) ) / np.max( vals+np.abs(np.min(vals)) ))**2 # normalize marker diameter to 15-30 pt
-                    ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas)
+                    vals = (vals-0.9)/(1.1-0.9)
+                    areas = ( 5+vals*15 )**2 # normalize marker diameter in pts**2 to 15-30 pt - assumes vals are between 0 and 1!
+                    ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas, cmap=plt.cm.jet, vmin=0, vmax=1)
+                    size = np.max( [np.max(antCoords[0])-np.min(antCoords[0]), np.max(antCoords[1])-np.min(antCoords[1])] )*1.1 # make img squared
+                    ax.set_xlim( xmin=np.median(antCoords[0])-size/2., xmax=np.median(antCoords[0])+size/2. )
+                    ax.set_ylim( ymin=np.median(antCoords[1])-size/2., ymax=np.median(antCoords[1])+size/2. )
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
                     if plotFlag: 
@@ -154,7 +158,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                         if automaxZ < vals.max(fill_value=-np.inf) or automaxZ == -np.inf:
                             automaxZ = vals.max(fill_value=-np.inf)
 
-        if not cmesh: 
+        if not cmesh and antCoords == []: 
             if minZ != 0:
                 ax.set_ylim(ymin=minZ)
             else:
@@ -308,8 +312,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             return 1
         antCoords = [[],[]]
         for ant in soltab.getAxisValues('ant'): # select only user-selected antenna in proper order
-            antCoords[0].append(H.getAnt(soltab.getAddress().split('/')[0])[ant][0])
-            antCoords[1].append(H.getAnt(soltab.getAddress().split('/')[0])[ant][1])
+            antCoords[0].append(+1*soltab.getSolset().getAnt()[ant][1])
+            antCoords[1].append(-1*soltab.getSolset().getAnt()[ant][0])
+
     else:
         antCoords = []
         
@@ -529,7 +534,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                 "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
         os.system(ss)
-        #print ss
-        for png in pngs: os.system('rm '+png)
+        print ss
+        #for png in pngs: os.system('rm '+png)
 
     return 0
