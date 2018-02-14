@@ -62,7 +62,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """
     import numpy as np
     from math import factorial
-    
+
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
@@ -83,19 +83,19 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
     return np.convolve( m[::-1], y, mode='valid')
-    
+
 def median_window_filter(ampl, half_window, threshold):
     ampl_tot_copy = np.copy(ampl)
     ndata = len(ampl)
     flags = np.zeros(ndata, dtype=bool)
     sol = np.zeros(ndata+2*half_window)
     sol[half_window:half_window+ndata] = ampl
-    
+
     for i in range(0, half_window):
         # Mirror at left edge.
         idx = min(ndata-1, half_window-i)
         sol[i] = ampl[idx]
-        
+
         # Mirror at right edge
         idx = max(0, ndata-2-i)
         sol[ndata+half_window+i] = ampl[idx]
@@ -130,12 +130,12 @@ def median_window_filter(ampl, half_window, threshold):
         if mask[i]:
             ampl_tot_copy[i] = median_array[half_window+i] # fixed 2012
     return ampl_tot_copy
-    
-    
+
+
 def running_median(ampl,half_window) :
 
     ampl_tot_copy = np.copy(ampl)
-    
+
     ndata = len(ampl)
     flags = np.zeros(ndata, dtype=bool)
     sol = np.zeros(ndata+2*half_window)
@@ -150,10 +150,10 @@ def running_median(ampl,half_window) :
         # Mirror at right edge
         idx = max(0, ndata-2-i)
         sol[ndata+half_window+i] = ampl[idx]
-    
+
     for i in range(len(ampl)):
         #print i, i+half_window
-        std[i] =  np.median(sol[i:i+(2*half_window)])  
+        std[i] =  np.median(sol[i:i+(2*half_window)])
 
     return std
 
@@ -161,20 +161,17 @@ def running_median(ampl,half_window) :
 def run( soltab, BadSBList = '', n_chan = 4):
 
     import numpy as np
-    import matplotlib
-    import matplotlib.pyplot
     import scipy
     import scipy.ndimage
-    import pylab
 
     logging.info("Running prefactor_bandpass on: "+soltab.name)
     solset = soltab.getSolset()
-    
+
     solType = soltab.getType()
     if solType != 'amplitude':
        logging.warning("Soltab type of "+soltab.name+" is: "+solType+" should be amplitude. Ignoring.")
        return 1
-    
+
     if BadSBList == '':
       bad_sblist   = []
     else:
@@ -183,9 +180,9 @@ def run( soltab, BadSBList = '', n_chan = 4):
     source_id  = 0
 
     logging.info("bad SBs: " + str(bad_sblist))
-    
+
     amplitude_arraytmp = soltab.val[:]
-    
+
     logging.info("Shape of amplitudes array: " + str(np.shape(amplitude_arraytmp)))
 
     nfreqs = len(soltab.freq[:])
@@ -193,7 +190,7 @@ def run( soltab, BadSBList = '', n_chan = 4):
     nants = len(soltab.ant[:])
 
     logging.info("Number of antennas: " + str(len(soltab.ant[:])) +  " of frequencies: " + str(nfreqs) + ", and of times: " + str(ntimes))
-    
+
     freqidx = np.arange(n_chan/2,nfreqs,n_chan)
     freqs = soltab.freq[freqidx]
     timeidx = np.arange(ntimes)
@@ -244,7 +241,7 @@ def run( soltab, BadSBList = '', n_chan = 4):
             elif time>0:
                 amps_array_flagged[antenna_id,time,:,1] = amps_array_flagged[antenna_id,(time-1),:,1]
 
-       
+
     ampsoutfile = open('calibrator_amplitude_array.txt','w')
     ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
     for antenna_id in range(0,len(soltab.ant[:])):
@@ -261,13 +258,13 @@ def run( soltab, BadSBList = '', n_chan = 4):
 
         for time in range(0,len(soltab.time[:])):
             amps_array[antenna_id,time,:,0] = np.copy(savitzky_golay(amp_xx[time,:], 17, 2))
-            amps_array[antenna_id,time,:,1] = np.copy(savitzky_golay(amp_yy[time,:], 17, 2))       
-     
+            amps_array[antenna_id,time,:,1] = np.copy(savitzky_golay(amp_yy[time,:], 17, 2))
+
         for i in range(0,len(freqs_new)):
             amps_array[antenna_id,:,i,0] = np.median(amps_array[antenna_id,:,i,0])
             amps_array[antenna_id,:,i,1] = np.median(amps_array[antenna_id,:,i,1])
             pass
-    
+
     new_soltab = solset.makeSoltab(soltype='amplitude', soltabName='bandpass',
                              axesNames=['ant', 'freq', 'pol'], axesVals=[soltab.ant, freqs_new, ['XX','YY']],
                              vals=amps_array[:,0,:,:],

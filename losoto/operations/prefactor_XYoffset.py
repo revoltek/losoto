@@ -29,22 +29,21 @@ def run( soltab):
 
     import numpy as np
     import scipy.signal as s
-    import pylab as pl
 
     logging.info("Running XYoffset on: "+soltab.name)
     solset = soltab.getSolset()
-    
+
     solType = soltab.getType()
     if solType != 'phase':
        logging.warning("Soltab type of "+soltab.name+" is: "+solType+" should be phase. Ignoring.")
        return 1
-    
+
     phases_tmp = np.copy(soltab.val)
     freqs = np.copy(soltab.freq)
     npol = len(soltab.pol)
     sourceID = 0
     refstationID=2
-    
+
     stationsnames = [ stat for stat in soltab.ant]
     # this gets the subband number to any given frequency in HBA-low
     subbands = np.unique(np.round(freqs/195.3125e3-512.))
@@ -72,8 +71,8 @@ def run( soltab):
     global_stat_offsets_smoothed = np.zeros([nsubbands,nstations,npol])
     for istat in xrange(nstations):
         global_stat_offsets_smoothed[:,istat,-1] = s.medfilt(global_stat_offsets[istat,:], kernel_size=15)
-        
-    
+
+
     new_soltab = solset.makeSoltab(soltype='phase', soltabName='XYoffset',
                              axesNames=['freq', 'ant', 'pol'], axesVals=[freq_per_sb, soltab.ant, ['XX','YY']],
                              vals=global_stat_offsets_smoothed,
