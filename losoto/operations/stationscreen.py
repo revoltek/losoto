@@ -292,14 +292,17 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
     stddev = np.zeros(weights.shape)
     flagged = np.where(weights == 0.0)
     nonflagged = np.where(weights > 0.0)
+    if nonflagged[0].size == 0:
+        return weights
+
     if screen_type == 'phase':
         # Use circular stddev
         residual = normalize_phase(residual)
         residual_nan = residual.copy()
         residual_nan[flagged] = np.nan
         screen_stddev = nancircstd(residual_nan, axis=0)
-    elif screen_type == 'amplitude':
-        # Use log residuals
+    elif screen_type == 'tec' or screen_type == 'amplitude':
+        # Use normal stddev
         screen_stddev = np.sqrt(np.average(residual[nonflagged]**2,
             weights=weights[nonflagged], axis=0))
 
@@ -331,14 +334,15 @@ def _circ_chi2(samples, weights):
     import numpy as np
 
     unflagged = np.where(weights > 0.0)
+    if unflagged[0].size == 0:
+        return 0.0
+
     x1 = np.sin(samples[unflagged])
     x2 = np.cos(samples[unflagged])
     meanx1, sumw = np.average(x1**2, weights=weights[unflagged], returned=True)
     meanx2, sumw = np.average(x2**2, weights=weights[unflagged], returned=True)
     R = np.hypot(meanx1, meanx2)
     var = (1.0 - R)
-    if np.isnan(var):
-        0/0
 
     return var * sumw
 
@@ -462,7 +466,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
         # Calculate phase screen
         screen_fit = np.arctan2(np.dot(C, imag_fit), np.dot(C, real_fit))
         screen_fit_white = np.dot(pinvC, screen_fit)
-    else:
+    elif screen_type == 'amplitude':
         # Calculate log(amp) screen
         rr = rr[unflagged]
         rr1 = np.dot(np.transpose(U[:, :order]), np.dot(w, np.log10(rr)))
@@ -470,6 +474,15 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
         # Calculate amp screen
         screen_fit = 10**(np.dot(C, amp_fit_log))
+        screen_fit_white = np.dot(pinvC, screen_fit)
+    elif screen_type == 'tec':
+        # Calculate tec screen
+        rr = rr[unflagged]
+        rr1 = np.dot(np.transpose(U[:, :order]), np.dot(w, rr))
+        tec_fit = np.dot(pinvC, np.dot(U[:, :order], np.dot(invU, rr1)))
+
+        # Calculate amp screen
+        screen_fit = np.dot(C, tec_fit)
         screen_fit_white = np.dot(pinvC, screen_fit)
 
     # Calculate screen in all directions
@@ -556,8 +569,8 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
 
     # Get screen type
     screen_type = soltab.getType()
-    if screen_type not in ['phase', 'amplitude']:
-        logging.error('Screens can only be fit to soltabs of type "phase" or "amplitude".')
+    if screen_type not in ['phase', 'amplitude', 'tec']:
+        logging.error('Screens can only be fit to soltabs of type "phase", "tec", or "amplitude".')
         return 1
     logging.info('Using solution table {0} to calculate {1} screens'.format(soltab.name, screen_type))
 
@@ -594,6 +607,8 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     for source in source_names:
         source_positions.append(source_dict[source])
     station_names = soltab.ant[:]
+    if type(station_names) is not list:
+        station_names = station_names.tolist()
     station_dict = solset.getAnt()
     station_positions = []
     for station in station_names:
@@ -660,10 +675,10 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
 
             # Fit screens
             for s, stat in enumerate(station_names):
-                if s == refAnt and screen_type == 'phase':
-                    # skip reference station (phase-type only)
+                if s == refAnt and (screen_type == 'phase' or screen_type == 'tec'):
+                    # skip reference station (phase- or tec-type only)
                     continue
-                screen_order[s, :, freq_ind, pol_ind] = order
+                screen_order[s, :, freq_ind, pol_ind] = station_order[s]
                 rr = np.reshape(r[:, s, :], [N_piercepoints, N_times])
                 pp = pp_list[s]
 
@@ -677,8 +692,8 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                 for iterindx in range(niter):
                     if iterindx > 0:
                         # Flag outliers
-                        if screen_type == 'phase':
-                            # Use circular stddev
+                        if screen_type == 'phase' or screen_type == 'tec':
+                            # Use residuals
                             screen_diff = residual[:, s, :, freq_ind, pol_ind]
                         elif screen_type == 'amplitude':
                             # Use log residuals
@@ -694,6 +709,8 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                             norderiter = 4
                     for tindx, t in enumerate(times):
                         N_unflagged = np.where(station_weights[:, tindx] > 0.0)[0].size
+                        if N_unflagged == 0:
+                            continue
                         if screen_order[s, tindx, freq_ind, pol_ind] > N_unflagged-1:
                             screen_order[s, tindx, freq_ind, pol_ind] = N_unflagged-1
                         hit_upper = False
@@ -714,7 +731,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                             if not np.all(station_weights[:, tindx] == 0.0) and not skip_fit:
                                 scr, res = _fit_screen([stat], source_names, full_matrices[s],
                                     pp[:, :], rr[:, tindx], station_weights[:, tindx],
-                                    screen_order[s, tindx, freq_ind, pol_ind], r_0, beta, screen_type)
+                                    int(screen_order[s, tindx, freq_ind, pol_ind]), r_0, beta, screen_type)
                                 screen[:, s, tindx, freq_ind, pol_ind] = scr[:, 0]
                                 residual[:, s, tindx, freq_ind, pol_ind] = res[:, 0]
 
