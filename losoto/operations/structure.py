@@ -73,14 +73,16 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
         # unwrap
         if doUnwrap:
+            # remove mean to facilitate unwrapping
             for a, ant in enumerate(coord['ant']):
-                if not (flags[a,:,:] == True).all():
+                if not (flags[a,:,:] == True).all() and ant != refAnt:
                     logging.debug('Unwrapping: '+ant)
+                    mean = np.angle( np.nanmean( np.exp(1j*vals[a].flatten()) ))
+                    vals[a] -= mean
+                    vals[a] = np.mod(vals[a]+np.pi, 2*np.pi) - np.pi
                     vals[a,:,:] = unwrap_2d(vals[a,:,:], flags[a,:,:], coord['freq'], coord['time'])
-                    # center at 0
-                    vals[a] -= np.nanmean(vals[a])
         
-        logging.debug('Normalising...')
+        logging.debug('Computing differential values...')
         t1 = np.ma.array( vals, mask=flags ) # mask flagged data
         dph = t1[np.newaxis]-t1[:,np.newaxis] # ant x ant x freq x time
         D = pos[np.newaxis]-pos[:,np.newaxis] # ant x ant x 3
@@ -89,15 +91,15 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
         if not doUnwrap:
             logging.debug('Re-normalising...')
-            dph = np.remainder(dph+np.pi,2*np.pi)-np.pi #center around 0
+            dph = np.mod(dph+np.pi, 2*np.pi) - np.pi
             avgdph = np.ma.average(dph, axis=2) # avg in freq (can do because is between -pi and pi)
             #one extra step to remove most(all) phase wraps, phase wraps disturbe the averaging...
             dph = np.remainder(dph - np.ma.average(avgdph,axis=-1)[:,:,np.newaxis,np.newaxis]+np.pi,2*np.pi) + np.ma.average(avgdph,axis=-1)[:,:,np.newaxis,np.newaxis]-np.pi #center around the avg value
         
-        logging.debug('Get sructure function...')
+        logging.debug('Computing sructure function...')
         avgdph = np.ma.average(dph,axis=2) # avg in freq to reduce noise
 
-        variances = []
+        variances = []; pars = []
         avgdph = avgdph[...,avgdph.shape[-1]%ndiv:] # remove a few timeslots to make the array divisible by np.split
         for i, avgdphSplit in enumerate( np.split(avgdph, ndiv, axis=-1) ):
             variance = np.ma.var(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
@@ -110,16 +112,15 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             A = np.vstack([np.log10(D2[myselect][~mask]), np.ones(len(D2[myselect][~mask]))])
             par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) )[0] 
             S0 = 10**(-1*par[1]/par[0])
-            logging.info(r't%i: $\beta=%.2f$ - $R_{diff}=%.2f$ km' % (i, par[0], S0/1.e3))
+            logging.info(r't%i: beta=%.2f - R_diff=%.2f km' % (i, par[0], S0/1.e3))
             variances.append(variance)
+            pars.append(par)
 
         if plotName != '':
             if plotName.split('.')[-1] != 'png': plotName += '.png' # add png
 
             if not 'matplotlib' in sys.modules:
                 import matplotlib as mpl
-                mpl.rc('font',size = 20 )
-                mpl.rcParams['xtick.labelsize'] = 20
                 mpl.use("Agg")
             import matplotlib.pyplot as plt
     
@@ -132,22 +133,27 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
                 if len(variances) > 1:
                     color = plt.cm.jet(i/float(len(variances)-1)) # from 0 to 1
                 else: color = 'black'
-                ax.plot(D2[myselect]/1.e3,variance[myselect],marker='o',linestyle='',color=color, markeredgecolor='none', label='T')
+                ax.plot(D2[myselect]/1.e3,variance[myselect],marker='o',linestyle='', color=color, markeredgecolor='none', label='T')
 
-            # regression
-            x = D2[myselect]
-            ax1.plot(x.flatten()/1.e3, par[0]*np.log10(x.flatten()) + par[1], '-k')
-    
+                # regression
+                par = pars[i]
+                x = D2[myselect]
+                S0 = 10**(-1*par[1]/par[0])
+                if color == 'black': color = 'red' # in case of single color, use red line that is more visible
+                ax1.plot(x.flatten()/1.e3, par[0]*np.log10(x.flatten()) + par[1], linestyle='-', color=color, label=r'$\beta=%.2f$ - $R_{\rm diff}=%.2f$ km' % (par[0], S0/1.e3))
+
             ax.set_xlabel('Distance (km)')
             ax.set_ylabel(r'Phase variance @150 MHz (rad$^2$)')
             ax.set_xscale('log')
             ax.set_yscale('log')
 
             ymin = np.min(variance[myselect])
-            ymax = 100*np.max(variance[myselect])
+            ymax = np.max(variance[myselect])
             ax.set_xlim(xmin=0.1,xmax=3)
             ax.set_ylim(ymin,ymax)
             ax1.set_ylim(np.log10(ymin),np.log10(ymax))
+            ax1.legend(loc='lower right', frameon=False)
+            ax1.set_yticks([])
         
             logging.warning('Save pic: %s' % plotName)
             plt.savefig(plotName, bbox_inches='tight')
