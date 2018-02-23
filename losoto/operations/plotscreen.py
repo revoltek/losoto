@@ -6,6 +6,7 @@
 
 import logging
 from losoto.lib_operations import *
+from losoto.operations.directionscreen import _calc_piercepoint
 
 logging.debug('Loading PLOTSCREEN module.')
 
@@ -363,7 +364,7 @@ def _calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, u
             if height == 0.0:
                 p = np.array([xi, yi, 0.0])
             else:
-                p, airmass = calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
+                p, airmass = _calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
             d2 = np.sum(np.square(pp - p), axis=1)
             c = -(d2 / ( r_0**2 ))**(beta_val / 2.0) / 2.0
             screen[i, j] = np.dot(c, f)
@@ -523,7 +524,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     if sindx >= 0:
         plt.title('Station {0}, Time {1} (red. chi2 = {2:0.3f})'.format(station_names[sindx], k, redchi2))
     else:
-        plt.title('Time {0} (red. chi2 = {1:0.3f})'.format(k, redchi2))
+        plt.title('Time {0}'.format(k))
     if is_image_plane:
         ax.set_xlim(lower[0], upper[0])
         ax.set_ylim(lower[1], upper[1])

@@ -276,7 +276,7 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
     nsigma : float
         Number of sigma above with outliers are clipped (= weight set to zero)
     screen_type : str
-        Type of screen: 'phase' or 'amplitude'
+        Type of screen: 'phase', 'tec', or 'amplitude'
 
     Returns
     -------
