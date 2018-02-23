@@ -146,7 +146,11 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
     else:
         fudge_factor = 1.0
     w = 1.0 / np.square(stddev*fudge_factor)
-    w[w > 65504.0] = 65504.0
+
+    # Rescale to fit in float16
+    float16max = 65504.0
+    if np.max(w) > float16max:
+        w *= float16max / np.max(w)
 
     outQueue.put([sindx, w])
 
@@ -180,7 +184,7 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
     logging.info("Reweighting soltab: "+soltab.name)
 
     if mode == 'copy':
-        if soltabImport == '': 
+        if soltabImport == '':
             logging.error('In copy mode a soltabImport must be specified.')
             return 1
         solset = soltab.getSolset()

@@ -6,6 +6,7 @@
 
 import logging
 from losoto.lib_operations import *
+from losoto.operations.directionscreen import _calc_piercepoint
 
 logging.debug('Loading PLOTSCREEN module.')
 
@@ -331,7 +332,6 @@ def _calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, u
     from numpy import kron, concatenate, newaxis
     from numpy.linalg import pinv, norm
     import numpy as np
-    from losoto.operations.tecscreen import calc_piercepoint
 
     screen = np.zeros((Nx, Ny))
 
@@ -364,7 +364,7 @@ def _calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, u
             if height == 0.0:
                 p = np.array([xi, yi, 0.0])
             else:
-                p, airmass = calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
+                p, airmass = _calc_piercepoint(np.dot(np.array([xi, yi]), np.array([east, north])), up, height)
             d2 = np.sum(np.square(pp - p), axis=1)
             c = -(d2 / ( r_0**2 ))**(beta_val / 2.0) / 2.0
             screen[i, j] = np.dot(c, f)
@@ -427,7 +427,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         mpl.use("Agg")
     import matplotlib as mpl
     import matplotlib.pyplot as plt # after setting "Agg" to speed up
-    from losoto.operations.phasescreen import xy2radec, makeWCS, circ_chi2
+    from losoto.operations.stationscreen import _makeWCS, _circ_chi2
     import numpy as np
     try:
         try:
@@ -453,7 +453,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     sm._A = []
 
     if is_image_plane and hasWCSaxes:
-        wcs = makeWCS(midRA, midDec)
+        wcs = _makeWCS(midRA, midDec)
         ax = fig.add_axes([0.15, 0.1, 0.8, 0.8], projection=wcs)
     else:
         plt.gca().set_aspect('equal')
@@ -463,6 +463,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     c = []
     xf = []
     yf = []
+    weights = np.array(weights, dtype=float)
     nonflagged = np.where(weights > 0.0)
     for j in range(fitted_phase1.shape[0]):
         if weights[j] > 0.0:
@@ -504,7 +505,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     cbar = plt.colorbar(im)
     cbar.set_label('Value', rotation=270)
 
-    ax.scatter(np.array(x), np.array(y), s=np.array(s), c=np.array(c), alpha=0.7)
+    ax.scatter(np.array(x), np.array(y), s=np.array(s), c=np.array(c), alpha=0.7, cmap=cmap, vmin=vmin, vmax=vmax)
     if len(xf) > 0:
         ax.scatter(xf, yf, s=120, c='k', marker='x')
     if show_source_names:
@@ -517,13 +518,13 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
 
     nsrcs = np.where(weights > 0.0)[0].size
     if is_phase:
-        redchi2 =  circ_chi2(residuals, weights) / (nsrcs-order)
+        redchi2 =  _circ_chi2(residuals, weights) / (nsrcs-order)
     else:
         redchi2 =  np.sum(np.square(residuals) * weights) / (nsrcs-order)
     if sindx >= 0:
         plt.title('Station {0}, Time {1} (red. chi2 = {2:0.3f})'.format(station_names[sindx], k, redchi2))
     else:
-        plt.title('Time {0} (red. chi2 = {1:0.3f})'.format(k, redchi2))
+        plt.title('Time {0}'.format(k))
     if is_image_plane:
         ax.set_xlim(lower[0], upper[0])
         ax.set_ylim(lower[1], upper[1])
@@ -607,7 +608,7 @@ def _make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
     from numpy.linalg import pinv, norm
     import numpy as np
     import os
-    from losoto.operations.tecscreen import calc_piercepoint
+
     # avoids error if re-setting "agg" a second run of plot
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
