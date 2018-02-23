@@ -11,13 +11,13 @@ from losoto.operations.directionscreen import _calc_piercepoint
 logging.debug('Loading PLOTSCREEN module.')
 
 def _run_parser(soltab, parser, step):
-
-    minZ, maxZ = parser.getarray( step, "MinMax", [0.0, 0.0] )
+    resSoltab = parser.getstr( step, "resSoltab", '' )
+    minZ, maxZ = parser.getarrayfloat( step, "MinMax", [0.0, 0.0] )
     prefix = parser.getstr( step, "Prefix", '' )
     remove_gradient = parser.getbool( step, "RemoveGradient", False )
     show_source_names = parser.getbool( step, "ShowSourceNames", False )
-    remove_gradient = parser.getint( step, "npcu", 0 )
-    return run(soltab, minZ, maxZ, prefix, remove_gradient, show_source_names, ncpu)
+    ncpu = parser.getint( step, "npcu", 0 )
+    return run(soltab, resSoltab, minZ, maxZ, prefix, remove_gradient, show_source_names, ncpu)
 
 
 def _phase_cm():
@@ -441,7 +441,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     from matplotlib.colors import LinearSegmentedColormap
 
 
-    fig = plt.figure(figsize=(7,7))
+    fig = plt.figure(figsize=(6,6))
 
     # Set colormap
     if is_phase:
@@ -505,7 +505,7 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     cbar = plt.colorbar(im)
     cbar.set_label('Value', rotation=270)
 
-    ax.scatter(np.array(x), np.array(y), s=np.array(s), c=np.array(c), alpha=0.7, cmap=cmap, vmin=vmin, vmax=vmax)
+    ax.scatter(np.array(x), np.array(y), s=np.array(s), c=np.array(c), alpha=0.7, cmap=cmap, vmin=vmin, vmax=vmax, edgecolor='black')
     if len(xf) > 0:
         ax.scatter(xf, yf, s=120, c='k', marker='x')
     if show_source_names:
@@ -549,9 +549,9 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         plt.xlabel('Projected Distance East-West (km)')
         plt.ylabel('Projected Distance North-South (km)')
     if sindx >= 0:
-        plt.savefig(root_dir + '/' + prestr + '_station%0.4i' % sindx + '_frame%0.4i.png' % k)
+        plt.savefig(root_dir + '/' + prestr + '_station%0.4i' % sindx + '_frame%0.4i.png' % k, bbox_inches='tight')
     else:
-        plt.savefig(root_dir + '/' + prestr + '_frame%0.4i.png' % k)
+        plt.savefig(root_dir + '/' + prestr + '_frame%0.4i.png' % k, bbox_inches='tight')
     plt.close(fig)
 
 
@@ -811,7 +811,7 @@ def _fitPLaneLTSQ(XYZ):
     return (a, b, c)
 
 
-def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False,
+def run(soltab, resSoltab='', minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=False,
     show_source_names=False, ncpu=0):
     """
     Plot screens (one plot is made per time and per station)
@@ -820,7 +820,7 @@ def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=
     ----------
     soltab : solution table
         Soltab containing screen.
-    ressoltab : solution table, optional
+    resSoltab : solution table, optional
         Soltab containing the screen residuals.
     minZ : float, optional
         Minimum value of colorbar scale.
@@ -848,14 +848,16 @@ def run(soltab, ressoltab=None, minZ=-3.2, maxZ=3.2, prefix='', remove_gradient=
 
     # Get values from soltabs
     solset = soltab.getSolset()
-    if ressoltab is None:
+    if resSoltab is '':
         try:
             # Look for residual soltab assuming standard naming conventions
             ressoltab = solset.getSoltab(soltab.name+'resid')
         except:
             logging.error('Could not find the soltab with associated screen residuals. '
-                'Please specify it with the "ressoltab" argument.')
+                'Please specify it with the "resSoltab" argument.')
             return 1
+    else:
+        ressoltab = solset.getSoltab(resSoltab)
     logging.info('Using input screen residual soltab: {}'.format(ressoltab.name))
     screen = np.array(soltab.val)
     weights = np.array(soltab.weight)

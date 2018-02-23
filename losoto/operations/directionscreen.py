@@ -12,11 +12,12 @@ from losoto.operations.stationscreen import _flag_outliers, _circ_chi2
 logging.debug('Loading DIRECTIONSCREEN module.')
 
 
-def run_parser(soltab, parser, step):
-    outSoltab = parser.getarraystr( step, "outSoltab" )
+def _run_parser(soltab, parser, step):
+    outSoltab = parser.getstr( step, "outSoltab", 'tecscreen' )
     height = parser.getfloat( step, "height", 200e3 )
     order = parser.getint( step, "Order", 5 )
-    return run(soltab, outSoltab, height, order)
+    ncpu = parser.getint( '_global', "npcu", 0 )
+    return run(soltab, outSoltab, height, order, ncpu)
 
 
 def _calculate_piercepoints(station_positions, source_positions, times, height=200e3):
@@ -352,13 +353,13 @@ def _fit_tec_screen(station_names, source_names, pp, airmass, rr, weights, times
     outQueue.put([tec_fit_white_all, tec_residual_all, times])
 
 
-def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
+def run(soltab, outSoltab='tecscreen', height=200.0e3, order=12,
     beta=5.0/3.0, ncpu=0):
     """
     Fits a screen to TEC + scalaraphase values.
 
     The results of the fit are stored in the soltab parent solset in
-    "outsoltab" and the residual phases (actual-screen) are stored in
+    "outSoltab" and the residual phases (actual-screen) are stored in
     "outsoltabresid". These values are the screen phase values per station per
     pierce point per solution interval. The pierce point locations are stored in
     an auxiliary array in the output soltabs.
@@ -369,7 +370,7 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
     ----------
     soltab: solution table
         Soltab containing phase solutions
-    outsoltab: str, optional
+    outSoltab: str, optional
         Name of output soltab
     height : float, optional
         Height in m of screen
@@ -404,10 +405,10 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
     logging.info('Using solution table {0} to calculate {1} screens'.format(soltab.name, screen_type))
 
     # Load phases
-    logging.info('Using solution table: {}'.format(soltab.name))
+    axis_names = soltab.getAxesNames()
     r = np.array(soltab.val)
     weights = soltab.weight[:]
-    if len(r.shape) > 3:
+    if 'freq' in soltab.getAxesNames():
         freqs = soltab.freq[:]
         if len(freqs) > 1:
             logging.error('Screens can only be fit at a single frequency')
@@ -418,10 +419,18 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
         freq_ind = soltab.getAxesNames().index('freq')
         r = np.squeeze(r, axis=freq_ind)
         weights = np.squeeze(weights, axis=freq_ind)
+        axis_names.pop(freq_ind)
 
-    axis_names = soltab.getAxesNames()
-    axis_names.pop(freq_ind)
-    dir_ind = axis_names.index('dir')
+    # fix for missing dir axis
+    if not 'dir' in soltab.getAxesNames():
+        r = np.array([r])
+        weights = np.array([weights])
+        dir_ind = len(axis_names)
+        source_names = ['POINTING']
+    else:
+        dir_ind = axis_names.index('dir')
+        source_names = soltab.dir[:]
+
     time_ind = axis_names.index('time')
     ant_ind = axis_names.index('ant')
     r = r.transpose([dir_ind, ant_ind, time_ind])
@@ -431,7 +440,6 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
     # Collect station and source names and positions and times, making sure
     # that they are ordered correctly.
     solset = soltab.getSolset()
-    source_names = soltab.dir[:]
     source_dict = solset.getSou()
     source_positions = []
     for source in source_names:
@@ -506,11 +514,11 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
     # Store screen values
     weights = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
     vals = screen.transpose([0, 2, 1])
-    screen_st = solset.makeSoltab('{}screen'.format(screen_type), outsoltab,
+    screen_st = solset.makeSoltab('{}screen'.format(screen_type), outSoltab,
         axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
         ants_out], vals=vals, weights=weights)
     vals = residual.transpose([0, 2, 1])
-    resscreen_st = solset.makeSoltab('{}screenresid'.format(screen_type), outsoltab+'resid',
+    resscreen_st = solset.makeSoltab('{}screenresid'.format(screen_type), outSoltab+'resid',
         axesNames=['dir', 'time', 'ant'], axesVals=[dirs_out, times_out,
         ants_out], vals=vals, weights=weights)
 
@@ -518,8 +526,9 @@ def run(soltab, outsoltab='tecscreen', height=200.0e3, order=12,
     screen_st.obj._v_attrs['beta'] = beta
     screen_st.obj._v_attrs['r_0'] = r_0
     screen_st.obj._v_attrs['height'] = height
-    screen_st.obj._v_attrs['freq'] = freq
     screen_st.obj._v_attrs['order'] = order
+    if 'freq' in soltab.getAxesNames():
+        screen_st.obj._v_attrs['freq'] = freq
 
     # Store piercepoint table. Note that it does not conform to the axis
     # shapes, so we cannot use makeSoltab()
