@@ -104,7 +104,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
                     else: # rotation table
                         idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
                         freq       = np.copy(coord['freq'])[idx]
-                        phase_diff = -2.*vals[:,t][idx]
+                        phase_diff = 2.*vals[:,t][idx] # a rotation is between -pi and +pi
 
                     if len(freq) < 30:
                         fitweights[t] = 0

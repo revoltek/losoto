@@ -407,6 +407,11 @@ class Solset( object ):
         self.obj = solset
         self.name = solset._v_name
 
+    def close(self):
+        """
+        """
+        self.obj._g_flushGroup()
+
 
     def delete(self):
         """
@@ -1076,7 +1081,7 @@ class Soltab( object ):
 
         Parameters
         ----------
-        retAxisVals : bool, optional
+        retAxesVals : bool, optional
             If true returns also the axes vals as a dict of:
             {'axisname1':[axisvals1],'axisname2':[axisvals2],...}.
             By default True.
