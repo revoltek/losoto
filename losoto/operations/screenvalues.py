@@ -299,8 +299,8 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
             'TEC+scalarphase values'.format(soltab1.name, soltab2.name))
     else:
         screen_type = soltab1.getType().split('screen')[0]
-        if screen_type not in ['phase', 'amplitude']:
-            logging.error('Values can only be derived for screens of type "phasescreen" or "amplitudescreen".')
+        if screen_type not in ['phase', 'amplitude', 'tec']:
+            logging.error('Values can only be derived for screens of type "phasescreen", "tecscreen", or "amplitudescreen".')
             return 1
         logging.info('Using input solution table {0} to calculate '
             '{1} values'.format(soltab1.name, screen_type))

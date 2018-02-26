@@ -65,7 +65,7 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                       axesVals=[soltab.getAxisValues(axisName) for axisName in ['ant','time']], \
                       vals=np.zeros(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))), \
                       weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))) )
-    soltabout.addHistory('Created by TEC operation.')
+    soltabout.addHistory('Created by TEC operation from %s.' % soltab.name)
         
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt):
 

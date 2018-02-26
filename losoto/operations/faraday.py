@@ -68,7 +68,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
                              axesNames=['ant','time'], axesVals=[ants, times],
                              vals=np.zeros((len(ants),len(times))),
                              weights=np.ones((len(ants),len(times))))
-    soltabout.addHistory('Created by FARADAY operation.')
+    soltabout.addHistory('Created by FARADAY operation from %s.' % soltab.name)
 
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, reference=refAnt):
 

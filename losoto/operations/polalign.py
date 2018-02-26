@@ -68,7 +68,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
     soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
                       axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
                       vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False))
-    soltabout.addHistory('Created by POLALIGN operation.')
+    soltabout.addHistory('Created by POLALIGN operation from %s.' % soltab.name)
 
     if 'XX' in soltab.getAxisValues('pol'): pol = 'XX'
     elif 'RR' in soltab.getAxisValues('pol'): pol = 'RR'
