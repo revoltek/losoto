@@ -99,7 +99,7 @@ if __name__=='__main__':
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
-                   "CORRFUNCT": operations.corrfunct,
+                   #"CORRFUNCT": operations.corrfunct,
                    "POLALIGN": operations.polalign,
                    "DIRECTIONSCREEN": operations.directionscreen,
                    "DUPLICATE": operations.duplicate,
