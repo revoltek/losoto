@@ -93,7 +93,7 @@ for insoltab in insoltabs:
     logging.debug("Shape:"+str(allShape))
     allVals = np.empty( shape=allShape )
     allVals[:] = np.nan
-    allWeights = np.zeros( shape=allShape )
+    allWeights = np.zeros( shape=allShape )#, dtype=np.float16 )
 
     # fill arrays
     logging.info("Filling new table...")
@@ -103,6 +103,9 @@ for insoltab in insoltabs:
             coords.append( np.searchsorted( allAxesVals[axis], soltab.getAxisValues(axis) ) )
         allVals[np.ix_(*coords)] = soltab.obj.val
         allWeights[np.ix_(*coords)] = soltab.obj.weight
+
+    # TODO: leave correct weights - this is a workaround for h5parm with weight not in float16
+    allWeights[ allWeights != 0 ] = 1.
 
     # TODO: interpolate on selected axes
 

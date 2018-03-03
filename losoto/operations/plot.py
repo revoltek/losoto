@@ -481,6 +481,8 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 # normalize
                 if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
                     vals = normalize_phase(vals)
+                if (soltab.getType() == 'rotation'):
+                    vals = np.mod(vals + np.pi/2., np.pi) - np.pi/2.
 
                 # is user requested axis in an order that is different from h5parm, we need to transpose
                 if len(axesInPlot) == 2:
