@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import logging
 from losoto.lib_operations import *
@@ -137,7 +138,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
                     # Debug plot
                     doplot = False
                     if doplot and coord['ant'] == 'RS310LBA' and t%10==0:
-                        print "Plotting"
+                        print("Plotting")
                         if not 'matplotlib' in sys.modules:
                             import matplotlib as mpl
                             mpl.rc('font',size =8 )

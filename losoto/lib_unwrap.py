@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #from __future__ import division
+from __future__ import print_function
 import numpy as np
 import scipy.fftpack as fft
 import logging
@@ -227,9 +228,9 @@ if __name__ == "__main__":
     #    phase_unwrapped = unwrap_dct(phase_wrapped)
     t1 = time()-t0
     coord = None
-    print( 'time:\t%fs'%(t1))
+    print('time:\t%fs'%(t1))
     
-    print( 'norm:', np.abs(phase_unwrapped-phase_orig) )
+    print('norm:', np.abs(phase_unwrapped-phase_orig) )
     
     fig, ((ax1,ax2),(ax3,ax4)) = pl.subplots(2,2)
     im1 = ax1.imshow(phase_orig.__array__())

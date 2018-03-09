@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import logging
 from losoto.lib_operations import *
@@ -50,8 +51,8 @@ def run( soltab):
     nsubbands = len(subbands)
     nchan = len(freqs)/nsubbands
     if nsubbands*nchan != len(freqs):
-        print "find_cal_global_phaseoffset_losoto.py: irregular number of ch/SB detected! Bailing out!"
-        print "  nchan %d, nSB: %d, nfreq: %d" % (nchan, nsubbands, len(freqs))
+        print("find_cal_global_phaseoffset_losoto.py: irregular number of ch/SB detected! Bailing out!")
+        print("  nchan %d, nSB: %d, nfreq: %d" % (nchan, nsubbands, len(freqs)))
         sys.exit(1)
     tmpfreqs = freqs.reshape([nsubbands,nchan])
     freq_per_sb = np.mean(tmpfreqs,axis=1)

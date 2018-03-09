@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import logging
 from losoto.lib_operations import *
@@ -155,7 +156,7 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                     # Debug plot
                     doplot = True
                     if doplot and (coord['ant'] == 'RS509LBA' or coord['ant'] == 'RS210LBA') and t%50==0:
-                        print "Plotting"
+                        print("Plotting")
                         if not 'matplotlib' in sys.modules:
                             import matplotlib as mpl
                             mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )

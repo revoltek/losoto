@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is an example operation for LoSoTo
+from __future__ import print_function
 
 import logging
 from losoto.lib_operations import *
@@ -77,8 +78,8 @@ def run( soltab, opt1, opt2 = [1., 2., 3.], opt3 = 0 ):
     # axis names
     logging.info("Axes: "+str(soltab.getAxesNames()))
     # axis shape
-    print axes
-    print [soltab.getAxisLen(axis) for axis in axes] # not ordered, is a dict!
+    print(axes)
+    print([soltab.getAxisLen(axis) for axis in axes]) # not ordered, is a dict!
     # data array shape (same of axis shape)
     logging.info("Shape of values: "+str(grid.shape))
     #logging.info("$ val is "+str(grid[0,0,0,0,100]))
