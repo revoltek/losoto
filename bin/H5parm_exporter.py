@@ -409,7 +409,7 @@ if __name__=='__main__':
             if s.name in soltabs_to_use:
                 solTabs_filt.append(s)
         for s in soltabs_to_use:
-            if s.name not in solset.getSoltabNames()):
+            if s.name not in solset.getSoltabNames():
                 logging.warning('Solution table {0} not found in input H5parm file.'.format(s.name))
         solTabs = solTabs_filt
     if len(solTabs) == 0:
