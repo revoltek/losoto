@@ -387,12 +387,16 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         else: 
             yvals = None
             if datatype == 'clock':
+                datatype = 'Clock'
                 ylabelunit = ' (s)'
             elif datatype == 'tec':
+                datatype = 'dTEC'
                 ylabelunit = ' (TECU)'
             elif datatype == 'rotationmeasure':
+                datatype = 'dRM'
                 ylabelunit = r' (rad m$^{-2}$)'
             elif datatype == 'tec3rd':
+                datatype = r'dTEC$_3$'
                 ylabelunit = r' (rad m$^{-3}$)'
             else:
                 ylabelunit = ''

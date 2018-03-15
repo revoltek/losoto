@@ -422,7 +422,6 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
     """
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
-        mpl.rc('font',size =8 )
         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
         mpl.use("Agg")
     import matplotlib as mpl
@@ -612,7 +611,6 @@ def _make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
     # avoids error if re-setting "agg" a second run of plot
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
-        mpl.rc('font',size =8 )
         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
         mpl.use("Agg")
     import matplotlib as mpl

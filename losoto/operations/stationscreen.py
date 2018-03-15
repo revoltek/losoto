@@ -18,7 +18,7 @@ def _run_parser(soltab, parser, step):
     nsigma = parser.getfloat( step, "nsigma", 5.0 )
     refAnt = parser.getint( step, "RefAnt", -1 )
     scale_order = parser.getbool( step, "ScaleOrder", True )
-    scale_dist = parser.getfloat( step, "nsigma", 25000.0 )
+    scale_dist = parser.getfloat( step, "scaleDist", 25000.0 )
     min_order = parser.getint( step, "MinOrder", 5 )
     adjust_order = parser.getbool( step, "AdjustOrder", True )
 
