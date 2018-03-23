@@ -37,13 +37,12 @@ def run( soltab, chanWidth ):
 
     solType = soltab.getType()
     if solType != 'phase':
-       logging.warning("Soltab type of "+soltab.name+" is: "+solType+" should be phase. Ignoring.")
+       logging.error("Soltab type of "+soltab.name+" is: "+solType+" but should be phase.")
        return 1
 
-    phases_tmp = np.copy(soltab.val)
+    phases_tmp = np.copy(soltab.val) # axes are [time, ant, freq, pol]
     freqs = np.copy(soltab.freq)
     npol = len(soltab.pol)
-    sourceID = 0
     refstationID=2
 
     stationsnames = [ stat for stat in soltab.ant]
@@ -81,14 +80,14 @@ def run( soltab, chanWidth ):
     tmpfreqs = freqs.reshape([nsubbands,nchan])
     freq_per_sb = np.mean(tmpfreqs,axis=1)
     nstations = len(stationsnames)
-    refphases = phases_tmp[:,sourceID,refstationID,:,:]
+    refphases = phases_tmp[:, refstationID, :, :]
 
     for istat in xrange(nstations):
-        phases_00 = phases_tmp[0,sourceID,istat,:,:]-refphases[0,:,:]
-        phases_11 = phases_tmp[1,sourceID,istat,:,:]-refphases[1,:,:]
-        phases_diff = normalize(phases_00-phases_11)
-        tmp_phases_diff = np.median(phases_diff,axis=1)
-        med_phases_diff = np.median(tmp_phases_diff.reshape([nsubbands,nchan]),axis=1)
+        phases_00 = phases_tmp[:, istat, :, 0] - refphases[:, :, 0]
+        phases_11 = phases_tmp[:, istat, :, 1] - refphases[:, :, 1]
+        phases_diff = normalize(phases_00 - phases_11)
+        tmp_phases_diff = np.median(phases_diff, axis=0)  # take median over time axis
+        med_phases_diff = np.median(tmp_phases_diff.reshape([nsubbands, nchan]), axis=1)  # take median over each subband
         if istat == 0:
             global_stat_offsets = med_phases_diff
         else:
@@ -96,10 +95,13 @@ def run( soltab, chanWidth ):
     global_stat_offsets_smoothed = np.zeros([nsubbands, nstations, npol])
     global_stat_offsets_smoothed_interp = np.zeros([len(freqs_new), nstations, npol])
     for istat in xrange(nstations):
-        global_stat_offsets_smoothed[:,istat,-1] = sg.medfilt(global_stat_offsets[istat,:], kernel_size=15)
-        real = np.interp(freqs_new, freq_per_sb, np.cos(global_stat_offsets_smoothed[:,istat,-1]))
-        imag = np.interp(freqs_new, freq_per_sb, np.sin(global_stat_offsets_smoothed[:,istat,-1]))
-        global_stat_offsets_smoothed_interp[:,istat,-1] = np.arctan2(imag, real)
+        global_stat_offsets_smoothed[:, istat, -1] = sg.medfilt(global_stat_offsets[istat, :], kernel_size=15) # smooth over frequency
+
+        # interpolate to the output
+        real = np.interp(freqs_new, freq_per_sb, np.cos(global_stat_offsets_smoothed[:, istat, -1]))
+        imag = np.interp(freqs_new, freq_per_sb, np.sin(global_stat_offsets_smoothed[:, istat, -1]))
+        global_stat_offsets_smoothed_interp[:, istat, -1] = np.arctan2(imag, real)
+
     try:
         new_soltab = solset.getSoltab('XYoffset')
         new_soltab.delete()

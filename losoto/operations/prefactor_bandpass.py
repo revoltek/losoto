@@ -177,11 +177,9 @@ def run( soltab, chanWidth, BadSBList = ''):
     else:
       bad_sblist = [int(SB) for SB in BadSBList.strip('\"\'').split(';')]
 
-    source_id  = 0
-
     logging.info("bad SBs: " + str(bad_sblist))
 
-    amplitude_arraytmp = soltab.val[:]
+    amplitude_arraytmp = soltab.val[:] # axes are [time, ant, freq, pol]
 
     logging.info("Shape of amplitudes array: " + str(np.shape(amplitude_arraytmp)))
 
@@ -236,8 +234,8 @@ def run( soltab, chanWidth, BadSBList = ''):
 
     for antenna_id in range(0,len(soltab.ant[:])):
         for time in range(0,len(soltab.time[:])):
-            amp_xx_tmp = np.copy(amplitude_arraytmp[0,source_id,antenna_id,:,time])
-            amp_yy_tmp = np.copy(amplitude_arraytmp[1,source_id,antenna_id,:,time])
+            amp_xx_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 0])
+            amp_yy_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 1])
             freq_tmp = soltab.freq[:]
             assert len(amp_xx_tmp[:]) == len(freq_tmp[:])
             mask_xx = np.not_equal(amp_xx_tmp,1.)
@@ -258,7 +256,6 @@ def run( soltab, chanWidth, BadSBList = ''):
                 amps_array_flagged[antenna_id,time,:,1] = np.interp(freqs_new,freq_yy_tointer,amps_yy_tointer)
             elif time>0:
                 amps_array_flagged[antenna_id,time,:,1] = amps_array_flagged[antenna_id,(time-1),:,1]
-
 
     ampsoutfile = open('calibrator_amplitude_array.txt','w')
     ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
