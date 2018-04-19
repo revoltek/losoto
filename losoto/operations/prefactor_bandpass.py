@@ -7,9 +7,9 @@ from losoto.lib_operations import *
 logging.debug('Loading PREFACTOR_BANDPASS module.')
 
 def _run_parser(soltab, parser, step):
+    chanWidth = parser.getstr( step, 'chanWidth')
     BadSBList = parser.getstr( step, 'BadSBList' , '')
-    n_chan    = parser.getint( step, 'nchan'     , 4 )
-    return run(soltab, BadSBList, n_chan)
+    return run(soltab, chanWidth, BadSBList)
 
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
@@ -158,7 +158,7 @@ def running_median(ampl,half_window) :
     return std
 
 
-def run( soltab, BadSBList = '', n_chan = 4):
+def run( soltab, chanWidth, BadSBList = ''):
 
     import numpy as np
     import scipy
@@ -177,11 +177,9 @@ def run( soltab, BadSBList = '', n_chan = 4):
     else:
       bad_sblist = [int(SB) for SB in BadSBList.strip('\"\'').split(';')]
 
-    source_id  = 0
-
     logging.info("bad SBs: " + str(bad_sblist))
 
-    amplitude_arraytmp = soltab.val[:]
+    amplitude_arraytmp = soltab.val[:] # axes are [time, ant, freq, pol]
 
     logging.info("Shape of amplitudes array: " + str(np.shape(amplitude_arraytmp)))
 
@@ -191,15 +189,33 @@ def run( soltab, BadSBList = '', n_chan = 4):
 
     logging.info("Number of antennas: " + str(len(soltab.ant[:])) +  " of frequencies: " + str(nfreqs) + ", and of times: " + str(ntimes))
 
-    freqidx = np.arange(n_chan/2,nfreqs,n_chan)
-    freqs = soltab.freq[freqidx]
+    subbandHz = 195.3125e3
+    if type(chanWidth) is str:
+        letters = [1 for s in chanWidth[::-1] if s.isalpha()]
+        indx = len(chanWidth) - sum(letters)
+        unit = chanWidth[indx:]
+        if unit.strip().lower() == 'hz':
+            conversion = 1.0
+        elif unit.strip().lower() == 'khz':
+            conversion = 1e3
+        elif unit.strip().lower() == 'mhz':
+            conversion = 1e6
+        else:
+            logging.error("The unit on chanWidth was not understood.")
+            raise ValueError("The unit on chanWidth was not understood.")
+        chanWidthHz = float(chanWidth[:indx]) * conversion
+    else:
+        chanWidthHz = chanWidth
+    offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
+    freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
+    freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
     timeidx = np.arange(ntimes)
 
-    SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/195.3125e3)
+    SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/subbandHz)
 
-    freqs_new  = np.arange(np.min(freqs),np.max(freqs)+100e3, 195.3125e3)
-    amps_array_flagged = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
-    amps_array = np.zeros( (nants,ntimes,len(freqs_new),2), dtype='float')
+    freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
+    amps_array_flagged = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
+    amps_array = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
     minscale = np.zeros( nants )
     maxscale = np.zeros( nants )
 
@@ -218,8 +234,8 @@ def run( soltab, BadSBList = '', n_chan = 4):
 
     for antenna_id in range(0,len(soltab.ant[:])):
         for time in range(0,len(soltab.time[:])):
-            amp_xx_tmp = np.copy(amplitude_arraytmp[0,source_id,antenna_id,:,time])
-            amp_yy_tmp = np.copy(amplitude_arraytmp[1,source_id,antenna_id,:,time])
+            amp_xx_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 0])
+            amp_yy_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 1])
             freq_tmp = soltab.freq[:]
             assert len(amp_xx_tmp[:]) == len(freq_tmp[:])
             mask_xx = np.not_equal(amp_xx_tmp,1.)
@@ -240,7 +256,6 @@ def run( soltab, BadSBList = '', n_chan = 4):
                 amps_array_flagged[antenna_id,time,:,1] = np.interp(freqs_new,freq_yy_tointer,amps_yy_tointer)
             elif time>0:
                 amps_array_flagged[antenna_id,time,:,1] = amps_array_flagged[antenna_id,(time-1),:,1]
-
 
     ampsoutfile = open('calibrator_amplitude_array.txt','w')
     ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
@@ -265,6 +280,11 @@ def run( soltab, BadSBList = '', n_chan = 4):
             amps_array[antenna_id,:,i,1] = np.median(amps_array[antenna_id,:,i,1])
             pass
 
+    try:
+        new_soltab = solset.getSoltab('bandpass')
+        new_soltab.delete()
+    except:
+        pass
     new_soltab = solset.makeSoltab(soltype='amplitude', soltabName='bandpass',
                              axesNames=['ant', 'freq', 'pol'], axesVals=[soltab.ant, freqs_new, ['XX','YY']],
                              vals=amps_array[:,0,:,:],

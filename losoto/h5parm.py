@@ -667,7 +667,11 @@ class Soltab( object ):
         self.name = soltab._v_name
 
         # list of axes names, set once to speed up calls
-        self.axesNames = soltab.val.attrs['AXES'].split(',')
+        axesNamesInH5 = soltab.val.attrs['AXES']
+        if not isinstance(axesNamesInH5, str):
+            # This is necessary in python3
+            axesNamesInH5 = str(soltab.val.attrs['AXES'], 'utf-8')
+        self.axesNames = axesNamesInH5.split(',')
 
         # dict of axes values, set once to speed up calls (a bit of memory usage though)
         self.axes = {}

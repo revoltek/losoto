@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
 import logging
 from losoto.lib_operations import *
@@ -7,7 +8,8 @@ from losoto.lib_operations import *
 logging.debug('Loading PREFACTOR_XYOFFSET module.')
 
 def _run_parser(soltab, parser, step):
-    return run(soltab)
+    chanWidth = parser.getstr( step, 'chanWidth')
+    return run(soltab, chanWidth)
 
 
 def normalize(phase):
@@ -25,58 +27,90 @@ def normalize(phase):
     return out
 
 
-def run( soltab):
+def run( soltab, chanWidth ):
 
     import numpy as np
-    import scipy.signal as s
+    import scipy.signal as sg
 
     logging.info("Running XYoffset on: "+soltab.name)
     solset = soltab.getSolset()
 
     solType = soltab.getType()
     if solType != 'phase':
-       logging.warning("Soltab type of "+soltab.name+" is: "+solType+" should be phase. Ignoring.")
+       logging.error("Soltab type of "+soltab.name+" is: "+solType+" but should be phase.")
        return 1
 
-    phases_tmp = np.copy(soltab.val)
+    phases_tmp = np.copy(soltab.val) # axes are [time, ant, freq, pol]
     freqs = np.copy(soltab.freq)
     npol = len(soltab.pol)
-    sourceID = 0
     refstationID=2
 
     stationsnames = [ stat for stat in soltab.ant]
+
+    subbandHz = 195.3125e3
+    if type(chanWidth) is str:
+        letters = [1 for s in chanWidth[::-1] if s.isalpha()]
+        indx = len(chanWidth) - sum(letters)
+        unit = chanWidth[indx:]
+        if unit.strip().lower() == 'hz':
+            conversion = 1.0
+        elif unit.strip().lower() == 'khz':
+            conversion = 1e3
+        elif unit.strip().lower() == 'mhz':
+            conversion = 1e6
+        else:
+            logging.error("The unit on chanWidth was not understood.")
+            raise ValueError("The unit on chanWidth was not understood.")
+        chanWidthHz = float(chanWidth[:indx]) * conversion
+    else:
+        chanWidthHz = chanWidth
+    offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
+    freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
+    freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
+    freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
+
     # this gets the subband number to any given frequency in HBA-low
     subbands = np.unique(np.round(freqs/195.3125e3-512.))
     nsubbands = len(subbands)
     nchan = len(freqs)/nsubbands
     if nsubbands*nchan != len(freqs):
-        print "find_cal_global_phaseoffset_losoto.py: irregular number of ch/SB detected! Bailing out!"
-        print "  nchan %d, nSB: %d, nfreq: %d" % (nchan, nsubbands, len(freqs))
+        print("find_cal_global_phaseoffset_losoto.py: irregular number of ch/SB detected! Bailing out!")
+        print("  nchan %d, nSB: %d, nfreq: %d" % (nchan, nsubbands, len(freqs)))
         sys.exit(1)
     tmpfreqs = freqs.reshape([nsubbands,nchan])
     freq_per_sb = np.mean(tmpfreqs,axis=1)
     nstations = len(stationsnames)
-    refphases = phases_tmp[:,sourceID,refstationID,:,:]
+    refphases = phases_tmp[:, refstationID, :, :]
 
     for istat in xrange(nstations):
-        phases_00 = phases_tmp[0,sourceID,istat,:,:]-refphases[0,:,:]
-        phases_11 = phases_tmp[1,sourceID,istat,:,:]-refphases[1,:,:]
-        phases_diff = normalize(phases_00-phases_11)
-        tmp_phases_diff = np.median(phases_diff,axis=1)
-        med_phases_diff = np.median(tmp_phases_diff.reshape([nsubbands,nchan]),axis=1)
+        phases_00 = phases_tmp[:, istat, :, 0] - refphases[:, :, 0]
+        phases_11 = phases_tmp[:, istat, :, 1] - refphases[:, :, 1]
+        phases_diff = normalize(phases_00 - phases_11)
+        tmp_phases_diff = np.median(phases_diff, axis=0)  # take median over time axis
+        med_phases_diff = np.median(tmp_phases_diff.reshape([nsubbands, nchan]), axis=1)  # take median over each subband
         if istat == 0:
             global_stat_offsets = med_phases_diff
         else:
             global_stat_offsets = np.vstack( (global_stat_offsets, med_phases_diff) )
-    global_stat_offsets_smoothed = np.zeros([nsubbands,nstations,npol])
+    global_stat_offsets_smoothed = np.zeros([nsubbands, nstations, npol])
+    global_stat_offsets_smoothed_interp = np.zeros([len(freqs_new), nstations, npol])
     for istat in xrange(nstations):
-        global_stat_offsets_smoothed[:,istat,-1] = s.medfilt(global_stat_offsets[istat,:], kernel_size=15)
+        global_stat_offsets_smoothed[:, istat, -1] = sg.medfilt(global_stat_offsets[istat, :], kernel_size=15) # smooth over frequency
 
+        # interpolate to the output
+        real = np.interp(freqs_new, freq_per_sb, np.cos(global_stat_offsets_smoothed[:, istat, -1]))
+        imag = np.interp(freqs_new, freq_per_sb, np.sin(global_stat_offsets_smoothed[:, istat, -1]))
+        global_stat_offsets_smoothed_interp[:, istat, -1] = np.arctan2(imag, real)
 
+    try:
+        new_soltab = solset.getSoltab('XYoffset')
+        new_soltab.delete()
+    except:
+        pass
     new_soltab = solset.makeSoltab(soltype='phase', soltabName='XYoffset',
-                             axesNames=['freq', 'ant', 'pol'], axesVals=[freq_per_sb, soltab.ant, ['XX','YY']],
-                             vals=global_stat_offsets_smoothed,
-                             weights=np.ones_like(global_stat_offsets_smoothed,dtype=np.float16))
+                             axesNames=['freq', 'ant', 'pol'], axesVals=[freqs_new, soltab.ant, ['XX','YY']],
+                             vals=global_stat_offsets_smoothed_interp,
+                             weights=np.ones_like(global_stat_offsets_smoothed_interp, dtype=np.float16))
     new_soltab.addHistory('CREATE (by PREFACTOR_XYOFFSET operation)')
 
     return 0

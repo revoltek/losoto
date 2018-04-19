@@ -12,7 +12,7 @@ Contributed code:
 * Andreas Horneffer
 
 Cite:
-* If you use LoSoTo for your data reduction, please acknowledge it with "This work had made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
+* If you use LoSoTo for your data reduction, please acknowledge it with "This work has made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
 
 Install:
 * Get LoSoTo from https://github.com/revoltek/losoto 
