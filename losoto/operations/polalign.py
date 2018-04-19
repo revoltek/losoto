@@ -56,9 +56,9 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         return 1
     
     if refAnt != '' and not refAnt in soltab.getAxisValues('ant'):
-        logging.error('Reference antenna '+refAnt+' not found.')
-        return 1
-    if refAnt == '': refAnt = soltab.getAxisValues('ant')[0]
+        logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+        refAnt = soltab.getAxisValues('ant')[1]
+    if refAnt == '': refAnt = soltab.getAxisValues('ant')[1]
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')
