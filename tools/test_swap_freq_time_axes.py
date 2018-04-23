@@ -34,9 +34,11 @@ class TestH5parmSwapFreqTime(unittest.TestCase):
       solset = h5.getSolset("sol000")
       soltab = solset.getSoltab("phase000")
       vals = soltab.getValues(retAxesVals = False)
+      weights = soltab.getValues(retAxesVals=False, weight=True)
       axesnames = soltab.getAxesNames()
 
       self.assertEqual(vals.shape, (2, 5, 3))
+      self.assertEqual(weights.shape, (2, 5, 3))
       self.assertEqual(axesnames, ["dir", "time", "freq"])
 
       os.remove(h5fname)

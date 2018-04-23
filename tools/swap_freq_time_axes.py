@@ -14,6 +14,10 @@ def soltab_swap_freq_time(soltab):
         Soltab object which will be changed
     """
     vals = soltab.getValues(retAxesVals = False)
+    weights = soltab.getValues(weight=True, retAxesVals=False)
+
+    if vals.shape != weights.shape:
+        raise RuntimeError("Shape of weights differs from shape of values")
 
     axesnames = soltab.getAxesNames()
     axesnums = list(range(len(axesnames)))
@@ -37,6 +41,7 @@ def soltab_swap_freq_time(soltab):
     soltab.obj.val._f_setattr("AXES", ",".join(axesnames))
     # Transpose the values
     vals = vals.transpose(axesnums)
+    weights = weights.transpose(axesnums)
 
     # Need to remove the array from the file because changing shape is not supported by pytables
     # Store the attributes in a dict
@@ -45,8 +50,10 @@ def soltab_swap_freq_time(soltab):
     for attrname in attrs._f_list():
         attrsdict[attrname] = attrs[attrname]
     soltab.obj.val._f_remove()
+    soltab.obj.weight._f_remove()
     # Create new val here
     soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'val', obj=vals, atom=tables.Float64Atom())
+    soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'weight', obj=weights, atom=tables.Float16Atom())
     # Restore the original attributes
     for attrname in attrsdict:
         soltab.obj.val._f_setattr(attrname, attrsdict[attrname])
