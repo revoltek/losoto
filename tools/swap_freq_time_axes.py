@@ -3,6 +3,7 @@
 
 from losoto.h5parm import h5parm
 import argparse
+import tables
 
 def soltab_swap_freq_time(soltab):
     """Swap the frequency and time axes to make the frequency the fastest varying axis
@@ -13,9 +14,13 @@ def soltab_swap_freq_time(soltab):
         Soltab object which will be changed
     """
     vals = soltab.getValues(retAxesVals = False)
+    weights = soltab.getValues(weight=True, retAxesVals=False)
+
+    if vals.shape != weights.shape:
+        raise RuntimeError("Shape of weights differs from shape of values")
 
     axesnames = soltab.getAxesNames()
-    axesnums = range(len(axesnames))
+    axesnums = list(range(len(axesnames)))
 
     if 'freq' not in axesnames or 'time' not in axesnames:
         print("Nothing to be done, no freq + time axes in " + soltab.name)
@@ -35,7 +40,29 @@ def soltab_swap_freq_time(soltab):
     # Swap the axes order in the metadata
     soltab.obj.val._f_setattr("AXES", ",".join(axesnames))
     # Transpose the values
-    soltab.obj.val = vals.transpose(axesnums)
+    vals = vals.transpose(axesnums)
+    weights = weights.transpose(axesnums)
+
+    # Need to remove the array from the file because changing shape is not supported by pytables
+    # Store the attributes in a dict
+    attrs = soltab.obj.val._v_attrs
+    attrsdict = {}
+    for attrname in attrs._f_list():
+        attrsdict[attrname] = attrs[attrname]
+    soltab.obj.val._f_remove()
+    soltab.obj.weight._f_remove()
+    # Create new val here
+    soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'val', obj=vals, atom=tables.Float64Atom())
+    soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'weight', obj=weights, atom=tables.Float16Atom())
+    # Restore the original attributes
+    for attrname in attrsdict:
+        soltab.obj.val._f_setattr(attrname, attrsdict[attrname])
+
+    soltab.addHistory("Swap frequency and time axes to make frequency vary fastest")
+
+    soltab.obj._f_flush()
+
+    print("Successfully swapped frequency and time axes in " + soltab.name)
 
 def h5parm_swap_freq_time(h5parmname, solset='sol000', soltab='all'):
     """Open an H5Parm and swap the frequency and time axes to make the frequency the fastest varying axis
@@ -50,7 +77,7 @@ def h5parm_swap_freq_time(h5parmname, solset='sol000', soltab='all'):
         Soltab name or 'all' for all soltabs
     """
     
-    h5 = h5parm('parmdb2h5.h5', False)
+    h5 = h5parm(h5parmname, False)
     solset = h5.getSolset('sol000')
 
     if soltab=='all':
