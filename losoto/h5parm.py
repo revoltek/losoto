@@ -936,10 +936,16 @@ class Soltab( object ):
             return None
 
         if ignoreSelection:
-            return np.copy(self.axes[axis])
+            axisvalues = np.copy(self.axes[axis])
         else:
             axisIdx = self.getAxesNames().index(axis)
-            return np.copy(self.axes[axis][ self.selection[axisIdx] ])
+            axisvalues = np.copy(self.axes[axis][ self.selection[axisIdx] ])
+
+        if axisvalues.dtype.str[0:2] == '|S':
+            # Convert to native string format for python 3
+            return axisvalues.astype(str)
+        else:
+            return axisvalues
 
 
     def setAxisValues(self, axis, vals):
