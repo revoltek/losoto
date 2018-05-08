@@ -97,9 +97,10 @@ def run( soltab, chanWidth ):
     for istat in xrange(nstations):
         global_stat_offsets_smoothed[:, istat, -1] = sg.medfilt(global_stat_offsets[istat, :], kernel_size=15) # smooth over frequency
 
-        # interpolate to the output
-        real = np.interp(freqs_new, freq_per_sb, np.cos(global_stat_offsets_smoothed[:, istat, -1]))
-        imag = np.interp(freqs_new, freq_per_sb, np.sin(global_stat_offsets_smoothed[:, istat, -1]))
+        # Convert to real/imag, invert correction (so that offsets are removed when applied),
+        # and interpolate to the output frequency grid
+        real = np.interp(freqs_new, freq_per_sb, np.cos(-1. * global_stat_offsets_smoothed[:, istat, -1]))
+        imag = np.interp(freqs_new, freq_per_sb, np.sin(-1. * global_stat_offsets_smoothed[:, istat, -1]))
         global_stat_offsets_smoothed_interp[:, istat, -1] = np.arctan2(imag, real)
 
     try:
