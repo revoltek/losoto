@@ -18,12 +18,13 @@ parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) - if not given use all')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
-parser.add_argument('--verbose', '-V', dest='verbose', action='store_true', help='Go Vebose! (default=False)')
+parser.add_argument('--verbose', '-V', default=False, action='store_true', help='Go Vebose! (default=False)')
+parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm file instead of appending to it (default=False)')
 args = parser.parse_args()
 
-if len(args.h5parmFiles) < 2:
+if len(args.h5parmFiles) < 1:
     parser.print_help()
-    sys.exit()
+    sys.exit(1)
 
 if args.verbose: _logging.setLevel("debug")
 
@@ -53,6 +54,8 @@ for h5parmFile in args.h5parmFiles:
     h5s.append(h5)
 
 # open output
+if os.path.exists(args.outh5parm) and args.clobber:
+    os.remove(args.outh5parm)
 h5Out = h5parm(args.outh5parm, readonly = False)
 
 for insoltab in insoltabs:
