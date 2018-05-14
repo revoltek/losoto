@@ -31,5 +31,5 @@ def run( soltab, soltabOut=''):
 
     logging.info('Duplicate %s -> %s' % (soltab.name, soltabout.name) )
 
-    soltabout.addHistory('DUPLICATE (from table %s)' % (soltab.name))
+    soltabout.addHistory('DUPLICATE from table %s' % (soltab.name))
     return 0

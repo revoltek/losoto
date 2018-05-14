@@ -55,7 +55,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
        return 1
 
     ants = soltab.getAxisValues('ant')
-    if refAnt != '' and not refAnt in ants:
+    if refAnt != '' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
         refAnt = ants[0]
     if refAnt == '': refAnt = ants[0]
