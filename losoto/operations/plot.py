@@ -54,15 +54,15 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
         if figSize[1] == 0:
             if makeMovie: figSize[1]=4+1*Nr
             else: figSize[1]=8+2*Nr
-        
+
         figgrid, axa = plt.subplots(Nr, Nc, sharex=True, sharey=True, figsize=figSize)
 
         if Nplots == 1: axa = np.array([axa])
         figgrid.subplots_adjust(hspace=0, wspace=0)
         axaiter = chain.from_iterable(axa)
 
-        # axes label 
-        if len(axa.shape) == 1: # only one row 
+        # axes label
+        if len(axa.shape) == 1: # only one row
             [ax.set_xlabel(axesInPlot[0]+xlabelunit, fontsize=20) for ax in axa[:]]
             if cmesh:
                 axa[0].set_ylabel(axesInPlot[1]+ylabelunit, fontsize=20)
@@ -85,7 +85,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
             for j in jumps: xvals[j+1:] += gap
 
         for Ntab, title in enumerate(titles):
-           
+
             ax = axa.flatten()[Ntab]
             ax.text(.5, .9, title, horizontalalignment='center', fontsize=14, transform=ax.transAxes)
 
@@ -95,7 +95,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                 if minZ != 0: texty = minZ + np.abs(np.nanmin(dataCube[Ntab]))*0.01
                 else: texty = np.nanmin(dataCube[Ntab]) + np.abs(np.nanmin(dataCube[Ntab]))*0.01
                 [ ax.text( xvals[j]+gap/2., texty, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
-           
+
             # set log scales if activated
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
@@ -118,7 +118,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                 # plotting
                 if cmesh:
                     # setting min max
-                    if minZ == 0 and maxZ == 0: 
+                    if minZ == 0 and maxZ == 0:
                         autominZ = np.mean(vals) - 3*np.std(vals)
                         automaxZ = np.mean(vals) + 3*np.std(vals)
                     else:
@@ -148,18 +148,18 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                     ax.set_ylim( ymin=np.median(antCoords[1])-size/2., ymax=np.median(antCoords[1])+size/2. )
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
-                    if plotFlag: 
+                    if plotFlag:
                         ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=2, markeredgecolor='none') # plot flagged points
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
                     if not all(vals.mask == True):
-                        if autominZ > vals.min(fill_value=np.inf) or autominZ == np.inf: 
+                        if autominZ > vals.min(fill_value=np.inf) or autominZ == np.inf:
                             autominZ = vals.min(fill_value=np.inf)
                         if automaxZ < vals.max(fill_value=-np.inf) or automaxZ == -np.inf:
                             automaxZ = vals.max(fill_value=-np.inf)
 
-        if not cmesh and antCoords == []: 
+        if not cmesh and antCoords == []:
             if minZ != 0:
                 ax.set_ylim(ymin=minZ)
             else:
@@ -168,6 +168,10 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                 ax.set_ylim(ymax=maxZ)
             else:
                 ax.set_ylim(ymax=automaxZ)
+
+        if cmesh:
+            # add a color bar to show scale
+            figgrid.colorbar(im, ax=axa.ravel().tolist(), use_gridspec=True, fraction=0.03, pad=0.01)
 
         logging.info("Saving "+filename+'.png')
         try:
@@ -212,25 +216,25 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     plotFlag : bool, optional
         Whether to plot also flags as red points in 2D plots. By default False.
-    
+
     doUnwrap : bool, optional
         Unwrap phases. By default False.
-    
+
     refAnt : str, optional
         Reference antenna for phases. By default None.
-    
+
     soltabsToAdd : str, optional
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
-    
+
     makeAntPlot : bool, optional
         Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.
-    
+
     makeMovie : bool, optional
         Make a movie summing up all the produced plots, by default False.
-    
+
     prefix : str, optional
         Prefix to add before the self-generated filename, by default None.
-    
+
     ncpu : int, optional
         Number of cpus, by default all available.
     """
@@ -264,7 +268,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             logging.error('Axis \"'+axis+'\" not found.')
             return 1
 
-    if makeMovie: 
+    if makeMovie:
         prefix = prefix+'__tmp__'
 
     if os.path.dirname(prefix) != '' and not os.path.exists(os.path.dirname(prefix)):
@@ -318,7 +322,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     else:
         antCoords = []
-        
+
     datatype = soltab.getType()
 
     # start processes for multi-thread
@@ -327,7 +331,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     # cycle on files
     if makeMovie: pngs = [] # store png filenames
     for vals, coord, selection in soltab.getValuesIter(returnAxes=axisDiff+axisInTable+axisInCol+axesInPlot):
-       
+
         # set filename
         filename = ''
         for axis in axesInFile:
@@ -340,7 +344,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         # if plotting antenna - convert to number
         if axesInPlot[0] == 'ant':
             xvals = np.arange(len(xvals))
-        
+
         # if plotting time - convert in h/min/s
         xlabelunit=''
         if axesInPlot[0] == 'time':
@@ -354,7 +358,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                 xvals = (xvals-xvals[0])  # sec
                 xlabelunit = ' [s]'
         # if plotting freq convert in MHz
-        elif axesInPlot[0] == 'freq': 
+        elif axesInPlot[0] == 'freq':
             xvals = xvals/1.e6 # MHz
             xlabelunit = ' [MHz]'
 
@@ -384,7 +388,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             elif axesInPlot[1] == 'freq':  # Mhz
                 yvals = yvals/1.e6
                 ylabelunit = ' [MHz]'
-        else: 
+        else:
             yvals = None
             if datatype == 'clock':
                 datatype = 'Clock'
@@ -503,14 +507,14 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                         flags = np.array((weight == 0), dtype=bool)
                         if not (flags == True).all():
                             vals = unwrap_2d(vals, flags, coord[axesInPlot[0]], coord[axesInPlot[1]])
-                
+
                 dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.))
-            
+
             soltab.selection = soltab2Selection
             ### end cycle on colors
 
         # if dataCube too large (> 500 MB) do not go parallel
-        if np.array(dataCube).nbytes > 1024*1024*500: 
+        if np.array(dataCube).nbytes > 1024*1024*500:
             logging.debug('Big plot, parallel not possible.')
             _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
         else:
