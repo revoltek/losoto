@@ -133,7 +133,8 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                         if maxZ > 0: automaxZ = np.log10(maxZ)
                         else: autominZ = None
                         vals = np.log10(vals)
-                    ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=autominZ, vmax=automaxZ)
+                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=autominZ, vmax=automaxZ)
+
                 # make an antenna plot
                 elif antCoords != []:
                     ax.set_xlabel('')
