@@ -14,6 +14,7 @@ def _run_parser(soltab, parser, step):
     axisDiff = parser.getstr( step, 'axisDiff', '' )
     NColFig = parser.getint( step, 'NColFig', 0 )
     figSize = parser.getarrayint( step, 'figSize', [0,0] )
+    markerSize = parser.getint( step, 'markerSize', 2 )
     minmax = parser.getarrayfloat( step, 'minmax', [0.,0.] )
     log = parser.getstr( step, 'log', '' )
     plotFlag = parser.getbool( step, 'plotFlag', False )
@@ -24,11 +25,11 @@ def _run_parser(soltab, parser, step):
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
-    return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, minmax, log, \
+    return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
                plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 
-def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
+def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
         import os
         from itertools import cycle, chain
         import numpy as np
@@ -148,9 +149,9 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
                     ax.set_xlim( xmin=np.median(antCoords[0])-size/2., xmax=np.median(antCoords[0])+size/2. )
                     ax.set_ylim( ymin=np.median(antCoords[1])-size/2., ymax=np.median(antCoords[1])+size/2. )
                 else:
-                    ax.plot(xvals, vals, 'o', color=color, markersize=2, markeredgecolor='none') # flagged data are automatically masked
+                    ax.plot(xvals, vals, 'o', color=color, markersize=markerSize, markeredgecolor='none') # flagged data are automatically masked
                     if plotFlag:
-                        ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=2, markeredgecolor='none') # plot flagged points
+                        ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=markerSize, markeredgecolor='none') # plot flagged points
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
 
                     # find proper min max as the automatic setting is shit
@@ -183,7 +184,7 @@ def _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals
         plt.close()
 
 
-def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], minmax=[0,0], log='', \
+def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], markerSize=2, minmax=[0,0], log='', \
                plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
@@ -208,6 +209,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     figSize : array of int, optional
         Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.
+
+    markerSize : int, optional
+        Size of the markers in the 2D plot. By default 2.
 
     minmax : array of float, optional
         Min max value for the independent variable (0 means automatic). By default 0.
@@ -517,9 +521,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         # if dataCube too large (> 500 MB) do not go parallel
         if np.array(dataCube).nbytes > 1024*1024*500:
             logging.debug('Big plot, parallel not possible.')
-            _plot(Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
+            _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
         else:
-            mpm.put([Nplots, NColFig, figSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
+            mpm.put([Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
         if makeMovie: pngs.append(prefix+filename+'.png')
 
         soltab.selection = soltab1Selection
