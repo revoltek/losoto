@@ -20,18 +20,26 @@ losoto\.h5parm module
     :undoc-members:
     :show-inheritance:
 
-losoto\.losoto\_lib module
+losoto\.lib\_losoto module
 --------------------------
 
-.. automodule:: losoto.losoto_lib
+.. automodule:: losoto.lib_losoto
     :members:
     :undoc-members:
     :show-inheritance:
 
-losoto\.operations\_lib module
+losoto\.lib\_operations module
 ------------------------------
 
-.. automodule:: losoto.operations_lib
+.. automodule:: losoto.lib_operations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.lib\_unwrap module
+--------------------------
+
+.. automodule:: losoto.lib_unwrap
     :members:
     :undoc-members:
     :show-inheritance:

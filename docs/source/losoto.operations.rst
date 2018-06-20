@@ -28,6 +28,14 @@ losoto\.operations\.clocktec module
     :undoc-members:
     :show-inheritance:
 
+losoto\.operations\.directionscreen module
+------------------------------------------
+
+.. automodule:: losoto.operations.directionscreen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 losoto\.operations\.duplicate module
 ------------------------------------
 
@@ -80,6 +88,14 @@ losoto\.operations\.interp module
 ---------------------------------
 
 .. automodule:: losoto.operations.interp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.operations\.lofarbeam module
+------------------------------------
+
+.. automodule:: losoto.operations.lofarbeam
     :members:
     :undoc-members:
     :show-inheritance:
@@ -176,6 +192,22 @@ losoto\.operations\.stationscreen module
 ----------------------------------------
 
 .. automodule:: losoto.operations.stationscreen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.operations\.structure module
+------------------------------------
+
+.. automodule:: losoto.operations.structure
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+losoto\.operations\.tec module
+------------------------------
+
+.. automodule:: losoto.operations.tec
     :members:
     :undoc-members:
     :show-inheritance:

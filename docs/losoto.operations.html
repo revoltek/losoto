@@ -128,6 +128,40 @@ The Clock and TEC values are stored in the specified output soltab with type ‘
 </dd></dl>
 
 </div>
+<div class="section" id="module-losoto.operations.directionscreen">
+<span id="losoto-operations-directionscreen-module"></span><h2>losoto.operations.directionscreen module<a class="headerlink" href="#module-losoto.operations.directionscreen" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.directionscreen.run">
+<code class="descclassname">losoto.operations.directionscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>outSoltab='tecscreen'</em>, <em>height=200000.0</em>, <em>order=12</em>, <em>beta=1.6666666666666667</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.directionscreen.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fits a screen to TEC + scalaraphase values.</p>
+<p>The results of the fit are stored in the soltab parent solset in
+“outSoltab” and the residual phases (actual-screen) are stored in
+“outsoltabresid”. These values are the screen phase values per station per
+pierce point per solution interval. The pierce point locations are stored in
+an auxiliary array in the output soltabs.</p>
+<p>Screens can be plotted with the PLOTSCREEN operation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>soltab</strong> (<em>solution table</em>) – Soltab containing phase solutions</li>
+<li><strong>outSoltab</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of output soltab</li>
+<li><strong>height</strong> (<em>float</em><em>, </em><em>optional</em>) – Height in m of screen</li>
+<li><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of screen (i.e., number of KL base vectors to keep).</li>
+<li><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Power-law index for phase structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</li>
+<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</li>
+<li><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to do when determining weights</li>
+<li><strong>nsigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma above which directions are flagged</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="module-losoto.operations.duplicate">
 <span id="losoto-operations-duplicate-module"></span><h2>losoto.operations.duplicate module<a class="headerlink" href="#module-losoto.operations.duplicate" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -172,7 +206,7 @@ The Clock and TEC values are stored in the specified output soltab with type ‘
 <dl class="function">
 <dt id="losoto.operations.faraday.run">
 <code class="descclassname">losoto.operations.faraday.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>refAnt=''</em>, <em>maxResidual=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Faraday rotation extraction.</p>
+<dd><p>Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -337,6 +371,23 @@ Must be a vector of same length of Axes.</li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-losoto.operations.lofarbeam">
+<span id="losoto-operations-lofarbeam-module"></span><h2>losoto.operations.lofarbeam module<a class="headerlink" href="#module-losoto.operations.lofarbeam" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.lofarbeam.run">
+<code class="descclassname">losoto.operations.lofarbeam.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>ms</em>, <em>inverse=False</em>, <em>useElementResponse=True</em>, <em>useArrayFactor=True</em>, <em>useChanFreq=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.lofarbeam.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic unspecified step for easy expansion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>opt1</strong> (<em>float</em>) – Is a mandatory parameter.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="module-losoto.operations.norm">
 <span id="losoto-operations-norm-module"></span><h2>losoto.operations.norm module<a class="headerlink" href="#module-losoto.operations.norm" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -363,7 +414,7 @@ WEIGHT: Weights compliant</p>
 <span id="losoto-operations-plot-module"></span><h2>losoto.operations.plot module<a class="headerlink" href="#module-losoto.operations.plot" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="losoto.operations.plot.run">
-<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0, 0], minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0, 0], markerSize=2, minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements basic plotting
 WEIGHT: flag-only compliant, no need for weight</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -377,13 +428,14 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <li><strong>axisDiff</strong> (<em>str</em><em>, </em><em>optional</em>) – This must be a len=2 axis and the plot will have the differential value - e.g. ‘pol’ to plot XX-YY. By default ‘’.</li>
 <li><strong>NColFig</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of columns in a multi-table image. By default is automatically chosen.</li>
 <li><strong>figSize</strong> (<em>array of int</em><em>, </em><em>optional</em>) – Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.</li>
+<li><strong>markerSize</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the markers in the 2D plot. By default 2.</li>
 <li><strong>minmax</strong> (<em>array of float</em><em>, </em><em>optional</em>) – Min max value for the independent variable (0 means automatic). By default 0.</li>
 <li><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use Log=’XYZ’ to set which axes to put in Log. By default ‘’.</li>
 <li><strong>plotFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot also flags as red points in 2D plots. By default False.</li>
 <li><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Unwrap phases. By default False.</li>
 <li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. By default None.</li>
 <li><strong>soltabsToAdd</strong> (<em>str</em><em>, </em><em>optional</em>) – Tables to “add” (e.g. ‘sol000/tec000’), it works only for tec and clock to be added to phases. By default None.</li>
-<li><strong>makeAntPlot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a plot containing antenna coordinates in x,y and in color the value to plot, Axes must be [ant]. By default False.</li>
+<li><strong>makeAntPlot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.</li>
 <li><strong>makeMovie</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a movie summing up all the produced plots, by default False.</li>
 <li><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – Prefix to add before the self-generated filename, by default None.</li>
 <li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpus, by default all available.</li>
@@ -399,7 +451,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <span id="losoto-operations-plotscreen-module"></span><h2>losoto.operations.plotscreen module<a class="headerlink" href="#module-losoto.operations.plotscreen" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="losoto.operations.plotscreen.run">
-<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>ressoltab=None</em>, <em>minZ=-3.2</em>, <em>maxZ=3.2</em>, <em>prefix=''</em>, <em>remove_gradient=False</em>, <em>show_source_names=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>resSoltab=''</em>, <em>minZ=-3.2</em>, <em>maxZ=3.2</em>, <em>prefix=''</em>, <em>remove_gradient=False</em>, <em>show_source_names=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot screens (one plot is made per time and per station)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -407,7 +459,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>soltab</strong> (<em>solution table</em>) – Soltab containing screen.</li>
-<li><strong>ressoltab</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screen residuals.</li>
+<li><strong>resSoltab</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screen residuals.</li>
 <li><strong>minZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of colorbar scale.</li>
 <li><strong>maxZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Max value of colorbar scale.</li>
 <li><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – String to prepend to output plots.</li>
@@ -427,7 +479,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 <dl class="function">
 <dt id="losoto.operations.polalign.run">
 <code class="descclassname">losoto.operations.polalign.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>fitOffset=False</em>, <em>average=False</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate polarization alignment as delay</p>
+<dd><p>Estimate polarization misalignment as delay.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -457,7 +509,7 @@ WEIGHT: flag-only compliant, no need for weight</p>
 
 <dl class="function">
 <dt id="losoto.operations.prefactor_XYoffset.run">
-<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>chanWidth</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.run" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -537,7 +589,7 @@ Cambridge University Press ISBN-13: 9780521880688</td></tr>
 
 <dl class="function">
 <dt id="losoto.operations.prefactor_bandpass.run">
-<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>BadSBList=''</em>, <em>n_chan=4</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>chanWidth</em>, <em>BadSBList=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.run" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -577,22 +629,22 @@ WEIGHT: flag compliant, no need for weight</p>
 <span id="losoto-operations-reweight-module"></span><h2>losoto.operations.reweight module<a class="headerlink" href="#module-losoto.operations.reweight" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="losoto.operations.reweight.run">
-<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>method='uniform'</em>, <em>weightVal=1.0</em>, <em>nmedian=3</em>, <em>nstddev=251</em>, <em>soltabImport=''</em>, <em>flagBad=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>This operation resets the weight vals</p>
+<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>mode='uniform'</em>, <em>weightVal=1.0</em>, <em>nmedian=3</em>, <em>nstddev=251</em>, <em>soltabImport=''</em>, <em>flagBad=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the the weight values.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘uniform’ (single value) or ‘window’ (sliding window in time).</li>
+<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘uniform’ (single value), ‘window’ (sliding window in time), or ‘copy’ (copy from another table), by default ‘uniform’.</li>
 <li><strong>weightVal</strong> (<em>float</em><em>, </em><em>optional</em>) – Set weights to this values (0=flagged), by default 1.</li>
-<li><strong>nmedian</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Median window size in number of timeslots for ‘window’ method.
+<li><strong>nmedian</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Median window size in number of timeslots for ‘window’ mode.
 If nonzero, a median-smoothed version of the input values is
 subtracted to detrend them. If 0, no smoothing or subtraction is
-done.</li>
-<li><strong>nstddev</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Standard deviation window size in number of timeslots for ‘window’ method.</li>
-<li><strong>soltabImport</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of a soltab. Copy weights from this soltab, by default do not copy.</li>
-<li><strong>flagBad</strong> (<em>bool</em><em>, </em><em>optional</em>) – Re-apply flags to bad values, by default False.</li>
+done, by default 3.</li>
+<li><strong>nstddev</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Standard deviation window size in number of timeslots for ‘window’ mode, by default 251.</li>
+<li><strong>soltabImport</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of a soltab. Copy weights from this soltab (must have same axes shape), by default none.</li>
+<li><strong>flagBad</strong> (<em>bool</em><em>, </em><em>optional</em>) – Re-apply flags to bad values (1 for amp, 0 for other tables), by default False.</li>
 </ul>
 </td>
 </tr>
@@ -632,8 +684,8 @@ phase)</li>
 <dl class="function">
 <dt id="losoto.operations.smooth.run">
 <code class="descclassname">losoto.operations.smooth.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToSmooth</em>, <em>size=[]</em>, <em>mode='runningmedian'</em>, <em>degree=1</em>, <em>replace=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.smooth.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>This operation for LoSoTo implement a smoothing function: running-median on an arbitrary number of axes, running polyfit on one axis, or set all solutions to mean/median value.
-WEIGHH: flag ready</p>
+<dd><p>A smoothing function: running-median on an arbitrary number of axes, running polyfit on one axis, or set all solutions to the mean/median value.
+WEIGHH: flag ready.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -695,6 +747,51 @@ unity</li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-losoto.operations.structure">
+<span id="losoto-operations-structure-module"></span><h2>losoto.operations.structure module<a class="headerlink" href="#module-losoto.operations.structure" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.structure.run">
+<code class="descclassname">losoto.operations.structure.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>doUnwrap=False</em>, <em>refAnt=''</em>, <em>plotName=''</em>, <em>ndiv=1</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.structure.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the structure function from phase solutions of core stations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – </li>
+<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
+<li><strong>plotName</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot file name, by default no plot.</li>
+<li><strong>ndiv</strong> (<em>int</em><em>, </em><em>optional</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-losoto.operations.tec">
+<span id="losoto-operations-tec-module"></span><h2>losoto.operations.tec module<a class="headerlink" href="#module-losoto.operations.tec" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="losoto.operations.tec.run">
+<code class="descclassname">losoto.operations.tec.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='tec000'</em>, <em>refAnt=''</em>, <em>maxResidual=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bruteforce TEC extraction from phase solutions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “tec”.</li>
+<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
+<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Max average residual in radians before flagging datapoint, by default 1. If 0: no check.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="module-losoto.operations.tecjump">
 <span id="losoto-operations-tecjump-module"></span><h2>losoto.operations.tecjump module<a class="headerlink" href="#module-losoto.operations.tecjump" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
@@ -721,6 +818,7 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.abs">losoto.operations.abs module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clip">losoto.operations.clip module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clocktec">losoto.operations.clocktec module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.directionscreen">losoto.operations.directionscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.example">losoto.operations.example module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.faraday">losoto.operations.faraday module</a></li>
@@ -728,6 +826,7 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.flag">losoto.operations.flag module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.flagextend">losoto.operations.flagextend module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.interp">losoto.operations.interp module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.lofarbeam">losoto.operations.lofarbeam module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plotscreen">losoto.operations.plotscreen module</a></li>
@@ -740,6 +839,8 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.screenvalues">losoto.operations.screenvalues module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.smooth">losoto.operations.smooth module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.stationscreen">losoto.operations.stationscreen module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.structure">losoto.operations.structure module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.tec">losoto.operations.tec module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.tecjump">losoto.operations.tecjump module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations">Module contents</a></li>
 </ul>
@@ -787,7 +888,7 @@ unity</li>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Francesco de Gasperin.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>
