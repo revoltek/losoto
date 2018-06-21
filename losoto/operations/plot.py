@@ -115,13 +115,13 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
 
-            colors = cycle(['g', 'b', 'c', 'm'])
+            colors = cycle(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
             for Ncol, data in enumerate(dataCube[Ntab]):
 
                 # set color, use defined colors if a few lines, otherwise a continuum colormap
-                if len(dataCube[Ntab]) <= 4:
+                if len(dataCube[Ntab]) <= 8:
                     color = colors.next()
-                    colorFlag = 'r'
+                    colorFlag = 'k'
                 else:
                     color = plt.cm.jet(Ncol/float(len(dataCube[Ntab])-1)) # from 0 to 1
                     colorFlag = 'k'
@@ -145,7 +145,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         cmap = plt.cm.gist_rainbow
                     else:
                         cmap = plt.cm.viridis
-
+                    
+                    # ugly fix to enforce min/max as imshow has some problems with very large numbers
                     vals[vals>maxZ] = maxZ
                     vals[vals<minZ] = minZ
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
