@@ -115,13 +115,13 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
 
-            colors = cycle(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf'])
+            colors = cycle(['#377eb8','#ff7f00','#984ea3','#ffff33','#a65628','#f781bf','#4daf4a'])
             for Ncol, data in enumerate(dataCube[Ntab]):
 
                 # set color, use defined colors if a few lines, otherwise a continuum colormap
                 if len(dataCube[Ntab]) <= 8:
                     color = colors.next()
-                    colorFlag = 'k'
+                    colorFlag = '#e41a1c'
                 else:
                     color = plt.cm.jet(Ncol/float(len(dataCube[Ntab])-1)) # from 0 to 1
                     colorFlag = 'k'
