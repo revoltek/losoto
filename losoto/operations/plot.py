@@ -48,9 +48,9 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 minZ = np.nanmin(dataCube)
                 maxZ = np.nanmax(dataCube)
             elif datatype == 'amplitude':
-                minZ = 1e-6
+                minZ = 0.
                 flat = np.array( dataCube ).flatten()
-                maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ flat<1e3 ] )
+                maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100 ] )
             else:
                 minZ = np.nanmin(dataCube)
                 maxZ = np.nanmax(dataCube)
@@ -136,7 +136,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if 'Z' in log:
-                        minZ = np.log10(minZ)
+                        if minZ == 0: minZ = np.log10(1e-6)
+                        else: minZ = np.log10(minZ)
                         maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
                     im = ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, \
