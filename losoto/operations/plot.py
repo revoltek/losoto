@@ -140,7 +140,15 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         else: minZ = np.log10(minZ)
                         maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
-                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, \
+
+                    if datatype == 'phase' or datatype == 'rotation':
+                        cmap = plt.cm.gist_rainbow
+                    else:
+                        cmap = plt.cm.viridis
+
+                    vals[vals>maxZ] = maxZ
+                    vals[vals<minZ] = minZ
+                    im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
                 # make an antenna plot
@@ -166,7 +174,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
         if cmesh:
             # add a color bar to show scale
-            figgrid.colorbar(im, ax=axa.ravel().tolist(), use_gridspec=True, fraction=0.03, pad=0.01)
+            figgrid.colorbar(im, ax=axa.ravel().tolist(), use_gridspec=True, fraction=0.02, pad=0.005, aspect=35)
 
         logging.info("Saving "+filename+'.png')
         try:
