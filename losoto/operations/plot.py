@@ -42,7 +42,21 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
-        autominZ = np.inf; automaxZ = -np.inf
+        # find common min and max if not set
+        if minZ == 0 and maxZ == 0:
+            if datatype == 'phase':
+                minZ = np.nanmin(dataCube)
+                maxZ = np.nanmax(dataCube)
+            elif datatype == 'amplitude':
+                minZ = 1e-6
+                flat = np.array( dataCube ).flatten()
+                maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ flat<1e3 ] )
+            else:
+                minZ = np.nanmin(dataCube)
+                maxZ = np.nanmax(dataCube)
+                #minZ = np.nanmedian(vals) - 3*np.nanstd(vals)
+                #maxZ = np.nanmedian(vals) + 3*np.nanstd(vals)
+            logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
 
         # if user-defined number of col use that
         if NColFig != 0: Nc = NColFig
@@ -116,25 +130,17 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 if np.ma.getmask(dataCube[Ntab][Ncol]).all():
                     continue
 
-                # plotting
+                # 3D cmesh plot
                 if cmesh:
-                    # setting min max
-                    if minZ == 0 and maxZ == 0:
-                        autominZ = np.mean(vals) - 3*np.std(vals)
-                        automaxZ = np.mean(vals) + 3*np.std(vals)
-                    else:
-                        autominZ = minZ
-                        automaxZ = maxZ
                    # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
                     if 'Z' in log:
-                        if minZ > 0: autominZ = np.log10(minZ)
-                        else: autominZ = None
-                        if maxZ > 0: automaxZ = np.log10(maxZ)
-                        else: autominZ = None
+                        minZ = np.log10(minZ)
+                        maxZ = np.log10(maxZ)
                         vals = np.log10(vals)
-                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=autominZ, vmax=automaxZ)
+                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=plt.cm.jet, \
+                            extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
                 # make an antenna plot
                 elif antCoords != []:
@@ -148,28 +154,14 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     size = np.max( [np.max(antCoords[0])-np.min(antCoords[0]), np.max(antCoords[1])-np.min(antCoords[1])] )*1.1 # make img squared
                     ax.set_xlim( xmin=np.median(antCoords[0])-size/2., xmax=np.median(antCoords[0])+size/2. )
                     ax.set_ylim( ymin=np.median(antCoords[1])-size/2., ymax=np.median(antCoords[1])+size/2. )
+
+                # 2D scatter plot
                 else:
                     ax.plot(xvals, vals, 'o', color=color, markersize=markerSize, markeredgecolor='none') # flagged data are automatically masked
                     if plotFlag:
                         ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=markerSize, markeredgecolor='none') # plot flagged points
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
-
-                    # find proper min max as the automatic setting is shit
-                    if not all(vals.mask == True):
-                        if autominZ > vals.min(fill_value=np.inf) or autominZ == np.inf:
-                            autominZ = vals.min(fill_value=np.inf)
-                        if automaxZ < vals.max(fill_value=-np.inf) or automaxZ == -np.inf:
-                            automaxZ = vals.max(fill_value=-np.inf)
-
-        if not cmesh and antCoords == []:
-            if minZ != 0:
-                ax.set_ylim(ymin=minZ)
-            else:
-                ax.set_ylim(ymin=autominZ)
-            if maxZ != 0:
-                ax.set_ylim(ymax=maxZ)
-            else:
-                ax.set_ylim(ymax=automaxZ)
+                    ax.set_ylim(ymin=minZ, ymax=maxZ)
 
         if cmesh:
             # add a color bar to show scale
