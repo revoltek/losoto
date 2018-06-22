@@ -41,7 +41,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             #mpl.rc('figure.subplot',left=0.1, bottom=0.1, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
-        from losoto.phase_colormap import cm_phase
+        #from losoto.phase_colormap import cm_phase
 
         # find common min and max if not set
         if minZ == 0 and maxZ == 0:
@@ -116,11 +116,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
 
-            colors = cycle(['#377eb8','#4daf4a','#ff7f00','#984ea3','#ffff33','#a65628','#f781bf'])
+            colors = cycle(['#377eb8','#b88637','#4daf4a','#984ea3','#ffff33','#f781bf'])
             for Ncol, data in enumerate(dataCube[Ntab]):
 
                 # set color, use defined colors if a few lines, otherwise a continuum colormap
-                if len(dataCube[Ntab]) <= 8:
+                if len(dataCube[Ntab]) <= 6:
                     color = colors.next()
                     colorFlag = '#e41a1c'
                 else:
@@ -143,8 +143,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         vals = np.log10(vals)
 
                     if datatype == 'phase' or datatype == 'rotation':
-                        cmap = cm_phase
-                        #cmap = plt.cm.gist_rainbow
+                        #cmap = cm_phase
+                        cmap = plt.cm.jet
                     else:
                         cmap = plt.cm.viridis
                     
