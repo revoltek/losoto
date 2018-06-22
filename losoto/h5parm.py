@@ -777,7 +777,7 @@ class Soltab( object ):
 
         for axis, selVal in iter( args.items() ):
             # if None continue and keep all the values
-            if selVal is None: continue
+            if selVal is None or selVal==['']: continue
 
             if not axis in self.getAxesNames():
                 logging.warning("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
