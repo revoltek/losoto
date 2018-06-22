@@ -41,6 +41,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             #mpl.rc('figure.subplot',left=0.1, bottom=0.1, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
+        from losoto.phase_colormap import cm_phase
 
         # find common min and max if not set
         if minZ == 0 and maxZ == 0:
@@ -142,7 +143,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         vals = np.log10(vals)
 
                     if datatype == 'phase' or datatype == 'rotation':
-                        cmap = plt.cm.gist_rainbow
+                        cmap = cm_phase
+                        #cmap = plt.cm.gist_rainbow
                     else:
                         cmap = plt.cm.viridis
                     

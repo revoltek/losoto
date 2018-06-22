@@ -257,4 +257,4 @@ cm_data = [[0.51845, 0.38426, 0.97935],
  [0.48802, 0.36282, 0.97864],
  [0.49795, 0.37015, 0.97883],
  [0.50807, 0.3773, 0.97906]];
-phase_colormap = ListedColormap(cm_data, name='phase')
+cm_phase = ListedColormap(cm_data, name='phase')
