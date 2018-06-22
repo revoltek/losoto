@@ -115,7 +115,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if 'X' in log: ax.set_xscale('log')
             if 'Y' in log: ax.set_yscale('log')
 
-            colors = cycle(['#377eb8','#ff7f00','#984ea3','#ffff33','#a65628','#f781bf','#4daf4a'])
+            colors = cycle(['#377eb8','#4daf4a','#ff7f00','#984ea3','#ffff33','#a65628','#f781bf'])
             for Ncol, data in enumerate(dataCube[Ntab]):
 
                 # set color, use defined colors if a few lines, otherwise a continuum colormap
