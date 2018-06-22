@@ -146,8 +146,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         cmap = cm_phase
                         #cmap = plt.cm.gist_rainbow
                     else:
-                        cmap = plt.cm.viridis
-                    
+                        try:
+                            cmap = plt.cm.viridis
+                        except AttributeError:
+                            cmap = plt.cm.rainbow
+
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
                     vals[vals>maxZ] = maxZ
                     vals[vals<minZ] = minZ
