@@ -7,11 +7,11 @@ This tool is used to import killms solutions into a H5parm format.
 # Francesco de Gasperin
 _author = "Francesco de Gasperin (astro@voo.it)"
 
-import sys, os, glob
+import sys, os, glob, pickle
 import logging
+import numpy as np
 from losoto import _version
 from losoto import _logging
-
     
 if __name__=='__main__':
     # Options
@@ -29,13 +29,35 @@ if __name__=='__main__':
         sys.exit()
     if options.verbose: _logging.setLevel("debug")
 
-    input_file = args[1]
-    h5parm_file = args[0]
+    inputFile = args[1:]
+    logging.info("KILLMS filenames = "+str(inputFile))
+    h5parmFile = args[0]
     logging.info("H5parm filename = "+h5parmFile)
     
     # Common options
     complevel = options.complevel
-    solset_name = options.solset
+    solsetName = options.solset
+
+    for FileName in inputFile:
+
+        SolsDico = np.load(FileName)
+        Sols = SolsDico["Sols"]
+        Sols = Sols.view(np.recarray)
+        nt,nch,na,nd,_,_ = Sols.G.shape
+
+        # build direction subtable
+        ClusterCat = SolsDico["ClusterCat"]
+        dirs = []
+        for i, c in enumerate(ClusterCat):
+            print type(c)
+            dirs.append['Dir%02i' % i, c[1], c[2]]
+
+        # build antenna subtable
+        StationNames = SolsDico["StationNames"]
 
 
-    
+    print SolsDico.keys()
+    print SolsDico['FreqDomains']
+    print nt,nch,na,nd
+    print tpye(Sols)
+    print dirs

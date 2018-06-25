@@ -100,6 +100,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             gap = xvals[-1] / 100 # 1%
             for j in jumps: xvals[j+1:] += gap
 
+        im = None
         for Ntab, title in enumerate(titles):
 
             ax = axa.flatten()[Ntab]
@@ -129,10 +130,12 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
                 vals = dataCube[Ntab][Ncol]
                 if np.ma.getmask(dataCube[Ntab][Ncol]).all():
+                    print ('cont')
                     continue
 
                 # 3D cmesh plot
                 if cmesh:
+                    print('in cmesh')
                    # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
@@ -175,7 +178,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
                     ax.set_ylim(ymin=minZ, ymax=maxZ)
 
-        if cmesh:
+        if not im is None:
             # add a color bar to show scale
             figgrid.colorbar(im, ax=axa.ravel().tolist(), use_gridspec=True, fraction=0.02, pad=0.005, aspect=35)
 
