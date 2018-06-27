@@ -130,12 +130,10 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
                 vals = dataCube[Ntab][Ncol]
                 if np.ma.getmask(dataCube[Ntab][Ncol]).all():
-                    print ('cont')
                     continue
 
                 # 3D cmesh plot
                 if cmesh:
-                    print('in cmesh')
                    # stratch the imshow output to fill the plot size
                     bbox = ax.get_window_extent().transformed(figgrid.dpi_scale_trans.inverted())
                     aspect = ((xvals[-1]-xvals[0])*bbox.height)/((yvals[-1]-yvals[0])*bbox.width)
