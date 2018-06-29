@@ -8,13 +8,18 @@ logging.debug('Loading PREFACTOR_BANDPASS module.')
 
 def _run_parser(soltab, parser, step):
     chanWidth = parser.getstr( step, 'chanWidth')
+    outSoltabName = parser.getstr( step, 'outSoltabName', 'bandpass' )
     BadSBList = parser.getstr( step, 'BadSBList' , '')
-    autoflag = parser.getbool( step, 'autoFlag', False )
-    nsigma = parser.getfloat( step, 'nSigma', 5.0 )
-    max_flagged_fraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5 )
-    max_stddev = parser.getfloat( step, 'maxStddev', 0.006 )
+    interpolate = parser.getbool( step, 'interpolate', True )
+    removeTimeAxis = parser.getbool( step, 'removeTimeAxis', True )
+    autoFlag = parser.getbool( step, 'autoFlag', False )
+    nSigma = parser.getfloat( step, 'nSigma', 5.0 )
+    maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5 )
+    maxStddev = parser.getfloat( step, 'maxStddev', 0.006 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
-    return run(soltab, chanWidth, BadSBList)
+
+    return run(soltab, chanWidth, outSoltabName, BadSBList, interpolate, removeTimeAxis,
+               autoFlag, nSigma, maxFlaggedFraction, maxStddev, ncpu)
 
 
 def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
@@ -206,11 +211,14 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         return None, bandpass_function(freq, *tuple(init_coeffs))
 
 
-def _flag_amplitudes(freqs, amps, weights, nsigma, max_flagged_fraction, max_stddev,
+def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev,
                      plot, s, outQueue):
     """
     Flags bad amplitude solutions relative to median bandpass (in log space) by setting
     the corresponding weights to 0.0
+
+    Note: A median over the time axis is done before flagging, so the flags are not time-
+    dependent
 
     Parameters
     ----------
@@ -220,12 +228,12 @@ def _flag_amplitudes(freqs, amps, weights, nsigma, max_flagged_fraction, max_std
         Array of amplitudes as [time, ant, freq, pol]
     weights : array
         Array of weights as [time, ant, freq, pol]
-    nsigma : float
-        Number of sigma for flagging. Amplitudes outside of nsigma*stddev are flagged
-    max_flagged_fraction : float
+    nSigma : float
+        Number of sigma for flagging. Amplitudes outside of nSigma*stddev are flagged
+    maxFlaggedFraction : float
         Maximum allowable fraction of flagged frequencies. Stations with higher fractions
         will be completely flagged
-    max_stddev : float
+    maxStddev : float
         Maximum allowable standard deviation
     plot : bool
         If True, the bandpass with flags and best-fit line is plotted for each station
@@ -282,8 +290,8 @@ def _flag_amplitudes(freqs, amps, weights, nsigma, max_flagged_fraction, max_std
         while nflag != nflag_prev and niter < maxiter:
             p, bp_sp = _fit_bandpass(freqs, np.log10(amps_div), sigma_div, band)
             stdev_all = np.sqrt(np.average((bp_sp-np.log10(amps_div))**2, weights=(1/sigma_div)**2))
-            stdev = min(max_stddev, stdev_all)
-            bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > nsigma*stdev)
+            stdev = min(maxStddev, stdev_all)
+            bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > nSigma*stdev)
             nflag = len(bad[0])
             if nflag == 0:
                 break
@@ -302,12 +310,12 @@ def _flag_amplitudes(freqs, amps, weights, nsigma, max_flagged_fraction, max_std
 
         # Check whether entire station is bad (high stdev or high flagged fraction). If
         # so, flag all frequencies and polarizations
-        if stdev_all > max_stddev * 5.0:
+        if stdev_all > maxStddev * 5.0:
             # Station has very high stddev relative to median bandpass; flag it
             print('Flagging station {} due to high stddev'.format(s))
             weights[:, :, :] = 0.0
             break
-        elif float(len(bad[0]))/float(len(freqs)) > max_flagged_fraction:
+        elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
             # Station has high fraction of flagged frequencies; flag it
             print('Flagging station {} due to high flagged fraction'.format(s))
             weights[:, :, :] = 0.0
@@ -325,8 +333,9 @@ def _flag_amplitudes(freqs, amps, weights, nsigma, max_flagged_fraction, max_std
     outQueue.put([s, weights])
 
 
-def run(soltab, chanWidth, BadSBList = '', autoflag=False, nsigma=5.0,
-        max_flagged_fraction=0.5, max_stddev=0.006, ncpu=0):
+def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate=True,
+        removeTimeAxis=True, autoFlag=False, nSigma=5.0, maxFlaggedFraction=0.5,
+        maxStddev=0.006, ncpu=0):
     """
     This operation for LoSoTo implements the Prefactor bandpass operation
     WEIGHT: flag-only compliant, no need for weight
@@ -338,17 +347,27 @@ def run(soltab, chanWidth, BadSBList = '', autoflag=False, nsigma=5.0,
         either a string like "48kHz" or a float in Hz
     BadSBList : str, optional
         a list of bad subbands that will be flagged
-    autoflag : bool, optional
+    outSoltabName : str, optional
+        Name of the output bandpass soltab. An existing soltab with this name will be
+        overwritten
+    interpolate : bool, optional
+        If True, interpolate to a regular frequency grid and then smooth, ignoring bad
+        subbands. If False, neither interpolation nor smoothing is done and the output
+        frequency grid is the same as the input one
+    removeTimeAxis : bool, optional
+        If True, the time axis of the output bandpass soltab is removed by doing a median
+        over time. If False, the output time grid is the same as the input one
+    autoFlag : bool, optional
         If True, automatically flag bad frequencies and stations
-    nsigma : float, optional
-        Number of sigma for autoflagging. Amplitudes outside of nsigma*stddev are flagged
-    max_flagged_fraction : float, optional
-        Maximum allowable fraction of flagged frequencies for autoflagging. Stations with
+    nSigma : float, optional
+        Number of sigma for autoFlagging. Amplitudes outside of nSigma*stddev are flagged
+    maxFlaggedFraction : float, optional
+        Maximum allowable fraction of flagged frequencies for autoFlagging. Stations with
         higher fractions will be completely flagged
-    max_stddev : float, optional
-        Maximum allowable standard deviation for autoflagging
+    maxStddev : float, optional
+        Maximum allowable standard deviation for autoFlagging
     ncpu : int, optional
-        Number of CPUs to use during autoflagging (0 = all)
+        Number of CPUs to use during autoFlagging (0 = all)
     """
     import numpy as np
     import scipy
@@ -423,81 +442,95 @@ def run(soltab, chanWidth, BadSBList = '', autoflag=False, nsigma=5.0,
         weights_arraytmp[:, :, bad_sb, :] = 0.0
 
     # remove bad solutions relative to the model bandpass
-    if autoflag:
+    if autoFlag:
         if ncpu == 0:
             import multiprocessing
             ncpu = multiprocessing.cpu_count()
         mpm = multiprocManager(ncpu, _flag_amplitudes)
         for s in range(nants):
             mpm.put([soltab.freq[:], amplitude_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
-                     nsigma, max_flagged_fraction, max_stddev, False, s])
+                     nSigma, maxFlaggedFraction, maxStddev, False, s])
         mpm.wait()
         for (s, w) in mpm.get():
             weights_arraytmp[:, s, :, :] = w
 
-    # Now interpolate over flagged values
-    for antenna_id in range(len(soltab.ant[:])):
-        for time in range(len(soltab.time[:])):
-            amp_xx_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 0])
-            amp_yy_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 1])
-            freq_tmp = soltab.freq[:]
-            assert len(amp_xx_tmp[:]) == len(freq_tmp[:])
-            mask_xx = np.not_equal(weights_arraytmp[time, antenna_id, :, 0], 0.0)
-            if np.sum(mask_xx)>2:
-                amps_xx_tointer = amp_xx_tmp[mask_xx]
-                freq_xx_tointer = freq_tmp[mask_xx]
-                amps_array_flagged[antenna_id, time, :, 0] = np.interp(freqs_new, freq_xx_tointer, amps_xx_tointer)
-            elif time>0:
-                amps_array_flagged[antenna_id, time, :, 0] = amps_array_flagged[antenna_id, (time-1), :, 0]
-            mask_yy = np.not_equal(weights_arraytmp[time, antenna_id, :, 1], 0.0)
-            if np.sum(mask_yy)>2:
-                amps_yy_tointer = amp_yy_tmp[mask_yy]
-                freq_yy_tointer = freq_tmp[mask_yy]
-                amps_array_flagged[antenna_id, time, :, 1] = np.interp(freqs_new, freq_yy_tointer, amps_yy_tointer)
-            elif time>0:
-                amps_array_flagged[antenna_id, time, :, 1] = amps_array_flagged[antenna_id, (time-1), :, 1]
-
-    ampsoutfile = open('calibrator_amplitude_array.txt','w')
-    ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
-    for antenna_id in range(len(soltab.ant[:])):
-        if np.all(weights_arraytmp[:, antenna_id, :, :] == 0.0):
-            weights_array[antenna_id, :, :, :] = 0.0
-        else:
-            amp_xx = np.copy(amps_array_flagged[antenna_id, :, :, 0])
-            amp_yy = np.copy(amps_array_flagged[antenna_id, :, :, 1])
-
-            amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (3,3))
-            amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (7,1))
-            amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (3,3))
-            amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (7,1))
-
-            for i in range(len(freqs_new)):
-                ampsoutfile.write('%s %s %s %s %s %s\n'%(soltab.ant[antenna_id], antenna_id,
-                                                         i, np.median(amp_xx[:,i], axis=0),
-                                                         np.median(amp_yy[:,i], axis=0),
-                                                         freqs_new[i]))
-
+    # Now interpolate over flagged values and smooth over frequency and time axes
+    if interpolate:
+        for antenna_id in range(len(soltab.ant[:])):
             for time in range(len(soltab.time[:])):
-                amps_array[antenna_id, time, :, 0] = np.copy(_savitzky_golay(amp_xx[time,:], 17, 2))
-                amps_array[antenna_id, time, :, 1] = np.copy(_savitzky_golay(amp_yy[time,:], 17, 2))
+                amp_xx_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 0])
+                amp_yy_tmp = np.copy(amplitude_arraytmp[time, antenna_id, :, 1])
+                freq_tmp = soltab.freq[:]
+                assert len(amp_xx_tmp[:]) == len(freq_tmp[:])
+                mask_xx = np.not_equal(weights_arraytmp[time, antenna_id, :, 0], 0.0)
+                if np.sum(mask_xx)>2:
+                    amps_xx_tointer = amp_xx_tmp[mask_xx]
+                    freq_xx_tointer = freq_tmp[mask_xx]
+                    amps_array_flagged[antenna_id, time, :, 0] = np.interp(freqs_new, freq_xx_tointer, amps_xx_tointer)
+                elif time>0:
+                    amps_array_flagged[antenna_id, time, :, 0] = amps_array_flagged[antenna_id, (time-1), :, 0]
+                mask_yy = np.not_equal(weights_arraytmp[time, antenna_id, :, 1], 0.0)
+                if np.sum(mask_yy)>2:
+                    amps_yy_tointer = amp_yy_tmp[mask_yy]
+                    freq_yy_tointer = freq_tmp[mask_yy]
+                    amps_array_flagged[antenna_id, time, :, 1] = np.interp(freqs_new, freq_yy_tointer, amps_yy_tointer)
+                elif time>0:
+                    amps_array_flagged[antenna_id, time, :, 1] = amps_array_flagged[antenna_id, (time-1), :, 1]
 
-            for i in range(len(freqs_new)):
-                amps_array[antenna_id, :, i, 0] = np.median(amps_array[antenna_id, :, i, 0])
-                amps_array[antenna_id, :, i, 1] = np.median(amps_array[antenna_id, :, i, 1])
-                ind = freq_mapping['{}'.format(freqs_new[i])]
-                if np.any(weights_arraytmp[:, antenna_id, ind, :] == 0.0):
-                    weights_array[antenna_id, :, i, :] = 0.0
+        ampsoutfile = open('calibrator_amplitude_array.txt','w')
+        ampsoutfile.write('# Antenna name, Antenna ID, subband, XXamp, YYamp, frequency\n')
+        for antenna_id in range(len(soltab.ant[:])):
+            if np.all(weights_arraytmp[:, antenna_id, :, :] == 0.0):
+                weights_array[antenna_id, :, :, :] = 0.0
+            else:
+                amp_xx = np.copy(amps_array_flagged[antenna_id, :, :, 0])
+                amp_yy = np.copy(amps_array_flagged[antenna_id, :, :, 1])
+
+                amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (3,3))
+                amp_xx = scipy.ndimage.filters.median_filter(amp_xx, (7,1))
+                amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (3,3))
+                amp_yy = scipy.ndimage.filters.median_filter(amp_yy, (7,1))
+
+                for i in range(len(freqs_new)):
+                    ampsoutfile.write('%s %s %s %s %s %s\n'%(soltab.ant[antenna_id], antenna_id,
+                                                             i, np.median(amp_xx[:,i], axis=0),
+                                                             np.median(amp_yy[:,i], axis=0),
+                                                             freqs_new[i]))
+
+                for time in range(len(soltab.time[:])):
+                    amps_array[antenna_id, time, :, 0] = np.copy(_savitzky_golay(amp_xx[time,:], 17, 2))
+                    amps_array[antenna_id, time, :, 1] = np.copy(_savitzky_golay(amp_yy[time,:], 17, 2))
+
+                for i in range(len(freqs_new)):
+                    amps_array[antenna_id, :, i, 0] = np.median(amps_array[antenna_id, :, i, 0])
+                    amps_array[antenna_id, :, i, 1] = np.median(amps_array[antenna_id, :, i, 1])
+                    ind = freq_mapping['{}'.format(freqs_new[i])]
+                    if np.any(weights_arraytmp[:, antenna_id, ind, :] == 0.0):
+                        weights_array[antenna_id, :, i, :] = 0.0
+    else:
+        amps_array = amplitude_arraytmp
+        weights_array = weights_arraytmp
 
     # delete existing bandpass soltab if needed and write solutions
     try:
-        new_soltab = solset.getSoltab('bandpass')
+        new_soltab = solset.getSoltab(outSoltabName)
         new_soltab.delete()
     except:
         pass
-    new_soltab = solset.makeSoltab(soltype='amplitude', soltabName='bandpass',
-                             axesNames=['ant', 'freq', 'pol'], axesVals=[soltab.ant,
-                             freqs_new, ['XX', 'YY']], vals=amps_array[:, 0, :, :],
-                             weights=weights_array[:, 0, :, :])
+
+    if removeTimeAxis:
+        # Write bandpass, taking median over the time axis
+        new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
+                                 axesNames=['ant', 'freq', 'pol'],
+                                 axesVals=[soltab.ant, freqs_new, ['XX', 'YY']],
+                                 vals=np.median(amps_array, axis=1),
+                                 weights=np.median(weights_array, axis=1))
+    else:
+        # Write bandpass, preserving the time axis
+        new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
+                                 axesNames=['time', 'ant', 'freq', 'pol'],
+                                 axesVals=[soltab.time, soltab.ant, soltab.freq, ['XX', 'YY']],
+                                 vals=amps_array, weights=weights_array)
     new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation)')
 
     return 0
