@@ -10,6 +10,7 @@ Contributed code:
 * Jose Sabater Montes
 * Martin Hardcastle
 * Andreas Horneffer
+* and the LOFAR Survey Key Science Project
 
 Cite:
 * If you use LoSoTo for your data reduction, please acknowledge it with "This work has made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
