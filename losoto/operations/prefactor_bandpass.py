@@ -7,15 +7,15 @@ from losoto.lib_operations import *
 logging.debug('Loading PREFACTOR_BANDPASS module.')
 
 def _run_parser(soltab, parser, step):
-    chanWidth = parser.getstr( step, 'chanWidth')
+    chanWidth = parser.getstr( step, 'chanWidth', '')
     outSoltabName = parser.getstr( step, 'outSoltabName', 'bandpass' )
-    BadSBList = parser.getstr( step, 'BadSBList' , '')
+    BadSBList = parser.getstr( step, 'BadSBList', '')
     interpolate = parser.getbool( step, 'interpolate', True )
     removeTimeAxis = parser.getbool( step, 'removeTimeAxis', True )
     autoFlag = parser.getbool( step, 'autoFlag', False )
     nSigma = parser.getfloat( step, 'nSigma', 5.0 )
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5 )
-    maxStddev = parser.getfloat( step, 'maxStddev', 0.006 )
+    maxStddev = parser.getfloat( step, 'maxStddev', 0.01 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
     return run(soltab, chanWidth, outSoltabName, BadSBList, interpolate, removeTimeAxis,
@@ -133,9 +133,37 @@ def _bspline(x, t, c, k):
     return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(range(n), extrap))
 
 
+def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
+    """
+    Defines the functional form of the LBA bandpass in terms of splines of degree 3
+
+    The spline fit was done using LSQUnivariateSpline() on the median bandpass between
+    30 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
+    minimum number of parameters.
+
+    Parameters
+    ----------
+    freq : array
+        Array of frequencies
+    c1-c9: float
+        Spline coefficients
+
+    Returns
+    -------
+    bandpass : list
+        List of bandpass values as function of frequency
+    """
+    knots = np.array([30003357.0, 30003357.0, 30003357.0, 30003357.0, 40000000.0,
+                      50000000.0, 55000000.0, 56000000.0, 60000000.0, 62000000.0,
+                      63000000.0, 64000000.0, 70000000.0, 77610779.0, 77610779.0,
+                      77610779.0, 77610779.0])
+    coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13])
+    return [_bspline(f, knots, coeffs, 3) for f in freq]
+
+
 def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
     """
-    Defines the functional form of the bandpass in terms of splines of degree 3
+    Defines the functional form of the HBA-low bandpass in terms of splines of degree 3
 
     The spline fit was done using LSQUnivariateSpline() on the median bandpass between
     120 MHz and 188 MHz. The knots were set by hand to acheive a good fit with a
@@ -153,10 +181,10 @@ def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
     bandpass : list
         List of bandpass values as function of frequency
     """
-    knots = np.array([1.20237732e+08, 1.20237732e+08, 1.20237732e+08, 1.20237732e+08,
-                      1.30000000e+08, 1.38000000e+08, 1.48000000e+08, 1.60000000e+08,
-                      1.68000000e+08, 1.78000000e+08, 1.87376404e+08, 1.87376404e+08,
-                      1.87376404e+08, 1.87376404e+08])
+    knots = np.array([1.15e+08, 1.15e+08, 1.15e+08, 1.15e+08,
+                      1.30e+08, 1.38e+08, 1.48e+08, 1.60e+08,
+                      1.68e+08, 1.78e+08, 1.90e+08, 1.90e+08,
+                      1.9e+08, 1.9e+08])
     coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10])
     return [_bspline(f, knots, coeffs, 3) for f in freq]
 
@@ -195,14 +223,25 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         init_coeffs = np.array([-0.01460369, 0.05062699, 0.02827004, 0.03738518,
                                 -0.05729109, 0.02303295, -0.03550487, -0.0803113,
                                 -0.2394929, -0.358301])
-        bounds_deltas = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+        bounds_deltas_lower = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.1, 0.1, 0.2, 0.5]
+        bounds_deltas_upper = [0.06, 0.1, 0.1, 0.1, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+    elif band.lower() == 'lba':
+        bandpass_function = _bandpass_LBA
+        init_coeffs = np.array([-0.22654016, -0.1950495, -0.07763014, 0.10002095,
+                                0.32797671, 0.46900048, 0.47155583, 0.31945897,
+                                0.29072278, 0.08064795, -0.15761538, -0.36020451,
+                                -0.51163338])
+        bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+                               0.15, 0.15, 0.15]
+        bounds_deltas_upper = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+                               0.15, 0.15, 0.15]
     else:
         print('The "{}" band is not supported'.format(band))
         sys.exit(1)
 
     if do_fit:
-        lower = [c - b for c, b in zip(init_coeffs, bounds_deltas)]
-        upper = [c + b for c, b in zip(init_coeffs, bounds_deltas)]
+        lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
+        upper = [c + b for c, b in zip(init_coeffs, bounds_deltas_upper)]
         param_bounds = (lower, upper)
         popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma,
                                bounds=param_bounds)
@@ -250,6 +289,10 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         band = 'hba_low'
         median_min = 75.0
         median_max = 200.0
+    elif np.median(freqs) < 90e6:
+        band = 'lba'
+        median_min = 50.0
+        median_max = 200.0
     else:
         print('The median frequency of {} Hz is outside of any know band'.format(np.median(freqs)))
         sys.exit(1)
@@ -260,20 +303,30 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         return
 
     # Build arrays for fitting
-    flagged = np.where(weights == 0.0)
+    flagged = np.where(np.logical_or(weights == 0.0, amps == 0.0))
     amps_flagged = amps.copy()
     amps_flagged[flagged] = np.nan
-    sigma = np.sqrt(1.0 / weights)
+    sigma = weights.copy()
+    sigma[flagged] = 1.0
+    sigma = np.sqrt(1.0 / sigma)
     sigma[flagged] = 1e8
 
     # Iterate over polarizations
     npols = amps.shape[2] # number of polarizations
     for pol in range(npols):
-        # take median over time and pol axes and divide out the median offset
-        amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
-        median_val = np.nanmedian(amps_div)
+        # take median over time and divide out the median offset
+        with np.warnings.catch_warnings():
+            np.warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+            amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
+            median_val = np.nanmedian(amps_div)
         amps_div /= median_val
-        sigma_div = np.nanmedian(sigma[:, :, pol], axis=0)
+        sigma_div = np.median(sigma[:, :, pol], axis=0)
+        median_flagged = np.where(np.isnan(amps_div))
+        amps_div[median_flagged] = 1.0
+        sigma_div[median_flagged] = 1e8
+        median_flagged = np.where(amps_div <= 0.0)
+        amps_div[median_flagged] = 1.0
+        sigma_div[median_flagged] = 1e8
         sigma_orig = sigma_div.copy()
 
         # Before doing the fitting, flag any solutions that deviate from the model bandpass by
@@ -311,40 +364,45 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         # Check whether entire station is bad (high stdev or high flagged fraction). If
         # so, flag all frequencies and polarizations
         if stdev_all > maxStddev * 5.0:
-            # Station has very high stddev relative to median bandpass; flag it
-            print('Flagging station {} due to high stddev'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has high stddev relative to median bandpass
+            print('Flagged station {0} (pol {1}) due to high stddev '
+                  '({2})'.format(s, pol, stdev_all))
+            weights[:, :, pol] = 0.0
         elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
-            # Station has high fraction of flagged frequencies; flag it
-            print('Flagging station {} due to high flagged fraction'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has high fraction of flagged solutions
+            print('Flagged station {0} (pol {1}) due to high flagged fraction '
+                  '({2})'.format(s, pol, float(len(bad[0]))/float(len(freqs))))
+            weights[:, :, pol] = 0.0
         elif median_val < median_min or median_val > median_max:
-            # Station has extreme median value; flag it
-            print('Flagging station {} due to extreme median value'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has extreme median value
+            print('Flagged station {0} (pol {1}) due to extreme median value '
+                  '({2})'.format(s, pol, median_val))
+            weights[:, :, pol] = 0.0
         else:
             # Station is OK; flag solutions with high sigma values
             flagged = np.where(sigma_div > 1e3)
+            nflagged_orig = len(np.where(weights[:, :, pol] == 0.0)[0])
             weights[:, flagged[0], pol] = 0.0
+            nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
+            prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
+            print('Flagged {0}% of solutions for station {1} (pol {2})'.format(prcnt, s, pol))
 
     outQueue.put([s, weights])
 
 
-def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate=True,
+def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpolate=True,
         removeTimeAxis=True, autoFlag=False, nSigma=5.0, maxFlaggedFraction=0.5,
-        maxStddev=0.006, ncpu=0):
+        maxStddev=0.01, ncpu=0):
     """
     This operation for LoSoTo implements the Prefactor bandpass operation
     WEIGHT: flag-only compliant, no need for weight
 
     Parameters
     ----------
-    chanWidth : str or float
+    chanWidth : str or float, optional
         the width of each channel in the data from which solutions were obtained. Can be
-        either a string like "48kHz" or a float in Hz
+        either a string like "48kHz" or a float in Hz. If interpolate = True, chanWidth
+        must be specified
     BadSBList : str, optional
         a list of bad subbands that will be flagged
     outSoltabName : str, optional
@@ -353,7 +411,8 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
     interpolate : bool, optional
         If True, interpolate to a regular frequency grid and then smooth, ignoring bad
         subbands. If False, neither interpolation nor smoothing is done and the output
-        frequency grid is the same as the input one
+        frequency grid is the same as the input one. If interpolate = True, chanWidth
+        must be specified
     removeTimeAxis : bool, optional
         If True, the time axis of the output bandpass soltab is removed by doing a median
         over time. If False, the output time grid is the same as the input one
@@ -395,48 +454,48 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
     nants = len(soltab.ant[:])
 
     subbandHz = 195.3125e3
-    if type(chanWidth) is str:
-        letters = [1 for s in chanWidth[::-1] if s.isalpha()]
-        indx = len(chanWidth) - sum(letters)
-        unit = chanWidth[indx:]
-        if unit.strip().lower() == 'hz':
-            conversion = 1.0
-        elif unit.strip().lower() == 'khz':
-            conversion = 1e3
-        elif unit.strip().lower() == 'mhz':
-            conversion = 1e6
+    if interpolate:
+        if chanWidth == '':
+            logging.error("If interpolate = True, chanWidth must be specified.")
+            raise ValueError("If interpolate = True, chanWidth must be specified.")
+        if type(chanWidth) is str:
+            letters = [1 for s in chanWidth[::-1] if s.isalpha()]
+            indx = len(chanWidth) - sum(letters)
+            unit = chanWidth[indx:]
+            if unit.strip().lower() == 'hz':
+                conversion = 1.0
+            elif unit.strip().lower() == 'khz':
+                conversion = 1e3
+            elif unit.strip().lower() == 'mhz':
+                conversion = 1e6
+            else:
+                logging.error("The unit on chanWidth was not understood.")
+                raise ValueError("The unit on chanWidth was not understood.")
+            chanWidthHz = float(chanWidth[:indx]) * conversion
         else:
-            logging.error("The unit on chanWidth was not understood.")
-            raise ValueError("The unit on chanWidth was not understood.")
-        chanWidthHz = float(chanWidth[:indx]) * conversion
-    else:
-        chanWidthHz = chanWidth
-    offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
-    freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
-    freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
-    timeidx = np.arange(ntimes)
-    SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/subbandHz)
-    freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
-    amps_array_flagged = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    amps_array = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    weights_array =  np.ones( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    minscale = np.zeros( nants )
-    maxscale = np.zeros( nants )
+            chanWidthHz = chanWidth
+        offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
+        freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
+        freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
+        SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/subbandHz)
+        freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
+        amps_array_flagged = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
+        amps_array = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
+        weights_array =  np.ones( (nants, ntimes, len(freqs_new), 2), dtype='float')
 
-    if len(freqs_new) < 20:
-        logging.error("Frequency span is less than 20 subbands! The filtering will not work!")
-        logging.error("Please run the calibrator pipeline on the full calibrator bandwidth.")
-        raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
-        pass
+        logging.info("Have " + str(max(SBgrid)) + " subbands.")
+        if len(freqs_new) < 20:
+            logging.error("Frequency span is less than 20 subbands! The filtering will not work!")
+            logging.error("Please run the calibrator pipeline on the full calibrator bandwidth.")
+            raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
 
-    # make a mapping of new frequencies to old ones
-    freq_mapping = {}
-    for fn in freqs_new:
-        ind = np.where(np.logical_and(soltab.freq < fn+subbandHz/2.0, soltab.freq >= fn-subbandHz/2.0))
-        freq_mapping['{}'.format(fn)] = ind
+        # make a mapping of new frequencies to old ones
+        freq_mapping = {}
+        for fn in freqs_new:
+            ind = np.where(np.logical_and(soltab.freq < fn+subbandHz/2.0, soltab.freq >= fn-subbandHz/2.0))
+            freq_mapping['{}'.format(fn)] = ind
 
     # remove bad subbands specified by user
-    logging.info("Have " + str(max(SBgrid)) + " subbands.")
     for bad_sb in bad_sblist:
         logging.info('Removing user-specified subband: ' + str(bad_sb))
         weights_arraytmp[:, :, bad_sb, :] = 0.0
@@ -505,11 +564,18 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
                     amps_array[antenna_id, :, i, 0] = np.median(amps_array[antenna_id, :, i, 0])
                     amps_array[antenna_id, :, i, 1] = np.median(amps_array[antenna_id, :, i, 1])
                     ind = freq_mapping['{}'.format(freqs_new[i])]
-                    if np.any(weights_arraytmp[:, antenna_id, ind, :] == 0.0):
-                        weights_array[antenna_id, :, i, :] = 0.0
+                    for p in range(2):
+                        # If half or more of original frequencies are flagged, flag the
+                        # output frequency as well
+                        nflagged = len(np.where(weights_arraytmp[:, antenna_id, ind, p] == 0.0)[0])
+                        ntot = weights_arraytmp.shape[0] * len(ind[0])
+                        if ntot > 0:
+                            if float(nflagged)/float(ntot) >= 0.5:
+                                weights_array[antenna_id, :, i, p] = 0.0
     else:
         amps_array = amplitude_arraytmp
         weights_array = weights_arraytmp
+        freqs_new = soltab.freq[:]
 
     # delete existing bandpass soltab if needed and write solutions
     try:
@@ -529,7 +595,7 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
         # Write bandpass, preserving the time axis
         new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
                                  axesNames=['time', 'ant', 'freq', 'pol'],
-                                 axesVals=[soltab.time, soltab.ant, soltab.freq, ['XX', 'YY']],
+                                 axesVals=[soltab.time, soltab.ant, freqs_new, ['XX', 'YY']],
                                  vals=amps_array, weights=weights_array)
     new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation)')
 
