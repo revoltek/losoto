@@ -564,8 +564,14 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
                     amps_array[antenna_id, :, i, 0] = np.median(amps_array[antenna_id, :, i, 0])
                     amps_array[antenna_id, :, i, 1] = np.median(amps_array[antenna_id, :, i, 1])
                     ind = freq_mapping['{}'.format(freqs_new[i])]
-                    if np.any(weights_arraytmp[:, antenna_id, ind, :] == 0.0):
-                        weights_array[antenna_id, :, i, :] = 0.0
+                    for p in range(2):
+                        # If half or more of original frequencies are flagged, flag the
+                        # output frequency as well
+                        nflagged = len(np.where(weights_arraytmp[:, antenna_id, ind, p] == 0.0)[0])
+                        ntot = weights_arraytmp.shape[0] * len(ind[0])
+                        if ntot > 0:
+                            if float(nflagged)/float(ntot) >= 0.5:
+                                weights_array[antenna_id, :, i, p] = 0.0
     else:
         amps_array = amplitude_arraytmp
         weights_array = weights_arraytmp
