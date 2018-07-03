@@ -7,9 +7,9 @@ from losoto.lib_operations import *
 logging.debug('Loading PREFACTOR_BANDPASS module.')
 
 def _run_parser(soltab, parser, step):
-    chanWidth = parser.getstr( step, 'chanWidth')
+    chanWidth = parser.getstr( step, 'chanWidth', '')
     outSoltabName = parser.getstr( step, 'outSoltabName', 'bandpass' )
-    BadSBList = parser.getstr( step, 'BadSBList' , '')
+    BadSBList = parser.getstr( step, 'BadSBList', '')
     interpolate = parser.getbool( step, 'interpolate', True )
     removeTimeAxis = parser.getbool( step, 'removeTimeAxis', True )
     autoFlag = parser.getbool( step, 'autoFlag', False )
@@ -384,7 +384,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     outQueue.put([s, weights])
 
 
-def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate=True,
+def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpolate=True,
         removeTimeAxis=True, autoFlag=False, nSigma=5.0, maxFlaggedFraction=0.5,
         maxStddev=0.006, ncpu=0):
     """
@@ -393,9 +393,10 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
 
     Parameters
     ----------
-    chanWidth : str or float
+    chanWidth : str or float, optional
         the width of each channel in the data from which solutions were obtained. Can be
-        either a string like "48kHz" or a float in Hz
+        either a string like "48kHz" or a float in Hz. If interpolate = True, chanWidth
+        must be specified
     BadSBList : str, optional
         a list of bad subbands that will be flagged
     outSoltabName : str, optional
@@ -404,7 +405,8 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
     interpolate : bool, optional
         If True, interpolate to a regular frequency grid and then smooth, ignoring bad
         subbands. If False, neither interpolation nor smoothing is done and the output
-        frequency grid is the same as the input one
+        frequency grid is the same as the input one. If interpolate = True, chanWidth
+        must be specified
     removeTimeAxis : bool, optional
         If True, the time axis of the output bandpass soltab is removed by doing a median
         over time. If False, the output time grid is the same as the input one
@@ -446,48 +448,48 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
     nants = len(soltab.ant[:])
 
     subbandHz = 195.3125e3
-    if type(chanWidth) is str:
-        letters = [1 for s in chanWidth[::-1] if s.isalpha()]
-        indx = len(chanWidth) - sum(letters)
-        unit = chanWidth[indx:]
-        if unit.strip().lower() == 'hz':
-            conversion = 1.0
-        elif unit.strip().lower() == 'khz':
-            conversion = 1e3
-        elif unit.strip().lower() == 'mhz':
-            conversion = 1e6
+    if interpolate:
+        if chanWidth == '':
+            logging.error("If interpolate = True, chanWidth must be specified.")
+            raise ValueError("If interpolate = True, chanWidth must be specified.")
+        if type(chanWidth) is str:
+            letters = [1 for s in chanWidth[::-1] if s.isalpha()]
+            indx = len(chanWidth) - sum(letters)
+            unit = chanWidth[indx:]
+            if unit.strip().lower() == 'hz':
+                conversion = 1.0
+            elif unit.strip().lower() == 'khz':
+                conversion = 1e3
+            elif unit.strip().lower() == 'mhz':
+                conversion = 1e6
+            else:
+                logging.error("The unit on chanWidth was not understood.")
+                raise ValueError("The unit on chanWidth was not understood.")
+            chanWidthHz = float(chanWidth[:indx]) * conversion
         else:
-            logging.error("The unit on chanWidth was not understood.")
-            raise ValueError("The unit on chanWidth was not understood.")
-        chanWidthHz = float(chanWidth[:indx]) * conversion
-    else:
-        chanWidthHz = chanWidth
-    offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
-    freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
-    freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
-    timeidx = np.arange(ntimes)
-    SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/subbandHz)
-    freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
-    amps_array_flagged = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    amps_array = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    weights_array =  np.ones( (nants, ntimes, len(freqs_new), 2), dtype='float')
-    minscale = np.zeros( nants )
-    maxscale = np.zeros( nants )
+            chanWidthHz = chanWidth
+        offsetHz = subbandHz / 2.0 - 0.5 * chanWidthHz
+        freqmin = np.min(soltab.freq[:]) + offsetHz # central frequency of first subband
+        freqmax = np.max(soltab.freq[:]) + offsetHz # central frequency of last subband
+        SBgrid = np.floor((soltab.freq[:]-np.min(soltab.freq[:]))/subbandHz)
+        freqs_new  = np.arange(freqmin, freqmax+100e3, subbandHz)
+        amps_array_flagged = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
+        amps_array = np.zeros( (nants, ntimes, len(freqs_new), 2), dtype='float')
+        weights_array =  np.ones( (nants, ntimes, len(freqs_new), 2), dtype='float')
 
-    if len(freqs_new) < 20:
-        logging.error("Frequency span is less than 20 subbands! The filtering will not work!")
-        logging.error("Please run the calibrator pipeline on the full calibrator bandwidth.")
-        raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
-        pass
+        logging.info("Have " + str(max(SBgrid)) + " subbands.")
+        if len(freqs_new) < 20:
+            logging.error("Frequency span is less than 20 subbands! The filtering will not work!")
+            logging.error("Please run the calibrator pipeline on the full calibrator bandwidth.")
+            raise ValueError("Frequency span is less than 20 subbands! Amplitude filtering will not work!")
 
-    # make a mapping of new frequencies to old ones
-    freq_mapping = {}
-    for fn in freqs_new:
-        ind = np.where(np.logical_and(soltab.freq < fn+subbandHz/2.0, soltab.freq >= fn-subbandHz/2.0))
-        freq_mapping['{}'.format(fn)] = ind
+        # make a mapping of new frequencies to old ones
+        freq_mapping = {}
+        for fn in freqs_new:
+            ind = np.where(np.logical_and(soltab.freq < fn+subbandHz/2.0, soltab.freq >= fn-subbandHz/2.0))
+            freq_mapping['{}'.format(fn)] = ind
 
     # remove bad subbands specified by user
-    logging.info("Have " + str(max(SBgrid)) + " subbands.")
     for bad_sb in bad_sblist:
         logging.info('Removing user-specified subband: ' + str(bad_sb))
         weights_arraytmp[:, :, bad_sb, :] = 0.0
@@ -561,6 +563,7 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
     else:
         amps_array = amplitude_arraytmp
         weights_array = weights_arraytmp
+        freqs_new = soltab.freq[:]
 
     # delete existing bandpass soltab if needed and write solutions
     try:
@@ -580,7 +583,7 @@ def run(soltab, chanWidth, outSoltabName='bandpass', BadSBList = '', interpolate
         # Write bandpass, preserving the time axis
         new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
                                  axesNames=['time', 'ant', 'freq', 'pol'],
-                                 axesVals=[soltab.time, soltab.ant, soltab.freq, ['XX', 'YY']],
+                                 axesVals=[soltab.time, soltab.ant, freqs_new, ['XX', 'YY']],
                                  vals=amps_array, weights=weights_array)
     new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation)')
 
