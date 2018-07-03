@@ -133,9 +133,37 @@ def _bspline(x, t, c, k):
     return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(range(n), extrap))
 
 
+def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
+    """
+    Defines the functional form of the LBA bandpass in terms of splines of degree 3
+
+    The spline fit was done using LSQUnivariateSpline() on the median bandpass between
+    30 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
+    minimum number of parameters.
+
+    Parameters
+    ----------
+    freq : array
+        Array of frequencies
+    c1-c9: float
+        Spline coefficients
+
+    Returns
+    -------
+    bandpass : list
+        List of bandpass values as function of frequency
+    """
+    knots = np.array([30003357.0, 30003357.0, 30003357.0, 30003357.0, 40000000.0,
+                      50000000.0, 55000000.0, 56000000.0, 60000000.0, 62000000.0,
+                      63000000.0, 64000000.0, 70000000.0, 77610779.0, 77610779.0,
+                      77610779.0, 77610779.0])
+    coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13])
+    return [_bspline(f, knots, coeffs, 3) for f in freq]
+
+
 def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
     """
-    Defines the functional form of the bandpass in terms of splines of degree 3
+    Defines the functional form of the HBA-low bandpass in terms of splines of degree 3
 
     The spline fit was done using LSQUnivariateSpline() on the median bandpass between
     120 MHz and 188 MHz. The knots were set by hand to acheive a good fit with a
@@ -195,14 +223,27 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         init_coeffs = np.array([-0.01460369, 0.05062699, 0.02827004, 0.03738518,
                                 -0.05729109, 0.02303295, -0.03550487, -0.0803113,
                                 -0.2394929, -0.358301])
-        bounds_deltas = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+        bounds_deltas_lower = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+        bounds_deltas_upper = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+    elif band.lower() == 'lba':
+        bandpass_function = _bandpass_LBA
+        init_coeffs = np.array([-0.22654016, -0.1950495, -0.07763014, 0.10002095,
+                                0.32797671, 0.46900048, 0.47155583, 0.31945897,
+                                0.29072278, 0.08064795, -0.15761538, -0.36020451,
+                                -0.51163338])
+#         bounds_deltas_lower = [0.1, 0.1, 0.1, 0.05, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4,
+#                                0.45, 0.3, 0.15]
+        bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+                               0.15, 0.15, 0.15]
+        bounds_deltas_upper = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+                               0.15, 0.15, 0.15]
     else:
         print('The "{}" band is not supported'.format(band))
         sys.exit(1)
 
     if do_fit:
-        lower = [c - b for c, b in zip(init_coeffs, bounds_deltas)]
-        upper = [c + b for c, b in zip(init_coeffs, bounds_deltas)]
+        lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
+        upper = [c + b for c, b in zip(init_coeffs, bounds_deltas_upper)]
         param_bounds = (lower, upper)
         popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma,
                                bounds=param_bounds)
@@ -250,6 +291,10 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         band = 'hba_low'
         median_min = 75.0
         median_max = 200.0
+    elif np.median(freqs) < 90e6:
+        band = 'lba'
+        median_min = 50.0
+        median_max = 200.0
     else:
         print('The median frequency of {} Hz is outside of any know band'.format(np.median(freqs)))
         sys.exit(1)
@@ -263,7 +308,9 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     flagged = np.where(weights == 0.0)
     amps_flagged = amps.copy()
     amps_flagged[flagged] = np.nan
-    sigma = np.sqrt(1.0 / weights)
+    sigma = weights.copy()
+    sigma[flagged] = 1.0
+    sigma = np.sqrt(1.0 / sigma)
     sigma[flagged] = 1e8
 
     # Iterate over polarizations
@@ -311,24 +358,28 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         # Check whether entire station is bad (high stdev or high flagged fraction). If
         # so, flag all frequencies and polarizations
         if stdev_all > maxStddev * 5.0:
-            # Station has very high stddev relative to median bandpass; flag it
-            print('Flagging station {} due to high stddev'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has high stddev relative to median bandpass
+            print('Flagged station {0} (pol {1}) due to high stddev '
+                  '({2})'.format(s, pol, stdev_all))
+            weights[:, :, pol] = 0.0
         elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
-            # Station has high fraction of flagged frequencies; flag it
-            print('Flagging station {} due to high flagged fraction'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has high fraction of flagged solutions
+            print('Flagged station {0} (pol {1}) due to high flagged fraction '
+                  '({2})'.format(s, pol, float(len(bad[0]))/float(len(freqs))))
+            weights[:, :, pol] = 0.0
         elif median_val < median_min or median_val > median_max:
-            # Station has extreme median value; flag it
-            print('Flagging station {} due to extreme median value'.format(s))
-            weights[:, :, :] = 0.0
-            break
+            # Station has extreme median value
+            print('Flagged station {0} (pol {1}) due to extreme median value '
+                  '({2})'.format(s, pol, median_val))
+            weights[:, :, pol] = 0.0
         else:
             # Station is OK; flag solutions with high sigma values
             flagged = np.where(sigma_div > 1e3)
+            nflagged_orig = len(np.where(weights[:, :, pol] == 0.0)[0])
             weights[:, flagged[0], pol] = 0.0
+            nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
+            prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
+            print('Flagged {0}% of solutions for station {1} (pol {2})'.format(prcnt, s, pol))
 
     outQueue.put([s, weights])
 
