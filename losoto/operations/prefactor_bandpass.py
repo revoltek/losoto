@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
     autoFlag = parser.getbool( step, 'autoFlag', False )
     nSigma = parser.getfloat( step, 'nSigma', 5.0 )
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5 )
-    maxStddev = parser.getfloat( step, 'maxStddev', 0.006 )
+    maxStddev = parser.getfloat( step, 'maxStddev', 0.01 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
     return run(soltab, chanWidth, outSoltabName, BadSBList, interpolate, removeTimeAxis,
@@ -181,10 +181,10 @@ def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
     bandpass : list
         List of bandpass values as function of frequency
     """
-    knots = np.array([1.20237732e+08, 1.20237732e+08, 1.20237732e+08, 1.20237732e+08,
-                      1.30000000e+08, 1.38000000e+08, 1.48000000e+08, 1.60000000e+08,
-                      1.68000000e+08, 1.78000000e+08, 1.87376404e+08, 1.87376404e+08,
-                      1.87376404e+08, 1.87376404e+08])
+    knots = np.array([1.15e+08, 1.15e+08, 1.15e+08, 1.15e+08,
+                      1.30e+08, 1.38e+08, 1.48e+08, 1.60e+08,
+                      1.68e+08, 1.78e+08, 1.90e+08, 1.90e+08,
+                      1.9e+08, 1.9e+08])
     coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10])
     return [_bspline(f, knots, coeffs, 3) for f in freq]
 
@@ -223,16 +223,14 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         init_coeffs = np.array([-0.01460369, 0.05062699, 0.02827004, 0.03738518,
                                 -0.05729109, 0.02303295, -0.03550487, -0.0803113,
                                 -0.2394929, -0.358301])
-        bounds_deltas_lower = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
-        bounds_deltas_upper = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
+        bounds_deltas_lower = [0.06, 0.05, 0.04, 0.04, 0.04, 0.04, 0.1, 0.1, 0.2, 0.5]
+        bounds_deltas_upper = [0.06, 0.1, 0.1, 0.1, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
     elif band.lower() == 'lba':
         bandpass_function = _bandpass_LBA
         init_coeffs = np.array([-0.22654016, -0.1950495, -0.07763014, 0.10002095,
                                 0.32797671, 0.46900048, 0.47155583, 0.31945897,
                                 0.29072278, 0.08064795, -0.15761538, -0.36020451,
                                 -0.51163338])
-#         bounds_deltas_lower = [0.1, 0.1, 0.1, 0.05, 0.1, 0.2, 0.2, 0.3, 0.3, 0.4,
-#                                0.45, 0.3, 0.15]
         bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                0.15, 0.15, 0.15]
         bounds_deltas_upper = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
@@ -305,7 +303,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         return
 
     # Build arrays for fitting
-    flagged = np.where(weights == 0.0)
+    flagged = np.where(np.logical_or(weights == 0.0, amps == 0.0))
     amps_flagged = amps.copy()
     amps_flagged[flagged] = np.nan
     sigma = weights.copy()
@@ -316,11 +314,19 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     # Iterate over polarizations
     npols = amps.shape[2] # number of polarizations
     for pol in range(npols):
-        # take median over time and pol axes and divide out the median offset
-        amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
-        median_val = np.nanmedian(amps_div)
+        # take median over time and divide out the median offset
+        with np.warnings.catch_warnings():
+            np.warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+            amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
+            median_val = np.nanmedian(amps_div)
         amps_div /= median_val
-        sigma_div = np.nanmedian(sigma[:, :, pol], axis=0)
+        sigma_div = np.median(sigma[:, :, pol], axis=0)
+        median_flagged = np.where(np.isnan(amps_div))
+        amps_div[median_flagged] = 1.0
+        sigma_div[median_flagged] = 1e8
+        median_flagged = np.where(amps_div <= 0.0)
+        amps_div[median_flagged] = 1.0
+        sigma_div[median_flagged] = 1e8
         sigma_orig = sigma_div.copy()
 
         # Before doing the fitting, flag any solutions that deviate from the model bandpass by
@@ -386,7 +392,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
 
 def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpolate=True,
         removeTimeAxis=True, autoFlag=False, nSigma=5.0, maxFlaggedFraction=0.5,
-        maxStddev=0.006, ncpu=0):
+        maxStddev=0.01, ncpu=0):
     """
     This operation for LoSoTo implements the Prefactor bandpass operation
     WEIGHT: flag-only compliant, no need for weight
