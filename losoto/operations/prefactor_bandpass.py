@@ -439,6 +439,9 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
     if solType != 'amplitude':
        logging.warning("Soltab type of "+soltab.name+" is: "+solType+" should be amplitude. Ignoring.")
        return 1
+    if soltab.name == outSoltabName and (removeTimeAxis or interpolate):
+            logging.error("If removeTimeAxis = True or interpolate = True, outSoltabName must specify a new soltab.")
+            raise ValueError("If removeTimeAxis = True or interpolate = True, outSoltabName must specify a new soltab.")
 
     if BadSBList == '':
       bad_sblist   = []
@@ -578,11 +581,12 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
         freqs_new = soltab.freq[:]
 
     # delete existing bandpass soltab if needed and write solutions
-    try:
-        new_soltab = solset.getSoltab(outSoltabName)
-        new_soltab.delete()
-    except:
-        pass
+    if soltab.name != outSoltabName:
+        try:
+            new_soltab = solset.getSoltab(outSoltabName)
+            new_soltab.delete()
+        except:
+            pass
 
     if removeTimeAxis:
         # Write bandpass, taking median over the time axis
@@ -591,12 +595,30 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
                                  axesVals=[soltab.ant, freqs_new, ['XX', 'YY']],
                                  vals=np.median(amps_array, axis=1),
                                  weights=np.median(weights_array, axis=1))
+        new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation) with BadSBList = {0}, '
+                                  'interpolate={1}, removeTimeAxis={2}, autoFlag={3}, nSigma={4}, '
+                                  'maxFlaggedFraction={5}, maxStddev={6}'.format(BadSBList,
+                                  interpolate, removeTimeAxis, autoFlag, nSigma,
+                                  maxFlaggedFraction, maxStddev))
     else:
         # Write bandpass, preserving the time axis
-        new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
-                                 axesNames=['time', 'ant', 'freq', 'pol'],
-                                 axesVals=[soltab.time, soltab.ant, freqs_new, ['XX', 'YY']],
-                                 vals=amps_array, weights=weights_array)
-    new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation)')
+        if soltab.name == outSoltabName:
+            soltab.setValues(amps_array)
+            soltab.setValues(weights_array, weight=True)
+            soltab.addHistory('BANDPASS processed with BadSBList = {0}, interpolate={1}, '
+                              'removeTimeAxis={2}, autoFlag={3}, nSigma={4}, '
+                              'maxFlaggedFraction={5}, maxStddev={6}'.format(BadSBList,
+                              interpolate, removeTimeAxis, autoFlag, nSigma,
+                              maxFlaggedFraction, maxStddev))
+        else:
+            new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
+                                     axesNames=['time', 'ant', 'freq', 'pol'],
+                                     axesVals=[soltab.time, soltab.ant, freqs_new, ['XX', 'YY']],
+                                     vals=amps_array, weights=weights_array)
+            new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation) with BadSBList = {0}, '
+                                  'interpolate={1}, removeTimeAxis={2}, autoFlag={3}, nSigma={4}, '
+                                  'maxFlaggedFraction={5}, maxStddev={6}'.format(BadSBList,
+                                  interpolate, removeTimeAxis, autoFlag, nSigma,
+                                  maxFlaggedFraction, maxStddev))
 
     return 0
