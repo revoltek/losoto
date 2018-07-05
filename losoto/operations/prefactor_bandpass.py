@@ -287,7 +287,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     # Determine which band we're in
     if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
         band = 'hba_low'
-        median_min = 75.0
+        median_min = 50.0
         median_max = 200.0
     elif np.median(freqs) < 90e6:
         band = 'lba'
