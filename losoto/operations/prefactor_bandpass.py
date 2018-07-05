@@ -575,6 +575,8 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
                         if ntot > 0:
                             if float(nflagged)/float(ntot) >= 0.5:
                                 weights_array[antenna_id, :, i, p] = 0.0
+        amps_array = amps_array.swapaxes(0, 1)
+        weights_array = weights_array.swapaxes(0, 1)
     else:
         amps_array = amplitude_arraytmp
         weights_array = weights_arraytmp
