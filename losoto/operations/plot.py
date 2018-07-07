@@ -63,7 +63,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
         if NColFig != 0: Nc = NColFig
         else: Nc = int(np.ceil(np.sqrt(Nplots)))
         Nr = int(np.ceil(np.float(Nplots)/Nc))
-
+        
         if figSize[0] == 0:
             if makeMovie: figSize[0]=5+2*Nc
             else: figSize[0]=10+3*Nc
@@ -94,7 +94,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
         # if gaps in time, collapse and add a black vertical line on separation points
         if axesInPlot[0] == 'time' and cmesh == False:
             delta = np.abs(xvals[:-1] - xvals[1:])
-            jumps = np.where( delta > 100*np.min(delta) )[0] # jump if larger than 100 times the minimum step
+            jumps = np.where( delta > 100*np.median(delta) )[0] # jump if larger than 100 times the minimum step
             # remove jumps
             for j in jumps: xvals[j+1:] -= delta[j]
             gap = xvals[-1] / 100 # 1%
