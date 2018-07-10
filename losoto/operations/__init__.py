@@ -27,6 +27,6 @@ class timer(object):
 
     def __exit__(self, exit_type, value, tb):
 
-        #if exit_type is not None:
-        #    raise RuntimeError("timer.__init__ should not be called with ({}, {}, {})".format(exit_type, value, tb))
-        self.log.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - self.start), (time.clock() - self.startcpu) ))
+        # if not an error
+        if exit_type is None:
+            self.log.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - self.start), (time.clock() - self.startcpu) ))
