@@ -20,7 +20,7 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
     Parameters
     ----------
     axesToClip : list of str
-        axes along which to calculate the median
+        axes along which to calculate the median (e.g. [time,freq])
 
     clipLevel : float, optional
         factor above/below median at which to clip, by default 5
@@ -30,6 +30,9 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
     """
 
     import numpy as np
+
+    def percentFlagged(w):
+        return 100.*(weights.size-np.count_nonzero(weights))/float(weights.size)
 
     logging.info("Clipping soltab: "+soltab.name)
 
@@ -52,13 +55,9 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
         logging.error('CLIP is for "amplitude" tables, not %s.' % soltab.getType())
         return 1
 
-    before_count=0
-    after_count=0
-    total=0
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToClip, weight = True):
 
-        total += len(vals)
-        before_count += (len(weights)-np.count_nonzero(weights))
+        initPercent = percentFlagged(weights)
 
         # first find the median and standard deviation
         if (weights == 0).all():
@@ -73,14 +72,16 @@ def run( soltab, axesToClip, clipLevel=5., log=True ):
                 rms = np.std(vals[(weights != 0)])
                 np.putmask(weights, np.abs(vals-valmedian) > rms * clipLevel, 0)
     
-        after_count += (len(weights)-np.count_nonzero(weights))
-
         # writing back the solutions
         soltab.setValues(weights, selection, weight=True)
 
+        #print('max', np.max(vals[(weights != 0)]))
+        #print('median', np.nanmedian(vals[(weights != 0)]))
+        logging.debug('Percentage of data flagged (%s): %.3f%% -> %.3f%% (rms=%.2f)' \
+            % (removeKeys(coord, axesToClip), initPercent, percentFlagged(weights), rms))
+
+
     soltab.addHistory('CLIP (over %s with %s sigma cut)' % (axesToClip, clipLevel))
-    logging.info('Clip, flagged data: %f %% -> %f %%' \
-            % (100.*before_count/total, 100.*after_count/total))
 
     soltab.flush()
         

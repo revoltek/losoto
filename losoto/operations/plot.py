@@ -49,9 +49,10 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 minZ = np.nanmin(dataCube)
                 maxZ = np.nanmax(dataCube)
             elif datatype == 'amplitude':
-                minZ = 0.
                 flat = np.array( dataCube ).flatten()
                 maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100 ] )
+                maxZ = np.min( [np.nanmax( flat ), maxZ])
+                minZ = np.nanmin( flat )
             else:
                 minZ = np.nanmin(dataCube)
                 maxZ = np.nanmax(dataCube)
@@ -153,9 +154,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                             cmap = plt.cm.rainbow
 
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
+                    vals = vals.filled(np.nan)
                     vals[vals>maxZ] = maxZ
                     vals[vals<minZ] = minZ
-                    im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
+
+                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
                 # make an antenna plot
@@ -422,11 +425,16 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         soltab1Selection = soltab.selection # save global selection and subselect only axex to iterate
         soltab.selection = selection
         titles = []
-        dataCube = []
-        weightCube = []
+        #dataCube = []
+        if cmesh:
+            dataCube = np.ma.array( shape = (soltab.getAxisLen(axisInTable[0]), soltab.getAxisLen(axisInCol[0]), \
+                soltab.getAxisLen(axisInPlot[0]), soltab.getAxisLen(axisInPlot[1])) )
+        else:
+            dataCube = np.ma.array( shape = (soltab.getAxisLen(axisInTable[0]), soltab.getAxisLen(axisInCol[0]), \
+                soltab.getAxisLen(axisInPlot[0])) )
+
         for Ntab, (vals, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axisInCol+axesInPlot)):
-            dataCube.append([])
-            weightCube.append([])
+#            dataCube.append([])
 
             # set tile
             titles.append('')
@@ -439,8 +447,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             soltab2Selection = soltab.selection
             soltab.selection = selection
             for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
-                dataCube[Ntab].append([])
-                weightCube[Ntab].append([])
+#                dataCube[Ntab].append([])
 
                 # differential plot
                 if axisDiff != []:
@@ -521,7 +528,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                         if not (flags == True).all():
                             vals = unwrap_2d(vals, flags, coord[axesInPlot[0]], coord[axesInPlot[1]])
 
-                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.))
+                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.), fill_value=np.nan)
 
             soltab.selection = soltab2Selection
             ### end cycle on colors
