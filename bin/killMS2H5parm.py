@@ -80,7 +80,7 @@ if __name__=='__main__':
 
     weights = np.ones(shape=vals_amp.shape)
 
-    is_tec = 'SolsTEC' in SolsDico.dtype.names
+    is_tec = 'SolsTEC' in SolsDico.keys()
     if is_tec:
         # construct TEC array 
         vals_tec = np.zeros(shape=(td,ta,tt))
