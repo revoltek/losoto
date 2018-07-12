@@ -80,13 +80,15 @@ if __name__=='__main__':
 
     weights = np.ones(shape=vals_amp.shape)
 
-    # construct TEC array 
-    vals_tec = np.zeros(shape=(td,ta,tt))
-    vals_tec = SolsDico['SolsTEC'].T
-    vals_csp = np.zeros(shape=(td,ta,tt))
-    vals_csp = SolsDico['SolsCPhase'].T
-    print vals_tec.shape
-    weights_tec = np.ones(shape=vals_tec.shape)
+    is_tec = 'SolsTEC' in SolsDico.keys()
+    if is_tec:
+        # construct TEC array 
+        vals_tec = np.zeros(shape=(td,ta,tt))
+        vals_tec = SolsDico['SolsTEC'].T
+        vals_csp = np.zeros(shape=(td,ta,tt))
+        vals_csp = SolsDico['SolsCPhase'].T
+        print vals_tec.shape
+        weights_tec = np.ones(shape=vals_tec.shape)
 
     # write to h5pram
     h5parm = h5parm_mod.h5parm(h5parmFile, readonly = False, complevel = complevel)
@@ -95,10 +97,11 @@ if __name__=='__main__':
             axesVals=[pols,dirNames,antNames,freqs,times], vals=vals_amp, weights=weights)
     solset.makeSoltab('phase', axesNames=['pol','dir','ant','freq','time'], \
             axesVals=[pols,dirNames,antNames,freqs,times], vals=vals_ph, weights=weights)
-    solset.makeSoltab('tec', axesNames=['ant','dir','time'], \
-            axesVals=[antNames,dirNames,times], vals=vals_tec, weights=weights_tec)
-    solset.makeSoltab('phase', 'offset', axesNames=['ant','dir','time'], \
-            axesVals=[antNames,dirNames,times], vals=vals_csp, weights=weights_tec)
+    if is_tec:
+        solset.makeSoltab('tec', axesNames=['ant','dir','time'], \
+                axesVals=[antNames,dirNames,times], vals=vals_tec, weights=weights_tec)
+        solset.makeSoltab('phase', 'offset', axesNames=['ant','dir','time'], \
+                axesVals=[antNames,dirNames,times], vals=vals_csp, weights=weights_tec)
 
     # fill source table
     sourceTable = solset.obj._f_get_child('source')
