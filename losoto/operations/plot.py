@@ -44,20 +44,20 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
         #from losoto.phase_colormap import cm_phase
 
         # find common min and max if not set
+        flat = dataCube.filled(np.nan).flatten()
         if minZ == 0 and maxZ == 0:
             if datatype == 'phase':
-                minZ = np.nanmin(dataCube)
-                maxZ = np.nanmax(dataCube)
+                minZ = np.nanmin(flat)
+                maxZ = np.nanmax(flat)
             elif datatype == 'amplitude':
-                flat = np.array( dataCube ).flatten()
                 maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100 ] )
                 maxZ = np.min( [np.nanmax( flat ), maxZ])
                 minZ = np.nanmin( flat )
             else:
-                minZ = np.nanmin(dataCube)
-                maxZ = np.nanmax(dataCube)
-                #minZ = np.nanmedian(vals) - 3*np.nanstd(vals)
-                #maxZ = np.nanmedian(vals) + 3*np.nanstd(vals)
+                minZ = np.nanmin(flat)
+                maxZ = np.nanmax(flat)
+                #minZ = np.nanmedian(flat) - 3*np.nanstd(flat)
+                #maxZ = np.nanmedian(flat) + 3*np.nanstd(flat)
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
 
         # if user-defined number of col use that
@@ -154,11 +154,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                             cmap = plt.cm.rainbow
 
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
-                    vals = vals.filled(np.nan)
-                    vals[vals>maxZ] = maxZ
-                    vals[vals<minZ] = minZ
+                    #vals = vals.filled(np.nan)
+                    #vals[vals>maxZ] = maxZ
+                    #vals[vals<minZ] = minZ
 
-                    im = ax.imshow(vals, origin='lower', interpolation="none", cmap=cmap, norm=None, \
+                    im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
                 # make an antenna plot
@@ -344,6 +344,21 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     # start processes for multi-thread
     mpm = multiprocManager(ncpu, _plot)
 
+    # compute dataCube size
+    shape = []
+    if axisInTable != []: shape.append(soltab.getAxisLen(axisInTable[0]))
+    else: shape.append(1)
+    if axisInCol != []: shape.append(soltab.getAxisLen(axisInCol[0]))
+    else: shape.append(1)
+    if cmesh:
+        shape.append(soltab.getAxisLen(axesInPlot[1]))
+        shape.append(soltab.getAxisLen(axesInPlot[0]))
+    else:
+        shape.append(soltab.getAxisLen(axesInPlot[0]))
+    
+    # will contain the data to pass to each thread to make 1 image
+    dataCube = np.ma.zeros( shape=shape, fill_value=np.nan )
+
     # cycle on files
     if makeMovie: pngs = [] # store png filenames
     for vals, coord, selection in soltab.getValuesIter(returnAxes=axisDiff+axisInTable+axisInCol+axesInPlot):
@@ -425,16 +440,8 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         soltab1Selection = soltab.selection # save global selection and subselect only axex to iterate
         soltab.selection = selection
         titles = []
-        #dataCube = []
-        if cmesh:
-            dataCube = np.ma.array( shape = (soltab.getAxisLen(axisInTable[0]), soltab.getAxisLen(axisInCol[0]), \
-                soltab.getAxisLen(axisInPlot[0]), soltab.getAxisLen(axisInPlot[1])) )
-        else:
-            dataCube = np.ma.array( shape = (soltab.getAxisLen(axisInTable[0]), soltab.getAxisLen(axisInCol[0]), \
-                soltab.getAxisLen(axisInPlot[0])) )
 
         for Ntab, (vals, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axisInCol+axesInPlot)):
-#            dataCube.append([])
 
             # set tile
             titles.append('')
@@ -447,7 +454,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             soltab2Selection = soltab.selection
             soltab.selection = selection
             for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
-#                dataCube[Ntab].append([])
 
                 # differential plot
                 if axisDiff != []:
@@ -514,7 +520,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                     vals = np.mod(vals + np.pi/2., np.pi) - np.pi/2.
 
                 # is user requested axis in an order that is different from h5parm, we need to transpose
-                if len(axesInPlot) == 2:
+                if cmesh:
                     if soltab.getAxesNames().index(axesInPlot[0]) < soltab.getAxesNames().index(axesInPlot[1]):
                         vals = vals.T
                         weight = weight.T
@@ -528,7 +534,12 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                         if not (flags == True).all():
                             vals = unwrap_2d(vals, flags, coord[axesInPlot[0]], coord[axesInPlot[1]])
 
-                dataCube[Ntab][Ncol] = np.ma.masked_array(vals, mask=(weight == 0.), fill_value=np.nan)
+                dataCube[Ntab,Ncol] = vals
+                sel = np.where(weight == 0.)
+                if cmesh:
+                    dataCube[Ntab,Ncol,sel[0],sel[1]] = np.ma.masked
+                else:
+                    dataCube[Ntab,Ncol,sel[0]] = np.ma.masked
 
             soltab.selection = soltab2Selection
             ### end cycle on colors
