@@ -105,11 +105,11 @@ if __name__=='__main__':
 
     # fill source table
     sourceTable = solset.obj._f_get_child('source')
-    sourceTable.append(zip(*(dirNames,dirCoords)))
+    sourceTable.append(list(zip(*(dirNames,dirCoords))))
 
     # fill antenna table
     antennaTable = solset.obj._f_get_child('antenna')
-    antennaTable.append(zip(*(antNames,antPos)))
+    antennaTable.append(list(zip(*(antNames,antPos))))
 
 
 
