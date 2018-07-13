@@ -322,13 +322,13 @@ class h5parm( object ):
             sources = sorted( solset.getSou().keys() )
             info += "Directions: "
             for src_name1, src_name2, src_name3 in grouper(3, sources):
-                info += "{0:<15s} {1:<15s} {2:<15s}\n            ".format(src_name1, src_name2, src_name3)
+                info += "{0:}\t{1:}\t{2:}\n            ".format(src_name1, src_name2, src_name3)
 
             # Add station names
             antennas = sorted( solset.getAnt().keys() )
             info += "\nStations: "
             for ant1, ant2, ant3, ant4 in grouper(4, antennas):
-                info += "{0:<10s} {1:<10s} {2:<10s} {3:<10s}\n          ".format(ant1, ant2, ant3, ant4)
+                info += "{0:}\t{1:}\t{2:}\t{3:}\n          ".format(ant1, ant2, ant3, ant4)
 
             # For each table, add length of each axis and history of
             # operations applied to the table.
