@@ -69,8 +69,8 @@ for insoltab in insoltabs:
         soltabs.append( soltab )
         # collect pointings
         sous = solset.getSou()
-        pointingNames.extend(sous.keys())
-        pointingDirections.extend(sous.values())
+        [pointingNames.append(k) for k in sous.keys() if not k in pointingNames]
+        [pointingDirections.append(v) for v in sous.values() if not any((v == x).all() for x in pointingDirections)]
         # collect anntennas
         ants = solset.getAnt()
         [antennaNames.append(k) for k in ants.keys() if not k in antennaNames]
