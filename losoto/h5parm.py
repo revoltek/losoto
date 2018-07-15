@@ -785,9 +785,12 @@ class Soltab( object ):
 
             # find the index of the working axis
             idx = self.getAxesNames().index(axis)
-
+            
+            # slice -> let the slice be as it is
+            if isinstance(selVal, (slice, range)):
+                self.selection[idx] = selVal
             # string -> regular expression
-            if type(selVal) is str:
+            elif type(selVal) is str:
                 if not self.getAxisType(axis).char is 'S':
                     logging.warning("Cannot select on axis \""+axis+"\" with a regular expression. Use all available values.")
                     continue
