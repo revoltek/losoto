@@ -52,6 +52,7 @@ if __name__=='__main__':
 
     # build antenna subtable
     stationNames = SolsDico["StationNames"]
+    print(stationNames)
     antPos = []; antNames = []
     for i, a in enumerate(stationNames):
         antPos.append([0,0,0])
@@ -87,7 +88,7 @@ if __name__=='__main__':
         vals_tec = SolsDico['SolsTEC'].T
         vals_csp = np.zeros(shape=(td,ta,tt))
         vals_csp = SolsDico['SolsCPhase'].T
-        print vals_tec.shape
+        print(vals_tec.shape)
         weights_tec = np.ones(shape=vals_tec.shape)
 
     # write to h5pram
@@ -110,6 +111,7 @@ if __name__=='__main__':
     # fill antenna table
     antennaTable = solset.obj._f_get_child('antenna')
     antennaTable.append(list(zip(*(antNames,antPos))))
+    print(h5parm)
 
 
 

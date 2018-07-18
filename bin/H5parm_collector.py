@@ -13,7 +13,7 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 
 # get input
 import argparse
-parser = argparse.ArgumentParser(description='Combine h5parm files - '+_author, version=_version.__version__)
+parser = argparse.ArgumentParser(description='Combine h5parm files - '+_author)#, version=_version.__version__
 parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) - if not given use all')
@@ -69,13 +69,18 @@ for insoltab in insoltabs:
         soltabs.append( soltab )
         # collect pointings
         sous = solset.getSou()
-        [pointingNames.append(k) for k in sous.keys() if not k in pointingNames]
-        [pointingDirections.append(v) for v in sous.values() if not any((v == x).all() for x in pointingDirections)]
+        for k,v in sous.items():
+            if k not in pointingNames:
+                pointingNames.append(k)
+                pointingDirections.append(v)
+        
         # collect anntennas
         ants = solset.getAnt()
-        [antennaNames.append(k) for k in ants.keys() if not k in antennaNames]
-        [antennaPositions.append(v) for v in ants.values() if not any((v == x).all() for x in antennaPositions)]
-
+        for k, v in ants.items():
+            if k not in antennaNames:
+                antennaNames.append(k)
+                antennaPositions.append(v)
+        
     # create output axes
     logging.info("Sorting output axes...")
     axes = soltabs[0].getAxesNames()
@@ -129,14 +134,16 @@ for insoltab in insoltabs:
 
 sourceTable = solsetOut.obj._f_get_child('source')
 antennaTable = solsetOut.obj._f_get_child('antenna')
-try:
-    antennaTable.append(zip(*(antennaNames,antennaPositions)))
-except:
-    logging.warning('Couldnt fill antenna table.')
-try:
-    sourceTable.append(zip(*(pointingNames,pointingDirections)))
-except:
-    logging.warning('Couldnt fill source table.')
+antennaTable.append(list(zip(*(antennaNames,antennaPositions))))
+sourceTable.append(list(zip(*(pointingNames,pointingDirections))))
+#try:
+#    
+#except:
+#    logging.warning('Couldnt fill antenna table.')
+#try:
+#    
+#except:
+#    logging.warning('Couldnt fill source table.')
 
 for h5 in h5s: h5.close()
 logging.info(str(h5Out))

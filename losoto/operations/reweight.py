@@ -24,9 +24,9 @@ def _rolling_window_lastaxis(a, window):
     import numpy as np
 
     if window < 1:
-       raise ValueError, "`window` must be at least 1."
+       raise ValueError("`window` must be at least 1.")
     if window > a.shape[-1]:
-       raise ValueError, "`window` is too long."
+       raise ValueError("`window` is too long.")
     shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
