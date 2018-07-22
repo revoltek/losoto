@@ -787,7 +787,7 @@ class Soltab( object ):
             idx = self.getAxesNames().index(axis)
             
             # slice -> let the slice be as it is
-            if isinstance(selVal, (slice, range)):
+            if isinstance(selVal, slice):
                 self.selection[idx] = selVal
             # string -> regular expression
             elif type(selVal) is str:
