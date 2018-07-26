@@ -16,6 +16,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Combine h5parm files - '+_author)#, version=_version.__version__
 parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
+parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', help='Input solset name [default: sol000]')
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) - if not given use all')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', default=False, action='store_true', help='Go Vebose! (default=False)')
@@ -50,8 +51,9 @@ else:
 # open input
 h5s = []
 for h5parmFile in args.h5parmFiles:
-    h5 = h5parm(h5parmFile, readonly=True)
+    h5 = h5parm(h5parmFile.replace("'",""), readonly=True)
     h5s.append(h5)
+
 
 # open output
 if os.path.exists(args.outh5parm) and args.clobber:
@@ -118,7 +120,7 @@ for insoltab in insoltabs:
     # TODO: interpolate on selected axes
 
     logging.info('Writing output...')
-    solsetOutName = args.insolset
+    solsetOutName = args.outsolset
     soltabOutName = args.insoltab
 
     # create solset (and add all antennas and directions of other solsets)
