@@ -448,8 +448,14 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
     else:
       bad_sblist = [int(SB) for SB in BadSBList.strip('\"\'').split(';')]
 
-    amplitude_arraytmp = soltab.val[:] # axes are [time, ant, freq, pol]
-    weights_arraytmp = soltab.weight[:] # axes are [time, ant, freq, pol]
+         
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['pol','ant','freq', 'time'], weight=True):
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'] )
+        weights = reorderAxes( weights, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'] )
+        pass
+        
+    amplitude_arraytmp = vals # axes are [time, ant, freq, pol]
+    weights_arraytmp = weights # axes are [time, ant, freq, pol]
     flagged = np.where(amplitude_arraytmp == 1.0)
     weights_arraytmp[flagged] = 0.0
     nfreqs = len(soltab.freq[:])
@@ -595,8 +601,8 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
         new_soltab = solset.makeSoltab(soltype='amplitude', soltabName=outSoltabName,
                                  axesNames=['ant', 'freq', 'pol'],
                                  axesVals=[soltab.ant, freqs_new, ['XX', 'YY']],
-                                 vals=np.median(amps_array, axis=1),
-                                 weights=np.median(weights_array, axis=1))
+                                 vals=np.median(amps_array, axis=0),
+                                 weights=np.median(weights_array, axis=0))
         new_soltab.addHistory('CREATE (by PREFACTOR_BANDPASS operation) with BadSBList = {0}, '
                                   'interpolate={1}, removeTimeAxis={2}, autoFlag={3}, nSigma={4}, '
                                   'maxFlaggedFraction={5}, maxStddev={6}'.format(BadSBList,
