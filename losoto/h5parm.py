@@ -789,6 +789,7 @@ class Soltab( object ):
             # slice -> let the slice be as it is
             if isinstance(selVal, slice):
                 self.selection[idx] = selVal
+
             # string -> regular expression
             elif type(selVal) is str:
                 if not self.getAxisType(axis).char is 'S':

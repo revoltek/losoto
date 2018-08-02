@@ -16,7 +16,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Combine h5parm files - '+_author)#, version=_version.__version__
 parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
-parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', help='Input solset name [default: sol000]')
+parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', help='Output solset name [default: sol000]')
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) - if not given use all')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', default=False, action='store_true', help='Go Vebose! (default=False)')
@@ -138,14 +138,6 @@ sourceTable = solsetOut.obj._f_get_child('source')
 antennaTable = solsetOut.obj._f_get_child('antenna')
 antennaTable.append(list(zip(*(antennaNames,antennaPositions))))
 sourceTable.append(list(zip(*(pointingNames,pointingDirections))))
-#try:
-#    
-#except:
-#    logging.warning('Couldnt fill antenna table.')
-#try:
-#    
-#except:
-#    logging.warning('Couldnt fill source table.')
 
 for h5 in h5s: h5.close()
 logging.info(str(h5Out))
