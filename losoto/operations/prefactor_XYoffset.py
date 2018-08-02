@@ -40,7 +40,11 @@ def run( soltab, chanWidth ):
        logging.error("Soltab type of "+soltab.name+" is: "+solType+" but should be phase.")
        return 1
 
-    phases_tmp = np.copy(soltab.val) # axes are [time, ant, freq, pol]
+    for vals, coord, selection in soltab.getValuesIter(returnAxes=['pol','ant','freq', 'time'], weight=False):
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'] )
+        pass
+
+    phases_tmp = np.copy(vals) # axes are [time, ant, freq, pol]
     freqs = np.copy(soltab.freq)
     npol = len(soltab.pol)
     refstationID=2
