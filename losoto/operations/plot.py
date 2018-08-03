@@ -51,7 +51,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 maxZ = np.nanmax(flat)
             elif datatype == 'amplitude':
                 maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100 ] )
-                maxZ = np.min( [np.nanmax( flat ), maxZ])
+                maxZ = np.nanmin( [np.nanmax( flat ), maxZ])
                 minZ = np.nanmin( flat )
             else:
                 minZ = np.nanmin(flat)
@@ -154,9 +154,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                             cmap = plt.cm.rainbow
 
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
-                    #vals = vals.filled(np.nan)
-                    #vals[vals>maxZ] = maxZ
-                    #vals[vals<minZ] = minZ
+                    vals[vals>maxZ] = maxZ
+                    vals[vals<minZ] = minZ
 
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
