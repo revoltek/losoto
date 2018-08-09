@@ -90,7 +90,7 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, type, outQueue):
 
     pad_width = [(0, 0)] * len(vals.shape)
     pad_width[-1] = ((nmedian-1)/2, (nmedian-1)/2)
-    if type == 'phase':
+    if type == 'phase' or type == 'rotation':
         # Median smooth and subtract to de-trend
         if nmedian > 0:
             # Convert to real/imag

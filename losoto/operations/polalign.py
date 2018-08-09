@@ -142,7 +142,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
                 # Debug plot
                 doplot = False
-                if doplot and t%100==0 and coord['ant'] == 'RS310LBA':
+                if doplot and t%100==0 and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'CS301LBA'):
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
