@@ -239,13 +239,18 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         print('The "{}" band is not supported'.format(band))
         sys.exit(1)
 
+    
     if do_fit:
         lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
         upper = [c + b for c, b in zip(init_coeffs, bounds_deltas_upper)]
         param_bounds = (lower, upper)
-        popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma,
-                               bounds=param_bounds)
-        return popt, bandpass_function(freq, *tuple(popt))
+        try:
+            popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma, bounds=param_bounds)
+            return popt, bandpass_function(freq, *tuple(popt))
+        except RuntimeError:
+            logging.error('Fitting failed.' )
+            return None, bandpass_function(freq, *tuple(init_coeffs))
+            pass
     else:
         return None, bandpass_function(freq, *tuple(init_coeffs))
 
