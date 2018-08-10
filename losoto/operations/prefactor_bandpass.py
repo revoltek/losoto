@@ -239,18 +239,18 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         print('The "{}" band is not supported'.format(band))
         sys.exit(1)
 
-    
+
     if do_fit:
         lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
         upper = [c + b for c, b in zip(init_coeffs, bounds_deltas_upper)]
         param_bounds = (lower, upper)
         try:
-            popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma, bounds=param_bounds)
+            popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma,
+                                   bounds=param_bounds, method='dogbox')
             return popt, bandpass_function(freq, *tuple(popt))
         except RuntimeError:
             logging.error('Fitting failed.' )
             return None, bandpass_function(freq, *tuple(init_coeffs))
-            pass
     else:
         return None, bandpass_function(freq, *tuple(init_coeffs))
 
@@ -453,12 +453,12 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
     else:
       bad_sblist = [int(SB) for SB in BadSBList.strip('\"\'').split(';')]
 
-         
+
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['pol','ant','freq', 'time'], weight=True):
         vals = reorderAxes( vals, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'] )
         weights = reorderAxes( weights, soltab.getAxesNames(), ['time', 'ant', 'freq', 'pol'] )
         pass
-        
+
     amplitude_arraytmp = vals # axes are [time, ant, freq, pol]
     weights_arraytmp = weights # axes are [time, ant, freq, pol]
     flagged = np.where(amplitude_arraytmp == 1.0)
