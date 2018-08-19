@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+#import warnings
+#warnings.simplefilter('error', UserWarning)
+
 import logging
 from losoto.lib_operations import *
 
@@ -108,10 +111,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             ax.text(.5, .9, title, horizontalalignment='center', fontsize=14, transform=ax.transAxes)
 
             # add vertical lines and numbers at jumps (numbers are the jump sizes)
-            if axesInPlot[0] == 'time' and cmesh == False and not np.all(np.isnan(dataCube[Ntab])):
+            if axesInPlot[0] == 'time' and cmesh == False and not np.all(np.isnan(dataCube[Ntab].filled(np.nan))):
+                flat = dataCube[Ntab].filled(np.nan).flatten()
                 [ ax.axvline(xvals[j]+gap/2., color='k') for j in jumps ]
-                if minZ != 0: texty = minZ + np.abs(np.nanmin(dataCube[Ntab]))*0.01
-                else: texty = np.nanmin(dataCube[Ntab]) + np.abs(np.nanmin(dataCube[Ntab]))*0.01
+                if minZ != 0: texty = minZ + np.abs(np.nanmin(flat))*0.01
+                else: texty = np.nanmin(dataCube[Ntab]) + np.abs(np.nanmin(flat))*0.01
                 [ ax.text( xvals[j]+gap/2., texty, '%.0f' % delta[j], fontsize=10 ) for j in jumps ]
 
             # set log scales if activated
@@ -175,7 +179,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
                 # 2D scatter plot
                 else:
-                    ax.plot(xvals, vals, 'o', color=color, markersize=markerSize, markeredgecolor='none') # flagged data are automatically masked
+                    ax.plot(xvals[~vals.mask], vals[~vals.mask], 'o', color=color, markersize=markerSize, markeredgecolor='none') # flagged data are automatically masked
                     if plotFlag:
                         ax.plot(xvals[vals.mask], vals.data[vals.mask], 'o', color=colorFlag, markersize=markerSize, markeredgecolor='none') # plot flagged points
                     ax.set_xlim(xmin=min(xvals), xmax=max(xvals))
