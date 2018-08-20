@@ -836,6 +836,9 @@ class Soltab( object ):
 
                 if len(selVal) == 1:
                     # speedup in the common case of a single value
+                    if not selVal[0] in self.getAxisValues(axis).tolist():
+                        logging.error('Cannot find value %s in axis %s. Skip selection.' % (selVal[0], axis))
+                        return
                     self.selection[idx] = [self.getAxisValues(axis).tolist().index(selVal)]
                 else:
                     self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if item in selVal]
