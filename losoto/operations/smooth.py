@@ -99,17 +99,27 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             if (weights == 0).all(): continue
     
             if mode == 'runningmedian':
+                vals_bkp = vals[ weights == 0 ]
+                                
                 # handle phases by using a complex array
                 if soltab.getType() == 'phase':
                     vals = np.exp(1j*vals)
 
-                vals_bkp = vals[ weights == 0 ]
-                np.putmask(vals, weights == 0, np.nan)
-                valsnew = generic_filter(vals, np.nanmedian, size=size, mode='constant', cval=np.nan)
+                    valsreal = np.real(vals)
+                    valsimag = np.imag(vals)
+                    np.putmask(valsreal, weights == 0, np.nan)
+                    np.putmask(valsimag, weights == 0, np.nan)
+                    
+                    # run generic_filter twice, once for real once for imaginary
+                    valsrealnew = generic_filter(valsreal, np.nanmedian, size=size, mode='constant', cval=np.nan)
+                    valsimagnew = generic_filter(valsimag, np.nanmedian, size=size, mode='constant', cval=np.nan)
+                    valsnew = valsrealnew + 1j*valsimagnew # go back to complex
+                    valsnew = np.angle(valsnew) # go back to phases
+                    
+                else: # other than phases          
+                    np.putmask(vals, weights == 0, np.nan)
+                    valsnew = generic_filter(vals, np.nanmedian, size=size, mode='constant', cval=np.nan)
 
-                # go back to phases
-                if soltab.getType() == 'phase':
-                    valsnew = np.angle(valsnew)
 
                 if replace: 
                     weights[ weights == 0] = 1
