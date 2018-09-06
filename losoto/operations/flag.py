@@ -154,7 +154,8 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
                     vals_detrend = vals - polyval(axes[0], m=fit_sol)
                 elif len(axes) == 2:
                     fit_sol = polyfit(axes[0], axes[1], z=vals, w=weights, order=order)
-                    vals_detrend = vals - polyval(axes[0], axes[1], m=fit_sol)
+                    vals_smooth = polyval(axes[0], axes[1], m=fit_sol)
+                    vals_detrend = vals - vals_smooth
             # TODO: should be rolling
             elif mode == 'spline':
                 # get spline
@@ -169,7 +170,8 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
                     y = y[(weights != 0)].flatten()
                     w = weights[(weights != 0)].flatten()
                     spline = scipy.interpolate.SmoothBivariateSpline(x, y, z, w, kx=order[0], ky=order[1])
-                    vals_detrend = vals - spline(axes[0], axes[1])
+                    vals_smooth = spline(axes[0], axes[1])
+                    vals_detrend = vals - vals_smooth
 
             # remove outliers
             if max_rms > 0:
@@ -203,7 +205,8 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
 
         # replace (outlier) flagged values with smoothed ones
         if replace:
-            vals[orig_weights != weights] = vals_detrended
+            logging.debug('Replacing %.2f%% of the data.' % np.sum(orig_weights != weights))
+            vals[np.where(orig_weights != weights)] = vals_smooth[np.where(orig_weights != weights)]
             weights = orig_weights
 
         # plot 1d
@@ -252,8 +255,10 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         vals = normalize_phase(vals + mean)
 
     elif solType == 'amplitude':
-        weights, vals, rms = outlier_rej(np.log10(vals), weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
-        vals = 10**vals
+        vals_good = (vals>0)
+        vals[vals_good] = np.log10(vals[vals_good])
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
+        vals[vals_good] = 10**vals[vals_good]
 
     else:
         weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)

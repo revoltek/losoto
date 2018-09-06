@@ -53,8 +53,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 minZ = np.nanmin(flat)
                 maxZ = np.nanmax(flat)
             elif datatype == 'amplitude':
-                maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100 ] )
-                maxZ = np.nanmin( [np.nanmax( flat ), maxZ])
+                maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100  ] )
+                maxZ = np.nanmin( [np.nanmax( flat ), maxZ] )
                 minZ = np.nanmin( flat )
             else:
                 minZ = np.nanmin(flat)
