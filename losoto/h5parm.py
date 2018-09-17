@@ -439,7 +439,7 @@ class Solset( object ):
 
     def makeSoltab(self, soltype=None, soltabName=None,
             axesNames = [], axesVals = [], chunkShape=None, vals=None,
-            weights=None, parmdbType=''):
+            weights=None, parmdbType='', weightDtype='f16'):
         """
         Create a Soltab into this solset.
 
@@ -462,6 +462,8 @@ class Solset( object ):
             0->FLAGGED, 1->MAX_WEIGHT
         parmdbType : str
             Original parmdb solution type
+        weightDtype : str
+            THe dtype of weights allowed values are ('f16' or 'f32' or 'f64')
 
         Returns
         -------
@@ -507,7 +509,17 @@ class Solset( object ):
         #weight = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
         # array do not have compression but are much faster
         val = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
-        weight = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), atom=tables.Float16Atom())
+        assert weightDtype in ['f16','f32', 'f64'], "Allowed weight dtypes are 'f16','f32', 'f64'"
+        if weightDtype == 'f16':
+            np_d = np.float16
+            pt_d = tables.Float16Atom()
+        elif weightDtype == 'f32':
+            np_d = np.float32
+            pt_d = tables.Float32Atom()
+        elif weightDtype == 'f64':
+            np_d = np.float64
+            pt_d = tables.Float64Atom()
+        weight = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np_d), atom=pt_d)
         val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
         weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
 
