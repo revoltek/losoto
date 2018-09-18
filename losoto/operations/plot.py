@@ -23,7 +23,7 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
-    soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
+    soltabsToAdd = parser.getarraystr( step, 'soltabsToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
