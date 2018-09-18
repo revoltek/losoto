@@ -117,36 +117,6 @@ def run( soltab, soltabsToSub, ratio=False ):
             # move freq axis back
             vals = np.swapaxes(vals, len(vals.shape)-1, idxFreq)
 
-#            # the only return axes is freq, slower but better code (TOO SLOW)
-#            for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='freq', weight = True):
-#                # restrict to have the same coordinates of phases
-#                for i, axisName in enumerate(soltabsub.getAxesNames()):
-#                    soltabsub.selection[i] = selection[soltab.getAxesNames().index(axisName)]
-#                print '.',
-#
-#                valsSub = np.squeeze(soltabsub.getValues(retAxesVals=False, weight=False))
-#                weightsSub = np.squeeze(soltabsub.getValues(retAxesVals=False, weight=True))
-#
-#                if soltabsub.getType() == 'clock':
-#                    vals -= 2. * np.pi * valsSub * coord['freq']
-#
-#                elif soltabsub.getType() == 'tec':
-#                    vals -= -8.44797245e9 * valsSub / coord['freq']
-#
-#                elif soltabsub.getType() == 'tec3rd':
-#                    vals -= - 1.e21 * valsSub / np.power(coord['freq'],3)
-#
-#                elif soltabsub.getType() == 'rotationmeasure':
-#                    wav = 2.99792458e8/coord['freq']
-#                    ph = wav * wav * valsSub
-#                    if coord['pol'] == 'XX' or coord['pol'] == 'RR':
-#                        vals -= ph
-#                    elif coord['pol'] == 'YY' or coord['pol'] == 'LL':
-#                        vals += ph
-#
-#                # flag data that are contaminated by flagged clock/tec data
-#                if weightsSub == 0: weights[:] = 0
-
             soltab.setValues(vals)
             soltab.setValues(weights, weight = True)
         else:
