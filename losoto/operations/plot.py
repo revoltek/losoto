@@ -23,7 +23,7 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
-    soltabsToAdd = parser.getarraystr( step, 'soltabToAdd', [] )
+    soltabsToAdd = parser.getarraystr( step, 'soltabsToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
@@ -483,38 +483,43 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
                 # add tables if required (e.g. phase/tec)
                 for soltabToAdd in soltabsToAdd:
-                    newCoord = {}
-                    for axisName in coord.keys():
-                        if axisName in soltabToAdd.getAxesNames():
-                            if type(coord[axisName]) is np.ndarray:
-                                newCoord[axisName] = coord[axisName]
-                            else:
-                                newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
-                    soltabToAdd.setSelection(**newCoord)
-                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
-                    if soltabToAdd.getType() == 'clock':
-                        valsAdd = 2. * np.pi * valsAdd * newCoord['freq']
-                    elif soltabToAdd.getType() == 'tec':
-                        valsAdd = -8.44797245e9 * valsAdd / newCoord['freq']
-                    else:
-                        logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+soltabToAdd.getType()+'.')
-                        continue
-
-                    # If clock/tec are single pol then duplicate it (TODO)
-                    # There still a problem with commonscalarphase and pol-dependant clock/tec
-                    #but there's not easy way to combine them
-                    if not 'pol' in soltabToAdd.getAxesNames() and 'pol' in soltab.getAxesNames():
-                        # find pol axis positions
-                        polAxisPos = soltab.getAxesNames().key_idx('pol')
-                        # create a new axes for the table to add and duplicate the values
-                        valsAdd = np.addaxes(valsAdd, polAxisPos)
-
-                    if valsAdd.shape != vals.shape:
-                        logging.error('Cannot combine the table '+soltabToAdd.getType()+' with '+soltab.getType()+'. Wrong shape.')
-                        mpm.wait()
-                        return 1
-
-                    vals += valsAdd
+                    logging.warning('soltabsToAdd not implemented. Ignoring.')
+#                    newCoord = {}
+#                    for axisName in coord.keys():
+#                        # prepare selected on present axes
+#                        if axisName in soltabToAdd.getAxesNames():
+#                            if type(coord[axisName]) is np.ndarray:
+#                                newCoord[axisName] = coord[axisName]
+#                            else:
+#                                newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
+#
+#                    soltabToAdd.setSelection(**newCoord)
+#                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
+#
+#                    # add missing axes
+#                    print ('shape:', vals.shape)
+#                    for axisName in coord.keys():
+#                        if not axisName in soltabToAdd.getAxesNames():
+#                            # find axis positions
+#                            axisPos = soltab.getAxesNames().index(axisName)
+#                            # create a new axes for the table to add and duplicate the values
+#                            valsAdd = np.expand_dims(valsAdd, axisPos)
+#                            print ('shape to add:', valsAdd.shape)
+#
+#                    if soltabToAdd.getType() == 'clock':
+#                        valsAdd = 2. * np.pi * valsAdd * coord['freq']
+#                    elif soltabToAdd.getType() == 'tec':
+#                        valsAdd = -8.44797245e9 * valsAdd / coord['freq']
+#                    else:
+#                        logging.warning('Only Clock or TEC can be added to solutions. Ignoring: '+soltabToAdd.getType()+'.')
+#                        continue
+#
+#                    if valsAdd.shape != vals.shape:
+#                        logging.error('Cannot combine the table '+soltabToAdd.getType()+' with '+soltab.getType()+'. Wrong shape.')
+#                        mpm.wait()
+#                        return 1
+#
+#                    vals += valsAdd
 
                 # normalize
                 if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
