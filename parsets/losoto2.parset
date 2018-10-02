@@ -12,7 +12,7 @@ dir = [pointing]
 # string used for regex selections, vectors for complete names (equal for 'pol' and 'dir')
 # to exclude stations, use ^((?!string1|string2|string3).)*$
 # with names containing string1, string2, or string3
-axisName.minmax = [0,10,2]
+axisName.minmaxstep = [0,10,2]
 axisName.regexp = RS*
 Ncpu = 0 # number of cpus in multithread operations, if 0 use all available cpus
 
