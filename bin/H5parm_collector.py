@@ -117,6 +117,9 @@ for insoltab in insoltabs:
     # TODO: leave correct weights - this is a workaround for h5parm with weight not in float16
     allWeights[ allWeights != 0 ] = 1.
 
+    # TODO: flag nans waiting for DPPP to do it
+    allWeights[ np.isnan(allVals) ] = 0.
+
     # TODO: interpolate on selected axes
 
     logging.info('Writing output...')
