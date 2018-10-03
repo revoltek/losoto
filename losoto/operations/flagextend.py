@@ -12,7 +12,7 @@ def _run_parser(soltab, parser, step):
     percent = parser.getfloat( step, 'percent', 50. )
     maxCycles = parser.getint( step, 'maxCycles', 3 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
-    return run(soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0)
+    return run(soltab, axesToExt, size, percent=percent, maxCycles=maxCycles, ncpu=ncpu)
 
 
 def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=3, outQueue=None):
