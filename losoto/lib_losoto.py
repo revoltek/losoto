@@ -157,7 +157,7 @@ def getParAxis( parser, step, axisName ):
 
 def getStepSoltabs(parser, step, H):
     """
-    Return a list of soltabs object for 
+    Return a list of soltabs object for a step and apply selection creteria
 
     Parameters
     ----------

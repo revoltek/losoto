@@ -114,6 +114,7 @@ if __name__=='__main__':
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
+                   "SPLITLEAK": operations.splitleak,
                    "STRUCTURE": operations.structure,
                    "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
                    "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,

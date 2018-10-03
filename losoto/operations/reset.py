@@ -7,23 +7,32 @@ import logging
 logging.debug('Loading RESET module.')
 
 def _run_parser(soltab, parser, step):
-    return run(soltab)
+    dataVal = parser.getfloat( step, 'dataVal' ) # no default
 
-def run( soltab ):
+    return run(soltab, dataVal=dataVal)
+
+def run( soltab, dataVal=None ):
     """
-    This operation reset all the selected amplitudes to 1
-    and all other selected solution types to 0
+    This operation reset all the selected solution values.
     WEIGHT: flag compliant, no need for weight
+
+    Parameters
+    ----------
+    dataVal : float, optional
+        If given set values to this number, otherwise uses 1 for amplitude and 0 for all other soltab types.
     """
 
     logging.info("Resetting soltab: "+soltab.name)
 
     solType = soltab.getType()
 
-    if solType == 'amplitude':
-        soltab.setValues(1.)
-    else:
-        soltab.setValues(0.)
+    if dataVal is None:
+        if solType == 'amplitude':
+            dataVal = 1.
+        else:
+            dataVal = 0.
+    
+    soltab.setValues(dataVal)
 
     soltab.addHistory('RESET')
     return 0

@@ -162,7 +162,6 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     vals.data[vals.data<minZ] = minZ
 
                     if (vals.mask == True).all(): print('all masked')
-                    print(vals)
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
