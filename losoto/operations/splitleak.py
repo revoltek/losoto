@@ -48,8 +48,8 @@ def run( soltab, soltabOutG=None, soltabOutD=None):
 
     # divide offdiag by diag, then set diag to 1 (see Hamaker+ 96, appendix D)
     soltabOutD.setSelection(pol=['XX','YY'])
-    valsDiag = soltabOutD.getValues( retAxesVals = False )
-    soltabOutG.setValues( 1. )
+    valsDiag = np.copy(soltabOutD.getValues( retAxesVals = False ))
+    soltabOutD.setValues( 1. )
 
     soltabOutD.setSelection(pol=['XY','YX'])
     valsOffdiag = soltabOutD.getValues( retAxesVals = False )

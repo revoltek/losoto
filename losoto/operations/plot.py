@@ -61,6 +61,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 maxZ = np.nanmax(flat)
                 #minZ = np.nanmedian(flat) - 3*np.nanstd(flat)
                 #maxZ = np.nanmedian(flat) + 3*np.nanstd(flat)
+
+            # prevent same min/max
+            if minZ == maxZ:
+                minZ *= 0.99
+                maxZ *= 1.01
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
 
         # if user-defined number of col use that
@@ -161,7 +166,6 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     vals.data[vals.data>maxZ] = maxZ
                     vals.data[vals.data<minZ] = minZ
 
-                    if (vals.mask == True).all(): print('all masked')
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
 
