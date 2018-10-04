@@ -52,6 +52,7 @@ def run( soltab, soltabOutG=None, soltabOutD=None):
     soltabOutD.setValues( 1. )
 
     soltabOutD.setSelection(pol=['XY','YX'])
+
     valsOffdiag = soltabOutD.getValues( retAxesVals = False )
     if soltab.getType() == 'amplitude':
         soltabOutD.setValues( valsOffdiag/valsDiag )
