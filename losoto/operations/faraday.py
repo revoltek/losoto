@@ -10,6 +10,8 @@ logging.debug('Loading FARADAY module.')
 def _run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '')
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
+
+    parser.checkSpelling( step, soltab, ['refAnt', 'maxResidual'])
     return run(soltab, refAnt, maxResidual)
 
 

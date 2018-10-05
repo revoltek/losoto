@@ -17,6 +17,7 @@ def _run_parser(soltab, parser, step):
     sourceDict = parser.getstr( step, "sourceDict" )
     ncpu = parser.getint( step, "ncpu", 0 )
 
+    parser.checkSpelling( step, soltab, ['inSoltab1', 'sourceDict', 'outSoltab', 'inSoltab2'])
     return run(inSoltab1, sourceDict, outSoltab, inSoltab2, ncpu)
 
 def _calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,

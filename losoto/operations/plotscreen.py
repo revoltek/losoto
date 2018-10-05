@@ -17,6 +17,8 @@ def _run_parser(soltab, parser, step):
     remove_gradient = parser.getbool( step, "RemoveGradient", False )
     show_source_names = parser.getbool( step, "ShowSourceNames", False )
     ncpu = parser.getint( step, "npcu", 0 )
+
+    parser.checkSpelling( step, soltab, ['resSoltab', 'minZ', 'maxZ', 'prefix', 'remove_gradient', 'show_source_names'])
     return run(soltab, resSoltab, minZ, maxZ, prefix, remove_gradient, show_source_names, ncpu)
 
 

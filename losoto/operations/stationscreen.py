@@ -22,6 +22,8 @@ def _run_parser(soltab, parser, step):
     min_order = parser.getint( step, "MinOrder", 5 )
     adjust_order = parser.getbool( step, "AdjustOrder", True )
 
+    parser.checkSpelling( step, soltab, ['outSoltab', 'order', 'beta', 'niter', 'nsigma',\
+        'refAnt', 'scale_order', 'scale_dist', 'min_order', 'adjust_order'])
     return run(soltab, outSoltab, order, beta, ncpu, niter, nsigma,
         refAnt, scale_order, scale_dist, min_order, adjust_order)
 

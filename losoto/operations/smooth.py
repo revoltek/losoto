@@ -12,6 +12,8 @@ def _run_parser(soltab, parser, step):
     mode = parser.getstr( step, 'mode', 'runningmedian' )
     degree = parser.getint( step, 'degree', 1 )
     replace = parser.getbool( step, 'replace', False )
+
+    parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace'])
     return run(soltab, axesToSmooth, size, mode, degree, replace)
 
 def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False):

@@ -28,6 +28,9 @@ def _run_parser(soltab, parser, step):
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
+
+    parser.checkSpelling( step, soltab, ['axesInPlot', 'axisInTable', 'axisInCol', 'axisDiff', 'NColFig', 'figSize', 'markerSize', 'minmax', 'log', \
+               'plotFlag', 'doUnwrap', 'refAnt', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
                plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 

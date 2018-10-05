@@ -15,6 +15,7 @@ def _run_parser(soltab, parser, step):
     flagBad = parser.getbool( step, 'flagBad', False )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
+    parser.checkSpelling( step, soltab, ['mode', 'weightVal', 'nmedian', 'nstddev', 'soltabImport', 'flagBad'])
     return run(soltab, mode, weightVal, nmedian, nstddev, soltabImport, flagBad, ncpu)
 
 

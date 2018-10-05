@@ -22,6 +22,8 @@ def _run_parser(soltab, parser, step):
     telescope = parser.getstr( step, 'telescope', 'lofar')
     refAnt = parser.getstr( step, 'refAnt', '')
     ncpu = parser.getint( '_global', 'ncpu', 0)
+
+    parser.checkSpelling( step, soltab, ['axesToFlag', 'order', 'maxCycles', 'maxRms', 'maxRmsNoise', 'fixRmsNoise', 'windowNoise', 'maxFlaggedFraction', 'maxStddev', 'replace', 'preflagzeros', 'mode', 'telescope', 'refAnt'])
     return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRmsNoise, windowNoise, maxFlaggedFraction, maxStddev, replace, preflagzeros, mode, telescope, refAnt, ncpu )
 
 

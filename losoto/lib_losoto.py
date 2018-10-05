@@ -5,14 +5,15 @@
 
 import os, sys, ast, re
 import logging
-if (sys.version_info > (3, 0)):
-    from configparser import RawConfigParser
-else:
-    from ConfigParser import RawConfigParser
+from configparser import ConfigParser
+#if (sys.version_info > (3, 0)):
+#    from configparser import ConfigParser
+#else:
+#    from ConfigParser import ConfigParser
 
 cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
 
-class LosotoParser(RawConfigParser):
+class LosotoParser(ConfigParser):
     """
     A parser for losoto parset files.
 
@@ -23,21 +24,26 @@ class LosotoParser(RawConfigParser):
     """
 
     def __init__(self, parsetFile):
-        RawConfigParser.__init__(self)
+        ConfigParser.__init__(self, inline_comment_prefixes=('#',';'))
 
-        # read parset and replace '#' with ';' to allow # as inline comments
-        # also add [_global] fake section at beginning
         import StringIO
         config = StringIO.StringIO()
-        config.write('[_global]\n'+open(parsetFile).read().replace('#',';'))
+        # add [_global] fake section at beginning
+        config.write('[_global]\n'+open(parsetFile).read())
         config.seek(0, os.SEEK_SET)
         self.readfp(config)
 
-    def checkSpelling(step, values):
+    def checkSpelling(self, s, soltab, availValues=[]):
         """
         check if any value in the step is missing from a value list and return a warning
         """
-        pass
+        entries = [x.lower() for x in dict(self.items(s)).keys()]
+        availValues = ['soltab','operation'] + availValues + \
+                    soltab.getAxesNames() + [a+'.minmaxstep' for a in soltab.getAxesNames()] + [a+'.regexpt' for a in soltab.getAxesNames()]
+        availValues = [x.lower() for x in availValues]
+        for e in entries:
+            if e not in availValues:
+                logging.warning('Mispelled option: %s - Ignoring!' % e)
 
     def getstr(self, s, v, default=None):
         if self.has_option(s, v):
@@ -49,7 +55,7 @@ class LosotoParser(RawConfigParser):
 
     def getbool(self, s, v, default=None):
         if self.has_option(s, v):
-            return RawConfigParser.getboolean(self, s, v)
+            return ConfigParser.getboolean(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected bool).' % (s, v))
         else:
@@ -57,7 +63,7 @@ class LosotoParser(RawConfigParser):
 
     def getfloat(self, s, v, default=None):
         if self.has_option(s, v):
-            return RawConfigParser.getfloat(self, s, v)
+            return ConfigParser.getfloat(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected float).' % (s, v))
         else:
@@ -65,7 +71,7 @@ class LosotoParser(RawConfigParser):
 
     def getint(self, s, v, default=None):
         if self.has_option(s, v):
-            return RawConfigParser.getint(self, s, v)
+            return ConfigParser.getint(self, s, v)
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected int).' % (s, v))
         else:

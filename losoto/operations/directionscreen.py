@@ -17,6 +17,8 @@ def _run_parser(soltab, parser, step):
     height = parser.getfloat( step, "height", 200e3 )
     order = parser.getint( step, "Order", 5 )
     ncpu = parser.getint( '_global', "npcu", 0 )
+
+    parser.checkSpelling( step, soltab, ['outSoltab', 'height', 'order'])
     return run(soltab, outSoltab, height, order, ncpu)
 
 

@@ -9,6 +9,8 @@ logging.debug('Loading NORM module.')
 def _run_parser(soltab, parser, step):
     axesToNorm = parser.getarraystr( step, 'axesToNorm' ) # no default
     normVal = parser.getfloat( step, 'normVal', 1.)
+
+    parser.checkSpelling( step, soltab, ['axesToNorm','normVal'])
     return run(soltab, axesToNorm, normVal)
 
 def run( soltab, axesToNorm, normVal = 1. ):

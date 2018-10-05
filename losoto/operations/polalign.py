@@ -13,6 +13,8 @@ def _run_parser(soltab, parser, step):
     average = parser.getbool( step, 'average', False )
     replace = parser.getbool( step, 'replace', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
+
+    parser.checkSpelling( step, soltab, ['soltabOut', 'maxResidual', 'fitOffset', 'average', 'replace', 'refAnt'])
     return run(soltab, soltabOut, maxResidual, fitOffset, average, replace, refAnt)
 
 

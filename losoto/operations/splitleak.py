@@ -9,6 +9,8 @@ logging.debug('Loading SPLITLEAK module.')
 def _run_parser(soltab, parser, step):
     soltabOutG = parser.getstr( step, 'soltabOutG' ) # no default
     soltabOutD = parser.getstr( step, 'soltabOutD' ) # no default
+
+    parser.checkSpelling( step, soltab, ['soltabOutG','soltabOutD'])
     return run(soltab, soltabOutG, soltabOutD)
 
 def run( soltab, soltabOutG=None, soltabOutD=None):

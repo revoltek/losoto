@@ -11,6 +11,8 @@ def _run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '')
     plotName = parser.getstr( step, 'plotName', '' )
     ndiv = parser.getint( step, 'ndiv', 1 )
+
+    parser.checkSpelling( step, soltab, ['doUnwrap', 'refAnt', 'plotName', 'ndiv'])
     return run(soltab, doUnwrap, refAnt, plotName, ndiv)
 
 

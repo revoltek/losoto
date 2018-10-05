@@ -18,6 +18,8 @@ def _run_parser(soltab, parser, step):
     maxStddev = parser.getfloat( step, 'maxStddev', 0.01 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
+    parser.checkSpelling( step, soltab, ['chanWidth', 'outSoltabName', 'BadSBList', 'interpolate', 'removeTimeAxis',\
+               'autoFlag', 'nSigma', 'maxFlaggedFraction', 'maxStddev'])
     return run(soltab, chanWidth, outSoltabName, BadSBList, interpolate, removeTimeAxis,
                autoFlag, nSigma, maxFlaggedFraction, maxStddev, ncpu)
 

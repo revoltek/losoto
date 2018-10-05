@@ -17,6 +17,8 @@ def _run_parser(soltab, parser, step):
     fit3rdorder = parser.getbool( step, 'fit3rdorder', False )
     circular = parser.getbool( step, 'circular', False )
     reverse = parser.getbool( step, 'reverse', False )
+
+    parser.checkSpelling( step, soltab, ['flagBadChannels', 'flagCut', 'chi2cut', 'combinePol', 'removePhaseWraps', 'fit3rdorder', 'circular', 'reverse'])
     return run(soltab, flagBadChannels, flagCut, chi2cut, combinePol, removePhaseWraps, fit3rdorder, circular, reverse)
 
 

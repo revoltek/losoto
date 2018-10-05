@@ -9,7 +9,8 @@ logging.debug('Loading RESET module.')
 def _run_parser(soltab, parser, step):
     dataVal = parser.getfloat( step, 'dataVal', -999. )
 
-    return run(soltab, dataVal=dataVal)
+    parser.checkSpelling( step, soltab, ['dataVal'])
+    return run(soltab, dataVal)
 
 def run( soltab, dataVal=-999. ):
     """

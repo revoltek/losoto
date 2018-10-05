@@ -9,6 +9,8 @@ logging.debug('Loading PREFACTOR_XYOFFSET module.')
 
 def _run_parser(soltab, parser, step):
     chanWidth = parser.getstr( step, 'chanWidth')
+
+    parser.checkSpelling( step, soltab, ['chanWidth'])
     return run(soltab, chanWidth)
 
 
