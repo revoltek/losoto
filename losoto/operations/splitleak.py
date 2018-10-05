@@ -54,9 +54,7 @@ def run( soltab, soltabOutG=None, soltabOutD=None):
     soltabOutD.setSelection(pol=['XY','YX'])
 
     valsOffdiag, ax = soltabOutD.getValues( retAxesVals = True )
-    print (ax)
     if soltab.getType() == 'amplitude':
-        valsOffdiag[...,1] *= -1.
         soltabOutD.setValues( valsOffdiag/valsDiag )
     if soltab.getType() == 'phase':
         soltabOutD.setValues( valsOffdiag - valsDiag )

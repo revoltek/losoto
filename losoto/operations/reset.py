@@ -7,11 +7,11 @@ import logging
 logging.debug('Loading RESET module.')
 
 def _run_parser(soltab, parser, step):
-    dataVal = parser.getfloat( step, 'dataVal' ) # no default
+    dataVal = parser.getfloat( step, 'dataVal', -999. )
 
     return run(soltab, dataVal=dataVal)
 
-def run( soltab, dataVal=None ):
+def run( soltab, dataVal=-999. ):
     """
     This operation reset all the selected solution values.
     WEIGHT: flag compliant, no need for weight
@@ -26,7 +26,7 @@ def run( soltab, dataVal=None ):
 
     solType = soltab.getType()
 
-    if dataVal is None:
+    if dataVal is -999.:
         if solType == 'amplitude':
             dataVal = 1.
         else:

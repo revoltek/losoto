@@ -62,10 +62,11 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 #minZ = np.nanmedian(flat) - 3*np.nanstd(flat)
                 #maxZ = np.nanmedian(flat) + 3*np.nanstd(flat)
 
-            # prevent same min/max
+            # prevent same min/max (still a problem at 0)
             if minZ == maxZ:
                 minZ *= 0.99
                 maxZ *= 1.01
+
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
 
         # if user-defined number of col use that
