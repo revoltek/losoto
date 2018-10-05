@@ -33,6 +33,12 @@ class LosotoParser(RawConfigParser):
         config.seek(0, os.SEEK_SET)
         self.readfp(config)
 
+    def checkSpelling(step, values):
+        """
+        check if any value in the step is missing from a value list and return a warning
+        """
+        pass
+
     def getstr(self, s, v, default=None):
         if self.has_option(s, v):
             return self.get(s, v).replace('\'','').replace('"','') # remove apex
