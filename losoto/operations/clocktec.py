@@ -54,7 +54,7 @@ def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=Fal
         Reverse the time axis. By default False.
     """
     import numpy as np
-    from .fitClockTEC import doFit
+    from ._fitClockTEC import doFit
 
     logging.info("Clock/TEC separation on soltab: "+soltab.name)
 
