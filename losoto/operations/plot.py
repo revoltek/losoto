@@ -168,8 +168,9 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                             cmap = plt.cm.rainbow
 
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
-                    vals.data[valscheck>maxZ] = maxZ
-                    vals.data[valscheck<minZ] = minZ
+                    if not np.isnan(vals).all():
+                        vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
+                        vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
 
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
