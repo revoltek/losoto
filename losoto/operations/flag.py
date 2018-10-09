@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
     fixRms = parser.getfloat( step, 'fixRms', 0.)
     fixRmsNoise = parser.getfloat( step, 'fixRmsNoise', 0.)
     windowNoise = parser.getint( step, 'windowNoise', 11)
-    maxFlaggedFraction = parser.getint( step, 'maxFlaggedFraction', 0.5)
+    maxFlaggedFraction = parser.getint( step, 'maxFlaggedFraction', 1.0)
     maxStddev = parser.getfloat( step, 'maxStddev', 0.01)
     replace = parser.getbool( step, 'replace', False)
     preflagzeros = parser.getbool( step, 'preflagzeros', False)
