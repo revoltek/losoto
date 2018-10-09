@@ -12,6 +12,7 @@ def _run_parser(soltab, parser, step):
     maxCycles = parser.getint( step, 'maxCycles', 5)
     maxRms = parser.getfloat( step, 'maxRms', 5.)
     maxRmsNoise = parser.getfloat( step, 'maxRmsNoise', 0.)
+    fixRms = parser.getfloat( step, 'fixRms', 0.)
     fixRmsNoise = parser.getfloat( step, 'fixRmsNoise', 0.)
     windowNoise = parser.getint( step, 'windowNoise', 11)
     maxFlaggedFraction = parser.getint( step, 'maxFlaggedFraction', 0.5)
@@ -23,11 +24,11 @@ def _run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '')
     ncpu = parser.getint( '_global', 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['axesToFlag', 'order', 'maxCycles', 'maxRms', 'maxRmsNoise', 'fixRmsNoise', 'windowNoise', 'maxFlaggedFraction', 'maxStddev', 'replace', 'preflagzeros', 'mode', 'telescope', 'refAnt'])
-    return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRmsNoise, windowNoise, maxFlaggedFraction, maxStddev, replace, preflagzeros, mode, telescope, refAnt, ncpu )
+    parser.checkSpelling( step, soltab, ['axesToFlag', 'order', 'maxCycles', 'maxRms', 'maxRmsNoise', 'fixRms', 'fixRmsNoise', 'windowNoise', 'maxFlaggedFraction', 'maxStddev', 'replace', 'preflagzeros', 'mode', 'telescope', 'refAnt'])
+    return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRms, fixRmsNoise, windowNoise, maxFlaggedFraction, maxStddev, replace, preflagzeros, mode, telescope, refAnt, ncpu )
 
 
-def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection, outQueue):
+def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, maxFlaggedFraction, selection, outQueue):
 
     import numpy as np
     import itertools
@@ -94,7 +95,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
             return np.polynomial.polynomial.polyval2d(x, y, m)
 
 
-    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles=3, max_rms=3., max_rms_noise=0., window_noise=11., fix_rms_noise=0., replace=False):
+    def outlier_rej(vals, weights, axes, order=5, mode='smooth', max_ncycles=3, max_rms=3., max_rms_noise=0., window_noise=11., fix_rms=0., fix_rms_noise=0., replace=False):
         """
         Reject outliers using a running median
         val = the array (avg must be 0)
@@ -176,10 +177,13 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
                     vals_detrend = vals - vals_smooth
 
             # remove outliers
-            if max_rms > 0:
+            if max_rms > 0 or fix_rms > 0:
                 # median calc https://en.wikipedia.org/wiki/Median_absolute_deviation
                 rms =  1.4826 * np.nanmedian( np.abs(vals_detrend[(weights != 0)]) )
                 if np.isnan(rms): weights[:] = 0
+                elif fix_rms > 0:
+                    flags = abs(vals_detrend) > fix_rms
+                    weights[ flags ] = 0
                 else:
                     flags = abs(vals_detrend) > max_rms * rms
                     weights[ flags ] = 0
@@ -253,7 +257,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
         vals = normalize_phase(vals - mean)
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace)
         vals = normalize_phase(vals + mean)
 
     elif solType == 'amplitude':
@@ -263,10 +267,15 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         vals[vals_good] = 10**vals[vals_good]
 
     else:
-        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace)
+        weights, vals, rms = outlier_rej(vals, weights, flagCoord, order, mode, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace)
 
     if percentFlagged(weights) == initPercentFlag:
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> None' % ((removeKeys(coord, axesToFlag), initPercentFlag)))
+    elif percentFlagged(weights)/100.0 >= maxFlaggedFraction:
+        logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %% (rms: %.5f)' \
+            % ((removeKeys(coord, axesToFlag), initPercentFlag, percentFlagged(weights), rms)))
+        logging.debug('Flagged percentage exceeds maxFlaggedFraction. Flagging all')
+        weights[:] = 0
     else:
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
             % ((removeKeys(coord, axesToFlag), initPercentFlag, percentFlagged(weights), rms)))
@@ -594,7 +603,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
     outQueue.put([s, weights])
 
 
-def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixRmsNoise=0., windowNoise=11, maxFlaggedFraction=0.5, maxStddev=0.01, replace=False, preflagzeros=False, mode='smooth', telescope='lofar', refAnt='', ncpu=0 ):
+def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixRms=0., fixRmsNoise=0., windowNoise=11, maxFlaggedFraction=1.0, maxStddev=0.01, replace=False, preflagzeros=False, mode='smooth', telescope='lofar', refAnt='', ncpu=0 ):
     """
     This operation for LoSoTo implement a flagging procedure
     WEIGHT: compliant
@@ -615,6 +624,9 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
 
     maxRmsNoise : float, optional
         Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, by default 0 (ignored).
+
+    fixRms : float, optional
+        Instead of calculating rms use this value, by default 0 (ignored).
 
     fixRmsNoise : float, optional
         Instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), by default 0 (ignored).
@@ -734,7 +746,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
 
         # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
         for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, reference=refAnt):
-            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRmsNoise, replace, axesToFlag, selection])
+            mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, maxFlaggedFraction, selection])
 
         mpm.wait()
 
