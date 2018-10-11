@@ -724,6 +724,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
             weights_arraytmp[:, s, :, :] = w
         weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
+        soltab.flush()
         soltab.addHistory('FLAG (mode=bandpass, telescope={0}, maxRms={1}, '
                           'maxFlaggedFraction={2}, maxStddev={3}'.format(telescope, maxRms,
                           maxFlaggedFraction, maxStddev))
