@@ -45,7 +45,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         ],
     tests_require=['pytest'],
-    install_requires=['numpy>=1.9','cython','numexpr>=2.0','tables>=3.0'],
+    install_requires=['numpy>=1.9','cython','numexpr>=2.0','tables>=3.0','configparser'],
     scripts = ['bin/losoto', 'bin/H5parm_benchmark.py',
                'bin/H5parm2parmdb.py', 'bin/parmdb2H5parm.py', 'bin/killMS2H5parm.py',
                'bin/H5parm_collector.py','bin/H5parm_copy.py'],

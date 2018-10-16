@@ -40,3 +40,4 @@ Required packages:
 * PyTables version:  >3.0.0
 * HDF5 version:      >1.8.4
 * NumPy version:     >1.9.0
+* configparser (backport from python 3.0 if using python 2.7)
