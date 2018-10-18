@@ -466,8 +466,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     if soltabExport == '':
         soltabExport = None
 
-    mode = mode.lower()
-    if mode not in ['bandpass', 'phaseresid']:
+    if mode == None or mode.lower() not in ['bandpass', 'phaseresid']:
         logging.error('Mode must be one of bandpass or phaseresid')
         return 1
 
