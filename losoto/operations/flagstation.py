@@ -508,7 +508,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
             weights_arraytmp[:, s, :, :] = w
         weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
-        soltab.flush()
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, maxFlaggedFraction={1}, '
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
     else:
@@ -528,7 +527,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
             weights_arraytmp[:, s, :, :] = w
         weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
-        soltab.flush()
         soltab.addHistory('FLAGSTATION (mode=phaseresid, maxFlaggedFraction={0}, '
                           'nSigma={1}'.format(maxFlaggedFraction, nSigma))
 
