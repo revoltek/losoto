@@ -466,8 +466,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     if soltabExport == '':
         soltabExport = None
 
-    mode = mode.lower()
-    if mode not in ['bandpass', 'phaseresid']:
+    if mode == None or mode.lower() not in ['bandpass', 'phaseresid']:
         logging.error('Mode must be one of bandpass or phaseresid')
         return 1
 
@@ -494,10 +493,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
         if solType != 'amplitude':
            logging.error("Soltab must be of type amplitude for bandpass mode.")
            return 1
-
-        # Check for NaN solutions and flag
-        flagged = np.where(np.isnan(vals_arraytmp))
-        weights_arraytmp[flagged] = 0.0
 
         # Fill the queue
         mpm = multiprocManager(ncpu, _flag_bandpass)

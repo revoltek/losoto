@@ -106,6 +106,7 @@ if __name__=='__main__':
                    "FARADAY": operations.faraday,
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
+                   "FLAGSTATION": operations.flagstation,
                    "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
