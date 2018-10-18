@@ -51,11 +51,13 @@ def run( soltab, soltabOutG=None, soltabOutD=None):
     # divide offdiag by diag, then set diag to 1 (see Hamaker+ 96, appendix D)
     soltabOutD.setSelection(pol=['XX','YY'])
     valsDiag = np.copy(soltabOutD.getValues( retAxesVals = False ))
-    soltabOutD.setValues( 1. )
+    if soltab.getType() == 'amplitude':
+        soltabOutD.setValues( 1. )
+    if soltab.getType() == 'phase':
+        soltabOutD.setValues( 0. )
 
     soltabOutD.setSelection(pol=['XY','YX'])
-
-    valsOffdiag, ax = soltabOutD.getValues( retAxesVals = True )
+    valsOffdiag = soltabOutD.getValues( retAxesVals = False )
     if soltab.getType() == 'amplitude':
         soltabOutD.setValues( valsOffdiag/valsDiag )
     if soltab.getType() == 'phase':

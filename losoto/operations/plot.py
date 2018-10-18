@@ -49,7 +49,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
         # find common min and max if not set
         flat = dataCube.filled(np.nan).flatten()
-        if np.isnan(flat).all():
+        if np.isnan(flat).all() or np.all(flat==0):
             minZ=-0.1; maxZ=0.1
         elif minZ == 0 and maxZ == 0:
             if datatype == 'phase':
