@@ -31,6 +31,9 @@ def run( soltab, soltabOutG=None, soltabOutD=None):
     if soltab.getType() != 'amplitude' and soltab.getType() != 'phase':
         logging.error('SPLITLEAK can work only on amplitude/phase soltabs. Found: %s.' % soltab.getType())
         return 1
+    if soltab.getAxisValues('pol') != ['XX', 'XY', 'YX', 'YY']:
+        logging.error('Pol in unusual order, not implemented.')
+        return 1
 
     solset = soltab.getSolset()
 
