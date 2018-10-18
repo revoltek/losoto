@@ -364,10 +364,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
         sigma_div[median_flagged] = 1e8
         sigma_orig = sigma_div.copy()
 
-        # Before doing the fitting, flag any solutions that deviate from the model bandpass by
-        # a large factor to avoid biasing the first fit
+        # Before doing the fitting, renormalize and flag any solutions that deviate from
+        # the model bandpass by a large factor to avoid biasing the first fit
         _, bp_sp = _fit_bandpass(freqs, np.log10(amps_div), sigma_div, band, do_fit=False)
-        bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > 0.2)
+        normval = np.median(np.log10(amps_div) - bp_sp) # value to normalize model to data
+        amps_div /= 10**normval
+        bad = np.where(np.abs(np.array(bp_sp) - np.log10(amps_div)) > 0.2)
         sigma_div[bad] = 1e8
 
         # Iteratively fit and flag
@@ -398,7 +400,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
 
         # Check whether entire station is bad (high stdev or high flagged fraction). If
         # so, flag all frequencies and polarizations
-        if stdev_all > maxStddev * 5.0:
+        if stdev_all > nSigma*maxStddev:
             # Station has high stddev relative to median bandpass
             logging.info('Flagged station {0} (pol {1}) due to high stddev '
                   '({2})'.format(s, pol, stdev_all))
