@@ -57,7 +57,7 @@ if __name__=='__main__':
     if args.h5parm == None:
         logging.error('No h5parm given.')
         sys.exit(1)
-    
+
     if not os.path.isfile(args.h5parm):
         logging.critical("Missing h5parm file.")
         sys.exit(1)
@@ -107,6 +107,7 @@ if __name__=='__main__':
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
                    "FLAGSTATION": operations.flagstation,
+                   "INTERPOLATE": operations.interpolate,
                    "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
