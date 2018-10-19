@@ -10,12 +10,12 @@ logging.debug('Loading INTERPOLATE module.')
 def _run_parser(soltab, parser, step):
     outSoltab = parser.getstr( step, 'outSoltab') # no default
     axisToRegrid = parser.getstr( step, 'axisToRegrid') # no default
-    delta = parser.getfloat( step, 'delta') # no default
-    newDelta = parser.getfloat( step, 'newDelta') # no default
+    newDelta = parser.getstr( step, 'newDelta') # no default
+    delta = parser.getstr( step, 'delta', '')
     maxFlaggedWidth = parser.getint( step, 'maxFlaggedWidth', 0)
 
-    parser.checkSpelling( step, soltab, ['outSoltab', 'axisToRegrid', 'delta', 'newDelta', 'maxFlaggedWidth'])
-    return run( soltab, outSoltab, axisToRegrid, delta, newdelta, maxFlaggedWidth)
+    parser.checkSpelling( step, soltab, ['outSoltab', 'axisToRegrid', 'newDelta', 'delta', 'maxFlaggedWidth'])
+    return run( soltab, outSoltab, axisToRegrid, newdelta, delta, maxFlaggedWidth)
 
 
 def _regrid_axis(vals, delta, newdelta):
@@ -81,7 +81,7 @@ def _convert_strval(val):
     return val
 
 
-def run( soltab, outsoltab, axisToRegrid, delta, newdelta, maxFlaggedWidth=0):
+def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0):
     """
     This operation for LoSoTo implements regridding and linear interpolation of data for an axis.
     WEIGHT: compliant
@@ -94,11 +94,12 @@ def run( soltab, outsoltab, axisToRegrid, delta, newdelta, maxFlaggedWidth=0):
     axisToRegrid : str
         Name of the axis for which regridding/interpolation will be done
 
-    delta : float
-        Fundamental width between samples in axisToRegrid
+    newdelta : float or str
+        Fundamental width between samples after regridding. E.g., "100kHz" or "10s"
 
-    newdelta : float
-        Fundamental width between samples after regridding
+    delta : float or str, optional
+        Fundamental width between samples in axisToRegrid. E.g., "100kHz" or "10s". If "",
+        it is calculated from the axisToRegrid values
 
     maxFlaggedWidth : int, optional
         Maximum allowable width in number of samples (after regridding) above which
@@ -113,8 +114,13 @@ def run( soltab, outsoltab, axisToRegrid, delta, newdelta, maxFlaggedWidth=0):
     if axisToRegrid not in ['freq', 'time']:
         logging.error('Axis \"'+axisToRegrid+'\" must be either time or freq.')
         return 1
-    delta = _convert_strval(delta)
     newdelta = _convert_strval(newdelta)
+    if delta == "":
+        deltas = soltab.getAxisValues(axisToRegrid)[1:] - soltab.getAxisValues(axisToRegrid)[:-1]
+        delta = np.min(deltas)
+        logging.info('Using {} for delta'.format(delta))
+    else:
+        delta = _convert_strval(delta)
 
     # Regrid axis
     axisind = soltab.getAxesNames().index(axisToRegrid)
