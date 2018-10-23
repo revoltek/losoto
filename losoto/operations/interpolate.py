@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
     maxFlaggedWidth = parser.getint( step, 'maxFlaggedWidth', 0)
 
     parser.checkSpelling( step, soltab, ['outSoltab', 'axisToRegrid', 'newDelta', 'delta', 'maxFlaggedWidth'])
-    return run( soltab, outSoltab, axisToRegrid, newdelta, delta, maxFlaggedWidth)
+    return run( soltab, outSoltab, axisToRegrid, newDelta, delta, maxFlaggedWidth)
 
 
 def _regrid_axis(vals, delta, newdelta):
@@ -41,7 +41,6 @@ def _regrid_axis(vals, delta, newdelta):
     offset = newdelta / 2.0 - 0.5 * delta
     freqmin = np.min(vals) + offset
     freqmax = np.max(vals) + offset
-    newgrid = np.floor((vals-np.min(vals)) / newdelta)
     vals_new  = np.arange(freqmin, freqmax + newdelta / 2.0, newdelta)
 
     return vals_new
