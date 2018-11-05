@@ -13,9 +13,10 @@ def _run_parser(soltab, parser, step):
     newDelta = parser.getstr( step, 'newDelta') # no default
     delta = parser.getstr( step, 'delta', '')
     maxFlaggedWidth = parser.getint( step, 'maxFlaggedWidth', 0)
+    log = parser.getbool( step, 'log', False )
 
-    parser.checkSpelling( step, soltab, ['outSoltab', 'axisToRegrid', 'newDelta', 'delta', 'maxFlaggedWidth'])
-    return run( soltab, outSoltab, axisToRegrid, newDelta, delta, maxFlaggedWidth)
+    parser.checkSpelling( step, soltab, ['outSoltab', 'axisToRegrid', 'newDelta', 'delta', 'maxFlaggedWidth', 'log'])
+    return run( soltab, outSoltab, axisToRegrid, newDelta, delta, maxFlaggedWidth, log)
 
 
 def _regrid_axis(vals, delta, newdelta):
@@ -80,7 +81,7 @@ def _convert_strval(val):
     return val
 
 
-def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0):
+def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0, log=False):
     """
     This operation for LoSoTo implements regridding and linear interpolation of data for an axis.
     WEIGHT: compliant
@@ -105,6 +106,9 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0)
         interpolated values are flagged (e.g., maxFlaggedWidth = 5 would allow gaps of
         5 samples or less to be interpolated across but gaps of 6 or more would be
         flagged)
+
+    log : bool, optional
+        Interpolation is done in log10 space, by default False
     """
     # Check inputs
     if axisToRegrid not in soltab.getAxesNames():
@@ -120,6 +124,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0)
         logging.info('Using {} for delta'.format(delta))
     else:
         delta = _convert_strval(delta)
+    if soltab.getType() == 'amplitude' and not log:
+        logging.warning('Amplitude solution tab detected and log=False. Amplitude solution tables should be treated in log space.')
 
     # Regrid axis
     axisind = soltab.getAxesNames().index(axisToRegrid)
@@ -135,6 +141,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0)
         mask = np.not_equal(weights, 0.0)
         if np.sum(mask) > 2:
             # If there are at least two unflagged points, interpolate with mask
+            if log:
+                vals = np.log10(vals)
             new_vals[selection] = np.interp(new_axisvals, orig_axisvals[mask], vals[mask])
 
             # For the weights, interpolate without the mask
@@ -162,6 +170,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0)
             axesVals.append(new_axisvals)
         else:
             axesVals.append(soltab.getAxisValues(axisName))
+    if log:
+        new_vals = 10**new_vals
     s = solset.makeSoltab(soltab.getType(), outsoltab,
         axesNames=soltab.getAxesNames(), axesVals=axesVals, vals=new_vals, weights=new_weights)
     s.addHistory('CREATE by INTERPOLATE operation from '+soltab.name+'.')
