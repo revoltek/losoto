@@ -36,13 +36,15 @@ class multiprocManager(object):
                 self.inQueue.task_done()
 
 
-    def __init__(self, procs=1, funct=None):
+    def __init__(self, procs=0, funct=None):
         """
         Manager for multiprocessing
-        procs: number of processors
+        procs: number of processors, if 0 use all available
         funct: function to parallelize / note that the last parameter of this function must be the outQueue
         and it will be linked to the output queue
         """
+        if procs == 0:
+            procs = multiprocessing.cpu_count()
         self.procs = procs
         self._threads = []
         self.inQueue = multiprocessing.JoinableQueue()

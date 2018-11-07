@@ -206,9 +206,6 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
         soltab.setValues(weightVal, weight=True)
 
     elif mode == 'window':
-        if ncpu == 0:
-            import multiprocessing
-            ncpu = multiprocessing.cpu_count()
         if nmedian !=0 and nmedian % 2 == 0:
             logging.error('nmedian must be odd')
             return 1
