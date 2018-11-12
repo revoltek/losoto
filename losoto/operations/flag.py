@@ -326,10 +326,6 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
     logging.info("Flag on soltab: "+soltab.name)
 
     # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     if refAnt == '':
         refAnt = None
 

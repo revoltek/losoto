@@ -19,8 +19,6 @@ def _run_parser(soltab, parser, step):
     parser.checkSpelling( step, soltab, ['ms', 'inverse', 'useElementResponse', 'useArrayFactor', 'useChanFreq'])
     return run(soltab, ms, inverse, useElementResponse, useArrayFactor, useChanFreq)
 
-# this funct can be called by python directly
-# parameters that are non optional require the default value equal to the one defined for the parset above
 def run( soltab, ms, inverse=False, useElementResponse=True, useArrayFactor=True, useChanFreq=True ):
     """
     Generic unspecified step for easy expansion.

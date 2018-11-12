@@ -459,10 +459,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     logging.info("Flagging on soltab: "+soltab.name)
 
     # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     if refAnt == '':
         refAnt = None
     if soltabExport == '':

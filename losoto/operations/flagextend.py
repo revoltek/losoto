@@ -92,10 +92,6 @@ def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
     logging.info("Extending flag on soltab: "+soltab.name)
 
     # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-    
     if axesToExt == []:
         logging.error("Please specify at least one axis to extend flag.")
         return 1

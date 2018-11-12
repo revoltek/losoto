@@ -564,11 +564,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     except ImportError:
         import losoto.progressbar as progressbar
 
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     # Get screen type
     screen_type = soltab.getType()
     if screen_type not in ['phase', 'amplitude', 'tec']:

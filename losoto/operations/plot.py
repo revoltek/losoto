@@ -315,10 +315,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     solset = soltab.getSolset()
     soltabsToAdd = [ solset.getSoltab(soltabName) for soltabName in soltabsToAdd ]
 
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     cmesh = False
     if len(axesInPlot) == 2:
         cmesh = True

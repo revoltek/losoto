@@ -153,11 +153,6 @@ def _screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
     except ImportError:
         import losoto.progressbar as progressbar
 
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     ra = [r for r, d in directions]
     dec = [d for r, d in directions]
     directions = np.array([ra, dec]) * 180.0 / np.pi
@@ -224,11 +219,6 @@ def _screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
         import progressbar
     except ImportError:
         import losoto.progressbar as progressbar
-
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     ra = [r for r, d in directions]
     dec = [d for r, d in directions]
