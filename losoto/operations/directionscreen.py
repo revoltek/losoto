@@ -394,11 +394,6 @@ def run(soltab, outSoltab='tecscreen', height=200.0e3, order=12,
     import re
     import os
 
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     # Get screen type
     screen_type = soltab.getType()
     if screen_type not in ['phase', 'tec']:

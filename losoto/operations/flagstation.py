@@ -364,10 +364,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
         sigma_div[median_flagged] = 1e8
         sigma_orig = sigma_div.copy()
 
-        # Before doing the fitting, flag any solutions that deviate from the model bandpass by
-        # a large factor to avoid biasing the first fit
+        # Before doing the fitting, renormalize and flag any solutions that deviate from
+        # the model bandpass by a large factor to avoid biasing the first fit
         _, bp_sp = _fit_bandpass(freqs, np.log10(amps_div), sigma_div, band, do_fit=False)
-        bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > 0.2)
+        normval = np.median(np.log10(amps_div) - bp_sp) # value to normalize model to data
+        amps_div /= 10**normval
+        bad = np.where(np.abs(np.array(bp_sp) - np.log10(amps_div)) > 0.2)
         sigma_div[bad] = 1e8
 
         # Iteratively fit and flag
@@ -398,7 +400,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
 
         # Check whether entire station is bad (high stdev or high flagged fraction). If
         # so, flag all frequencies and polarizations
-        if stdev_all > maxStddev * 5.0:
+        if stdev_all > nSigma*maxStddev:
             # Station has high stddev relative to median bandpass
             logging.info('Flagged station {0} (pol {1}) due to high stddev '
                   '({2})'.format(s, pol, stdev_all))
@@ -457,10 +459,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     logging.info("Flagging on soltab: "+soltab.name)
 
     # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
-
     if refAnt == '':
         refAnt = None
     if soltabExport == '':
@@ -506,7 +504,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
             weights_arraytmp[:, s, :, :] = w
         weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
-        soltab.flush()
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, maxFlaggedFraction={1}, '
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
     else:
@@ -526,7 +523,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
             weights_arraytmp[:, s, :, :] = w
         weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
-        soltab.flush()
         soltab.addHistory('FLAGSTATION (mode=phaseresid, maxFlaggedFraction={0}, '
                           'nSigma={1}'.format(maxFlaggedFraction, nSigma))
 

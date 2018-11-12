@@ -57,7 +57,7 @@ if __name__=='__main__':
     if args.h5parm == None:
         logging.error('No h5parm given.')
         sys.exit(1)
-    
+
     if not os.path.isfile(args.h5parm):
         logging.critical("Missing h5parm file.")
         sys.exit(1)
@@ -99,7 +99,6 @@ if __name__=='__main__':
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
-                   #"CORRFUNCT": operations.corrfunct,
                    "POLALIGN": operations.polalign,
                    "DIRECTIONSCREEN": operations.directionscreen,
                    "DUPLICATE": operations.duplicate,
@@ -107,7 +106,8 @@ if __name__=='__main__':
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
                    "FLAGSTATION": operations.flagstation,
-                   "LOFARBEAM": operations.lofarbeam,
+                   "INTERPOLATE": operations.interpolate,
+                   #"LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
                    "PLOTSCREEN": operations.plotscreen,
@@ -120,7 +120,6 @@ if __name__=='__main__':
                    "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
                    "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,
                    "TEC": operations.tec,
-                   #"SMOOTHCLOCK": operations.smoothclock,
                    #"TECFIT": operations.tecfit,
                    #"TECJUMP": operations.tecjump,
                    #"TECSCREEN": operations.tecscreen,

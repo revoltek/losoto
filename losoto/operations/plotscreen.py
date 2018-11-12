@@ -628,9 +628,6 @@ def _make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         os.makedirs(root_dir)
     except OSError:
         pass
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     if height == 0.0:
         N_stations = 1 # screens are single-station screens

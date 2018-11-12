@@ -12,9 +12,10 @@ def _run_parser(soltab, parser, step):
     mode = parser.getstr( step, 'mode', 'runningmedian' )
     degree = parser.getint( step, 'degree', 1 )
     replace = parser.getbool( step, 'replace', False )
+    log = parser.getbool( step, 'log', False )
 
-    parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace'])
-    return run(soltab, axesToSmooth, size, mode, degree, replace)
+    parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace', 'log'])
+    return run(soltab, axesToSmooth, size, mode, degree, replace, log)
 
 def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -98,7 +99,7 @@ def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
     return np.convolve( m[::-1], y, mode='valid')
 
 
-def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False):
+def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False, log=False):
     """
     A smoothing function: running-median on an arbitrary number of axes, running polyfit and Savitzky-Golay on one axis, or set all solutions to the mean/median value.
     WEIGHT: flag ready.
@@ -119,6 +120,9 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
 
     replace : bool, optional
         Flagged data are replaced with smoothed value and unflagged, by default False.
+
+    log : bool, optional
+        clip is done in log10 space, by default False
     """
 
     import numpy as np
@@ -149,8 +153,12 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             del size[i]
             logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
+    if soltab.getType() == 'amplitude' and not log:
+        logging.warning('Amplitude solution tab detected and log=False. Amplitude solution tables should be treated in log space.')
+
     if mode == 'median' or mode == 'mean':
         vals = soltab.getValues(retAxesVals=False)
+        if log: vals = np.log10(vals)
         weights = soltab.getValues(retAxesVals=False, weight=True)
         np.putmask(vals, weights==0, np.nan)
         idx_axes = [soltab.getAxesNames().index(axisToSmooth) for axisToSmooth in axesToSmooth]
@@ -170,6 +178,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             vals = np.angle(vals)
 
         # write back
+        if log: vals = 10**vals
         soltab.setValues(vals)
         if replace:
             weights[ (weights == 0) ] = 1
@@ -181,6 +190,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
 
             # skip completely flagged selections
             if (weights == 0).all(): continue
+            if log: vals = np.log10(vals)
 
             if mode == 'runningmedian':
                 vals_bkp = vals[ weights == 0 ]
@@ -251,6 +261,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
                 logging.error('Mode must be: runningmedian, runningpoly, savitzky-golay, median or mean')
                 return 1
 
+            if log: valsnew = 10**valsnew
             soltab.setValues(valsnew, selection)
             if replace: soltab.setValues(weights, selection, weight=True)
 
