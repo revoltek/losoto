@@ -138,7 +138,7 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     new_weights = np.zeros(new_shape, dtype='float')
 
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=[axisToRegrid], weight=True):
-        mask = np.not_equal(weights, 0.0)
+        mask = np.logical_or(np.not_equal(weights, 0.0), ~np.isnan(vals))
         if np.sum(mask) > 2:
             # If there are at least two unflagged points, interpolate with mask
             if log:
