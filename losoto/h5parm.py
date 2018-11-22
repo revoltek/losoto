@@ -1081,7 +1081,7 @@ class Soltab( object ):
            ( type(data) is np.ndarray or \
            np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
         
-            logging.debug('Optimizing selection reading '+str(selection))
+            #logging.debug('Optimizing selection reading '+str(selection))
             # for performances is important to minimize the fetched data
             # move all slices at the first selection and lists afterwards (first list is allowd in firstselection)
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
