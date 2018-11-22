@@ -399,6 +399,10 @@ def getResidualPhaseWraps(avgResiduals, freqs):
     wraps = np.zeros((nSt, ), dtype=np.float)
     tmpflags = flags
     tmpfreqs = freqs[np.logical_not(tmpflags)]
+    steps=[0,0]
+    if np.ma.count(tmpfreqs) < 3:
+        logging.debug('Cannot unwrap, too many channels flagged') 
+        return (wraps,steps)
     (tmpbasef, steps) = getPhaseWrapBase(tmpfreqs)
     basef = np.zeros(freqs.shape)
     basef[np.logical_not(tmpflags)] = tmpbasef

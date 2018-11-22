@@ -19,7 +19,7 @@ def _run_parser(soltab, parser, step):
     return run( soltab, mode, maxFlaggedFraction, nSigma, telescope, refAnt, soltabExport, ncpu )
 
 
-def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, s, outQueue):
+def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
     """
     Flags bad phase residuals relative to mean by setting the corresponding weights to 0.0
 
@@ -42,6 +42,9 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, s, 
 
     maxStddev : float
         Maximum allowable standard deviation
+
+    ants : list
+        List of station names
 
     s : int
         Station index
@@ -95,15 +98,15 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, s, 
         # so, flag all frequencies and polarizations; if not, leave flags as they were
         if float(len(bad[0]))/float(nsols) > maxFlaggedFraction:
             # Station has high fraction of flagged solutions
-            logging.info('Flagged station {0} (pol {1}) due to high flagged fraction '
-                  '({2})'.format(s, pol, float(len(bad[0]))/float(nsols)))
+            logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
+                  '({2:.2f})'.format(anst[s], pol, float(len(bad[0]))/float(nsols)))
             weights[:, :, pol] = 0.0
 
     outQueue.put([s, weights])
 
 
 def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, maxStddev,
-                     plot, s, outQueue):
+                     plot, ants, s, outQueue):
     """
     Flags bad amplitude solutions relative to median bandpass (in log space) by setting
     the corresponding weights to 0.0
@@ -137,6 +140,9 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
 
     plot : bool
         If True, the bandpass with flags and best-fit line is plotted for each station
+
+    ants : list
+        List of station names
 
     s : int
         Station index
@@ -402,27 +408,29 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
         # so, flag all frequencies and polarizations
         if stdev_all > nSigma*maxStddev:
             # Station has high stddev relative to median bandpass
-            logging.info('Flagged station {0} (pol {1}) due to high stddev '
-                  '({2})'.format(s, pol, stdev_all))
+            logging.info('Flagged {0} (pol {1}) due to high stddev '
+                  '({2})'.format(ants[s], pol, stdev_all))
             weights[:, :, pol] = 0.0
         elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
             # Station has high fraction of flagged solutions
-            logging.info('Flagged station {0} (pol {1}) due to high flagged fraction '
-                  '({2})'.format(s, pol, float(len(bad[0]))/float(len(freqs))))
-            weights[:, :, pol] = 0.0
-        elif median_val < median_min or median_val > median_max:
-            # Station has extreme median value
-            logging.info('Flagged station {0} (pol {1}) due to extreme median value '
-                  '({2})'.format(s, pol, median_val))
+            logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
+                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(len(freqs))))
             weights[:, :, pol] = 0.0
         else:
-            # Station is OK; flag solutions with high sigma values
             flagged = np.where(sigma_div > 1e3)
             nflagged_orig = len(np.where(weights[:, :, pol] == 0.0)[0])
             weights[:, flagged[0], pol] = 0.0
             nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
-            prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
-            logging.info('Flagged {0}% of solutions for station {1} (pol {2})'.format(prcnt, s, pol))
+            median_val = np.nanmedian(amps[np.where(weights[:, :, pol] > 0.0)])
+            if median_val < median_min or median_val > median_max:
+                # Station has extreme median value
+                logging.info('Flagged {0} (pol {1}) due to extreme median value '
+                      '({2})'.format(ants[s], pol, median_val))
+                weights[:, :, pol] = 0.0
+            else:
+                # Station is OK, flag bad points only
+                prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
+                logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(prcnt, ants[s], pol))
 
     outQueue.put([s, weights])
 
@@ -496,7 +504,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
         mpm = multiprocManager(ncpu, _flag_bandpass)
         for s in range(len(soltab.ant)):
             mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
-                     telescope, nSigma, maxFlaggedFraction, 0.01, False, s])
+                     telescope, nSigma, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
         mpm.wait()
 
         # Write new weights
@@ -515,7 +523,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
         # Fill the queue
         mpm = multiprocManager(ncpu, _flag_phaseresid)
         for s in range(len(soltab.ant)):
-            mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], nSigma, maxFlaggedFraction, 0.2, s])
+            mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], nSigma, maxFlaggedFraction, 0.2, soltab.ant[:], s])
         mpm.wait()
 
         # Write new weights
