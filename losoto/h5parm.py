@@ -1023,7 +1023,7 @@ class Soltab( object ):
             # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
             else: dataVals[tuple(selection)] = np.reshape(vals, dataVals[tuple(selection)].shape)
         except:
-            logging.debug('Optimizing selection writing '+str(selection))
+            #logging.debug('Optimizing selection writing '+str(selection))
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
             subSelection = selection[:]
             # create a subSelection also for the "vals" array
