@@ -62,20 +62,24 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ant
     # Iterate over polarizations
     npols = phases.shape[2] # number of polarizations
     for pol in range(npols):
-        # Skip fully flagged polarizations
+        # Check flags
         weights_orig = weights[:, :, pol]
+        nan_flagged = np.where(np.isnan(phases[:, :, pol]))
+        weights_orig[nan_flagged] = 0.0
         if np.all(weights_orig == 0.0):
+            # Skip fully flagged polarizations
             continue
+        flagged = np.where(weights_orig == 0.0)
+        unflagged = np.where(weights_orig != 0.0)
 
         # Remove mean (to avoid wraps near +/- pi) and set flagged points to 0
         mean = np.angle( np.sum( weights_orig.flatten() * np.exp(1j*phases[:, :, pol].flatten()) ) / ( phases[:, :, pol].flatten().size * sum(weights_orig.flatten()) ) )
         phases_flagged = phases[:, :, pol]
         phases_flagged = normalize_phase(phases_flagged - mean)
-        flagged = np.where(np.logical_or(weights_orig == 0.0, phases[:, :, pol] == 0.0))
         phases_flagged[flagged] = 0.0
 
         # Iteratively fit and flag
-        nsols = phases_flagged.shape[0]*phases_flagged.shape[1]
+        nsols_unflagged = phases_flagged[unflagged].shape[0]*phases_flagged[unflagged].shape[1]
         maxiter = 5
         niter = 0
         nflag = 0
@@ -86,7 +90,7 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ant
             stdev = min(maxStddev, stdev_all)
             bad = np.where(np.abs(phases_flagged) > nSigma*stdev)
             nflag = len(bad[0])
-            if nflag == 0 or nflag == nsols:
+            if nflag == 0 or nflag == nsols_unflagged:
                 break
             if niter > 0:
                 nflag_prev = nflag
@@ -96,10 +100,10 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ant
 
         # Check whether station is bad (high flagged fraction). If
         # so, flag all frequencies and polarizations; if not, leave flags as they were
-        if float(len(bad[0]))/float(nsols) > maxFlaggedFraction:
-            # Station has high fraction of flagged solutions
+        if float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
+            # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(anst[s], pol, float(len(bad[0]))/float(nsols)))
+                  '({2:.2f})'.format(anst[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
 
     outQueue.put([s, weights])
@@ -339,7 +343,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
         return
 
     # Build arrays for fitting
-    flagged = np.where(np.logical_or(weights == 0.0, amps == 0.0))
+    flagged = np.where(np.logical_or(weights == 0.0, np.isnan(amps)))
     amps_flagged = amps.copy()
     amps_flagged[flagged] = np.nan
     sigma = weights.copy()
@@ -362,13 +366,16 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             median_val = np.nanmedian(amps_div)
         amps_div /= median_val
         sigma_div = np.median(sigma[:, :, pol], axis=0)
+        sigma_orig = sigma_div.copy()
+        unflagged = np.where(~np.isnan(amps_div))
+        nsols_unflagged = len(unflagged[0])
         median_flagged = np.where(np.isnan(amps_div))
         amps_div[median_flagged] = 1.0
         sigma_div[median_flagged] = 1e8
         median_flagged = np.where(amps_div <= 0.0)
         amps_div[median_flagged] = 1.0
         sigma_div[median_flagged] = 1e8
-        sigma_orig = sigma_div.copy()
+        nsols_unflagged = len()
 
         # Before doing the fitting, renormalize and flag any solutions that deviate from
         # the model bandpass by a large factor to avoid biasing the first fit
@@ -389,7 +396,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             stdev = min(maxStddev, stdev_all)
             bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > nSigma*stdev)
             nflag = len(bad[0])
-            if nflag == 0 or nflag == len(freqs):
+            if nflag == 0 or nflag == nsols_unflagged:
                 break
             if niter > 0:
                 nflag_prev = nflag
@@ -411,10 +418,10 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             logging.info('Flagged {0} (pol {1}) due to high stddev '
                   '({2})'.format(ants[s], pol, stdev_all))
             weights[:, :, pol] = 0.0
-        elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
-            # Station has high fraction of flagged solutions
+        elif float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
+            # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(len(freqs))))
+                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
         else:
             flagged = np.where(sigma_div > 1e3)
