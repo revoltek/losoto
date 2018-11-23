@@ -4,6 +4,8 @@ import numpy as np
 import numpy.ma as ma
 import sys
 import logging
+from multiprocessing import Pool
+
 has_fitting=True
 try:
     import casacore.tables # must be loaded before expion - used in other operations as lofarbeam
@@ -375,6 +377,142 @@ def getClockTECFit(
     if fit3rdorder:
         return (tecarray, clockarray,tec3rdarray)
     return (tecarray, clockarray)
+
+def getClockTECFitStation(
+    ph,
+    freq,
+    stationname,
+    initSol=[],
+    returnResiduals=True,
+    chi2cut=1e8,
+    fit3rdorder=False,
+    double_search_space=False
+    ):
+    '''get the c/t separation per station'''
+    nT = ph.shape[0]
+    nF = freq.shape[0]
+    data = ph
+    tecarrayst = np.zeros((nT,), dtype=np.float32)
+    clockarrayst = np.zeros((nT,), dtype=np.float32)
+
+    if returnResiduals:
+        residualarrayst = np.zeros((nT, nF), dtype=np.float32)
+    if fit3rdorder:
+        tec3rdarrayst= np.zeros((nT,), dtype=np.float32)
+    A = np.ones((nF, 2+fit3rdorder), dtype=np.float)
+    A[:, 1] = freq * 2 * np.pi * 1e-9
+    A[:, 0] = -8.44797245e9 / freq
+    if fit3rdorder:
+        A[:, 2] = -1e21 / freq**3
+    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freq.shape[0], ), dtype=np.float)) 
+    succes=False
+    initprevsol=False
+    nrFail=0
+    sol = np.zeros((2+fit3rdorder), dtype=np.float)
+    prevsol = np.zeros_like(sol)
+    n3rd=0
+    for itm in xrange(nT):
+        datatmp=np.ma.copy(data[itm, :])
+        if itm == 0 or not succes:
+            if itm == 0 or not initprevsol:
+                if hasattr(initSol, '__len__') and len(initSol) > 0 :
+                    sol[:initSol.shape[0]]=initSol
+                    ndt=1
+                    ndtec=1
+                    if fit3rdorder:
+                        n3rd=1
+                else:
+                    sol[:]=0
+                    if fit3rdorder:
+                        n3rd=200
+                    if 'CS' in stationname:
+                        ndt=4
+                        ndtec=10
+                        if 'LBA' in stationname:
+                            ndt=2
+                            ndtec=40
+                    else:
+                        if 'RS' in stationname:
+                            ndt=200
+                            ndtec=80
+                        else:
+                            # large TEC variation for EU stations
+                            ndt=200
+                            ndtec=160
+                        if 'LBA' in stationname:
+                            ndt=60
+                            # no init clock possible due to large TEC effect
+                            #stepsize of dtec is small
+                            ndtec=320
+            else:
+                # further steps with non success
+                sol[:] = prevsol[:]
+                ndtec=min(nrFail+1,100)
+                if not 'CS' in stationname:
+                    ndt=min(nrFail+1,200)
+                else:
+                    ndt=min(nrFail+1,4)
+                if fit3rdorder:
+                    n3rd=min(nrFail+1,200)
+            datatmpist = datatmp[:]
+            if datatmpist.count() / float(nF) > 0.5:
+                # do brutforce and update data, unwrp pdata,update flags
+                par,datatmp[:] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[:])
+                sol[:] = par[:]
+        #now do the real fitting
+        datatmpist=datatmp[:]
+        if datatmpist.count() / float(nF) < 0.5:
+            logging.debug("Too many data points flagged t=%d st=%s flags=%d" % (itm,stationname,data[itm,:].count()) + str(sol[:]))
+            sol[:] = [-10.,]*sol.shape[0]
+        else:
+            fitdata=np.dot(sol,A.T)
+            datatmpist=unwrapPhases(datatmpist,fitdata)
+            mymask=datatmpist.mask
+            maskedfreq=np.ma.array(freq,mask=mymask)
+            A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
+            if datatmpist.count() / float(nF) < 0.5:
+                logging.debug("Too many data points flagged t=%d st=%s flags=%d" % (itm,stationname,data[itm,:].count()) + str(sol[:]))
+                sol[:] = [-10.,]*sol.shape[0]
+            else:
+                sol[:] = np.ma.dot(np.linalg.inv(np.ma.dot(A2.T, A2)), np.ma.dot(A2.T, datatmpist)).T
+            if initprevsol and np.abs((sol[1]-prevsol[1])/steps[1])>0.5 and (np.abs((sol[1]-prevsol[1])/steps[1])>0.75 or np.abs(np.sum((sol-prevsol)/steps,axis=-1))>0.5*A2.shape[0]):
+                #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
+                sol[:]-=np.round((sol[1]-prevsol[1])/steps[1])*steps
+        # calculate chi2 per station
+      
+        residual = data[itm] - np.dot(A, sol)
+        residual = np.ma.remainder(residual + np.pi, 2 * np.pi) - np.pi
+        chi2 = np.ma.sum(np.square(np.degrees(residual)), axis=0) / nF
+
+        if returnResiduals:
+            residualarrayst[itm] = residual
+
+        chi2select = (chi2 > chi2cut) or (sol[0] < -5) # select bad points
+        chi2select = chi2select or initprevsol*np.sum(np.abs((sol-prevsol)/steps),axis=-1)>(0.3*sol.shape[0]*(1+nrFail)) #also discard data where there is a "half" jump for any parameter wrst the previous solution (if previous solution exists). Multiply with number of fails, since after a large number of fails there is no clear match with the previous solution expected anyway...
+        if not initprevsol:
+            prevsol= sol[:]
+        if  chi2select:
+            logging.debug('High chi2 of fit, itm: %d  ' % (itm) + 'station:' + stationname)
+            succes = False
+            nrFail += 1
+        else:
+            prevsol = 0.5 * prevsol + 0.5 * np.copy(sol)
+            succes = True
+            initprevsol = True
+            nrFail = 0
+        tecarrayst[itm] = sol[0]
+        clockarrayst[itm] = sol[1]
+        if fit3rdorder:
+            tec3rdarrayst[itm]=sol[2]
+    if returnResiduals:
+        if fit3rdorder:
+            return (tecarrayst, clockarrayst, residualarrayst,tec3rdarrayst)
+        else:
+            return (tecarrayst, clockarrayst, residualarrayst)
+    if fit3rdorder:
+        return (tecarrayst, clockarrayst,tec3rdarrayst)
+    return (tecarrayst, clockarrayst)
+
           
 
 def getPhaseWrapBase(freqs):
@@ -477,6 +615,12 @@ def get_first_good(data,axis=1,check=lambda x:np.logical_and(x!=-10,x !=0)):
         ndata.append(np.take(data,a[abs(1-axis)][idx],axis=abs(1-axis))[i])
     return np.array(ndata)
 
+
+def merge_ct_args(args):
+    '''hel[per function for multiprocessing'''
+    return getClockTECFitStation(*args)
+
+
 def doFit(
     phases,
     mask,
@@ -494,6 +638,7 @@ def doFit(
     circular=False,
     initSol=[],
     initoffsets=[],
+    n_proc=10
     ):
     # make sure order of axes is as expected
     stidx = axes.index('ant')
@@ -593,6 +738,12 @@ def doFit(
         tec3rd = np.zeros((nT, nSt, npol), dtype=np.float32)
    
     # better not to use fitoffset
+    tecarray = np.zeros((nT, nSt), dtype=np.float32)
+    clockarray = np.zeros((nT, nSt), dtype=np.float32)
+
+    residualarray = np.zeros((nT, nF, nSt), dtype=np.float32)
+    if fit3rdorder:
+        tec3rdarray= np.zeros((nT, nSt), dtype=np.float32)
     for pol in xrange(npol):
         # get a good guesss without offset
         # logging.debug("sending masked data "+str(data[:,:,:,pol].count()))
@@ -600,27 +751,37 @@ def doFit(
         if removePhaseWraps:
             initialchi2cut = 30000.  # this number is quite arbitrary
         if fit3rdorder:
-            (tecarray, clockarray, residualarray,tec3rdarray) = getClockTECFit(
-                np.ma.copy(data[:, :, :, pol]),
-                freqs,
-                stations,
-                initSol=initSol,
-                returnResiduals=True,
-                fit3rdorder=True,
-                chi2cut=initialchi2cut,
-                double_search_space=circular and combine_pol
-                )
+              poolargs=[]
+              for ist in xrange(nSt):
+                  poolargs.append((np.ma.copy(data[:, :, ist, pol]),
+                                   freqs,
+                                   stations[ist],
+                                   [],
+                                   True,
+                                   initialchi2cut,
+                                   True,
+                                   circular and combine_pol
+                               ))
+              p=Pool(processes=n_proc)
+              result=p.map(merge_ct_args,poolargs)
+              for ist,tc in enumerate(result):
+                  tecarray[:, ist], clockarray[:, ist],residualarray[:,:,ist],tec3rdarray[:,ist] = tc
         else:
-            (tecarray, clockarray, residualarray) = getClockTECFit(
-                np.ma.copy(data[:, :, :, pol]),
-                freqs,
-                stations,
-                initSol=initSol,
-                returnResiduals=True,
-                fit3rdorder=False,
-                chi2cut=initialchi2cut,
-                double_search_space=circular and combine_pol
-                )
+              poolargs=[]
+              for ist in xrange(nSt):
+                  poolargs.append((np.ma.copy(data[:, :, ist, pol]),
+                                   freqs,
+                                   stations[ist],
+                                   [],
+                                   True,
+                                   initialchi2cut,
+                                   False,
+                                   circular and combine_pol
+                               ))
+              p=Pool(processes=n_proc)
+              result=p.map(merge_ct_args,poolargs)
+              for ist,tc in enumerate(result):
+                  tecarray[:, ist], clockarray[:, ist],residualarray[:,:,ist] = tc
         if removePhaseWraps:
             # correctfrist times only,try to make init correct ?
             #corrects wraps based on spatial correlation (averaged in time), only works for long time observations, not testted for LBA
@@ -644,32 +805,40 @@ def doFit(
             initsol[:, 1] = get_first_good(clockarray[:, :]) + wraps * steps[1]
             logging.debug('Initsol TEC, pol %d: ' % pol + str(initsol[:, 0]))
             logging.debug('Initsol clock, pol %d: ' % pol + str(initsol[:, 1]))
-            tecarray = 0
-            clockarray = 0
-            residualarray = 0
             # is it needed to redo the fitting? this is the time bottleneck
             if fit3rdorder:
-                (tec[:, :, pol], clock[:, :, pol],tec3rd[:, :, pol]) = getClockTECFit(
-                    np.ma.copy(data[:, :, :, pol]),
-                    freqs,
-                    stations,
-                    initSol=initsol,
-                    returnResiduals=False,
-                    fit3rdorder=True,
-                    chi2cut=chi2cut,
-                    double_search_space=circular and combine_pol
-                    )
+              poolargs=[]
+              for ist in xrange(nSt):
+                  poolargs.append((np.ma.copy(data[:, :, ist, pol]),
+                                   freqs,
+                                   stations[ist],
+                                   initsol[ist],
+                                   False,
+                                   chi2cut,
+                                   True,
+                                   circular and combine_pol
+                               ))
+              p=Pool(processes=n_proc)
+              result=p.map(merge_ct_args,poolargs)
+              for ist,tc in enumerate(result):
+                  tec[:, ist, pol], clock[:, ist, pol],tec3rd[:,ist,pol] = tc
             else:
-                (tec[:, :, pol], clock[:, :, pol]) = getClockTECFit(
-                    np.ma.copy(data[:, :, :, pol]),
-                    freqs,
-                    stations,
-                    initSol=initsol,
-                    returnResiduals=False,
-                    fit3rdorder=False,
-                    chi2cut=chi2cut,
-                    double_search_space=circular and combine_pol
-                    )
+              poolargs=[]
+              for ist in xrange(nSt):
+                  poolargs.append((np.ma.copy(data[:, :, ist, pol]),
+                                   freqs,
+                                   stations[ist],
+                                   initsol[ist],
+                                   False,
+                                   chi2cut,
+                                   False,
+                                   circular and combine_pol
+                               ))
+              p=Pool(processes=n_proc)
+              result=p.map(merge_ct_args,poolargs)
+              for ist,tc in enumerate(result):
+                  tec[:, ist, pol], clock[:, ist, pol] = tc
+
         else:
             tec[:, :, pol] = tecarray[:, :]+ wraps * steps[0]
             clock[:, :, pol] = clockarray[:, :]+ wraps * steps[1]

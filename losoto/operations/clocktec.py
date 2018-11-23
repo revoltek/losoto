@@ -17,12 +17,13 @@ def _run_parser(soltab, parser, step):
     fit3rdorder = parser.getbool( step, 'fit3rdorder', False )
     circular = parser.getbool( step, 'circular', False )
     reverse = parser.getbool( step, 'reverse', False )
+    nproc = parser.getint( step, 'nproc', 10 )
 
-    parser.checkSpelling( step, soltab, ['flagBadChannels', 'flagCut', 'chi2cut', 'combinePol', 'removePhaseWraps', 'fit3rdorder', 'circular', 'reverse'])
-    return run(soltab, flagBadChannels, flagCut, chi2cut, combinePol, removePhaseWraps, fit3rdorder, circular, reverse)
+    parser.checkSpelling( step, soltab, ['flagBadChannels', 'flagCut', 'chi2cut', 'combinePol', 'removePhaseWraps', 'fit3rdorder', 'circular', 'reverse','nproc'])
+    return run(soltab, flagBadChannels, flagCut, chi2cut, combinePol, removePhaseWraps, fit3rdorder, circular, reverse,nproc)
 
 
-def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=False, removePhaseWraps=True, fit3rdorder=False, circular=False, reverse=False ):
+def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=False, removePhaseWraps=True, fit3rdorder=False, circular=False, reverse=False,nproc=10 ):
     """
     Separate phase solutions into Clock and TEC.
     The Clock and TEC values are stored in the specified output soltab with type 'clock', 'tec', 'tec3rd'.
@@ -97,7 +98,7 @@ def run( soltab, flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=Fal
             flags = np.swapaxes(np.swapaxes(flags, 0, axes.index('time'))[::-1], 0, axes.index('time'))
 
         result=doFit(vals,flags==0,freqs,stations,station_positions,axes,\
-                         flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps,fit3rdorder=fit3rdorder,circular=circular)
+                         flagBadChannels=flagBadChannels,flagcut=flagCut,chi2cut=chi2cut,combine_pol=combinePol,removePhaseWraps=removePhaseWraps,fit3rdorder=fit3rdorder,circular=circular,n_proc=nproc)
         if fit3rdorder:
             clock,tec,offset,tec3rd=result
             if reverse: 
