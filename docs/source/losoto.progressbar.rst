@@ -1,19 +1,19 @@
-losoto\.progressbar package
-===========================
+losoto.progressbar package
+==========================
 
 Submodules
 ----------
 
-losoto\.progressbar\.compat module
-----------------------------------
+losoto.progressbar.compat module
+--------------------------------
 
 .. automodule:: losoto.progressbar.compat
     :members:
     :undoc-members:
     :show-inheritance:
 
-losoto\.progressbar\.widgets module
------------------------------------
+losoto.progressbar.widgets module
+---------------------------------
 
 .. automodule:: losoto.progressbar.widgets
     :members:

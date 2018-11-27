@@ -19,22 +19,23 @@ def _run_parser(soltab, parser, step):
     return run( soltab, mode, maxFlaggedFraction, nSigma, telescope, refAnt, soltabExport, ncpu )
 
 
-def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
+def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
     """
-    Flags bad phase residuals relative to mean by setting the corresponding weights to 0.0
-
-    Note: Flags are not time- or frequency-dependent
+    Flags bad residuals relative to mean by setting the corresponding weights to 0.0
 
     Parameters
     ----------
-    phases : array
-        Array of phases as [time, ant, freq, pol]
+    vals : array
+        Array of values as [time, ant, freq, pol]
 
     weights : array
         Array of weights as [time, ant, freq, pol]
 
+    soltype : str
+        Type of solutions: phase or amplitude
+
     nSigma : float
-        Number of sigma for flagging. Phases outside of nSigma*stddev are flagged
+        Number of sigma for flagging. vals outside of nSigma*stddev are flagged
 
     maxFlaggedFraction : float
         Maximum allowable fraction of flagged frequencies. Stations with higher fractions
@@ -60,33 +61,49 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ant
         return
 
     # Iterate over polarizations
-    npols = phases.shape[2] # number of polarizations
+    npols = vals.shape[2] # number of polarizations
     for pol in range(npols):
-        # Skip fully flagged polarizations
+        # Check flags
         weights_orig = weights[:, :, pol]
+        if soltype=='phase':
+            bad_sols = np.where(np.isnan(vals[:, :, pol]))
+        else:
+            bad_sols = np.where(np.logical_or(np.isnan(vals[:, :, pol]), vals[:, :, pol] <= 0.0))
+        weights_orig[bad_sols] = 0.0
         if np.all(weights_orig == 0.0):
+            # Skip fully flagged polarizations
             continue
+        flagged = np.where(weights_orig == 0.0)
+        unflagged = np.where(weights_orig != 0.0)
+
+        if soltype == 'amplitude':
+            # Take the log
+            vals[:, :, pol] = np.log10(vals[:, :, pol])
 
         # Remove mean (to avoid wraps near +/- pi) and set flagged points to 0
-        mean = np.angle( np.sum( weights_orig.flatten() * np.exp(1j*phases[:, :, pol].flatten()) ) / ( phases[:, :, pol].flatten().size * sum(weights_orig.flatten()) ) )
-        phases_flagged = phases[:, :, pol]
-        phases_flagged = normalize_phase(phases_flagged - mean)
-        flagged = np.where(np.logical_or(weights_orig == 0.0, phases[:, :, pol] == 0.0))
-        phases_flagged[flagged] = 0.0
+        if soltype=='phase':
+            mean = np.angle( np.nansum( weights_orig.flatten() * np.exp(1j*vals[:, :, pol].flatten()) ) / ( vals[:, :, pol].flatten().size * sum(weights_orig.flatten()) ) )
+        else:
+            mean = np.nansum( weights_orig.flatten() * vals[:, :, pol].flatten() ) / ( vals[:, :, pol].flatten().size * sum(weights_orig.flatten()) )
+        vals_flagged = vals[:, :, pol]
+        if soltype=='phase':
+            # Remove the mean to avoid wrapping issues near +/- pi
+            vals_flagged = normalize_phase(vals_flagged - mean)
+        vals_flagged[flagged] = 0.0
 
         # Iteratively fit and flag
-        nsols = phases_flagged.shape[0]*phases_flagged.shape[1]
+        nsols_unflagged = len(vals_flagged[unflagged])
         maxiter = 5
         niter = 0
         nflag = 0
         nflag_prev = -1
         weights_copy = weights_orig.copy()
         while nflag != nflag_prev and niter < maxiter:
-            stdev_all = np.sqrt(np.average(phases_flagged**2, weights=weights_copy))
+            stdev_all = np.sqrt(np.average(vals_flagged**2, weights=weights_copy))
             stdev = min(maxStddev, stdev_all)
-            bad = np.where(np.abs(phases_flagged) > nSigma*stdev)
+            bad = np.where(np.abs(vals_flagged) > nSigma*stdev)
             nflag = len(bad[0])
-            if nflag == 0 or nflag == nsols:
+            if nflag == 0 or nflag == nsols_unflagged:
                 break
             if niter > 0:
                 nflag_prev = nflag
@@ -95,12 +112,19 @@ def _flag_phaseresid(phases, weights, nSigma, maxFlaggedFraction, maxStddev, ant
             niter += 1
 
         # Check whether station is bad (high flagged fraction). If
-        # so, flag all frequencies and polarizations; if not, leave flags as they were
-        if float(len(bad[0]))/float(nsols) > maxFlaggedFraction:
-            # Station has high fraction of flagged solutions
+        # so, flag all frequencies and polarizations
+        if float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
+            # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(anst[s], pol, float(len(bad[0]))/float(nsols)))
+                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
+        else:
+            # Station is OK, flag bad points only
+            nflagged_orig = len(np.where(weights_orig == 0.0)[0])
+            nflagged_new = len(np.where(weights_copy == 0.0)[0])
+            weights[:, :, pol] = weights_copy
+            prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights_orig.shape)) * 100.0
+            logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(prcnt, ants[s], pol))
 
     outQueue.put([s, weights])
 
@@ -339,7 +363,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
         return
 
     # Build arrays for fitting
-    flagged = np.where(np.logical_or(weights == 0.0, amps == 0.0))
+    flagged = np.where(np.logical_or(weights == 0.0, np.isnan(amps)))
     amps_flagged = amps.copy()
     amps_flagged[flagged] = np.nan
     sigma = weights.copy()
@@ -362,13 +386,15 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             median_val = np.nanmedian(amps_div)
         amps_div /= median_val
         sigma_div = np.median(sigma[:, :, pol], axis=0)
+        sigma_orig = sigma_div.copy()
+        unflagged = np.where(~np.isnan(amps_div))
+        nsols_unflagged = len(unflagged[0])
         median_flagged = np.where(np.isnan(amps_div))
         amps_div[median_flagged] = 1.0
         sigma_div[median_flagged] = 1e8
         median_flagged = np.where(amps_div <= 0.0)
         amps_div[median_flagged] = 1.0
         sigma_div[median_flagged] = 1e8
-        sigma_orig = sigma_div.copy()
 
         # Before doing the fitting, renormalize and flag any solutions that deviate from
         # the model bandpass by a large factor to avoid biasing the first fit
@@ -389,7 +415,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             stdev = min(maxStddev, stdev_all)
             bad = np.where(np.abs(bp_sp - np.log10(amps_div)) > nSigma*stdev)
             nflag = len(bad[0])
-            if nflag == 0 or nflag == len(freqs):
+            if nflag == 0 or nflag == nsols_unflagged:
                 break
             if niter > 0:
                 nflag_prev = nflag
@@ -411,10 +437,10 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
             logging.info('Flagged {0} (pol {1}) due to high stddev '
                   '({2})'.format(ants[s], pol, stdev_all))
             weights[:, :, pol] = 0.0
-        elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
-            # Station has high fraction of flagged solutions
+        elif float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
+            # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(len(freqs))))
+                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
         else:
             flagged = np.where(sigma_div > 1e3)
@@ -443,7 +469,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     Parameters
     ----------
     mode: str
-        Fitting algorithm: bandpass or phaseresid. Bandpass mode clips amplitudes relative to a model bandpass (only LOFAR is currently supported). Phaseresid mode clips residual phases relative to the mean.
+        Fitting algorithm: bandpass or resid. Bandpass mode clips amplitudes relative to a model bandpass (only LOFAR is currently supported). Resid mode clips residual phases or log(amplitudes).
 
     maxFlaggedFraction : float, optional
         This sets the maximum allowable fraction of flagged solutions above which the entire station is flagged.
@@ -472,8 +498,8 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     if soltabExport == '':
         soltabExport = None
 
-    if mode == None or mode.lower() not in ['bandpass', 'phaseresid']:
-        logging.error('Mode must be one of bandpass or phaseresid')
+    if mode == None or mode.lower() not in ['bandpass', 'resid']:
+        logging.error('Mode must be one of bandpass or resid')
         return 1
 
     # Axis order must be [time, ant, freq, pol], so reorder if necessary
@@ -487,8 +513,13 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
     pol_ind = axis_names.index('pol')
     time_ind = axis_names.index('time')
     ant_ind = axis_names.index('ant')
-    vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
-    weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+    if 'dir' in axis_names:
+        dir_ind = axis_names.index('dir')
+        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+    else:
+        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
 
     # Check for NaN solutions and flag
     flagged = np.where(np.isnan(vals_arraytmp))
@@ -516,22 +547,38 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
     else:
         solType = soltab.getType()
-        if solType != 'phase':
-           logging.error("Soltab must be of type phase for phaseresid mode.")
+        if solType not in ['phase', 'amplitude']:
+           logging.error("Soltab must be of type phase or amplitude for resid mode.")
            return 1
+        if solType == 'phase':
+            maxStddev = 0.1 # in radians
+        else:
+            maxStddev = 0.02 # in log10(amp)
 
         # Fill the queue
-        mpm = multiprocManager(ncpu, _flag_phaseresid)
-        for s in range(len(soltab.ant)):
-            mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], nSigma, maxFlaggedFraction, 0.2, soltab.ant[:], s])
-        mpm.wait()
+        if 'dir' in axis_names:
+            for d, dirname in enumerate(soltab.dir):
+                mpm = multiprocManager(ncpu, _flag_resid)
+                for s in range(len(soltab.ant)):
+                    mpm.put([vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d], solType, nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
+                mpm.wait()
+                for (s, w) in mpm.get():
+                    weights_arraytmp[:, s, :, :, d] = w
+        else:
+            mpm = multiprocManager(ncpu, _flag_resid)
+            for s in range(len(soltab.ant)):
+                mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], solType, nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
+            mpm.wait()
+            for (s, w) in mpm.get():
+                weights_arraytmp[:, s, :, :] = w
 
         # Write new weights
-        for (s, w) in mpm.get():
-            weights_arraytmp[:, s, :, :] = w
-        weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        if 'dir' in axis_names:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        else:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
-        soltab.addHistory('FLAGSTATION (mode=phaseresid, maxFlaggedFraction={0}, '
+        soltab.addHistory('FLAGSTATION (mode=resid, maxFlaggedFraction={0}, '
                           'nSigma={1}'.format(maxFlaggedFraction, nSigma))
 
     if soltabExport is not None:
