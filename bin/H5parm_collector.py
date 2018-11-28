@@ -75,14 +75,14 @@ for insoltab in insoltabs:
             if k not in pointingNames:
                 pointingNames.append(k)
                 pointingDirections.append(v)
-        
+
         # collect anntennas
         ants = solset.getAnt()
         for k, v in ants.items():
             if k not in antennaNames:
                 antennaNames.append(k)
                 antennaPositions.append(v)
-        
+
     # create output axes
     logging.info("Sorting output axes...")
     axes = soltabs[0].getAxesNames()
@@ -124,7 +124,7 @@ for insoltab in insoltabs:
 
     logging.info('Writing output...')
     solsetOutName = args.outsolset
-    soltabOutName = args.insoltab
+    soltabOutName = insoltab
 
     # create solset (and add all antennas and directions of other solsets)
     if solsetOutName in h5Out.getSolsetNames():
