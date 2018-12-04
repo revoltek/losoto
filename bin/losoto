@@ -107,7 +107,7 @@ if __name__=='__main__':
                    "FLAGEXTEND": operations.flagextend,
                    "FLAGSTATION": operations.flagstation,
                    "INTERPOLATE": operations.interpolate,
-                   #"LOFARBEAM": operations.lofarbeam,
+                   "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
                    "PLOTSCREEN": operations.plotscreen,
