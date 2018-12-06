@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='Combine h5parm files - '+_author)#
 parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
 parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', help='Output solset name [default: sol000]')
-parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) - if not given use all')
+parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) or comma-separated list of soltab names - if not given use all')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', default=False, action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm file instead of appending to it (default=False)')
@@ -46,7 +46,7 @@ if args.insoltab is None:
     insoltabs = solset.getSoltabNames()
     h5.close()
 else:
-    insoltabs = [args.insoltab]
+    insoltabs = args.insoltab.split(',')
 
 # open input
 h5s = []
