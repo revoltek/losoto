@@ -11,12 +11,13 @@ def _run_parser(soltab, parser, step):
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5)
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
     telescope = parser.getstr( step, 'telescope', 'lofar')
+    skipInternational = parser.getbool( step, 'skipInternational', False)
     refAnt = parser.getstr( step, 'refAnt', '')
     soltabExport = parser.getstr( step, 'soltabExport', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'telescope', 'refAnt', 'soltabExport'])
-    return run( soltab, mode, maxFlaggedFraction, nSigma, telescope, refAnt, soltabExport, ncpu )
+    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'telescope', 'skipInternational', 'refAnt', 'soltabExport'])
+    return run( soltab, mode, maxFlaggedFraction, nSigma, telescope, skipInternational, refAnt, soltabExport, ncpu )
 
 
 def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
@@ -461,7 +462,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, maxFlaggedFraction, 
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -479,6 +480,9 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
+
+    skip_international : str, optional
+        If True, skip flagging of international LOFAR stations (only used if telescope = 'lofar')
 
     refAnt : str, optional
         If mode=phaseresid, this sets the reference antenna, by default None.
@@ -534,6 +538,9 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
         # Fill the queue
         mpm = multiprocManager(ncpu, _flag_bandpass)
         for s in range(len(soltab.ant)):
+            if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                skipInternational and telescope.lower() == 'lofar'):
+                continue
             mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
                      telescope, nSigma, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
         mpm.wait()
@@ -553,7 +560,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', re
         if solType == 'phase':
             maxStddev = 0.1 # in radians
         else:
-            maxStddev = 0.02 # in log10(amp)
+            maxStddev = 0.01 # in log10(amp)
 
         # Fill the queue
         if 'dir' in axis_names:
