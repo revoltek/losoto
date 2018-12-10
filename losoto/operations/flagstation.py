@@ -536,19 +536,35 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, telescope='lofar', sk
            return 1
 
         # Fill the queue
-        mpm = multiprocManager(ncpu, _flag_bandpass)
-        for s in range(len(soltab.ant)):
-            if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
-                skipInternational and telescope.lower() == 'lofar'):
-                continue
-            mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
-                     telescope, nSigma, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
-        mpm.wait()
+        if 'dir' in axis_names:
+            for d, dirname in enumerate(soltab.dir):
+                mpm = multiprocManager(ncpu, _flag_bandpass)
+                for s in range(len(soltab.ant)):
+                    if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                        skipInternational and telescope.lower() == 'lofar'):
+                        continue
+                    mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
+                             telescope, nSigma, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
+                mpm.wait()
+                for (s, w) in mpm.get():
+                    weights_arraytmp[:, s, :, :, d] = w
+        else:
+            mpm = multiprocManager(ncpu, _flag_bandpass)
+            for s in range(len(soltab.ant)):
+                if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                    skipInternational and telescope.lower() == 'lofar'):
+                    continue
+                mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
+                         telescope, nSigma, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
+            mpm.wait()
+            for (s, w) in mpm.get():
+                weights_arraytmp[:, s, :, :] = w
 
         # Write new weights
-        for (s, w) in mpm.get():
-            weights_arraytmp[:, s, :, :] = w
-        weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        if 'dir' in axis_names:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        else:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, maxFlaggedFraction={1}, '
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
