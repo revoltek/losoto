@@ -32,7 +32,9 @@ if args.verbose: _logging.setLevel("debug")
 ################################
 
 # check input
-if len(args.h5parmFiles) == 1 and ',' in args.h5parmFiles[0]:
+if len(args.h5parmFiles) == 1 and (',' in args.h5parmFiles[0] or
+                                   ('[' in args.h5parmFiles[0] and
+                                    ']' in args.h5parmFiles[0])):
     # Treat input as a string with comma-separated values
     args.h5parmFiles = args.h5parmFiles[0].strip('[]').split(',')
     args.h5parmFiles  = [f.strip() for f in args.h5parmFiles]
