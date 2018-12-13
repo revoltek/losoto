@@ -172,9 +172,9 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
 
     s : int
         Station index
-        
+
     ampRange : array
-        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit        
+        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit
 
     Returns
     -------
@@ -320,10 +320,10 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
                                     0.32797671, 0.46900048, 0.47155583, 0.31945897,
                                     0.29072278, 0.08064795, -0.15761538, -0.36020451,
                                     -0.51163338])
-            bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
-                                   0.15, 0.15, 0.15]
-            bounds_deltas_upper = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
-                                   0.15, 0.15, 0.15]
+            bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.1, 0.1, 0.16, 0.2, 0.15,
+                                   0.15, 0.25, 0.3]
+            bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+                                   0.15, 0.25, 0.35]
         else:
             print('The "{}" band is not supported'.format(band))
             sys.exit(1)
@@ -483,7 +483,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
         This sets the number of standard deviations considered when outlier clipping is done
 
     ampRange : array
-        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit        
+        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
@@ -567,6 +567,13 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
             for (s, w) in mpm.get():
                 weights_arraytmp[:, s, :, :] = w
 
+        # Make sure that fully flagged stations have all pols flagged
+        for s in range(len(soltab.ant)):
+            for p in range(len(soltab.pol)):
+                if np.all(weights_arraytmp[:, s, :, p] == 0.0):
+                    weights_arraytmp[:, s, :, :] = 0.0
+                    break
+
         # Write new weights
         if 'dir' in axis_names:
             weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
@@ -590,17 +597,26 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
             for d, dirname in enumerate(soltab.dir):
                 mpm = multiprocManager(ncpu, _flag_resid)
                 for s in range(len(soltab.ant)):
-                    mpm.put([vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d], solType, nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
+                    mpm.put([vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
+                             solType, nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
                 mpm.wait()
                 for (s, w) in mpm.get():
                     weights_arraytmp[:, s, :, :, d] = w
         else:
             mpm = multiprocManager(ncpu, _flag_resid)
             for s in range(len(soltab.ant)):
-                mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], solType, nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
+                mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], solType,
+                         nSigma, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
             mpm.wait()
             for (s, w) in mpm.get():
                 weights_arraytmp[:, s, :, :] = w
+
+        # Make sure that fully flagged stations have all pols flagged
+        for s in range(len(soltab.ant)):
+            for p in range(len(soltab.pol)):
+                if np.all(weights_arraytmp[:, s, :, p] == 0.0):
+                    weights_arraytmp[:, s, :, :] = 0.0
+                    break
 
         # Write new weights
         if 'dir' in axis_names:
