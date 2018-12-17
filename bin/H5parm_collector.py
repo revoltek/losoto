@@ -47,6 +47,9 @@ if args.insoltab is None:
     solset = h5.getSolset(insolset)
     insoltabs = solset.getSoltabNames()
     h5.close()
+    if len(insoltabs) == 0:
+        logging.critical('No soltabs found.')
+        sys.exit()
 else:
     insoltabs = args.insoltab.split(',')
 
@@ -55,7 +58,6 @@ h5s = []
 for h5parmFile in args.h5parmFiles:
     h5 = h5parm(h5parmFile.replace("'",""), readonly=True)
     h5s.append(h5)
-
 
 # open output
 if os.path.exists(args.outh5parm) and args.clobber:
