@@ -49,10 +49,10 @@ def _calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
 
     """
     import numpy as np
-    from losoto.operations.phasescreen import radec2xy
+    from losoto.operations.stationscreen import _radec2xy
 
     # Convert direction (RA, Dec) to (x, y)
-    x, y = radec2xy(directions[0], directions[1], midRA, midDec)
+    x, y = _radec2xy(directions[0], directions[1], midRA, midDec)
 
     # Calculate phases at freq1 and freq2
     phase1 = np.zeros(len(x))
@@ -94,10 +94,10 @@ def _calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
 
     """
     import numpy as np
-    from losoto.operations.phasescreen import radec2xy
+    from losoto.operations.stationscreen import _radec2xy
 
     # Convert direction (RA, Dec) to (x, y)
-    x, y = radec2xy(directions[0], directions[1], midRA, midDec)
+    x, y = _radec2xy(directions[0], directions[1], midRA, midDec)
 
     # Calculate values
     N_dirs = len(x)

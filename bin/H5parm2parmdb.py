@@ -561,10 +561,10 @@ if __name__=='__main__':
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
                     if parm == 'Real':
-                        weights2 = sf_phase.getValues(weight=True)[0]
+                        weights2 = solTab_ph.getValues(weight=True)[0]
                         flags[np.where(weights2 == 0)] = True
                     if parm == 'Imag':
-                        weights2 = sf_amp.getValues(weight=True)[0]
+                        weights2 = solTab_amp.getValues(weight=True)[0]
                         flags[np.where(weights2 == 0)] = True
                     np.putmask(val, flags, np.nan)
 
