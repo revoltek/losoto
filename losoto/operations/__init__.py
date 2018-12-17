@@ -5,17 +5,17 @@ __all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__
 for x in __all__:
     __import__(x, locals(), globals())
 
-class timer(object):
+class Timer(object):
     """
     context manager used to time the operations
     """
 
-    def __init__(self, log='', step = None, operation = None):
+    def __init__(self, log=None, step = 'undef.', operation = 'undef.'):
         """
         log: is a logging istance to print the correct log format
         if nothing is passed, root is used
         """
-        if log == '': self.log = logging
+        if log is None: self.log = logging
         else: self.log = log
         self.step = step
         self.operation = operation
