@@ -29,4 +29,4 @@ class Timer(object):
 
         # if not an error
         if exit_type is None:
-            self.log.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - self.start), (time.clock() - self.startcpu) ))
+            self.log.info("Time for %s step: %i s (cpu: %i s)." % ( self.step, ( time.time() - self.start), (time.clock() - self.startcpu) ))
