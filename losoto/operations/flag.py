@@ -144,7 +144,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
                 vals_smooth = np.copy(vals)
                 np.putmask(vals_smooth, weights==0, np.nan)
                 if all(o == 0 for o in order): order = vals_smooth.shape
-                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order, mode='nearest')
+                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order, mode='constant', cval=np.nan)
                 vals_detrend = vals - vals_smooth
             # TODO: should be rolling
             elif mode == 'poly':
