@@ -218,12 +218,13 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
             import matplotlib as mpl
             mpl.use("Agg")
             import matplotlib.pyplot as plt
-            plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
-            plt.plot(axes[0], vals, 'k.')
-            plt.plot(axes[0], vals_smooth, 'r.')
-            #plt.plot(axes[0], vals_detrend, 'g.')
+            print vals[0]
+            plt.plot(axes[1][weights[0] == 0], vals[0][weights[0] == 0], 'ro')
+            plt.plot(axes[1], vals[0], 'k.')
+            plt.plot(axes[1], vals_smooth[0], 'r.')
+            plt.plot(axes[1], vals_detrend[0], 'g.')
             plt.savefig('test.png')
-            #sys.exit(1)
+            sys.exit(1)
 
         return weights, vals, rms
 
