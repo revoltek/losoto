@@ -488,7 +488,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
 
-    skip_international : str, optional
+    skipInternational : str, optional
         If True, skip flagging of international LOFAR stations (only used if telescope = 'lofar')
 
     refAnt : str, optional
