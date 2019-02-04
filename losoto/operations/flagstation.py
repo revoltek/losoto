@@ -602,11 +602,15 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
                     logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
                     refAnt = ants[0]
                 refInd = ants.tolist().index(refAnt)
-                for i in range(vals_arraytmp.shape[1]):
+                if 'dir' in axis_names:
+                    vals_arrayref = vals_arraytmp[:, refInd, :, :, :].copy()
+                else:
+                    vals_arrayref = vals_arraytmp[:, refInd, :, :].copy()
+                for i in range(len(soltab.ant)):
                     if 'dir' in axis_names:
-                        vals_arraytmp[:, i, :, :, :] -= vals_arraytmp[:, refInd, :, :, :]
+                        vals_arraytmp[:, i, :, :, :] -= vals_arrayref
                     else:
-                        vals_arraytmp[:, i, :, :] -= vals_arraytmp[:, refInd, :, :]
+                        vals_arraytmp[:, i, :, :] -= vals_arrayref
 
         # Fill the queue
         if 'dir' in axis_names:
