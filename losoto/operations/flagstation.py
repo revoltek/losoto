@@ -492,7 +492,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
         If True, skip flagging of international LOFAR stations (only used if telescope = 'lofar')
 
     refAnt : str, optional
-        If mode=phaseresid, this sets the reference antenna, by default None.
+        If mode = resid, this sets the reference antenna for phase solutions, by default None.
 
     soltabExport : str, optional
         Soltab to export station flags to. Note: exported flags are not time- or frequency-dependent.
@@ -591,6 +591,22 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
             maxStddev = 0.1 # in radians
         else:
             maxStddev = 0.01 # in log10(amp)
+
+        # Subtract reference phases
+        if refAnt is not None:
+            if solType != 'phase':
+                logging.error('Reference possible only for phase solution tables. Ignoring referencing.')
+            else:
+                ants = soltab.getAxisValues('ant')
+                if refAnt not in ants:
+                    logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+                    refAnt = ants[0]
+                refInd = ants.tolist().index(refAnt)
+                for i in range(vals_arraytmp.shape[1]):
+                    if 'dir' in axis_names:
+                        vals_arraytmp[:, i, :, :, :] -= vals_arraytmp[:, refInd, :, :, :]
+                    else:
+                        vals_arraytmp[:, i, :, :] -= vals_arraytmp[:, refInd, :, :]
 
         # Fill the queue
         if 'dir' in axis_names:
