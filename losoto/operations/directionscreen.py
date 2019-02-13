@@ -17,6 +17,8 @@ def _run_parser(soltab, parser, step):
     height = parser.getfloat( step, "height", 200e3 )
     order = parser.getint( step, "Order", 5 )
     ncpu = parser.getint( '_global', "npcu", 0 )
+
+    parser.checkSpelling( step, soltab, ['outSoltab', 'height', 'order'])
     return run(soltab, outSoltab, height, order, ncpu)
 
 
@@ -391,11 +393,6 @@ def run(soltab, outSoltab='tecscreen', height=200.0e3, order=12,
     from numpy import newaxis
     import re
     import os
-
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     # Get screen type
     screen_type = soltab.getType()

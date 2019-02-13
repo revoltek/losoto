@@ -14,6 +14,8 @@ logging.debug('Loading RESIDUALS module.')
 def _run_parser(soltab, parser, step):
     soltabsToSub = parser.getarraystr( step, 'soltabsToSub' ) # no default
     ratio = parser.getbool( step, 'ratio', False )
+    
+    parser.checkSpelling( step, soltab, ['soltabsToSub','ratio'])
     return run(soltab, soltabsToSub, ratio)
 
 

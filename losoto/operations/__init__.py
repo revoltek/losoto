@@ -1,21 +1,21 @@
 import os, time, glob
 
-__all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py") if not f.endswith('__init__.py')]
+__all__ = [ os.path.basename(f)[:-3] for f in glob.glob(os.path.dirname(__file__)+"/*.py") if f[0] != '_']
 
 for x in __all__:
     __import__(x, locals(), globals())
 
-class timer(object):
+class Timer(object):
     """
     context manager used to time the operations
     """
 
-    def __init__(self, log='', step = None, operation = None):
+    def __init__(self, log=None, step = 'undef.', operation = 'undef.'):
         """
         log: is a logging istance to print the correct log format
         if nothing is passed, root is used
         """
-        if log == '': self.log = logging
+        if log is None: self.log = logging
         else: self.log = log
         self.step = step
         self.operation = operation
@@ -29,4 +29,4 @@ class timer(object):
 
         # if not an error
         if exit_type is None:
-            self.log.info("Time for this step: %i s (cpu: %i s)." % ( ( time.time() - self.start), (time.clock() - self.startcpu) ))
+            self.log.info("Time for %s step: %i s (cpu: %i s)." % ( self.step, ( time.time() - self.start), (time.clock() - self.startcpu) ))

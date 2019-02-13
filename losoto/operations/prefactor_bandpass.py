@@ -18,9 +18,10 @@ def _run_parser(soltab, parser, step):
     maxStddev = parser.getfloat( step, 'maxStddev', 0.01 )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
+    parser.checkSpelling( step, soltab, ['chanWidth', 'outSoltabName', 'BadSBList', 'interpolate', 'removeTimeAxis',\
+               'autoFlag', 'nSigma', 'maxFlaggedFraction', 'maxStddev'])
     return run(soltab, chanWidth, outSoltabName, BadSBList, interpolate, removeTimeAxis,
                autoFlag, nSigma, maxFlaggedFraction, maxStddev, ncpu)
-
 
 def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
     """Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -472,7 +473,7 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
         if chanWidth == '':
             logging.error("If interpolate = True, chanWidth must be specified.")
             raise ValueError("If interpolate = True, chanWidth must be specified.")
-        if type(chanWidth) is str:
+        if type(chanWidth) is str or type(chanWidth) is unicode:
             letters = [1 for s in chanWidth[::-1] if s.isalpha()]
             indx = len(chanWidth) - sum(letters)
             unit = chanWidth[indx:]

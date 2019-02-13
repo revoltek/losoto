@@ -15,6 +15,7 @@ def _run_parser(soltab, parser, step):
     flagBad = parser.getbool( step, 'flagBad', False )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
+    parser.checkSpelling( step, soltab, ['mode', 'weightVal', 'nmedian', 'nstddev', 'soltabImport', 'flagBad'])
     return run(soltab, mode, weightVal, nmedian, nstddev, soltabImport, flagBad, ncpu)
 
 
@@ -205,9 +206,6 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
         soltab.setValues(weightVal, weight=True)
 
     elif mode == 'window':
-        if ncpu == 0:
-            import multiprocessing
-            ncpu = multiprocessing.cpu_count()
         if nmedian !=0 and nmedian % 2 == 0:
             logging.error('nmedian must be odd')
             return 1

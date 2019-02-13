@@ -28,6 +28,9 @@ def _run_parser(soltab, parser, step):
     makeMovie = parser.getbool( step, 'makeMovie', False )
     prefix = parser.getstr( step, 'prefix', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
+
+    parser.checkSpelling( step, soltab, ['axesInPlot', 'axisInTable', 'axisInCol', 'axisDiff', 'NColFig', 'figSize', 'markerSize', 'minmax', 'log', \
+               'plotFlag', 'doUnwrap', 'refAnt', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
                plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
@@ -41,18 +44,19 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             import matplotlib as mpl
             mpl.rcParams['xtick.labelsize'] = 20
             mpl.rcParams['font.size'] = 20
-            #mpl.rc('figure.subplot',left=0.1, bottom=0.1, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
             mpl.use("Agg")
         import matplotlib.pyplot as plt # after setting "Agg" to speed up
-        #from losoto.phase_colormap import cm_phase
 
         # find common min and max if not set
         flat = dataCube.filled(np.nan).flatten()
-        if minZ == 0 and maxZ == 0:
+        if np.isnan(flat).all() or np.all(flat==0):
+            minZ=-0.1; maxZ=0.1
+        elif minZ == 0 and maxZ == 0:
             if datatype == 'phase':
                 minZ = np.nanmin(flat)
                 maxZ = np.nanmax(flat)
             elif datatype == 'amplitude':
+                flat[np.isnan(flat)] = np.nanmedian(flat) # get rid of nans (problem in "<" below)
                 maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100  ] )
                 maxZ = np.nanmin( [np.nanmax( flat ), maxZ] )
                 minZ = np.nanmin( flat )
@@ -61,6 +65,12 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 maxZ = np.nanmax(flat)
                 #minZ = np.nanmedian(flat) - 3*np.nanstd(flat)
                 #maxZ = np.nanmedian(flat) + 3*np.nanstd(flat)
+
+            # prevent same min/max (still a problem at 0)
+            if minZ == maxZ:
+                minZ *= 0.99
+                maxZ *= 1.01
+
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
             if np.isnan(minZ) or np.isnan(maxZ):
                 minZ = -1; maxZ = 1
@@ -160,8 +170,9 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                             cmap = plt.cm.rainbow
 
                     # ugly fix to enforce min/max as imshow has some problems with very large numbers
-                    vals.data[vals.data>maxZ] = maxZ
-                    vals.data[vals.data<minZ] = minZ
+                    if not np.isnan(vals).all():
+                        vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
+                        vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
 
                     im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                             extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
@@ -305,10 +316,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     solset = soltab.getSolset()
     soltabsToAdd = [ solset.getSoltab(soltabName) for soltabName in soltabsToAdd ]
-
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     cmesh = False
     if len(axesInPlot) == 2:
@@ -545,11 +552,14 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                             vals = unwrap_2d(vals, flags, coord[axesInPlot[0]], coord[axesInPlot[1]])
 
                 dataCube[Ntab,Ncol] = vals
-                sel = np.where(weight == 0.)
+                sel1 = np.where(weight == 0.)
+                sel2 = np.where(np.isnan(vals))
                 if cmesh:
-                    dataCube[Ntab,Ncol,sel[0],sel[1]] = np.ma.masked
+                    dataCube[Ntab,Ncol,sel1[0],sel1[1]] = np.ma.masked
+                    dataCube[Ntab,Ncol,sel2[0],sel2[1]] = np.ma.masked
                 else:
-                    dataCube[Ntab,Ncol,sel[0]] = np.ma.masked
+                    dataCube[Ntab,Ncol,sel1[0]] = np.ma.masked
+                    dataCube[Ntab,Ncol,sel2[0]] = np.ma.masked
 
             soltab.selection = soltab2Selection
             ### end cycle on colors

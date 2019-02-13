@@ -17,6 +17,8 @@ def _run_parser(soltab, parser, step):
     remove_gradient = parser.getbool( step, "RemoveGradient", False )
     show_source_names = parser.getbool( step, "ShowSourceNames", False )
     ncpu = parser.getint( step, "npcu", 0 )
+
+    parser.checkSpelling( step, soltab, ['resSoltab', 'minZ', 'maxZ', 'prefix', 'remove_gradient', 'show_source_names'])
     return run(soltab, resSoltab, minZ, maxZ, prefix, remove_gradient, show_source_names, ncpu)
 
 
@@ -626,9 +628,6 @@ def _make_screen_plots(pp, inscreen, inresiduals, weights, station_names,
         os.makedirs(root_dir)
     except OSError:
         pass
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     if height == 0.0:
         N_stations = 1 # screens are single-station screens

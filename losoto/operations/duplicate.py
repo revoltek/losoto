@@ -8,6 +8,8 @@ logging.debug('Loading DUPLICATE module.')
 
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', '' )
+
+    parser.checkSpelling( step, soltab, ['soltabOut'])
     return run(soltab, soltabOut)
 
 def run( soltab, soltabOut=''):

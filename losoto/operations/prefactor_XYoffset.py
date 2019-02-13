@@ -9,6 +9,8 @@ logging.debug('Loading PREFACTOR_XYOFFSET module.')
 
 def _run_parser(soltab, parser, step):
     chanWidth = parser.getstr( step, 'chanWidth')
+
+    parser.checkSpelling( step, soltab, ['chanWidth'])
     return run(soltab, chanWidth)
 
 
@@ -52,7 +54,7 @@ def run( soltab, chanWidth ):
     stationsnames = [ stat for stat in soltab.ant]
 
     subbandHz = 195.3125e3
-    if type(chanWidth) is str:
+    if type(chanWidth) is str or type(chanWidth) is unicode:
         letters = [1 for s in chanWidth[::-1] if s.isalpha()]
         indx = len(chanWidth) - sum(letters)
         unit = chanWidth[indx:]

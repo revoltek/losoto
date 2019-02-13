@@ -18,7 +18,7 @@ Cite:
 Install:
 * Get LoSoTo from https://github.com/revoltek/losoto 
 * Install losoto by simply: python setup.py install --prefix=~/mydir/
-* Alternatively: pip install --allow-external --upgrade --user https://github.com/revoltek/losoto/archive/master.zip 
+* Alternatively: pip install --upgrade --user https://github.com/revoltek/losoto/archive/master.zip 
 * In cep3 use the copy of the code in ~fdg/scripts/losoto/ (source the tool/lofarinit.[c]sh file which is shipped with the code)
 * Prepare a parset starting from the parset/losoto2.parset
 * in case of problems write to Francesco de Gasperin: astro@voo.it
@@ -40,3 +40,4 @@ Required packages:
 * PyTables version:  >3.0.0
 * HDF5 version:      >1.8.4
 * NumPy version:     >1.9.0
+* configparser (backport from python 3.0 if using python 2.7)

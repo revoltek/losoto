@@ -7,6 +7,7 @@ from losoto.lib_operations import *
 logging.debug('Loading ABS module.')
 
 def _run_parser(soltab, parser, step):
+    parser.checkSpelling( step, soltab )
     return run(soltab)
 
 def run( soltab ):

@@ -4,28 +4,19 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>losoto package &#8212; LoSoTo 2.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '2.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="losoto.operations package" href="losoto.operations.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -62,10 +53,10 @@
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.example">losoto.operations.example module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.faraday">losoto.operations.faraday module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.fitClockTEC">losoto.operations.fitClockTEC module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.flag">losoto.operations.flag module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.flagextend">losoto.operations.flagextend module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.interp">losoto.operations.interp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.flagstation">losoto.operations.flagstation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.interpolate">losoto.operations.interpolate module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.lofarbeam">losoto.operations.lofarbeam module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.plot">losoto.operations.plot module</a></li>
@@ -78,6 +69,7 @@
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.screenvalues">losoto.operations.screenvalues module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.smooth">losoto.operations.smooth module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.splitleak">losoto.operations.splitleak module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.stationscreen">losoto.operations.stationscreen module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.structure">losoto.operations.structure module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="losoto.operations.html#module-losoto.operations.tec">losoto.operations.tec module</a></li>
@@ -123,7 +115,7 @@
 <dl class="class">
 <dt id="losoto.h5parm.h5parm">
 <em class="property">class </em><code class="descclassname">losoto.h5parm.</code><code class="descname">h5parm</code><span class="sig-paren">(</span><em>h5parmFile</em>, <em>readonly=True</em>, <em>complevel=0</em>, <em>complib='zlib'</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.h5parm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Create an h5parm object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -249,7 +241,7 @@ then it falls back on the first available sol###.</p>
 <dl class="class">
 <dt id="losoto.h5parm.Solset">
 <em class="property">class </em><code class="descclassname">losoto.h5parm.</code><code class="descname">Solset</code><span class="sig-paren">(</span><em>solset</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Solset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Create a solset object</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -290,7 +282,7 @@ then it falls back on the first available sol###.</p>
 
 <dl class="method">
 <dt id="losoto.h5parm.Solset.makeSoltab">
-<code class="descname">makeSoltab</code><span class="sig-paren">(</span><em>soltype=None</em>, <em>soltabName=None</em>, <em>axesNames=[]</em>, <em>axesVals=[]</em>, <em>chunkShape=None</em>, <em>vals=None</em>, <em>weights=None</em>, <em>parmdbType=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Solset.makeSoltab" title="Permalink to this definition">¶</a></dt>
+<code class="descname">makeSoltab</code><span class="sig-paren">(</span><em>soltype=None</em>, <em>soltabName=None</em>, <em>axesNames=[]</em>, <em>axesVals=[]</em>, <em>chunkShape=None</em>, <em>vals=None</em>, <em>weights=None</em>, <em>parmdbType=''</em>, <em>weightDtype='f16'</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Solset.makeSoltab" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a Soltab into this solset.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -306,6 +298,7 @@ then it falls back on the first available sol###.</p>
 <li><strong>weights</strong> (<em>numpy array</em>) – Same shape of the vals array
 0-&gt;FLAGGED, 1-&gt;MAX_WEIGHT</li>
 <li><strong>parmdbType</strong> (<em>str</em>) – Original parmdb solution type</li>
+<li><strong>weightDtype</strong> (<em>str</em>) – THe dtype of weights allowed values are (‘f16’ or ‘f32’ or ‘f64’)</li>
 </ul>
 </td>
 </tr>
@@ -421,7 +414,7 @@ then it falls back on the first available sol###.</p>
 <dl class="class">
 <dt id="losoto.h5parm.Soltab">
 <em class="property">class </em><code class="descclassname">losoto.h5parm.</code><code class="descname">Soltab</code><span class="sig-paren">(</span><em>soltab</em>, <em>useCache=False</em>, <em>args={}</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.h5parm.Soltab" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -678,7 +671,7 @@ slicing the getValuesGrid() reurned matrix.</td>
 <li><strong>vals</strong> (<em>array</em><em>, </em><em>float</em>) – values to write as an n-dimentional array which match the selection dimention
 if a float is passed or the selected data are set to that value</li>
 <li><strong>selection</strong> (<em>selection format</em><em>, </em><em>optional</em>) – To set only a subset of data, overriding global selectioan, by default use global selection.
-Global seclection is restoread at the end of the function. This is used to set values in a loop of getValueIter().</li>
+This is used to set values in a loop of getValueIter(). Global seclection is NOT overwritten.</li>
 <li><strong>weight</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true store in the weights instead that in the vals, by default False</li>
 </ul>
 </td>
@@ -793,7 +786,7 @@ history entry is stored in a separate attribute.</p>
 <dl class="class">
 <dt id="losoto.lib_losoto.LosotoParser">
 <em class="property">class </em><code class="descclassname">losoto.lib_losoto.</code><code class="descname">LosotoParser</code><span class="sig-paren">(</span><em>parsetFile</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_losoto.LosotoParser" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ConfigParser.RawConfigParser</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">backports.configparser.ConfigParser</span></code></p>
 <p>A parser for losoto parset files.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -803,6 +796,12 @@ history entry is stored in a separate attribute.</p>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="losoto.lib_losoto.LosotoParser.checkSpelling">
+<code class="descname">checkSpelling</code><span class="sig-paren">(</span><em>s</em>, <em>soltab</em>, <em>availValues=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_losoto.LosotoParser.checkSpelling" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if any value in the step is missing from a value list and return a warning</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="losoto.lib_losoto.LosotoParser.getstr">
 <code class="descname">getstr</code><span class="sig-paren">(</span><em>s</em>, <em>v</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_losoto.LosotoParser.getstr" title="Permalink to this definition">¶</a></dt>
@@ -881,7 +880,7 @@ history entry is stored in a separate attribute.</p>
 <dl class="function">
 <dt id="losoto.lib_losoto.getStepSoltabs">
 <code class="descclassname">losoto.lib_losoto.</code><code class="descname">getStepSoltabs</code><span class="sig-paren">(</span><em>parser</em>, <em>step</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_losoto.getStepSoltabs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of soltabs object for</p>
+<dd><p>Return a list of soltabs object for a step and apply selection creteria</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -908,18 +907,19 @@ history entry is stored in a separate attribute.</p>
 <span id="losoto-lib-operations-module"></span><h2>losoto.lib_operations module<a class="headerlink" href="#module-losoto.lib_operations" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="losoto.lib_operations.multiprocManager">
-<em class="property">class </em><code class="descclassname">losoto.lib_operations.</code><code class="descname">multiprocManager</code><span class="sig-paren">(</span><em>procs=1</em>, <em>funct=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_operations.multiprocManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<em class="property">class </em><code class="descclassname">losoto.lib_operations.</code><code class="descname">multiprocManager</code><span class="sig-paren">(</span><em>procs=0</em>, <em>funct=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_operations.multiprocManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="class">
 <dt id="losoto.lib_operations.multiprocManager.multiThread">
 <em class="property">class </em><code class="descname">multiThread</code><span class="sig-paren">(</span><em>inQueue</em>, <em>outQueue</em>, <em>funct</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_operations.multiprocManager.multiThread" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">multiprocessing.process.Process</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.process.Process</span></code></p>
 <p>This class is a working thread which load parameters from a queue and
 return in the output queue</p>
 <dl class="method">
 <dt id="losoto.lib_operations.multiprocManager.multiThread.run">
 <code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#losoto.lib_operations.multiprocManager.multiThread.run" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Method to be run in sub-process; can be overridden in sub-class</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1056,6 +1056,9 @@ iterations – number of iterations to perform</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-losoto.phase_colormap">
+<span id="losoto-phase-colormap-module"></span><h2>losoto.phase_colormap module<a class="headerlink" href="#module-losoto.phase_colormap" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-losoto">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-losoto" title="Permalink to this headline">¶</a></h2>
 </div>
@@ -1076,6 +1079,7 @@ iterations – number of iterations to perform</p>
 <li><a class="reference internal" href="#module-losoto.lib_losoto">losoto.lib_losoto module</a></li>
 <li><a class="reference internal" href="#module-losoto.lib_operations">losoto.lib_operations module</a></li>
 <li><a class="reference internal" href="#module-losoto.lib_unwrap">losoto.lib_unwrap module</a></li>
+<li><a class="reference internal" href="#module-losoto.phase_colormap">losoto.phase_colormap module</a></li>
 <li><a class="reference internal" href="#module-losoto">Module contents</a></li>
 </ul>
 </li>
@@ -1093,12 +1097,14 @@ iterations – number of iterations to perform</p>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -1122,7 +1128,7 @@ iterations – number of iterations to perform</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Francesco de Gasperin.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.
     </div>
   </body>
 </html>

@@ -57,7 +57,7 @@ if __name__=='__main__':
     if args.h5parm == None:
         logging.error('No h5parm given.')
         sys.exit(1)
-    
+
     if not os.path.isfile(args.h5parm):
         logging.critical("Missing h5parm file.")
         sys.exit(1)
@@ -99,13 +99,14 @@ if __name__=='__main__':
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
-                   #"CORRFUNCT": operations.corrfunct,
                    "POLALIGN": operations.polalign,
                    "DIRECTIONSCREEN": operations.directionscreen,
                    "DUPLICATE": operations.duplicate,
                    "FARADAY": operations.faraday,
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
+                   "FLAGSTATION": operations.flagstation,
+                   "INTERPOLATE": operations.interpolate,
                    "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
@@ -114,11 +115,11 @@ if __name__=='__main__':
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,
                    "SMOOTH": operations.smooth,
+                   "SPLITLEAK": operations.splitleak,
                    "STRUCTURE": operations.structure,
                    "PREFACTOR_BANDPASS": operations.prefactor_bandpass,
                    "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,
                    "TEC": operations.tec,
-                   #"SMOOTHCLOCK": operations.smoothclock,
                    #"TECFIT": operations.tecfit,
                    #"TECJUMP": operations.tecjump,
                    #"TECSCREEN": operations.tecscreen,
@@ -138,7 +139,7 @@ if __name__=='__main__':
             continue
 
         returncode = 0
-        with operations.timer(logging, step, op) as t:
+        with operations.Timer(logging, step, op) as t:
             # global+local selection on axes are applied by this function
             for soltab in getStepSoltabs(parser, step, H):
                 returncode += ops[ op ]._run_parser( soltab, parser, step )

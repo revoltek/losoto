@@ -22,6 +22,8 @@ def _run_parser(soltab, parser, step):
     min_order = parser.getint( step, "MinOrder", 5 )
     adjust_order = parser.getbool( step, "AdjustOrder", True )
 
+    parser.checkSpelling( step, soltab, ['outSoltab', 'order', 'beta', 'niter', 'nsigma',\
+        'refAnt', 'scale_order', 'scale_dist', 'min_order', 'adjust_order'])
     return run(soltab, outSoltab, order, beta, ncpu, niter, nsigma,
         refAnt, scale_order, scale_dist, min_order, adjust_order)
 
@@ -561,11 +563,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
         import progressbar
     except ImportError:
         import losoto.progressbar as progressbar
-
-    # input check
-    if ncpu == 0:
-        import multiprocessing
-        ncpu = multiprocessing.cpu_count()
 
     # Get screen type
     screen_type = soltab.getType()

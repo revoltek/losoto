@@ -14,6 +14,8 @@ def _run_parser(soltab, parser, step):
     opt1 = parser.getfloat( step, 'opt1') # no default
     opt2 = parser.getarrayfloat( step, 'opt3', [1., 2., 3.])
     opt3 = parser.getint( step, 'opt2', 0 )
+    
+    parser.checkSpelling( step, soltab, ['op1', 'opt2', 'opt3'])
     return run(soltab, opt1, opt2, opt3)
 
 # this funct can be called by python directly

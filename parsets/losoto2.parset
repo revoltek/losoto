@@ -12,7 +12,7 @@ dir = [pointing]
 # string used for regex selections, vectors for complete names (equal for 'pol' and 'dir')
 # to exclude stations, use ^((?!string1|string2|string3).)*$
 # with names containing string1, string2, or string3
-axisName.minmax = [0,10,2]
+axisName.minmaxstep = [0,10,2]
 axisName.regexp = RS*
 Ncpu = 0 # number of cpus in multithread operations, if 0 use all available cpus
 
@@ -127,3 +127,4 @@ size = [10, 5] # window size for the runningmedian and runningpoly
 mode = runningmedian # runningmedian or runningpoly or mean or median (these last two values set all the solutions to the mean/median)
 degree = 1 # degrees of the polynomia for the runningpoly
 replace = False # Flagged data are replaced with smoothed value and unflagged
+log = True # smooth is done in log10 space

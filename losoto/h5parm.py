@@ -999,7 +999,7 @@ class Soltab( object ):
 
         selection : selection format, optional
             To set only a subset of data, overriding global selectioan, by default use global selection.
-            Global seclection is restoread at the end of the function. This is used to set values in a loop of getValueIter().
+            This is used to set values in a loop of getValueIter(). Global seclection is NOT overwritten.
 
         weight : bool, optional
             If true store in the weights instead that in the vals, by default False
@@ -1023,7 +1023,7 @@ class Soltab( object ):
             # the reshape is needed when saving e.g. [512] (vals shape) into [512,1,1] (selection output)
             else: dataVals[tuple(selection)] = np.reshape(vals, dataVals[tuple(selection)].shape)
         except:
-            logging.debug('Optimizing selection writing '+str(selection))
+            #logging.debug('Optimizing selection writing '+str(selection))
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
             subSelection = selection[:]
             # create a subSelection also for the "vals" array
@@ -1076,12 +1076,12 @@ class Soltab( object ):
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
         # Conversely, one can apply how many slices he wants.
         # Single values/contigous values are converted in slices in h5parm.
-        # This try/except implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
+        # This implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
         if np.sum( [1. for sel in selection if type(sel) is list] ) > 1 and \
            ( type(data) is np.ndarray or \
            np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
         
-            logging.debug('Optimizing selection reading '+str(selection))
+            #logging.debug('Optimizing selection reading '+str(selection))
             # for performances is important to minimize the fetched data
             # move all slices at the first selection and lists afterwards (first list is allowd in firstselection)
             selectionListsIdx = [i for i, s in enumerate(selection) if type(s) is list]
@@ -1125,7 +1125,6 @@ class Soltab( object ):
             A numpy ndarrey (values or weights depending on parameters)
             If selected, returns also the axes values
         """
-
         if self.useCache:
             if weight: dataVals = self.cacheWeight
             else: dataVals = self.cacheVal
@@ -1155,20 +1154,6 @@ class Soltab( object ):
                 refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
                 dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
-#                if referencePol is not None:
-#                    if not 'pol' in self.getAxesNames():
-#                        logging.error('Cannot find pol axis for referencing phases. Ignore pol referencing.')
-#                    else:
-#                        polAxis = self.getAxesNames().index('pol')
-#                        # put pol axis at the beginning
-#                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
-#                        # find reference pol index
-#                        polValIdx = list(self.getAxisValues('pol')).index(referencePol)
-#                        # set all polarisations equal to the ref pol, so at subtraction everything will be referenced only to that pol
-#                        for i in xrange(len(self.getAxisValues('pol'))):
-#                            dataValsRef[i] = dataValsRef[polValIdx]
-#                        # put pol axis back in place
-#                        dataValsRef = np.swapaxes(dataValsRef,0,polAxis)
                 if weight:
                     dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                 else:

@@ -28,7 +28,8 @@ def add_coloring_to_emit_ansi(fn):
 # set the logging colors
 logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
 # set the logging format and default level (info)
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO)
+
 
 def setLevel(level):
     """
