@@ -62,6 +62,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                 #minZ = np.nanmedian(flat) - 3*np.nanstd(flat)
                 #maxZ = np.nanmedian(flat) + 3*np.nanstd(flat)
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
+            if np.isnan(minZ) or np.isnan(maxZ):
+                minZ = -1; maxZ = 1
 
         # if user-defined number of col use that
         if NColFig != 0: Nc = NColFig
