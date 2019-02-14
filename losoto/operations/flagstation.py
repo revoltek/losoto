@@ -10,6 +10,7 @@ def _run_parser(soltab, parser, step):
     mode = parser.getstr( step, 'mode') # no default
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5)
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
+    maxStddev = parser.getfloat( step, 'maxStddev', -1.0)
     ampRange = parser.getarrayfloat( step, 'ampRange', [50.,200.] )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
@@ -17,8 +18,8 @@ def _run_parser(soltab, parser, step):
     soltabExport = parser.getstr( step, 'soltabExport', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'ampRange', 'telescope', 'skipInternational', 'refAnt', 'soltabExport'])
-    return run( soltab, mode, maxFlaggedFraction, nSigma, ampRange, telescope, skipInternational, refAnt, soltabExport, ncpu )
+    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'maxStddev', 'ampRange', 'telescope', 'skipInternational', 'refAnt', 'soltabExport'])
+    return run( soltab, mode, maxFlaggedFraction, nSigma, maxStddev, ampRange, telescope, skipInternational, refAnt, soltabExport, ncpu )
 
 
 def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
@@ -466,7 +467,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=[50,200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -480,19 +481,24 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
         This sets the maximum allowable fraction of flagged solutions above which the entire station is flagged.
 
     nSigma : float, optional
-        This sets the number of standard deviations considered when outlier clipping is done
+        This sets the number of standard deviations considered when outlier clipping is done.
 
-    ampRange : array
-        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit
+    maxStddev : float, optional
+        Maximum allowable standard deviation when outlier clipping is done. For phases, this should value
+        should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is
+        used for phases and 0.01 for amplitudes.
+
+    ampRange : array, optional
+        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
 
-    skip_international : str, optional
+    skipInternational : str, optional
         If True, skip flagging of international LOFAR stations (only used if telescope = 'lofar')
 
     refAnt : str, optional
-        If mode=phaseresid, this sets the reference antenna, by default None.
+        If mode = resid, this sets the reference antenna for phase solutions, by default None.
 
     soltabExport : str, optional
         Soltab to export station flags to. Note: exported flags are not time- or frequency-dependent.
@@ -508,10 +514,15 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
         refAnt = None
     if soltabExport == '':
         soltabExport = None
-
     if mode == None or mode.lower() not in ['bandpass', 'resid']:
         logging.error('Mode must be one of bandpass or resid')
         return 1
+    solType = soltab.getType()
+    if maxStddev is None or maxStddev <= 0.0:
+        if solType == 'phase':
+            maxStddev = 0.1  # in radians
+        else:
+            maxStddev = 0.01  # in log10(amp)
 
     # Axis order must be [time, ant, freq, pol], so reorder if necessary
     axis_names = soltab.getAxesNames()
@@ -537,7 +548,6 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
     weights_arraytmp[flagged] = 0.0
 
     if mode == 'bandpass':
-        solType = soltab.getType()
         if solType != 'amplitude':
            logging.error("Soltab must be of type amplitude for bandpass mode.")
            return 1
@@ -551,7 +561,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
                         skipInternational and telescope.lower() == 'lofar'):
                         continue
                     mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
-                             telescope, nSigma, ampRange, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
+                             telescope, nSigma, ampRange, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
                 mpm.wait()
                 for (s, w) in mpm.get():
                     weights_arraytmp[:, s, :, :, d] = w
@@ -562,7 +572,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
                     skipInternational and telescope.lower() == 'lofar'):
                     continue
                 mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
-                         telescope, nSigma, ampRange, maxFlaggedFraction, 0.01, False, soltab.ant[:], s])
+                         telescope, nSigma, ampRange, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
             mpm.wait()
             for (s, w) in mpm.get():
                 weights_arraytmp[:, s, :, :] = w
@@ -583,14 +593,29 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, ampRange=[50,200], te
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, maxFlaggedFraction={1}, '
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
     else:
-        solType = soltab.getType()
         if solType not in ['phase', 'amplitude']:
            logging.error("Soltab must be of type phase or amplitude for resid mode.")
            return 1
-        if solType == 'phase':
-            maxStddev = 0.1 # in radians
-        else:
-            maxStddev = 0.01 # in log10(amp)
+
+        # Subtract reference phases
+        if refAnt is not None:
+            if solType != 'phase':
+                logging.error('Reference possible only for phase solution tables. Ignoring referencing.')
+            else:
+                ants = soltab.getAxisValues('ant')
+                if refAnt not in ants:
+                    logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+                    refAnt = ants[0]
+                refInd = ants.tolist().index(refAnt)
+                if 'dir' in axis_names:
+                    vals_arrayref = vals_arraytmp[:, refInd, :, :, :].copy()
+                else:
+                    vals_arrayref = vals_arraytmp[:, refInd, :, :].copy()
+                for i in range(len(soltab.ant)):
+                    if 'dir' in axis_names:
+                        vals_arraytmp[:, i, :, :, :] -= vals_arrayref
+                    else:
+                        vals_arraytmp[:, i, :, :] -= vals_arrayref
 
         # Fill the queue
         if 'dir' in axis_names:
