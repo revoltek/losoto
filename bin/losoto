@@ -19,7 +19,7 @@ def my_close_open_files(verbose):
         print("Closing remaining open files:")
     # Compatibility fix
     if tables.__version__>='3.1.0':
-        for fileh in list(open_files.keys()):
+        for fileh in list(open_files.handlers):
             if verbose:
                 print("%s..." % (fileh.filename,))
             fileh.close()

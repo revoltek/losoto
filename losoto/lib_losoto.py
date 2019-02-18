@@ -6,10 +6,12 @@
 import os, sys, ast, re
 import logging
 from configparser import ConfigParser
-#if (sys.version_info > (3, 0)):
-#    from configparser import ConfigParser
-#else:
-#    from ConfigParser import ConfigParser
+if (sys.version_info > (3, 0)):
+    #from configparser import ConfigParser
+    from io import StringIO
+else:
+    #from ConfigParser import ConfigParser
+    from StringIO import StringIO
 
 cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
 
@@ -26,8 +28,7 @@ class LosotoParser(ConfigParser):
     def __init__(self, parsetFile):
         ConfigParser.__init__(self, inline_comment_prefixes=('#',';'))
 
-        import io
-        config = io.StringIO()
+        config = StringIO()
         # add [_global] fake section at beginning
         config.write('[_global]\n'+open(parsetFile).read())
         config.seek(0, os.SEEK_SET)
