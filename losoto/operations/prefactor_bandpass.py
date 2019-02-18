@@ -88,7 +88,7 @@ def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
+    order_range = list(range(order+1))
     half_window = (window_size -1) // 2
     # precompute coefficients
     b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
@@ -131,7 +131,7 @@ def _bspline(x, t, c, k):
     elif x < t[k]:
         extrap[0] = True
         invert = False
-    return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(range(n), extrap))
+    return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(list(range(n)), extrap))
 
 
 def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
@@ -237,7 +237,7 @@ def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         bounds_deltas_upper = [0.25, 0.2, 0.05, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                0.15, 0.15, 0.15]
     else:
-        print('The "{}" band is not supported'.format(band))
+        print(('The "{}" band is not supported'.format(band)))
         sys.exit(1)
 
 
@@ -300,7 +300,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         median_min = 50.0
         median_max = 200.0
     else:
-        print('The median frequency of {} Hz is outside of any know band'.format(np.median(freqs)))
+        print(('The median frequency of {} Hz is outside of any know band'.format(np.median(freqs))))
         sys.exit(1)
 
     # Skip fully flagged stations
@@ -371,18 +371,18 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
         # so, flag all frequencies and polarizations
         if stdev_all > maxStddev * 5.0:
             # Station has high stddev relative to median bandpass
-            print('Flagged station {0} (pol {1}) due to high stddev '
-                  '({2})'.format(s, pol, stdev_all))
+            print(('Flagged station {0} (pol {1}) due to high stddev '
+                  '({2})'.format(s, pol, stdev_all)))
             weights[:, :, pol] = 0.0
         elif float(len(bad[0]))/float(len(freqs)) > maxFlaggedFraction:
             # Station has high fraction of flagged solutions
-            print('Flagged station {0} (pol {1}) due to high flagged fraction '
-                  '({2})'.format(s, pol, float(len(bad[0]))/float(len(freqs))))
+            print(('Flagged station {0} (pol {1}) due to high flagged fraction '
+                  '({2})'.format(s, pol, float(len(bad[0]))/float(len(freqs)))))
             weights[:, :, pol] = 0.0
         elif median_val < median_min or median_val > median_max:
             # Station has extreme median value
-            print('Flagged station {0} (pol {1}) due to extreme median value '
-                  '({2})'.format(s, pol, median_val))
+            print(('Flagged station {0} (pol {1}) due to extreme median value '
+                  '({2})'.format(s, pol, median_val)))
             weights[:, :, pol] = 0.0
         else:
             # Station is OK; flag solutions with high sigma values
@@ -391,7 +391,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
             weights[:, flagged[0], pol] = 0.0
             nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
             prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
-            print('Flagged {0}% of solutions for station {1} (pol {2})'.format(prcnt, s, pol))
+            print(('Flagged {0}% of solutions for station {1} (pol {2})'.format(prcnt, s, pol)))
 
     outQueue.put([s, weights])
 
@@ -473,7 +473,7 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
         if chanWidth == '':
             logging.error("If interpolate = True, chanWidth must be specified.")
             raise ValueError("If interpolate = True, chanWidth must be specified.")
-        if type(chanWidth) is str or type(chanWidth) is unicode:
+        if type(chanWidth) is str:
             letters = [1 for s in chanWidth[::-1] if s.isalpha()]
             indx = len(chanWidth) - sum(letters)
             unit = chanWidth[indx:]

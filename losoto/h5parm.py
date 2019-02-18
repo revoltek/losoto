@@ -175,7 +175,7 @@ class h5parm( object ):
             A list of all solsets objects.
         """
         solsets = []
-        for solset in self.H.root._v_groups.itervalues():
+        for solset in self.H.root._v_groups.values():
             solsets.append(Solset(solset))
         return solsets
 
@@ -190,7 +190,7 @@ class h5parm( object ):
             A list of str of all solsets names.
         """
         solsetNames = []
-        for solsetName in iter( self.H.root._v_groups.keys() ):
+        for solsetName in iter( list(self.H.root._v_groups.keys()) ):
             solsetNames.append(solsetName)
         return solsetNames
 
@@ -566,7 +566,7 @@ class Solset( object ):
             List of solution tables objects for all available soltabs in this solset
         """
         soltabs = []
-        for soltab in self.obj._v_groups.itervalues():
+        for soltab in self.obj._v_groups.values():
             soltabs.append(Soltab(soltab, useCache, sel))
         return soltabs
 
@@ -581,7 +581,7 @@ class Solset( object ):
             List of str for all available soltabs in this solset.
         """
         soltabNames = []
-        for soltabName in iter( self.obj._v_groups.keys() ):
+        for soltabName in iter( list(self.obj._v_groups.keys()) ):
             soltabNames.append(soltabName)
         return soltabNames
 
@@ -667,10 +667,10 @@ class Solset( object ):
 
         ants = self.getAnt()
 
-        if not ant in ants.keys():
+        if not ant in list(ants.keys()):
             raise "Missing antenna %s in antenna table." % ant 
 
-        return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.iteritems() }
+        return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.items() }
 
 
 
@@ -814,7 +814,7 @@ class Soltab( object ):
         if not update:
             self.selection = [slice(None)] * len(self.getAxesNames())
 
-        for axis, selVal in iter( args.items() ):
+        for axis, selVal in iter( list(args.items()) ):
             # if None continue and keep all the values
             if selVal is None: continue
 
@@ -1119,9 +1119,9 @@ class Soltab( object ):
             secondSelection = []
             for i, sel in enumerate(selection):
                 #if i == selectionListsIdx[0]: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
-                if i == selectionListsIdx[0]: secondSelection.append(range(len(sel)))
+                if i == selectionListsIdx[0]: secondSelection.append(list(range(len(sel))))
                 elif type(sel) is list: secondSelection.append(sel)
-                elif type(sel) is slice: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
+                elif type(sel) is slice: secondSelection.append(list(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False))))
             #print firstSelection
             #print secondSelection
             #print data[tuple(firstSelection)].shape
@@ -1213,7 +1213,7 @@ class Soltab( object ):
                         antDists = self.getSolset().getAntDist(antToRef) # this is a dict
                         for badAnt in self._getFullyFlaggedAnts(): del antDists[badAnt] # remove bad ants
 
-                        reference = antDists.keys()[antDists.values().index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
+                        reference = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
 
                         refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
                         dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)

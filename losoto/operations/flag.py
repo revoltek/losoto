@@ -133,7 +133,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         if replace:
             orig_weights = np.copy(weights)
 
-        for i in xrange(max_ncycles):
+        for i in range(max_ncycles):
 
             # all is flagged? break
             if (weights == 0).all():
@@ -218,7 +218,6 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
             import matplotlib as mpl
             mpl.use("Agg")
             import matplotlib.pyplot as plt
-            print vals[0]
             plt.plot(axes[1][weights[0] == 0], vals[0][weights[0] == 0], 'ro')
             plt.plot(axes[1], vals[0], 'k.')
             plt.plot(axes[1], vals_smooth[0], 'r.')

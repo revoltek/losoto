@@ -3,7 +3,7 @@
 
 # This tool is used to split an H5parm into multiple smaller ones.
 
-from __future__ import print_function
+
 import sys, os, logging
 import numpy as np
 from losoto.h5parm import h5parm
@@ -44,11 +44,11 @@ pointingNames = []; antennaNames = []
 pointingDirections = []; antennaPositions = []
 ants = solset.getAnt()
 sous = solset.getSou()
-for k,v in sous.items():
+for k,v in list(sous.items()):
     if k not in pointingNames:
         pointingNames.append(k)
         pointingDirections.append(v)
-for k, v in ants.items():
+for k, v in list(ants.items()):
     if k not in antennaNames:
         antennaNames.append(k)
         antennaPositions.append(v)

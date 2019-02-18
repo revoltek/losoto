@@ -212,7 +212,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         elif x < t[k]:
             extrap[0] = True
             invert = False
-        return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(range(n), extrap))
+        return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(list(range(n)), extrap))
 
 
     def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
@@ -326,7 +326,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                    0.15, 0.25, 0.35]
         else:
-            print('The "{}" band is not supported'.format(band))
+            print(('The "{}" band is not supported'.format(band)))
             sys.exit(1)
 
         if do_fit:
@@ -355,8 +355,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             median_min = ampRange[0]
             median_max = ampRange[-1]
         else:
-            print('The median frequency of {} Hz is outside of any supported LOFAR band '
-                  '(LBA and HBA-low)'.format(np.median(freqs)))
+            print(('The median frequency of {} Hz is outside of any supported LOFAR band '
+                  '(LBA and HBA-low)'.format(np.median(freqs))))
             sys.exit(1)
     else:
        logging.error("Only telescope = 'lofar' is currently supported for bandpass mode.")

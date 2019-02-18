@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 
 import logging
 from losoto.lib_operations import *
@@ -54,7 +54,7 @@ def run( soltab, chanWidth ):
     stationsnames = [ stat for stat in soltab.ant]
 
     subbandHz = 195.3125e3
-    if type(chanWidth) is str or type(chanWidth) is unicode:
+    if type(chanWidth) is str:
         letters = [1 for s in chanWidth[::-1] if s.isalpha()]
         indx = len(chanWidth) - sum(letters)
         unit = chanWidth[indx:]
@@ -88,7 +88,7 @@ def run( soltab, chanWidth ):
     nstations = len(stationsnames)
     refphases = phases_tmp[:, refstationID, :, :]
 
-    for istat in xrange(nstations):
+    for istat in range(nstations):
         phases_00 = phases_tmp[:, istat, :, 0] - refphases[:, :, 0]
         phases_11 = phases_tmp[:, istat, :, 1] - refphases[:, :, 1]
         phases_diff = normalize(phases_00 - phases_11)
@@ -100,7 +100,7 @@ def run( soltab, chanWidth ):
             global_stat_offsets = np.vstack( (global_stat_offsets, med_phases_diff) )
     global_stat_offsets_smoothed = np.zeros([nsubbands, nstations, npol])
     global_stat_offsets_smoothed_interp = np.zeros([len(freqs_new), nstations, npol])
-    for istat in xrange(nstations):
+    for istat in range(nstations):
         global_stat_offsets_smoothed[:, istat, -1] = sg.medfilt(global_stat_offsets[istat, :], kernel_size=15) # smooth over frequency
 
         # Convert to real/imag, invert correction (so that offsets are removed when applied),

@@ -44,13 +44,13 @@ logging.info("parmdb filename = "+parmdbFile)
 logging.info("### Read all frequencies for a pol/dir/station")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Pfreqs = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['freqs']
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='3C196',ant='CS001LBA')
     Hfreqs = H.freq
 elapsed = (time.clock() - start)
@@ -62,13 +62,13 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 logging.info("### Read all times for a pol/dir/station")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Ptimes = P.getValuesGrid('RotationAngle:CS001LBA:3C196')['RotationAngle:CS001LBA:3C196']['times']
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='3C196',ant='CS001LBA')
     Htimes = H.time
 elapsed = (time.clock() - start)
@@ -80,13 +80,13 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 logging.info("### Read all rotations for 1 station (slice in time)")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Prot = P.getValuesGrid('CommonRotationAngle:CS001LBA',stime=Ptimes[30],etime=Ptimes[-30])['CommonRotationAngle:CS001LBA']['values'].transpose()[0]
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='pointing', ant='CS001LBA', time={'min':Htimes[31],'max':Htimes[-29]})
     Hrot = H.getValues(retAxesVals = False)
 elapsed = (time.clock() - start)
@@ -98,18 +98,18 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 logging.info("### Read all rotations for all station (slice in time)")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Protd = P.getValuesGrid('CommonRotationAngle:*',stime=Ptimes[30],etime=Ptimes[-30])
     # construct the matrix
     Prot = []
-    for ant in sorted(Protd.iterkeys()):
+    for ant in sorted(Protd.keys()):
         Prot.append(Protd[ant]['values'].transpose()[0])
     Prot = np.array(Prot)
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='pointing', time={'min':Htimes[31],'max':Htimes[-29]})
     Hrot = H.getValues(retAxesVals = False)
 elapsed = (time.clock() - start)
@@ -121,18 +121,18 @@ logging.info("H5parm -- "+str(elapsed)+" s.")
 logging.info("### Read all rotations for remote stations (slice in ant)")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Protd = P.getValuesGrid('CommonRotationAngle:RS*')
     # construct the matrix
     Prot = []
-    for ant in sorted(Protd.iterkeys()):
+    for ant in sorted(Protd.keys()):
         Prot.append(Protd[ant]['values'].transpose()[0])
     Prot = np.array(Prot)
 elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='pointing', ant='RS*')
     Hrot = H.getValues(retAxesVals = False)
 elapsed = (time.clock() - start)
@@ -146,7 +146,7 @@ logging.info("### Read all rotations for a dir/station and write them back")
 Hw = solWriter(H5.getSoltab(solset,'rotation000'))
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     Prot = P.getValuesGrid('CommonRotationAngle:CS001LBA')
     Prot = {'test'+str(i):Prot['CommonRotationAngle:CS001LBA']}
     P2.addValues(Prot)
@@ -155,7 +155,7 @@ elapsed = (time.clock() - start)
 logging.info("PARMDB -- "+str(elapsed)+" s.")
 
 start = time.clock()
-for i in xrange(n):
+for i in range(n):
     H.setSelection(dir='pointing', ant='CS001LBA')
     Hrot = H.getValues(retAxesVals = False)
     Hw.setSelection(dir='pointing', ant='CS001LBA')

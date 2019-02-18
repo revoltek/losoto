@@ -81,14 +81,14 @@ if __name__=='__main__':
 
     weights = np.ones(shape=vals_amp.shape)
 
-    is_tec = 'SolsTEC' in SolsDico.keys()
+    is_tec = 'SolsTEC' in list(SolsDico.keys())
     if is_tec:
         # construct TEC array 
         vals_tec = np.zeros(shape=(td,ta,tt))
         vals_tec = SolsDico['SolsTEC'].T
         vals_csp = np.zeros(shape=(td,ta,tt))
         vals_csp = SolsDico['SolsCPhase'].T
-        print(vals_tec.shape)
+        print((vals_tec.shape))
         weights_tec = np.ones(shape=vals_tec.shape)
 
     # write to h5pram

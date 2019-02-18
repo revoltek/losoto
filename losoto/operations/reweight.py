@@ -194,7 +194,7 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
 
         weights, axes = soltab.getValues(weight = True)
         weightsI, axesI = soltabI.getValues(weight = True)
-        if axes.keys() != axesI.keys() or weights.shape != weightsI.shape:
+        if list(axes.keys()) != list(axesI.keys()) or weights.shape != weightsI.shape:
             logging.error('Impossible to merge: two tables have with different axes values.')
             return 1
         weightsI[ np.where(weights == 0) ] = 0.

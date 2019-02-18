@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+
 import sys, os, logging
 import codecs
 import numpy as np
@@ -75,14 +76,14 @@ for insoltab in insoltabs:
         soltabs.append( soltab )
         # collect pointings
         sous = solset.getSou()
-        for k,v in sous.items():
+        for k,v in list(sous.items()):
             if k not in pointingNames:
                 pointingNames.append(k)
                 pointingDirections.append(v)
 
         # collect anntennas
         ants = solset.getAnt()
-        for k, v in ants.items():
+        for k, v in list(ants.items()):
             if k not in antennaNames:
                 antennaNames.append(k)
                 antennaPositions.append(v)

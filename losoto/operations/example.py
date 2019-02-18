@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is an example operation for LoSoTo
-from __future__ import print_function
+
 
 import logging
 from losoto.lib_operations import *

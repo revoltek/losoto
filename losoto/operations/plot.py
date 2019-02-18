@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 
 #import warnings
 #warnings.simplefilter('error', UserWarning)
@@ -137,7 +137,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
                 # set color, use defined colors if a few lines, otherwise a continuum colormap
                 if len(dataCube[Ntab]) <= 6:
-                    color = colors.next()
+                    color = next(colors)
                     colorFlag = '#e41a1c'
                 else:
                     color = plt.cm.jet(Ncol/float(len(dataCube[Ntab])-1)) # from 0 to 1
@@ -594,7 +594,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         ss="mencoder -ovc lavc -lavcopts vcodec=mpeg4:vpass=1:vbitrate=6160000:mbd=2:keyint=132:v4mv:vqmin=3:lumi_mask=0.07:dark_mask=0.2:"+\
                 "mpeg_quant:scplx_mask=0.1:tcplx_mask=0.1:naq -mf type=png:fps="+str(fps)+" -nosound -o "+movieName.replace('__tmp__','')+".mpg mf://"+movieName+"*  > mencoder.log 2>&1"
         os.system(ss)
-        print(ss)
         #for png in pngs: os.system('rm '+png)
 
     return 0

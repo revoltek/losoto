@@ -22,7 +22,7 @@ from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm as h5parm_mod
 try:
-    import progressbar
+    from . import progressbar
 except ImportError:
     import losoto.progressbar as progressbar
 
@@ -338,7 +338,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     antennaPositions = antennaTable.getcol('POSITION')
     antennaTable.close()
     antennaTable = solset.obj._f_get_child('antenna')
-    antennaTable.append(zip(*(antennaNames,antennaPositions)))
+    antennaTable.append(list(zip(*(antennaNames,antennaPositions))))
 
     logging.info('Collecting information from the FIELD table.')
     fieldTable = pt.table(fieldFile, ack=False)
@@ -409,8 +409,8 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 except KeyError:
                     # Source not found in skymodel parmdb, try to find components
                     logging.warning('Cannot find the source '+source+'. Trying components.')
-                    ra = np.array(skydb.getDefValues('Ra:*' + source + '*').values())
-                    dec = np.array(skydb.getDefValues('Dec:*' + source + '*').values())
+                    ra = np.array(list(skydb.getDefValues('Ra:*' + source + '*').values()))
+                    dec = np.array(list(skydb.getDefValues('Dec:*' + source + '*').values()))
                     if len(ra) == 0 or len(dec) == 0:
                         ra = np.nan
                         dec = np.nan
@@ -420,7 +420,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                         dec = dec.mean()
                         logging.info('Found average direction for '+source+' at ra:'+str(ra)+' - dec:'+str(dec))
                 vals.append([ra, dec])
-        sourceTable.append(zip(*(dirs,vals)))
+        sourceTable.append(list(zip(*(dirs,vals))))
 
     logging.info("Total file size: "+str(int(h5parm.H.get_filesize()/1024./1024.))+" M.")
 

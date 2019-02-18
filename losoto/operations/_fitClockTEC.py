@@ -58,8 +58,8 @@ def getInitClock(data, freq):
     avgdata = np.ma.arctan2(np.imag(avgdata), np.real(avgdata))
     nSt = avgdata.shape[0]
     npol = avgdata.shape[2]
-    for ist in xrange(nSt):
-        for pol in xrange(npol):
+    for ist in range(nSt):
+        for pol in range(npol):
             mymask = avgdata[ist, :, pol].mask
             if not hasattr(mymask, '__len__'):
                 mymask = np.ones(avgdata[ist, :, pol].shape, dtype=bool) * mymask
@@ -264,10 +264,10 @@ def getClockTECFit(
     sol = np.zeros((nSt, 2+fit3rdorder), dtype=np.float)
     prevsol = np.zeros_like(sol)
     n3rd=0
-    for itm in xrange(nT):
+    for itm in range(nT):
         datatmp=np.ma.copy(data[itm, :])
         if itm == 0 or not succes:
-            for ist in xrange(nSt):
+            for ist in range(nSt):
                 if itm == 0 or not initprevsol[ist]:
                     if hasattr(initSol, '__len__') and len(initSol) > ist:
                         sol[ist,:initSol[ist].shape[0]]=initSol[ist]
@@ -317,7 +317,7 @@ def getClockTECFit(
                     sol[ist, :] = par[:]
                 #if itm%100==0:
                     #logging.debug("Getting init par for station %d:%d "%(itm,ist)+str(sol[ist]))
-        for ist in xrange(nSt):
+        for ist in range(nSt):
             #now do the real fitting
             datatmpist=datatmp[:,ist]
             if datatmpist.count() / float(nF) < 0.5:
@@ -411,7 +411,7 @@ def getClockTECFitStation(
     sol = np.zeros((2+fit3rdorder), dtype=np.float)
     prevsol = np.zeros_like(sol)
     n3rd=0
-    for itm in xrange(nT):
+    for itm in range(nT):
         datatmp=np.ma.copy(data[itm, :])
         if itm == 0 or not succes:
             if itm == 0 or not initprevsol:
@@ -582,7 +582,7 @@ def correctWraps(
     lons -= lons[0]
     lonlat = np.concatenate((lons, lats)).reshape((2, ) + lons.shape)
     # refine (is it needed for LBA? check results)
-    for nr_iter in xrange(2):
+    for nr_iter in range(2):
         # recreate best TEC at the moment
         TEC = tecarray - tecarray[:, [0]] + steps[0] * (np.round(wraps) - np.round(wraps[0]))
         TEC = np.ma.array(TEC, mask=flags)
@@ -679,7 +679,7 @@ def doFit(
 
     if flagBadChannels:
         mymask=np.zeros((nF), dtype=np.bool)
-        for nr_iter in xrange(2):
+        for nr_iter in range(2):
             rms = np.ma.std(np.ma.std(refdata, axis=0), axis=1)
             freqselect = rms < flagcut * np.average(rms)
             logging.debug('Iter %d: flagging %d channels' % (nr_iter, np.sum(np.logical_not(freqselect))))
@@ -744,7 +744,7 @@ def doFit(
     residualarray = np.zeros((nT, nF, nSt), dtype=np.float32)
     if fit3rdorder:
         tec3rdarray= np.zeros((nT, nSt), dtype=np.float32)
-    for pol in xrange(npol):
+    for pol in range(npol):
         # get a good guesss without offset
         # logging.debug("sending masked data "+str(data[:,:,:,pol].count()))
         initialchi2cut = chi2cut  # user defined
@@ -752,7 +752,7 @@ def doFit(
             initialchi2cut = 30000.  # this number is quite arbitrary
         if fit3rdorder:
               poolargs=[]
-              for ist in xrange(nSt):
+              for ist in range(nSt):
                   poolargs.append((np.ma.copy(data[:, :, ist, pol]),
                                    freqs,
                                    stations[ist],
@@ -768,7 +768,7 @@ def doFit(
                   tecarray[:, ist], clockarray[:, ist],residualarray[:,:,ist],tec3rdarray[:,ist] = tc
         else:
               poolargs=[]
-              for ist in xrange(nSt):
+              for ist in range(nSt):
                   poolargs.append((np.ma.copy(data[:, :, ist, pol]),
                                    freqs,
                                    stations[ist],
@@ -808,7 +808,7 @@ def doFit(
             # is it needed to redo the fitting? this is the time bottleneck
             if fit3rdorder:
               poolargs=[]
-              for ist in xrange(nSt):
+              for ist in range(nSt):
                   poolargs.append((np.ma.copy(data[:, :, ist, pol]),
                                    freqs,
                                    stations[ist],
@@ -824,7 +824,7 @@ def doFit(
                   tec[:, ist, pol], clock[:, ist, pol],tec3rd[:,ist,pol] = tc
             else:
               poolargs=[]
-              for ist in xrange(nSt):
+              for ist in range(nSt):
                   poolargs.append((np.ma.copy(data[:, :, ist, pol]),
                                    freqs,
                                    stations[ist],

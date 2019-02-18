@@ -61,7 +61,7 @@ def _convert_strval(val):
     val : float
         Value in fundamental units (s or Hz)
     """
-    if type(val) is str or type(val) is unicode:
+    if type(val) is str:
         letters = [1 for s in val[::-1] if s.isalpha()]
         indx = len(val) - sum(letters)
         unit = val[indx:]

@@ -44,7 +44,7 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
         for i, s in enumerate(size):
             if s == 0: size[i] = 2*weights.shape[i]
 
-        for cycle in xrange(maxCycles):
+        for cycle in range(maxCycles):
             flag = scipy.ndimage.filters.generic_filter((weights==0), extendFlag, size=size, mode='mirror', cval=0.0, origin=0, extra_keywords={'percent':percent})
             weights[ ( flag == 1 ) ] = 0
             # no new flags

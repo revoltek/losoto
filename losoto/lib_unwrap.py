@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #from __future__ import division
-from __future__ import print_function
+
 import numpy as np
 import scipy.fftpack as fft
 import logging
@@ -74,7 +74,7 @@ def unwrap(phase, window_size=5):
     meanu = windowu.mean()
     slope = (meanu - meanl) / float(window_size)
 
-    for i in xrange(2, len(phase)):
+    for i in range(2, len(phase)):
         ref = meanu + (1.0 + (float(window_size) - 1.0) / 2.0) * slope
         delta = math.fmod(phase[i] - ref, 2.0 * math.pi)
 
@@ -114,8 +114,8 @@ def unwrap_huib( x, window = 10, alpha = 0.01, iterations = 3,
         s = ( clip_range[ 1 ] - clip_range[ 0 ] ) / 90.
     a = np.ones( ( window ), dtype = np.float64 ) / float( window )
     xs = xx[ 0 ]
-    for j in xrange( 2 * iterations ):
-        for k in xrange( window, len( x ) ):
+    for j in range( 2 * iterations ):
+        for k in range( window, len( x ) ):
             xi = xx[ k - window : k ]
             xp = np.dot( xi, a )
             e = xx[ k ] - xp
@@ -228,9 +228,9 @@ if __name__ == "__main__":
     #    phase_unwrapped = unwrap_dct(phase_wrapped)
     t1 = time()-t0
     coord = None
-    print('time:\t%fs'%(t1))
+    #print('time:\t%fs'%(t1))
     
-    print('norm:', np.abs(phase_unwrapped-phase_orig) )
+    #print('norm:', np.abs(phase_unwrapped-phase_orig) )
     
     fig, ((ax1,ax2),(ax3,ax4)) = pl.subplots(2,2)
     im1 = ax1.imshow(phase_orig.__array__())

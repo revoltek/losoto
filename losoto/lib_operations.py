@@ -52,7 +52,7 @@ class multiprocManager(object):
         self.runs = 0
         
         logging.debug('Spawning %i threads...' % self.procs)
-        for proc in xrange(self.procs):
+        for proc in range(self.procs):
             t = self.multiThread(self.inQueue, self.outQueue, funct)
             self._threads.append(t)
             t.start()
@@ -70,7 +70,7 @@ class multiprocManager(object):
         """
         # NOTE: do not use queue.empty() check which is unreliable
         # https://docs.python.org/2/library/multiprocessing.html
-        for run in xrange(self.runs):
+        for run in range(self.runs):
             yield self.outQueue.get()
 
     def wait(self):

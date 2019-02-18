@@ -322,7 +322,7 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
 
 
     # Collect info
-    source_names = source_dict.keys()
+    source_names = list(source_dict.keys())
     source_positions = []
     for source in source_names:
         source_positions.append(source_dict[source])
@@ -359,7 +359,7 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
 
     # Update solset source table if new sources are present
     needs_update = False
-    for k, v in source_dict.iteritems():
+    for k, v in source_dict.items():
         if k not in solset.getSou():
             needs_update = True
             break
@@ -371,14 +371,14 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
         sourceTable = solset.obj._f_get_child('source')
         names = []
         positions = []
-        for k, v in source_dict_orig.iteritems():
+        for k, v in source_dict_orig.items():
             # Add sources from original dict
             names.append(k)
             if type(v) is list:
                 positions.append(v)
             else:
                 positions.append(v.tolist())
-        for k, v in source_dict.iteritems():
+        for k, v in source_dict.items():
             # Add any new sources
             if k not in names:
                 names.append(k)
@@ -386,7 +386,7 @@ def run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0):
                     positions.append(v)
                 else:
                     positions.append(v.tolist())
-        sourceTable.append(zip(*(names, positions)))
+        sourceTable.append(list(zip(*(names, positions))))
 
     # Write the results to the output soltab(s)
     dirs_out = source_names

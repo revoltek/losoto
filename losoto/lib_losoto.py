@@ -26,8 +26,8 @@ class LosotoParser(ConfigParser):
     def __init__(self, parsetFile):
         ConfigParser.__init__(self, inline_comment_prefixes=('#',';'))
 
-        import StringIO
-        config = StringIO.StringIO()
+        import io
+        config = io.StringIO()
         # add [_global] fake section at beginning
         config.write('[_global]\n'+open(parsetFile).read())
         config.seek(0, os.SEEK_SET)
@@ -37,7 +37,7 @@ class LosotoParser(ConfigParser):
         """
         check if any value in the step is missing from a value list and return a warning
         """
-        entries = [x.lower() for x in dict(self.items(s)).keys()]
+        entries = [x.lower() for x in list(dict(self.items(s)).keys())]
         availValues = ['soltab','operation'] + availValues + \
                     soltab.getAxesNames() + [a+'.minmaxstep' for a in soltab.getAxesNames()] + [a+'.regexp' for a in soltab.getAxesNames()]
         availValues = [x.lower() for x in availValues]

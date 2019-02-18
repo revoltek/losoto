@@ -207,12 +207,12 @@ def makeTECparmdb(H, solset, TECsolTab, timewidths, freq, freqwidth):
     solset = H.getSolset(solset)
 
     station_dict = solset.getAnt()
-    station_names = station_dict.keys()
-    station_positions = station_dict.values()
+    station_names = list(station_dict.keys())
+    station_positions = list(station_dict.values())
 
     source_dict = solset.getSou()
-    source_names = source_dict.keys()
-    source_positions = source_dict.values()
+    source_names = list(source_dict.keys())
+    source_positions = list(source_dict.values())
 
     tec_sf = solset.getSoltab(TECsolTab)
     tec_screen, axis_vals = tec_sf.getValues()
@@ -468,7 +468,7 @@ if __name__=='__main__':
 
         # Add default values and steps
         DefValues = pdb_in.getDefValues()
-        for k, v in DefValues.iteritems():
+        for k, v in DefValues.items():
             pdb_out.addDefValues({k: pdb.makeDefValue(v.item(0))})
         pdb_out.setDefaultSteps(pdb_in.getDefaultSteps())
 
@@ -580,7 +580,7 @@ if __name__=='__main__':
                     #for t in sf.time: print '%.1f' % t
                     try:
                         data_out[solEntry]['values'] = val.T.reshape(shape)
-                    except ValueError, err:
+                    except ValueError as err:
                         logging.critical('Mismatch between parmdb table and H5parm '
                         'solution table: Differing number of frequencies and/or times')
                         sys.exit(1)
