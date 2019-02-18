@@ -39,7 +39,7 @@ class LosotoParser(ConfigParser):
         """
         entries = [x.lower() for x in dict(self.items(s)).keys()]
         availValues = ['soltab','operation'] + availValues + \
-                    soltab.getAxesNames() + [a+'.minmaxstep' for a in soltab.getAxesNames()] + [a+'.regexpt' for a in soltab.getAxesNames()]
+                    soltab.getAxesNames() + [a+'.minmaxstep' for a in soltab.getAxesNames()] + [a+'.regexp' for a in soltab.getAxesNames()]
         availValues = [x.lower() for x in availValues]
         for e in entries:
             if e not in availValues:
@@ -47,7 +47,7 @@ class LosotoParser(ConfigParser):
 
     def getstr(self, s, v, default=None):
         if self.has_option(s, v):
-            return self.get(s, v).replace('\'','').replace('"','') # remove apex
+            return str(self.get(s, v).replace('\'','').replace('"','')) # remove apex
         elif default is None:
             logging.error('Section: %s - Values: %s: required (expected string).' % (s, v))
         else:
