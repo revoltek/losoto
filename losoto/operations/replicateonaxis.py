@@ -3,7 +3,6 @@
 
 import logging
 from losoto.lib_operations import *
-import numpy as np
 
 logging.debug('Loading REPLICATEONAXIS module.')
 
@@ -26,6 +25,7 @@ def run( soltab, axisReplicate, fromCell):
     fromCell : str
         A cell value in axisReplicate from which to copy the data values.
     """
+    import numpy as np
 
     if not axisReplicate in soltab.getAxesNames():
         logging.error('Cannot find axis %s.' % axisReplicate)

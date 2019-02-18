@@ -648,6 +648,31 @@ class Solset( object ):
 
         return sources
 
+    def getAntDist(self, ant=None):
+        """
+        Get antenna distance to a specified one.
+
+        Parameters
+        ----------
+        ant : str
+            An antenna name.
+
+        Returns
+        -------
+        str
+            Dict of distances to each antenna. The distance with the antenna "ant" is 0.
+        """
+        if ant is None:
+            raise "Missing antenna name."
+
+        ants = self.getAnt()
+
+        if not ant in ants.keys():
+            raise "Missing antenna %s in antenna table." % ant 
+
+        return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.iteritems() }
+
+
 
 class Soltab( object ):
     """
@@ -697,6 +722,8 @@ class Soltab( object ):
         if self.useCache:
             logging.debug("Caching...")
             self.setCache(self.obj.val, self.obj.weight)
+
+        self.fullyFlaggedAnts = None # this is populated if required by reference
 
 
     def delete(self):
@@ -1104,6 +1131,28 @@ class Soltab( object ):
             return data[tuple(selection)]
 
 
+    def _getFullyFlaggedAnts(self):
+        if self.fullyFlaggedAnts is None:
+            self.fullyFlaggedAnts = [] # fully flagged antennas
+            antAxis = self.getAxesNames().index('ant')
+
+            if self.useCache:
+                dataWeights = self.cacheWeight
+            else:
+                dataWeights = self.obj.weight
+
+            for antToCheck in self.getAxisValues('ant', ignoreSelection=True):
+                # fully flagged?
+                refSelection = [slice(None)] * len(self.getAxesNames())
+                refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(antToCheck)]
+                if (self._applyAdvSelection(dataWeights, refSelection) == 0 ).all():
+                    self.fullyFlaggedAnts.append(antToCheck)
+
+        return self.fullyFlaggedAnts
+
+
+
+
     def getValues(self, retAxesVals=True, weight=False, reference=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
@@ -1118,6 +1167,7 @@ class Soltab( object ):
             If true get the weights instead that the vals, by defaul False.
         reference : str, optional
             In case of phase solutions, reference to this station name. By default no reference.
+            If "closest" reference to the closest antenna.
 
         Returns
         -------
@@ -1139,7 +1189,7 @@ class Soltab( object ):
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, and rotation solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
-            elif not reference in self.getAxisValues('ant', ignoreSelection = True):
+            elif not reference in self.getAxisValues('ant', ignoreSelection = True) and reference != 'closest':
                 logging.error('Cannot find antenna '+reference+'. Ignore referencing.')
             else:
 
@@ -1149,17 +1199,44 @@ class Soltab( object ):
                 else:
                     if weight: dataValsRef = self.obj.weight
                     else: dataValsRef = self.obj.val
-                refSelection = self.selection[:]
+                
                 antAxis = self.getAxesNames().index('ant')
-                refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
-                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+                refSelection = self.selection[:]
 
-                if weight:
-                    dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
+                if reference == 'closest':
+                    
+                    # put antenna addxis first
+                    dataVals = np.swapaxes(dataVals, 0, antAxis)
+
+                    for i, antToRef in enumerate(self.getAxisValues('ant')):
+                        # get the closest antenna
+                        antDists = self.getSolset().getAntDist(antToRef) # this is a dict
+                        for badAnt in self._getFullyFlaggedAnts(): del antDists[badAnt] # remove bad ants
+
+                        reference = antDists.keys()[antDists.values().index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
+
+                        refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
+                        dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+                        dataValsRef = np.swapaxes(dataValsRef, 0, antAxis)
+                        if weight:
+                            dataVals[ dataValsRef == 0. ] = 0.
+                        else:
+                            dataVals[i] -= dataValsRef[0]
+                        dataValsRef = np.swapaxes(dataValsRef, 0, antAxis)
+
+                    dataVals = np.swapaxes(dataVals, 0, antAxis)
+ 
                 else:
-                    dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                    if not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
-                        dataVals = normalize_phase(dataVals)
+                    refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
+                    dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+    
+                    if weight:
+                        dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
+                    else:
+                        dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
+                
+                if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
+                    dataVals = normalize_phase(dataVals)
 
         if not retAxesVals:
             return dataVals
