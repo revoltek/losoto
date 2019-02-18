@@ -8,19 +8,24 @@ from losoto.lib_operations import *
 logging.debug('Loading FARADAY module.')
 
 def _run_parser(soltab, parser, step):
+    soltabOut = parser.getstr( step, 'soltabOut', 'faraday' )
     refAnt = parser.getstr( step, 'refAnt', '')
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
 
-    parser.checkSpelling( step, soltab, ['refAnt', 'maxResidual'])
-    return run(soltab, refAnt, maxResidual)
+    parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
+    return run(soltab, soltabOut, refAnt, maxResidual)
 
 
-def run( soltab, refAnt='', maxResidual=1. ):
+def run( soltab, soltabOut='faraday', refAnt='', maxResidual=1. ):
     """
     Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).
 
     Parameters
     ----------
+    
+    soltabOut : str, optional
+        output table name (same solset), by deault "phasediff".
+        
     refAnt : str, optional
         Reference antenna, by default the first.
 
@@ -57,7 +62,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
        return 1
 
     ants = soltab.getAxisValues('ant')
-    if refAnt != '' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
         refAnt = ants[0]
     if refAnt == '': refAnt = ants[0]
@@ -67,7 +72,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
 
     # create new table
     solset = soltab.getSolset()
-    soltabout = solset.makeSoltab('rotationmeasure',
+    soltabout = solset.makeSoltab('rotationmeasure', soltabName = soltabOut,
                              axesNames=['ant','time'], axesVals=[ants, times],
                              vals=np.zeros((len(ants),len(times))),
                              weights=np.ones((len(ants),len(times))))
@@ -82,6 +87,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
         # reorder axes
         vals = reorderAxes( vals, soltab.getAxesNames(), returnAxes )
         weights = reorderAxes( weights, soltab.getAxesNames(), returnAxes )
+        weights[np.isnan(vals)] = 0.
 
         fitrm = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
@@ -104,6 +110,7 @@ def run( soltab, refAnt='', maxResidual=1. ):
                         phase_ll  = vals[coord_ll,:,t][idx]
                         # RR-LL to be consistent with BBS/NDPPP
                         phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
+                        print (freq, phase_diff)
                     else: # rotation table
                         idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
                         freq       = np.copy(coord['freq'])[idx]

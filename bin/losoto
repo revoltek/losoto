@@ -112,6 +112,7 @@ if __name__=='__main__':
                    "NORM": operations.norm,
                    "PLOT": operations.plot,
                    "PLOTSCREEN": operations.plotscreen,
+                   "REPLICATEONAXIS": operations.replicateonaxis,
                    "RESET": operations.reset,
                    "RESIDUALS": operations.residuals,
                    "REWEIGHT": operations.reweight,

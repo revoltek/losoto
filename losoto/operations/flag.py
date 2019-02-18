@@ -144,7 +144,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
                 vals_smooth = np.copy(vals)
                 np.putmask(vals_smooth, weights==0, np.nan)
                 if all(o == 0 for o in order): order = vals_smooth.shape
-                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order)
+                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order, mode='constant', cval=np.nan)
                 vals_detrend = vals - vals_smooth
             # TODO: should be rolling
             elif mode == 'poly':
@@ -218,12 +218,13 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
             import matplotlib as mpl
             mpl.use("Agg")
             import matplotlib.pyplot as plt
-            plt.plot(axes[0][weights == 0], vals[weights == 0], 'ro')
-            plt.plot(axes[0], vals, 'k.')
-            plt.plot(axes[0], vals_smooth, 'r.')
-            #plt.plot(axes[0], vals_detrend, 'g.')
+            print vals[0]
+            plt.plot(axes[1][weights[0] == 0], vals[0][weights[0] == 0], 'ro')
+            plt.plot(axes[1], vals[0], 'k.')
+            plt.plot(axes[1], vals_smooth[0], 'r.')
+            plt.plot(axes[1], vals_detrend[0], 'g.')
             plt.savefig('test.png')
-            #sys.exit(1)
+            sys.exit(1)
 
         return weights, vals, rms
 
