@@ -304,7 +304,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         os.makedirs(os.path.dirname(prefix))
 
     if refAnt == '': refAnt = None
-    elif not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+    elif refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
 
