@@ -361,7 +361,8 @@ class h5parm( object ):
                             else: f.write(" ".join(["{}".format(v) for v in vals])+"\n\n")
                     info += "\nSolution table '%s' (type: %s): %s\n" % (soltab.name, soltab.getType(), ", ".join(axis_str_list))
                     weights = soltab.getValues(weight = True, retAxesVals = False)
-                    info += '    Flagged data: %.3f%%\n' % (100.*np.sum(weights==0)/len(weights.flat))
+                    vals = soltab.getValues(weight = False, retAxesVals = False)
+                    info += '    Flagged data: %.3f%%\n' % (100.*np.sum(weights==0 | np.isnan(vals))/len(weights.flat))
 
                     # Add some extra attributes stored in screen-type tables
                     if soltab.getType() == 'screen':
