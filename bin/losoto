@@ -164,4 +164,3 @@ if __name__=='__main__':
 
     logging.info("Time for all steps: %i s." % ( time.time() - globalstart ))
     logging.info("Done.")
-:q
