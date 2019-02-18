@@ -36,9 +36,10 @@ def my_close_open_files(verbose):
 if __name__=='__main__':
     # Options
     import argparse
-    parser = argparse.ArgumentParser(description='LoSoTo - '+_author, version=_version.__version__)
+    parser = argparse.ArgumentParser(description='LoSoTo - '+_author)
+    parser.add_argument('--version', action='version', version=_version.__version__)
     parser.add_argument('--quiet', '-q', dest='quiet', help='Quiet', default=False, action='store_true')
-    parser.add_argument('--verbose', '-V', dest='verbose', help='Verbose', default=False, action='store_true')
+    parser.add_argument('--verbose', '-V', '-v', dest='verbose', help='Verbose', default=False, action='store_true')
     parser.add_argument('--filter', '-f', dest='filter', help='Filter to use with "-i" option to filter on solution set names (default=None)', default=None, type=str)
     parser.add_argument('--info', '-i', dest='info', help='List information about h5parm file (default=False). A filter on the solution set names can be specified with the "-f" option.', default=False, action='store_true')
     parser.add_argument('--delete', '-d', dest='delete', help='Specify a solution table to be deleted. Use the solset/soltab sintax.', default=None, type=str)
