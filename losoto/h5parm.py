@@ -501,8 +501,6 @@ class Solset( object ):
         soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
         soltab._v_attrs['parmdb_type'] = parmdbType
         for i, axisName in enumerate(axesNames):
-            #axis = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, axisName,\
-            #        obj=axesVals[i], chunkshape=[len(axesVals[i])])
             axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
 
         # create the val/weight Carrays
@@ -825,7 +823,7 @@ class Soltab( object ):
 
             # find the index of the working axis
             idx = self.getAxesNames().index(axis)
-            
+
             # slice -> let the slice be as it is
             if isinstance(selVal, slice):
                 self.selection[idx] = selVal
@@ -872,7 +870,8 @@ class Soltab( object ):
                 if type(selVal) is np.array or type(selVal) is np.ndarray: selVal = selVal.tolist()
                 if not type(selVal) is list: selVal = [selVal]
                 # convert to correct data type (from parset everything is a str)
-                selVal = np.array(selVal, dtype=self.getAxisType(axis))
+                if not self.getAxisType(axis).type is np.string_:
+                    selVal = np.array(selVal, dtype=self.getAxisType(axis))
 
                 if len(selVal) == 1:
                     # speedup in the common case of a single value
