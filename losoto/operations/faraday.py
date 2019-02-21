@@ -110,7 +110,6 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
                         phase_ll  = vals[coord_ll,:,t][idx]
                         # RR-LL to be consistent with BBS/NDPPP
                         phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-                        print (freq, phase_diff)
                     else: # rotation table
                         idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
                         freq       = np.copy(coord['freq'])[idx]
