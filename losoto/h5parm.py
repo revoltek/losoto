@@ -872,6 +872,8 @@ class Soltab( object ):
                 # convert to correct data type (from parset everything is a str)
                 if not self.getAxisType(axis).type is np.string_:
                     selVal = np.array(selVal, dtype=self.getAxisType(axis))
+                else:
+                    selVal = np.array(selVal)
 
                 if len(selVal) == 1:
                     # speedup in the common case of a single value
