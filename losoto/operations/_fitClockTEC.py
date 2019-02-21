@@ -682,7 +682,7 @@ def doFit(
         for nr_iter in range(2):
             rms = np.ma.std(np.ma.std(refdata, axis=0), axis=1)
             freqselect = rms < flagcut * np.average(rms)
-            logging.debug('Iter %d: flagging %d channels' % (nr_iter, np.sum(np.logical_not(freqselect))))
+            logging.debug('Iter %d: flagging %d channels' % (nr_iter, np.sum(np.logical_not(np.array(freqselect)))))
             #freqs = freqs[freqselect]
             #data = data[:, freqselect]
             mymask=np.ma.logical_or(mymask,~freqselect)
