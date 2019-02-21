@@ -119,7 +119,7 @@ def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, a
         if float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
             # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
+                         '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
         else:
             # Station is OK, flag bad points only
@@ -133,7 +133,7 @@ def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, a
 
 
 def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlaggedFraction, maxStddev,
-                     plot, ants, s, outQueue):
+                   plot, ants, s, outQueue):
     """
     Flags bad amplitude solutions relative to median bandpass (in log space) by setting
     the corresponding weights to 0.0
@@ -192,15 +192,14 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             else:
                 return 1.0 if t[i] <= x < t[i+1] else 0.0
         if t[i+k] == t[i]:
-           c1 = 0.0
+            c1 = 0.0
         else:
-           c1 = (x - t[i])/(t[i+k] - t[i]) * _B(x, k-1, i, t, extrap, invert)
+            c1 = (x - t[i])/(t[i+k] - t[i]) * _B(x, k-1, i, t, extrap, invert)
         if t[i+k+1] == t[i+1]:
-           c2 = 0.0
+            c2 = 0.0
         else:
-           c2 = (t[i+k+1] - x)/(t[i+k+1] - t[i+1]) * _B(x, k-1, i+1, t, extrap, invert)
+            c2 = (t[i+k+1] - x)/(t[i+k+1] - t[i+1]) * _B(x, k-1, i+1, t, extrap, invert)
         return c1 + c2
-
 
     def _bspline(x, t, c, k):
         n = len(t) - k - 1
@@ -213,7 +212,6 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             extrap[0] = True
             invert = False
         return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(list(range(n)), extrap))
-
 
     def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
         """
@@ -243,7 +241,6 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13])
         return [_bspline(f, knots, coeffs, 3) for f in freq]
 
-
     def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
         """
         Defines the functional form of the HBA-low bandpass in terms of splines of degree
@@ -272,7 +269,6 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
                           1.9e+08, 1.9e+08])
         coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10])
         return [_bspline(f, knots, coeffs, 3) for f in freq]
-
 
     def _fit_bandpass(freq, logamp, sigma, band, do_fit=True):
         """
@@ -359,9 +355,9 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
                   '(LBA and HBA-low)'.format(np.median(freqs))))
             sys.exit(1)
     else:
-       logging.error("Only telescope = 'lofar' is currently supported for bandpass mode.")
-       outQueue.put([s, weights])
-       return 1
+        logging.error("Only telescope = 'lofar' is currently supported for bandpass mode.")
+        outQueue.put([s, weights])
+        return 1
 
     # Skip fully flagged stations
     if np.all(weights == 0.0):
@@ -378,7 +374,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     sigma[flagged] = 1e8
 
     # Iterate over polarizations
-    npols = amps.shape[2] # number of polarizations
+    npols = amps.shape[2]
     for pol in range(npols):
         # Skip fully flagged polarizations
         if np.all(weights[:, :, pol] == 0.0):
@@ -441,12 +437,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         if stdev_all > nSigma*maxStddev:
             # Station has high stddev relative to median bandpass
             logging.info('Flagged {0} (pol {1}) due to high stddev '
-                  '({2})'.format(ants[s], pol, stdev_all))
+                         '({2})'.format(ants[s], pol, stdev_all))
             weights[:, :, pol] = 0.0
         elif float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
             # Station has high fraction of initially unflagged solutions that are now flagged
             logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                  '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
+                         '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
             weights[:, :, pol] = 0.0
         else:
             flagged = np.where(sigma_div > 1e3)
@@ -457,7 +453,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             if median_val < median_min or median_val > median_max:
                 # Station has extreme median value
                 logging.info('Flagged {0} (pol {1}) due to extreme median value '
-                      '({2})'.format(ants[s], pol, median_val))
+                             '({2})'.format(ants[s], pol, median_val))
                 weights[:, :, pol] = 0.0
             else:
                 # Station is OK, flag bad points only
@@ -467,7 +463,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=[50,200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=[50, 200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -514,7 +510,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
         refAnt = None
     if soltabExport == '':
         soltabExport = None
-    if mode == None or mode.lower() not in ['bandpass', 'resid']:
+    if mode is None or mode.lower() not in ['bandpass', 'resid']:
         logging.error('Mode must be one of bandpass or resid')
         return 1
     solType = soltab.getType()
@@ -528,9 +524,9 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
     axis_names = soltab.getAxesNames()
     if ('freq' not in axis_names or 'pol' not in axis_names or
         'time' not in axis_names or 'ant' not in axis_names):
-       logging.error("Currently, flagstation requires the following axes: "
+        logging.error("Currently, flagstation requires the following axes: "
                      "freq, pol, time, and ant.")
-       return 1
+        return 1
     freq_ind = axis_names.index('freq')
     pol_ind = axis_names.index('pol')
     time_ind = axis_names.index('time')
@@ -549,8 +545,8 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     if mode == 'bandpass':
         if solType != 'amplitude':
-           logging.error("Soltab must be of type amplitude for bandpass mode.")
-           return 1
+            logging.error("Soltab must be of type amplitude for bandpass mode.")
+            return 1
 
         # Fill the queue
         if 'dir' in axis_names:
@@ -594,28 +590,44 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
                           'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
     else:
         if solType not in ['phase', 'amplitude']:
-           logging.error("Soltab must be of type phase or amplitude for resid mode.")
-           return 1
+            logging.error("Soltab must be of type phase or amplitude for resid mode.")
+            return 1
 
         # Subtract reference phases
         if refAnt is not None:
             if solType != 'phase':
                 logging.error('Reference possible only for phase solution tables. Ignoring referencing.')
             else:
-                ants = soltab.getAxisValues('ant')
-                if refAnt not in ants:
-                    logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
-                    refAnt = ants[0]
-                refInd = ants.tolist().index(refAnt)
-                if 'dir' in axis_names:
-                    vals_arrayref = vals_arraytmp[:, refInd, :, :, :].copy()
+                if refAnt == 'nearest':
+                    for i, antToRef in enumerate(soltab.getAxisValues('ant')):
+                        # get the closest antenna
+                        antDists = soltab.getSolset().getAntDist(antToRef) # this is a dict
+                        for badAnt in soltab._getFullyFlaggedAnts(): del antDists[badAnt] # remove bad ants
+                        reference = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
+                        refInd = soltab.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)
+                        if 'dir' in axis_names:
+                            vals_arrayref = vals_arraytmp[:, refInd, :, :, :].copy()
+                        else:
+                            vals_arrayref = vals_arraytmp[:, refInd, :, :].copy()
+                        if 'dir' in axis_names:
+                            vals_arraytmp[:, i, :, :, :] -= vals_arrayref
+                        else:
+                            vals_arraytmp[:, i, :, :] -= vals_arrayref
                 else:
-                    vals_arrayref = vals_arraytmp[:, refInd, :, :].copy()
-                for i in range(len(soltab.ant)):
+                    ants = soltab.getAxisValues('ant')
+                    if refAnt not in ants:
+                        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+                        refAnt = ants[0]
+                    refInd = ants.tolist().index(refAnt)
                     if 'dir' in axis_names:
-                        vals_arraytmp[:, i, :, :, :] -= vals_arrayref
+                        vals_arrayref = vals_arraytmp[:, refInd, :, :, :].copy()
                     else:
-                        vals_arraytmp[:, i, :, :] -= vals_arrayref
+                        vals_arrayref = vals_arraytmp[:, refInd, :, :].copy()
+                    for i in range(len(soltab.ant)):
+                        if 'dir' in axis_names:
+                            vals_arraytmp[:, i, :, :, :] -= vals_arrayref
+                        else:
+                            vals_arraytmp[:, i, :, :] -= vals_arrayref
 
         # Fill the queue
         if 'dir' in axis_names:
