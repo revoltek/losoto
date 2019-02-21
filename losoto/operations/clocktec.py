@@ -9,10 +9,10 @@ from losoto.lib_operations import *
 logging.debug('Loading CLOCKTEC module.')
 
 def _run_parser(soltab, parser, step):
-    clocksoltabOut = parser.getstr( step, 'clocksoltabOut', 'clock' )
-    tecsoltabOut = parser.getstr( step, 'tecsoltabOut', 'tec' )
-    offsetsoltabOut = parser.getstr( step, 'offsetsoltabOut', 'phase_offset' )
-    tec3rdsoltabOut = parser.getstr( step, 'tec3rdsoltabOut', 'tec3rd' )
+    clocksoltabOut = parser.getstr( step, 'clocksoltabOut', 'clock000' )
+    tecsoltabOut = parser.getstr( step, 'tecsoltabOut', 'tec000' )
+    offsetsoltabOut = parser.getstr( step, 'offsetsoltabOut', 'phase_offset000' )
+    tec3rdsoltabOut = parser.getstr( step, 'tec3rdsoltabOut', 'tec3rd000' )
     flagBadChannels = parser.getbool( step, 'flagBadChannels', True )
     flagCut = parser.getfloat( step, 'flagCut', 5. )
     chi2cut = parser.getfloat( step, 'chi2cut', 3000. )
@@ -27,7 +27,7 @@ def _run_parser(soltab, parser, step):
     return run(soltab, tecsoltabOut, clocksoltabOut, offsetsoltabOut, tec3rdsoltabOut, flagBadChannels, flagCut, chi2cut, combinePol, removePhaseWraps, fit3rdorder, circular, reverse,nproc)
 
 
-def run( soltab, tecsoltabOut='tec', clocksoltabOut='clock', offsetsoltabOut='phase_offset', tec3rdsoltabOut='tec3rd', flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=False, removePhaseWraps=True, fit3rdorder=False, circular=False, reverse=False,nproc=10 ):
+def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabOut='phase_offset000', tec3rdsoltabOut='tec3rd000', flagBadChannels=True, flagCut=5., chi2cut=3000., combinePol=False, removePhaseWraps=True, fit3rdorder=False, circular=False, reverse=False,nproc=10 ):
     """
     Separate phase solutions into Clock and TEC.
     The Clock and TEC values are stored in the specified output soltab with type 'clock', 'tec', 'tec3rd'.

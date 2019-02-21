@@ -40,8 +40,8 @@ def run( soltab, axesToNorm, normVal = 1. ):
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToNorm, weight = True):
 
         # rescale solutions
-        if np.sum(weights) == 0: continue # skip flagged selections
-        valsMean = np.average(vals, weights=weights)
+        if np.all(weights == 0): continue # skip flagged selections
+        valsMean = np.nanmean(vals[weights != 0])
         vals[weights != 0] *= normVal/valsMean
         logging.debug(str(coord))
         logging.debug("Rescaling by: "+str(normVal/valsMean))

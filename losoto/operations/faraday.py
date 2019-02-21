@@ -8,7 +8,7 @@ from losoto.lib_operations import *
 logging.debug('Loading FARADAY module.')
 
 def _run_parser(soltab, parser, step):
-    soltabOut = parser.getstr( step, 'soltabOut', 'faraday' )
+    soltabOut = parser.getstr( step, 'soltabOut', 'rotationmeasure000' )
     refAnt = parser.getstr( step, 'refAnt', '')
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
 
@@ -16,7 +16,7 @@ def _run_parser(soltab, parser, step):
     return run(soltab, soltabOut, refAnt, maxResidual)
 
 
-def run( soltab, soltabOut='faraday', refAnt='', maxResidual=1. ):
+def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
     """
     Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).
 
@@ -24,7 +24,7 @@ def run( soltab, soltabOut='faraday', refAnt='', maxResidual=1. ):
     ----------
     
     soltabOut : str, optional
-        output table name (same solset), by deault "phasediff".
+        output table name (same solset), by deault "rotationmeasure000".
         
     refAnt : str, optional
         Reference antenna, by default the first.
@@ -110,7 +110,6 @@ def run( soltab, soltabOut='faraday', refAnt='', maxResidual=1. ):
                         phase_ll  = vals[coord_ll,:,t][idx]
                         # RR-LL to be consistent with BBS/NDPPP
                         phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
-                        print (freq, phase_diff)
                     else: # rotation table
                         idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
                         freq       = np.copy(coord['freq'])[idx]
