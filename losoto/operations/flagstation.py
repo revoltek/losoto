@@ -331,7 +331,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             param_bounds = (lower, upper)
             try:
                 popt, pcov = curve_fit(bandpass_function, freq, logamp, sigma=sigma,
-                                       bounds=param_bounds, method='dogbox')
+                                       bounds=param_bounds, method='dogbox', ftol=1e-3,
+                                       xtol=1e-3, gtol=1e-3)
                 return popt, bandpass_function(freq, *tuple(popt))
             except RuntimeError:
                 logging.error('Fitting failed.' )
