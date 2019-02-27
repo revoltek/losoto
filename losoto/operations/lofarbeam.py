@@ -34,7 +34,6 @@ def run( soltab, ms, inverse=False, useElementResponse=True, useArrayFactor=True
     import casacore.tables as pt
     from lofar.stationresponse import stationresponse
 
-    t = pt.table(ms, ack=False)
     sr = stationresponse(ms, inverse, useElementResponse, useArrayFactor, useChanFreq)
 
     numants = pt.taql('select gcount(*) as numants from '+ms+'::ANTENNA').getcol('numants')[0]
