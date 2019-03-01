@@ -20,7 +20,7 @@ parser.add_argument('length', help='Target length of axis in each output h5parm 
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
 parser.add_argument('--outsolset', '-o', default=None, dest='outsolset', help='Output solset name [default: same as insolset]')
 parser.add_argument('--root', '-r', default='output', dest='root', help='Root of output h5parm names; e.g., root_0.h5, root_1.h5, etc. [default: output]')
-parser.add_argument('--verbose', '-V', default=False, action='store_true', help='Go Vebose! (default=False)')
+parser.add_argument('--verbose', '-V', '-v', default=False, action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm files (default=False)')
 args = parser.parse_args()
 
