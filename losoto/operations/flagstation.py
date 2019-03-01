@@ -588,7 +588,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
             weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, maxFlaggedFraction={1}, '
-                          'nSigma={2}'.format(telescope, maxFlaggedFraction, nSigma))
+                          'nSigma={2})'.format(telescope, maxFlaggedFraction, nSigma))
     else:
         if solType not in ['phase', 'amplitude']:
             logging.error("Soltab must be of type phase or amplitude for resid mode.")
@@ -663,7 +663,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
             weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
         soltab.setValues(weights_array, weight=True)
         soltab.addHistory('FLAGSTATION (mode=resid, maxFlaggedFraction={0}, '
-                          'nSigma={1}'.format(maxFlaggedFraction, nSigma))
+                          'nSigma={1})'.format(maxFlaggedFraction, nSigma))
 
     if soltabExport is not None:
         # Transfer station flags to soltabExport
