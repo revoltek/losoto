@@ -10,7 +10,7 @@ logging.debug('Loading TEC module.')
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'tec000' )
     refAnt = parser.getstr( step, 'refAnt', '')
-    maxResidual = parser.getfloat( step, 'maxResidual', 1. )
+    maxResidual = parser.getfloat( step, 'maxResidual', 1 )
 
     parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
     return run(soltab, soltabOut, refAnt, maxResidual)
@@ -36,14 +36,18 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
     import scipy.optimize
     from losoto.lib_unwrap import unwrap_2d
 
-    dreal = lambda d, freq, y: -8.44797245e9*d[0]/freq - y
-    dreal2 = lambda d, freq, y: -8.44797245e9*d[0]/freq + d[1] - y
+    def mod(d):
+        return np.mod(d + np.pi, 2.*np.pi) - np.pi
+
+    drealbrute = lambda d, freq, y: np.sum(np.abs(mod(-8.44797245e9*d/freq) - y)) # bruteforce
+    dreal = lambda d, freq, y: mod(-8.44797245e9*d[0]/freq) - y
+    #dreal2 = lambda d, freq, y: mod(-8.44797245e9*d[0]/freq + d[1]) - y
     #dcomplex = lambda d, freq, y:  np.sum( ( np.cos(-8.44797245e9*d/freq)  - np.cos(y) )**2 ) +  np.sum( ( np.sin(-8.44797245e9*d/freq)  - np.sin(y) )**2 ) 
-    def dcomplex( d, freq, y, y_pre, y_post):  
-        return np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y) ) )**2 ) + \
-               .5*np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y_pre) ) )**2 ) + \
-               .5*np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y_post) ) )**2 )
-    dcomplex2 = lambda d, freq, y:  abs(np.cos(-8.44797245e9*d[0]/freq + d[1])  - np.cos(y)) + abs(np.sin(-8.44797245e9*d[0]/freq + d[1])  - np.sin(y))
+    #def dcomplex( d, freq, y, y_pre, y_post):  
+    #    return np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y) ) )**2 ) + \
+    #           .5*np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y_pre) ) )**2 ) + \
+    #           .5*np.sum( ( np.absolute( np.exp(-1j*8.44797245e9*d/freq)  - np.exp(1j*y_post) ) )**2 )
+    #dcomplex2 = lambda d, freq, y:  abs(np.cos(-8.44797245e9*d[0]/freq + d[1])  - np.cos(y)) + abs(np.sin(-8.44797245e9*d[0]/freq + d[1])  - np.sin(y))
 
     logging.info("Find TEC for soltab: "+soltab.name)
 
@@ -70,19 +74,21 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                       weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))) )
     soltabout.addHistory('Created by TEC operation from %s.' % soltab.name)
         
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, reference=refAnt):
 
         if len(coord['freq']) < 10:
             logging.error('Delay estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
             return 1
 
         # reorder axes
-        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
-        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','freq','time'] )
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['freq','time'] )
+        weights = reorderAxes( weights, soltab.getAxesNames(), ['freq','time'] )
 
         fitd = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
-        fitdguess = 0.01 # good guess
+        #fitdguess = 0.01 # good guess
+        ranges = (-0.5,0.5)
+        Ns = 1000
 
         if not coord['ant'] == refAnt:
 
@@ -91,26 +97,22 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                 fitweights[:] = 0
             else:
 
-                # combine pol
-                valscomb = np.ma.cos(vals) + 1.j * np.ma.sin(vals)
-                valscomb = np.ma.sum(valscomb, axis=0)
-                valscomb = np.ma.arctan2(np.imag(valscomb), np.real(valscomb))  # np.angle doesnot yet return masked array!!
                 # unwrap 2d timexfreq
-                #flags = np.array((weights[0,...] == 0) | (weights[1,...] == 0), dtype=bool)
-                #valscomb = unwrap_2d(valscomb, flags, coord['freq'], coord['time'])
+                #flags = np.array((weights == 0), dtype=bool)
+                #vals = unwrap_2d(vals, flags, coord['freq'], coord['time'])
 
                 for t, time in enumerate(times):
 
                     # apply flags
-                    idx       = ((weights[0,:,t] != 0.) & (weights[1,:,t] != 0.))
+                    idx       = (weights[:,t] != 0.)
                     freq      = np.copy(coord['freq'])[idx]
 
-                    if t == 0: phaseComb_pre  = valscomb[idx,0]
-                    else: phaseComb_pre  = valscomb[idx,t-1]
-                    if t == len(times)-1: phaseComb_post  = valscomb[idx,-1]
-                    else: phaseComb_post  = valscomb[idx,t+1]
+                    if t == 0: phaseComb_pre  = vals[idx,0]
+                    else: phaseComb_pre  = vals[idx,t-1]
+                    if t == len(times)-1: phaseComb_post  = vals[idx,-1]
+                    else: phaseComb_post  = vals[idx,t+1]
                     
-                    phaseComb  = valscomb[idx,t]
+                    phaseComb  = vals[idx,t]
 
                     if len(freq) < 10:
                         fitweights[t] = 0
@@ -121,15 +123,21 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                     if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
                         logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
-                    # least square
+                    # least square 2
                     #fitresultd2, success = scipy.optimize.leastsq(dreal2, [fitdguess,0.], args=(freq, phaseComb))
-                    #print fitresultd2
                     #numjumps = np.around(fitresultd2[1]/(2*np.pi))
                     #print 'best jumps:', numjumps
                     #phaseComb -= numjumps * 2*np.pi
                     #fitresultd, success = scipy.optimize.leastsq(dreal, [fitresultd2[0]], args=(freq, phaseComb))
-                    #print fitresultd
-                    #best_residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
+
+                    # least square 1
+                    #fitresultd, success = scipy.optimize.leastsq(dreal, [fitdguess], args=(freq, phaseComb))
+
+                    # hopper
+                    #fitresultd = scipy.optimize.basinhopping(dreal, [fitdguess], T=1, minimizer_kwargs={'args':(freq, phaseComb)})
+                    #fitresultd = [fitresultd.x]
+
+                    #best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
                     #best_residual = np.inf
                     #for jump in [-2,-1,0,1,2]:
@@ -143,20 +151,27 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                     #        best_jump = jump
 
                     # brute force
-                    fitresultd2 = scipy.optimize.brute(dcomplex, ranges=((-0.4,0.4,),), Ns=100, args=(freq, phaseComb, phaseComb_pre, phaseComb_post))
-                    best_residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd2[0]/freq) - phaseComb ) )
+                    fitresultd = scipy.optimize.brute(drealbrute, ranges=(ranges,), Ns=Ns, args=(freq, phaseComb))
+                    fitresultd, success = scipy.optimize.leastsq(dreal, fitresultd, args=(freq, phaseComb))
+                    best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
-                    fitd[t] = fitresultd2[0]
+                    fitd[t] = fitresultd[0]
                     if maxResidual == 0 or best_residual < maxResidual:
                         fitweights[t] = 1
-                        fitdguess = fitresultd2[0]
+                        #fitdguess = fitresultd[0]
+                        ranges = (fitresultd[0]-0.05,fitresultd[0]+0.05)
+                        Ns = 100
                     else:       
-                        # high residual, flag
+                        # high residual, flag and reset initial guess
                         logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(best_residual)+').')
                         fitweights[t] = 0
+                        #fitdguess = 0.01
+                        ranges = (-0.5,0.5)
+                        Ns = 1000
+
 
                     # Debug plot
-                    doplot = True
+                    doplot = False
                     if doplot and (coord['ant'] == 'RS509LBA' or coord['ant'] == 'RS210LBA') and t%50==0:
                         print("Plotting")
                         if not 'matplotlib' in sys.modules:
@@ -170,16 +185,15 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                         ax = fig.add_subplot(111)
 
                         # plot rm fit
-                        plotd = lambda d, freq: -8.44797245e9*d/freq # notice the factor of 2
-                        ax.plot(freq, plotd(fitresultd2[0], freq[:]), "-", color='purple')
-                        ax.plot(freq, np.mod(plotd(fitresultd2[0], freq[:]) + np.pi, 2.*np.pi) - np.pi, ":", color='purple')
+                        plotd = lambda d, freq: -8.44797245e9*d/freq
+                        ax.plot(freq, plotd(fitresultd[0], freq[:]), "-", color='purple')
+                        ax.plot(freq, mod(plotd(fitresultd[0], freq[:])), ":", color='purple')
 
-                        ax.plot(freq, np.mod(vals[0,idx,t] + np.pi, 2.*np.pi) - np.pi, '.b' )
-                        ax.plot(freq, np.mod(vals[1,idx,t] + np.pi, 2.*np.pi) - np.pi, '.g' )
+                        #ax.plot(freq, vals[idx,t], '.b' )
                         #ax.plot(freq, phaseComb + numjumps * 2*np.pi, 'x', color='purple' )                           
                         ax.plot(freq, phaseComb, 'o', color='purple' )                           
      
-                        residual = np.mod( plotd(fitd[t], freq[:]) - phaseComb + np.pi, 2.*np.pi) - np.pi
+                        residual = mod( plotd(fitd[t], freq[:]) - phaseComb)
                         ax.plot(freq, residual, '.', color='orange')
         
                         ax.set_xlabel('freq')
@@ -190,7 +204,7 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                         plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
                         del fig
 
-                logging.debug('%s: average tec: %f TECU' % (coord['ant'], np.mean(2*fitd)))
+                logging.info('%s: average tec: %f TECU' % (coord['ant'], np.mean(2*fitd)))
 
         # reorder axes back to the original order, needed for setValues
         soltabout.setSelection(ant=coord['ant'])
