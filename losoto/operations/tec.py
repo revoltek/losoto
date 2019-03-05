@@ -10,7 +10,7 @@ logging.debug('Loading TEC module.')
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'tec000' )
     refAnt = parser.getstr( step, 'refAnt', '')
-    maxResidual = parser.getfloat( step, 'maxResidual', 1 )
+    maxResidual = parser.getfloat( step, 'maxResidual', 2.5 )
 
     parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
     return run(soltab, soltabOut, refAnt, maxResidual)
