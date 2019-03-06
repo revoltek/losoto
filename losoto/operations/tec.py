@@ -10,13 +10,14 @@ logging.debug('Loading TEC module.')
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'tec000' )
     refAnt = parser.getstr( step, 'refAnt', '')
-    maxResidual = parser.getfloat( step, 'maxResidual', 2.5 )
+    maxResidualFlag = parser.getfloat( step, 'maxResidualFlag', 2.5 )
+    maxResidualProp = parser.getfloat( step, 'maxResidualProp', 1. )
 
-    parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
-    return run(soltab, soltabOut, refAnt, maxResidual)
+    parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidualFlag', 'maxResidualProp'])
+    return run(soltab, soltabOut, refAnt, maxResidualFlag, maxResidualProp)
 
 
-def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
+def run( soltab, soltabOut='tec000', refAnt='', maxResidualFlag=2.5, maxResidualProp=1. ):
     """
     Bruteforce TEC extraction from phase solutions.
 
@@ -28,8 +29,11 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
     refAnt : str, optional
         Reference antenna, by default the first.
 
-    maxResidual : float, optional
-        Max average residual in radians before flagging datapoint, by default 1. If 0: no check.
+    maxResidualFlag : float, optional
+        Max average residual in radians before flagging datapoint, by default 2.5 If 0: no check.
+
+    maxResidualProp : float, optional
+        Max average residual in radians before stop propagating solutions, by default 1. If 0: no check.
 
     """
     import numpy as np
@@ -120,7 +124,7 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                         continue
         
                     # if more than 1/4 of chans are flagged
-                    if (len(idx) - len(freq))/float(len(idx)) > 1/4.:
+                    if (len(idx) - len(freq))/float(len(idx)) > 1/3.:
                         logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
                     # least square 2
@@ -156,16 +160,18 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidual=1. ):
                     best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
                     fitd[t] = fitresultd[0]
-                    if maxResidual == 0 or best_residual < maxResidual:
+                    if maxResidualFlag == 0 or best_residual < maxResidualFlag:
                         fitweights[t] = 1
-                        #fitdguess = fitresultd[0]
-                        ranges = (fitresultd[0]-0.05,fitresultd[0]+0.05)
-                        Ns = 100
+                        if maxResidualProp == 0 or best_residual < maxResidualProp:
+                            ranges = (fitresultd[0]-0.05,fitresultd[0]+0.05)
+                            Ns = 100
+                        else:
+                            ranges = (-0.5,0.5)
+                            Ns = 1000
                     else:       
                         # high residual, flag and reset initial guess
-                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(best_residual)+').')
+                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiual: '+str(best_residual)+').')
                         fitweights[t] = 0
-                        #fitdguess = 0.01
                         ranges = (-0.5,0.5)
                         Ns = 1000
 
