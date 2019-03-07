@@ -21,6 +21,7 @@ parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', hel
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) or comma-separated list of soltab names - if not given use all')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', '-v', default=False, action='store_true', help='Go Vebose! (default=False)')
+parser.add_argument('--squeeze', '-q', default=False, action='store_true', help='Remove all axes with a length of 1 (default=False)')
 parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm file instead of appending to it (default=False)')
 args = parser.parse_args()
 
@@ -91,6 +92,8 @@ for insoltab in insoltabs:
     # create output axes
     logging.info("Sorting output axes...")
     axes = soltabs[0].getAxesNames()
+    if args.squeeze:
+        axes = [axis for axis in axes if soltabs[0].getAxisLen(axis) > 1]
     typ = soltabs[0].getType()
     allAxesVals = {axis:[] for axis in axes}
     allShape = []
@@ -116,8 +119,13 @@ for insoltab in insoltabs:
         coords = []
         for axis in axes:
             coords.append( np.searchsorted( allAxesVals[axis], soltab.getAxisValues(axis) ) )
-        allVals[np.ix_(*coords)] = soltab.obj.val
-        allWeights[np.ix_(*coords)] = soltab.obj.weight
+        if args.squeeze:    
+            allVals[np.ix_(*coords)] = np.squeeze(soltab.obj.val)
+            allWeights[np.ix_(*coords)] = np.squeeze(soltab.obj.weight)
+        else:
+            allVals[np.ix_(*coords)] = soltab.obj.val
+            allWeights[np.ix_(*coords)] = soltab.obj.weight
+
 
     # TODO: leave correct weights - this is a workaround for h5parm with weight not in float16
     allWeights[ allWeights != 0 ] = 1.
