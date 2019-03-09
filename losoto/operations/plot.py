@@ -291,7 +291,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         logging.error('Too many TableAxis/ColAxis/DiffAxis, they must be at most one each.')
         return 1
 
-    for axis in axesInPlot:
+    for axis in axesInPlot+axisInCol+axisDiff:
         if axis not in soltab.getAxesNames():
             logging.error('Axis \"'+axis+'\" not found.')
             return 1

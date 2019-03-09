@@ -139,12 +139,13 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                     fit_weights.append(1.)
                 else:       
                     # high residual, flag
-                    logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', residual: '+str(residual)+') -> ignoring.')
+                    logging.debug('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', residual: '+str(residual)+') -> ignoring.')
                     fit_weights.append(0.)
 
                 # Debug plot
                 doplot = False
-                if doplot and t%100==0 and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'CS301LBA'):
+                #if doplot and t%100==0 and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'CS301LBA'):
+                if doplot and t%10==0 and (coord['ant'] == 'W04'):
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
@@ -157,7 +158,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
                     # plot rm fit
                     plotdelay = lambda delay, offset, freq: np.mod( delay*freq + offset + np.pi, 2.*np.pi) - np.pi
-                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='purple')
+                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='purple', label=r'delay:%f$\nu$ (ns) + %f ' % (fitresultdelay[0]*1e9,fitresultdelay[1]) )
 
                     ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
                     ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
@@ -172,6 +173,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                     #ax.set_ylim(ymin=-np.pi, ymax=np.pi)
 
                     logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
+                    fig.legend(loc='upper left')
                     plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
                     del fig
             # end cycle in time
@@ -181,11 +183,13 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
             fit_offset = np.array(fit_offset)
 
             # avg in time
+
             if average:
                 fit_delays_bkp = fit_delays[ fit_weights == 0 ]
                 fit_offset_bkp = fit_offset[ fit_weights == 0 ]
                 np.putmask(fit_delays, fit_weights == 0, np.nan)
                 np.putmask(fit_offset, fit_weights == 0, np.nan)
+                print fit_delays
                 fit_delays[:] = np.nanmean(fit_delays)
                 # angle mean
                 fit_offset[:] = np.angle( np.nansum( np.exp(1j*fit_offset) ) / np.count_nonzero(~np.isnan(fit_offset)) )
@@ -197,7 +201,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                     fit_delays[ fit_weights == 0 ] = fit_delays_bkp
                     fit_offset[ fit_weights == 0 ] = fit_offset_bkp
 
-            logging.debug('%s: average delay: %f ns (offset: %f)' % ( coord['ant'], np.mean(fit_delays)*1e9, np.mean(fit_offset)))
+            logging.info('%s: average delay: %f ns (offset: %f)' % ( coord['ant'], np.mean(fit_delays)*1e9, np.mean(fit_offset)))
             for t, time in enumerate(times):
                 #vals[:,:,t] = 0.
                 #vals[coord1,:,t] = fit_delays[t]*np.array(coord['freq'])/2.

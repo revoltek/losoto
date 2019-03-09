@@ -131,7 +131,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
                              vals=clock[:,:,0]*1e-9,
                              weights=weights[:,:,0])
             tf_st.addHistory('CREATE (by CLOCKTECFIT operation)')
-            tf_st = solset.makeSoltab('phase_offset', soltabName = offsetsoltabOut,
+            tf_st = solset.makeSoltab('phase', soltabName = offsetsoltabOut,
                              axesNames=['ant'], axesVals=[stations],
                              vals=offset[:,0],
                              weights=np.ones_like(offset[:,0],dtype=np.float16))
@@ -152,7 +152,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
                              vals=clock*1e-9,
                              weights=weights)
             tf_st.addHistory('CREATE (by CLOCKTECFIT operation)')
-            tf_st = solset.makeSoltab('phase_offset', soltabName = phasesoltabOut,
+            tf_st = solset.makeSoltab('phase', soltabName = phasesoltabOut,
                              axesNames=['ant','pol'], axesVals=[stations, ['XX','YY']],
                              vals=offset,
                              weights=np.ones_like(offset,dtype=np.float16))
