@@ -68,7 +68,12 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if minZ == maxZ:
                 minZ *= 0.99
                 maxZ *= 1.01
-
+                
+            # add some space for clock plots
+            if datatype == 'Clock':
+                minZ -= 1e-8
+                maxZ += 1e-8
+                
             logging.info("Autoset min: %f, max:%f" % (minZ, maxZ))
 
         # if user-defined number of col use that
