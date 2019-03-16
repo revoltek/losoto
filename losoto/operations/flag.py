@@ -143,8 +143,13 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
             if mode == 'smooth':
                 vals_smooth = np.copy(vals)
                 np.putmask(vals_smooth, weights==0, np.nan)
-                if all(o == 0 for o in order): order = vals_smooth.shape
-                vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order, mode='constant', cval=np.nan)
+                # speedup: if all data are used then just do a median and don't call the filter
+                if all(o == 0 for o in order):
+                    vals_smooth = np.ones(vals_smooth.shape)*np.nanmedian(vals_smooth)
+                else:
+                    for i, o in enumerate(order): 
+                        if o == 0: order[i] = vals_smooth.shape[i]
+                    vals_smooth = generic_filter(vals_smooth, np.nanmedian, size=order, mode='constant', cval=np.nan)
                 vals_detrend = vals - vals_smooth
             # TODO: should be rolling
             elif mode == 'poly':
@@ -347,7 +352,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
         logging.error("AxesToFlag and order must be both 1 or 2 values.")
         return 1
 
-    if len(order) == 2: order = tuple(order)
+    if len(order) >= 2: order = list(order)
 
     # start processes for multi-thread
     mpm = multiprocManager(ncpu, _flag)
