@@ -17,9 +17,26 @@ def _run_parser(soltab, parser, step):
     parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace', 'log'])
     return run(soltab, axesToSmooth, size, mode, degree, replace, log)
 
+
 def _savitzky_golay(y, window_size, order):
     from scipy.signal import savgol_filter
-    return savgol_filter(y, window_size, order)
+
+    # replace any NaNs using linear interpolation
+    nans = np.isnan(y)
+    if np.any(nans):
+        x = np.array(range(len(y)))
+        y_nonan = np.interp(x, x[~nans], y[~nans])
+    else:
+        y_nonan = y
+
+    y_filt = savgol_filter(y_nonan, window_size, order)
+
+    # put any NaNs back
+    if np.any(nans):
+        y_filt[nans] = np.nan
+
+    return y_filt
+
 
 def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False, log=False):
     """
