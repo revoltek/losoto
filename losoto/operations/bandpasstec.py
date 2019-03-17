@@ -33,10 +33,8 @@ def run( soltab, soltabOutTEC='tec000', soltabOutBP='phase000', refAnt=''):
 
     """
     import numpy as np
-    import scipy.optimize
-    from losoto.lib_unwrap import unwrap_2d
 
-    logging.info("Find TEC for soltab: "+soltab.name)
+    logging.info("Find BANDPASS+TEC for soltab: "+soltab.name)
 
     # input check
     solType = soltab.getType()
@@ -64,9 +62,18 @@ def run( soltab, soltabOutTEC='tec000', soltabOutBP='phase000', refAnt=''):
                       weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('freq'),soltab.getAxisLen('pol'))) )
     soltaboutBP.addHistory('Created by BANDPASSTEC operation from %s.' % soltab.name)
  
-    # here the code
-    
-        
+    # get values
+    vals, axesVals = soltab.getValues(retAxesVals=True) 
+
+    # separate bandpass/tec
+
+
+
+    plot = False
+    if plot:
+        pass
+
+    # write solutions back
     soltaboutTEC.setValues( fitd )
     soltaboutBP.setValues( fitd )
     soltaboutTEC.setValues( fitweights, weight=True )
