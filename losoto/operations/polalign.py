@@ -189,7 +189,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                 fit_offset_bkp = fit_offset[ fit_weights == 0 ]
                 np.putmask(fit_delays, fit_weights == 0, np.nan)
                 np.putmask(fit_offset, fit_weights == 0, np.nan)
-                print fit_delays
+                print(fit_delays)
                 fit_delays[:] = np.nanmean(fit_delays)
                 # angle mean
                 fit_offset[:] = np.angle( np.nansum( np.exp(1j*fit_offset) ) / np.count_nonzero(~np.isnan(fit_offset)) )
