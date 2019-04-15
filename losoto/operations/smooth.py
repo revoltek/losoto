@@ -13,9 +13,10 @@ def _run_parser(soltab, parser, step):
     degree = parser.getint( step, 'degree', 1 )
     replace = parser.getbool( step, 'replace', False )
     log = parser.getbool( step, 'log', False )
+    refAnt = parser.getstr( step, 'refAnt', '' )
 
-    parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace', 'log'])
-    return run(soltab, axesToSmooth, size, mode, degree, replace, log)
+    parser.checkSpelling( step, soltab, ['axesToSmooth', 'size', 'mode', 'degree', 'replace', 'log', 'refAnt'])
+    return run(soltab, axesToSmooth, size, mode, degree, replace, log, refAnt)
 
 
 def _savitzky_golay(y, window_size, order):
@@ -38,7 +39,7 @@ def _savitzky_golay(y, window_size, order):
     return y_filt
 
 
-def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False, log=False):
+def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=False, log=False, refAnt=''):
     """
     A smoothing function: running-median on an arbitrary number of axes, running polyfit and Savitzky-Golay on one axis, or set all solutions to the mean/median value.
     WEIGHT: flag ready.
@@ -62,10 +63,18 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
 
     log : bool, optional
         clip is done in log10 space, by default False
+
+    refAnt : str, optional
+        Reference antenna for phases. By default None.
     """
 
     import numpy as np
     from scipy.ndimage import generic_filter
+
+    if refAnt == '': refAnt = None
+    elif not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+        refAnt = soltab.getAxisValues('ant')[1]
 
     if mode == "runningmedian" and len(axesToSmooth) != len(size):
         logging.error("Axes and Size lengths must be equal for runningmedian.")
@@ -96,7 +105,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
         logging.warning('Amplitude solution tab detected and log=False. Amplitude solution tables should be treated in log space.')
 
     if mode == 'median' or mode == 'mean':
-        vals = soltab.getValues(retAxesVals=False)
+        vals = soltab.getValues(retAxesVals=False, reference=refAnt)
         if log: vals = np.log10(vals)
         weights = soltab.getValues(retAxesVals=False, weight=True)
         np.putmask(vals, weights==0, np.nan)
@@ -125,7 +134,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             soltab.setValues(weights, weight=True)
 
     else:
-        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True):
+        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
 
             # skip completely flagged selections
             if (weights == 0).all(): continue
