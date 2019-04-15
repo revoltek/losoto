@@ -27,7 +27,7 @@ def run( soltab, dataVal=-999. ):
 
     solType = soltab.getType()
 
-    if dataVal is -999.:
+    if dataVal == -999.:
         if solType == 'amplitude':
             dataVal = 1.
         else:
