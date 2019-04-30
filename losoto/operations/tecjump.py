@@ -9,11 +9,16 @@ from losoto.lib_operations import *
 
 logging.debug('Loading TECJUMP module.')
 
-def run( step, parset, H ):
+def _run_parser(soltab, parser, step):
+    refAnt = parser.getstr( step, 'refAnt', '' )
+
+    parser.checkSpelling( step, soltab, ['refAnt'])
+    return run(soltab, refAnt)
+
+def run( soltab, refAnt='' ):
 
     import scipy.ndimage.filters
     import numpy as np
-    from losoto.h5parm import solFetcher, solWriter
     from scipy.optimize import minimize
     import itertools
     from scipy.interpolate import griddata
@@ -40,123 +45,129 @@ def run( step, parset, H ):
         
         return this_vals
 
-    tec_jump_val = 0.019628
-    maxsize = 300
-    clip = 10 # TECs over these amount of jumps are flagged
+    def getPhaseWrapBase(freqs):
+        """
+        freqs: frequency grid of the data
+        return the step size from a local minima (2pi phase wrap) to the others [0]: TEC, [1]: clock
+        """
+        freqs = np.array(freqs)
+        nF = freqs.shape[0]
+        A = np.zeros((nF, 2), dtype=np.float)
+        A[:, 1] = freqs * 2 * np.pi * 1e-9
+        A[:, 0] = -8.44797245e9 / freqs
+        steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float))
+        return steps
 
-    soltabs = getParSoltabs( step, parset, H )
+    tec_jump_val = abs(getPhaseWrapBase([42.308e6,42.308e6+23828e6])[0])*1.2
+    print ('TEC jump:',tec_jump_val,'TECU')
+    #tec_jump_val = 0.048
+    #maxsize = 300
+    #clip = 10 # TECs over these amount of jumps are flagged
 
-    for soltab in openSoltabs( H, soltabs ):
+    logging.info("Removing TEC jumps from soltab: "+soltab.name)
 
-        logging.info("Removing TEC jumps from soltab: "+soltab._v_name)
+    ants = soltab.getAxisValues('ant')
+    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
+        refAnt = ants[0]
+    if refAnt == '': refAnt = None
 
-        sf = solFetcher(soltab)
-        sw = solWriter(soltab) # remember to flush!
 
-        # TODO: check if it's a Tec table
+    # TODO: check if it's a Tec table
 
-        # axis selection
-        userSel = {}
-        for axis in sf.getAxesNames():
-            userSel[axis] = getParAxis( step, parset, H, axis )
-        sf.setSelection(**userSel)
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='time', weight = True, reference=refAnt):
 
-        for vals, weights, coord, selection in sf.getValuesIter(returnAxes='time', weight=True):
+        # skip all flagged
+        if (weights == 0).all(): continue
+        # skip reference
+        if (vals[(weights != 0)] == 0).all(): continue
 
-            # skip all flagged
-            if (weights == 0).all(): continue
-            # skip reference
-            if (np.diff(vals[(weights == 1)]) == 0).all(): continue
+        # kill large values
+#        weights[abs(vals/tec_jump_val)>clip] = 0
 
-            # kill large values
-#            weights[abs(vals/tec_jump_val)>clip] = 0
+        # interpolate flagged values to get resonable distances
+#        vals = mask_interp(vals, mask=(weights == 0))/tec_jump_val
+        # add edges to allow intervals to the borders
+#        vals = np.insert(vals, 0, vals[0])
+#        vals = np.insert(vals, len(vals), vals[-1])
+        #print(vals[:30],vals.shape, coord['dir'])
+        vals = np.fmod(vals, tec_jump_val)
 
-            # interpolate flagged values to get resonable distances
-#            vals = mask_interp(vals, mask=(weights == 0))/tec_jump_val
-            # add edges to allow intervals to the borders
-#            vals = np.insert(vals, 0, vals[0])
-#            vals = np.insert(vals, len(vals), vals[-1])
+        #print(vals[:30],vals.shape)
 
-            vals = np.fmod(vals,tec_jump_val)
-
-#            def find_jumps(d_vals):
-#                # jump poistion finder
-#                d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 21 )
-#                d_vals -= d_smooth
-#                jumps = list(np.where(np.abs(d_vals) > 1.)[0])
-#                return [0]+jumps+[len(d_vals)-1] # add edges
+#        def find_jumps(d_vals):
+#            # jump poistion finder
+#            d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 21 )
+#            d_vals -= d_smooth
+#            jumps = list(np.where(np.abs(d_vals) > 1.)[0])
+#            return [0]+jumps+[len(d_vals)-1] # add edges
 #
-#            class Jump(object):
-#                def __init__(self, jumps_idx, med):
-#                    self.idx_left = jumps_idx[0]
-#                    self.idx_right = jumps_idx[1]
-#                    self.jump_left = np.rint(d_vals[self.idx_left])
-#                    self.jump_right = np.rint(d_vals[self.idx_right])
-#                    self.size = self.idx_right-self.idx_left
-#                    self.hight = np.median(vals[self.idx_left+1:self.idx_right+1]-med)
-#                    if abs((self.hight-self.jump_left)-med) > abs((self.hight-self.jump_right)-med):
-#                        self.closejump = self.jump_right
-#                    else:
-#                        self.closejump = self.jump_left
-#    
-#            i = 0
-#            while i<len(coord['time']):
-#                # get tec[i] - tec[i+1], i.e. the derivative assuming constant timesteps
-#                # this is in units of tec_jump_val!
-#                d_vals = np.diff(vals)
-#                # get jumps idx, idx=n means a jump beteen val n and n+1
-#                jumps_idx = find_jumps(d_vals)
+#        class Jump(object):
+#            def __init__(self, jumps_idx, med):
+#                self.idx_left = jumps_idx[0]
+#                self.idx_right = jumps_idx[1]
+#                self.jump_left = np.rint(d_vals[self.idx_left])
+#                self.jump_right = np.rint(d_vals[self.idx_right])
+#                self.size = self.idx_right-self.idx_left
+#                self.hight = np.median(vals[self.idx_left+1:self.idx_right+1]-med)
+#                if abs((self.hight-self.jump_left)-med) > abs((self.hight-self.jump_right)-med):
+#                    self.closejump = self.jump_right
+#                else:
+#                    self.closejump = self.jump_left
 #
-#                # get regions
-#                med = np.median(vals)
-#                jumps = [Jump(jump_idx, med) for jump_idx in zip( jumps_idx[:-1], jumps_idx[1:] )]
-#                jumps = [jump for jump in jumps if jump.closejump != 0]
-#                jumps = [jump for jump in jumps if jump.size != 0] # prevent bug on edges
-#                jumps = [jump for jump in jumps if jump.size < maxsize]
+#        i = 0
+#        while i<len(coord['time']):
+#            # get tec[i] - tec[i+1], i.e. the derivative assuming constant timesteps
+#            # this is in units of tec_jump_val!
+#            d_vals = np.diff(vals)
+#            # get jumps idx, idx=n means a jump beteen val n and n+1
+#            jumps_idx = find_jumps(d_vals)
 #
-#                jumps.sort(key=lambda x: (np.abs(x.size), x.hight), reverse=False) #smallest first
-#                #print [(j.hight, j.closejump) for j in jumps]
+#            # get regions
+#            med = np.median(vals)
+#            jumps = [Jump(jump_idx, med) for jump_idx in zip( jumps_idx[:-1], jumps_idx[1:] )]
+#            jumps = [jump for jump in jumps if jump.closejump != 0]
+#            jumps = [jump for jump in jumps if jump.size != 0] # prevent bug on edges
+#            jumps = [jump for jump in jumps if jump.size < maxsize]
 #
-#                plot = False
-#                if plot:
-#                    import matplotlib.pyplot as plt
-#                    fig, ((ax1, ax2, ax3)) = plt.subplots(3, 1, sharex=True)
-#                    fig.subplots_adjust(hspace=0)
-#                    d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 31 )
-#                    ax1.plot(d_vals,'k-')
-#                    ax2.plot(d_smooth,'k-')
-#                    ax3.plot(vals, 'k-')
-#                    [ax3.axvline(jump_idx+0.5, color='r', ls=':') for jump_idx in jumps_idx]
-#                    ax1.set_ylabel('d_vals')
-#                    ax2.set_ylabel('d_vals - smooth')
-#                    ax3.set_ylabel('TEC/jump')
-#                    ax3.set_xlabel('timestep')
-#                    ax1.set_xlim(xmin=-10, xmax=len(d_smooth)+10)
-#                    fig.savefig('plots/%stecjump_debug_%03i' % (coord['ant'], i))
-#                i+=1
+#            jumps.sort(key=lambda x: (np.abs(x.size), x.hight), reverse=False) #smallest first
+#            #print [(j.hight, j.closejump) for j in jumps]
 #
-#                if len(jumps) == 0: 
-#                    break
+#            plot = False
+#            if plot:
+#                import matplotlib.pyplot as plt
+#                fig, ((ax1, ax2, ax3)) = plt.subplots(3, 1, sharex=True)
+#                fig.subplots_adjust(hspace=0)
+#                d_smooth = scipy.ndimage.filters.median_filter( mask_interp(d_vals, mask=(abs(d_vals)>0.8)), 31 )
+#                ax1.plot(d_vals,'k-')
+#                ax2.plot(d_smooth,'k-')
+#                ax3.plot(vals, 'k-')
+#                [ax3.axvline(jump_idx+0.5, color='r', ls=':') for jump_idx in jumps_idx]
+#                ax1.set_ylabel('d_vals')
+#                ax2.set_ylabel('d_vals - smooth')
+#                ax3.set_ylabel('TEC/jump')
+#                ax3.set_xlabel('timestep')
+#                ax1.set_xlim(xmin=-10, xmax=len(d_smooth)+10)
+#                fig.savefig('plots/%stecjump_debug_%03i' % (coord['ant'], i))
+#            i+=1
 #
-#                # move down the highest to the side closest to the median
-#                j = jumps[0]
-#                #print j.idx_left, j.idx_right, j.jump_left, j.jump_right, j.hight, j.closejump
+#            if len(jumps) == 0: 
+#                break
 #
-#                vals[j.idx_left+1:j.idx_right+1] -= j.closejump
-#                logging.debug("%s: Number of jumps left: %i - Removing jump: %i - Size %i" % (coord['ant'], len(jumps_idx)-2, j.closejump, j.size))
-                
-            # re-create proper vals
-#            vals = vals[1:-1]*tec_jump_val
-            # set back to 0 the values for flagged data
-            vals[weights == 0] = 0
+#            # move down the highest to the side closest to the median
+#            j = jumps[0]
+#            #print j.idx_left, j.idx_right, j.jump_left, j.jump_right, j.hight, j.closejump
+#
+#            vals[j.idx_left+1:j.idx_right+1] -= j.closejump
+#            logging.debug("%s: Number of jumps left: %i - Removing jump: %i - Size %i" % (coord['ant'], len(jumps_idx)-2, j.closejump, j.size))
+            
+        # re-create proper vals
+#        vals = vals[1:-1]*tec_jump_val
+        # set back to 0 the values for flagged data
+        vals[weights == 0] = 0
+        soltab.setValues(vals, selection)
+        soltab.addHistory('TECJUMP')
 
-            sw.selection = selection
-            sw.setValues(vals)
-            sw.setValues(weights, weight=True)
-
-        sw.addHistory('TECJUMP')
-        del sf
-        del sw
     return 0
 
 

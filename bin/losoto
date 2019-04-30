@@ -123,7 +123,7 @@ if __name__=='__main__':
                    "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,
                    "TEC": operations.tec,
                    #"TECFIT": operations.tecfit,
-                   #"TECJUMP": operations.tecjump,
+                   "TECJUMP": operations.tecjump,
                    #"TECSCREEN": operations.tecscreen,
                    # example operation
                    #"EXAMPLE": operations.example

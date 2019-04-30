@@ -1153,8 +1153,6 @@ class Soltab( object ):
         return self.fullyFlaggedAnts
 
 
-
-
     def getValues(self, retAxesVals=True, weight=False, reference=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
@@ -1201,13 +1199,13 @@ class Soltab( object ):
                 else:
                     if weight: dataValsRef = self.obj.weight
                     else: dataValsRef = self.obj.val
-                
+
                 antAxis = self.getAxesNames().index('ant')
                 refSelection = self.selection[:]
 
                 if reference == 'closest':
                     
-                    # put antenna addxis first
+                    # put antenna axis first
                     dataVals = np.swapaxes(dataVals, 0, antAxis)
 
                     for i, antToRef in enumerate(self.getAxisValues('ant')):
@@ -1218,13 +1216,12 @@ class Soltab( object ):
                         reference = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
 
                         refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
-                        dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
-                        dataValsRef = np.swapaxes(dataValsRef, 0, antAxis)
+                        dataValsRef_i = self._applyAdvSelection(dataValsRef, refSelection)
+                        dataValsRef_i = np.swapaxes(dataValsRef_i, 0, antAxis)
                         if weight:
-                            dataVals[ dataValsRef == 0. ] = 0.
+                            dataVals[i][ dataValsRef_i[0] == 0. ] = 0.
                         else:
-                            dataVals[i] -= dataValsRef[0]
-                        dataValsRef = np.swapaxes(dataValsRef, 0, antAxis)
+                            dataVals[i] -= dataValsRef_i[0]
 
                     dataVals = np.swapaxes(dataVals, 0, antAxis)
  

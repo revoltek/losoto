@@ -570,7 +570,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             logging.debug('Big plot, parallel not possible.')
             _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
         else:
-            mpm.put([Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords])
+            mpm.put([Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, np.ma.copy(dataCube), minZ, maxZ, plotFlag, makeMovie, antCoords])
         if makeMovie: pngs.append(prefix+filename+'.png')
 
         soltab.selection = soltab1Selection
