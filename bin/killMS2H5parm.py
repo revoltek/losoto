@@ -66,16 +66,16 @@ if __name__=='__main__':
 
     # construct solution arrays
     tt, tf, ta, td, _, _ = Sols['G'].shape
-    vals_amp = np.zeros(shape=(4,td,ta,tf,tt))
-    vals_ph = np.zeros(shape=(4,td,ta,tf,tt))
-    vals_amp[0] = np.abs(Sols['G'][...,0,0].T)
-    vals_amp[1] = np.abs(Sols['G'][...,0,1].T)
-    vals_amp[2] = np.abs(Sols['G'][...,1,0].T)
-    vals_amp[3] = np.abs(Sols['G'][...,1,1].T)
-    vals_ph[0] = np.angle(Sols['G'][...,0,0].T)
-    vals_ph[1] = np.angle(Sols['G'][...,0,1].T)
-    vals_ph[2] = np.angle(Sols['G'][...,1,0].T)
-    vals_ph[3] = np.angle(Sols['G'][...,1,1].T)
+    vals_amp = np.zeros(shape=(tt,tf,ta,td,4))
+    vals_ph = np.zeros(shape=(tt,tf,ta,td,4))
+    vals_amp[...,0] = np.abs(Sols['G'][...,0,0])
+    vals_amp[...,1] = np.abs(Sols['G'][...,0,1])
+    vals_amp[...,2] = np.abs(Sols['G'][...,1,0])
+    vals_amp[...,3] = np.abs(Sols['G'][...,1,1])
+    vals_ph[...,0] = np.angle(Sols['G'][...,0,0])
+    vals_ph[...,1] = np.angle(Sols['G'][...,0,1])
+    vals_ph[...,2] = np.angle(Sols['G'][...,1,0])
+    vals_ph[...,3] = np.angle(Sols['G'][...,1,1])
     #print vals_amp.shape
     #print len(pols), len(dirNames), len(antNames), len(freqs), len(times)
 
@@ -94,10 +94,10 @@ if __name__=='__main__':
     # write to h5pram
     h5parm = h5parm_mod.h5parm(h5parmFile, readonly = False, complevel = complevel)
     solset = h5parm.makeSolset(solsetName)
-    solset.makeSoltab('amplitude', axesNames=['pol','dir','ant','freq','time'], \
-            axesVals=[pols,dirNames,antNames,freqs,times], vals=vals_amp, weights=weights)
-    solset.makeSoltab('phase', axesNames=['pol','dir','ant','freq','time'], \
-            axesVals=[pols,dirNames,antNames,freqs,times], vals=vals_ph, weights=weights)
+    solset.makeSoltab('amplitude', axesNames=['time','freq','ant','dir','pol'], \
+            axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_amp, weights=weights)
+    solset.makeSoltab('phase', axesNames=['time','freq','ant','dir','pol'], \
+            axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_ph, weights=weights)
     if is_tec:
         solset.makeSoltab('tec', axesNames=['ant','dir','time'], \
                 axesVals=[antNames,dirNames,times], vals=vals_tec, weights=weights_tec)
