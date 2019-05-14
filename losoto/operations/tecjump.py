@@ -238,7 +238,7 @@ def run( soltab, refAnt='', soltabError='' ):
         vals_e[np.where(weights == 0)] = 1.
 
         i = 0
-        while True:
+        while i<500:
 
             # find blocks
             vals_diff = np.diff(vals)
@@ -262,14 +262,14 @@ def run( soltab, refAnt='', soltabError='' ):
                 block.jump(+1) # return to normality
                 # decrease potential for larger blocks to favour smaller block movements
                 potentials[-1] /= (block.len)**(1/4.)
-                print(j, potentials[-1], block.len)
+                #print(j, potentials[-1], block.len)
 
                 block.jump(+1)
                 potentials.append( global_potential(blocks, range(len(vals_init)) ) )
                 block.jump(-1) # return to normality
                 # decrease potentials for larger blocks to favour smaller block movements
                 potentials[-1] /= (block.len)**(1/4.)
-                print(j, potentials[-1], block.len)
+                #print(j, potentials[-1], block.len)
 
                 # prevent moving if the block is already at the minimum
                 #potentials0 = global_potential(blocks, range(len(vals_init)) )
@@ -286,12 +286,12 @@ def run( soltab, refAnt='', soltabError='' ):
             else: best_jump = +1
             best_block = blocks[idx//2]
             logging.debug('(Cycle %i - #jumps: %i) - Best jump (%i) on block: %i (len %i)' % (i, len(jumps_idx), best_jump, idx//2, best_block.len) )
-            print idx/2., potentials[idx]
+            #print idx/2., potentials[idx]
                 
             # recreate vals with the updated block value
             vals[best_block.idx] = best_block.vals + tec_jump*best_jump
 
-            plot = True
+            plot = False
             if plot:
                 best_block.vals_exp += tec_jump*best_jump
                 import matplotlib as mpl
@@ -320,7 +320,7 @@ def run( soltab, refAnt='', soltabError='' ):
             distances.append( np.sum( np.abs(vals_init - (vals + tec_jump*jump) ) ) )
             jumps.append(jump)
         idx = distances.index( min(distances) )
-        print('Rescaling all values by %i jumps.' % (jumps[idx]) )
+        logging.info('Rescaling all values by %i jumps.' % (jumps[idx]) )
         vals += tec_jump*jumps[idx]
 
         # set back to 0 the values for flagged data
