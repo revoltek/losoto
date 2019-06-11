@@ -94,11 +94,14 @@ for insoltab in insoltabs:
     axes = soltabs[0].getAxesNames()
     if args.squeeze:
         axes = [axis for axis in axes if soltabs[0].getAxisLen(axis) > 1 or axis == 'freq' ]
+        print(axes)
         removed_axes = list(set(soltabs[0].getAxesNames()) - set(axes))
+        print(removed_axes)
         if len(removed_axes) == 0:
             args.squeeze = False
         else:
             axes_squeeze = tuple([soltabs[0].getAxesNames().index(removed_axis) for removed_axis in removed_axes ])
+            print(axes_squeeze)
     typ = soltabs[0].getType()
     allAxesVals = {axis:[] for axis in axes}
     allShape = []
@@ -125,8 +128,8 @@ for insoltab in insoltabs:
         for axis in axes:
             coords.append( np.searchsorted( allAxesVals[axis], soltab.getAxisValues(axis) ) )
         if args.squeeze:
-            allVals[np.ix_(*coords)] = np.squeeze(soltab.obj.val, axis = axes_squeeze)
-            allWeights[np.ix_(*coords)] = np.squeeze(soltab.obj.weight, axis = axes_squeeze)
+            allVals[np.ix_(*coords)] = np.squeeze(np.array(soltab.obj.val), axis = axes_squeeze)
+            allWeights[np.ix_(*coords)] = np.squeeze(np.array(soltab.obj.weight), axis = axes_squeeze)
         else:
             allVals[np.ix_(*coords)] = soltab.obj.val
             allWeights[np.ix_(*coords)] = soltab.obj.weight
