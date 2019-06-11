@@ -184,9 +184,9 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     ax.set_ylabel('')
                     ax.axes.get_xaxis().set_ticks([])
                     ax.axes.get_yaxis().set_ticks([])
-                    vals = (vals-0.9)/(1.1-0.9)
-                    areas = ( 5+vals*15 )**2 # normalize marker diameter in pts**2 to 15-30 pt - assumes vals are between 0 and 1!
-                    ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas, cmap=plt.cm.jet, vmin=0, vmax=1)
+                    #vals = (vals-0.9)/(1.1-0.9)
+                    areas = ( 5+vals*10 )**2 # normalize marker diameter in pts**2 to 15-30 pt - assumes vals are between 0 and 1!
+                    ax.scatter(antCoords[0], antCoords[1], c=vals, s=areas, cmap=plt.cm.jet, vmin=-0.5, vmax=0.5)
                     size = np.max( [np.max(antCoords[0])-np.min(antCoords[0]), np.max(antCoords[1])-np.min(antCoords[1])] )*1.1 # make img squared
                     ax.set_xlim( xmin=np.median(antCoords[0])-size/2., xmax=np.median(antCoords[0])+size/2. )
                     ax.set_ylim( ymin=np.median(antCoords[1])-size/2., ymax=np.median(antCoords[1])+size/2. )

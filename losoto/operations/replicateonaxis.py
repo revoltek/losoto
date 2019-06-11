@@ -9,11 +9,12 @@ logging.debug('Loading REPLICATEONAXIS module.')
 def _run_parser(soltab, parser, step):
     axisReplicate = parser.getstr( step, 'axisReplicate' ) # no default
     fromCell = parser.getstr( step, 'fromCell', '' )
+    updateWeights = parser.getbool( step, 'updateWeights', True )
 
-    parser.checkSpelling( step, soltab, ['axisReplicate', 'fromCell'])
-    return run(soltab, axisReplicate, fromCell)
+    parser.checkSpelling( step, soltab, ['axisReplicate', 'fromCell', 'updateWeights'])
+    return run(soltab, axisReplicate, fromCell, updateWeights)
 
-def run( soltab, axisReplicate, fromCell):
+def run( soltab, axisReplicate, fromCell, updateWeights=True):
     """
     Replace the values along a certain axis taking them from one specific axic cell
 
@@ -24,6 +25,9 @@ def run( soltab, axisReplicate, fromCell):
 
     fromCell : str
         A cell value in axisReplicate from which to copy the data values.
+
+    updateWeights : bool
+        If False then weights are untoched, if True they are replicated like data. Default: True.
     """
     import numpy as np
 
@@ -47,7 +51,8 @@ def run( soltab, axisReplicate, fromCell):
     # get the cell to replicate
     soltab.setSelection(**{axisReplicate:fromCell})
     vals = soltab.getValues(retAxesVals=False)
-    weights = soltab.getValues(retAxesVals=False, weight=True)
+    if updateWeights:
+        weights = soltab.getValues(retAxesVals=False, weight=True)
 
     cellPos = list(soltab.getAxisValues(axisReplicate)).index(fromCell)
     axisReplicateLen = soltab.getAxisLen(axisReplicate, ignoreSelection=True)
@@ -59,7 +64,8 @@ def run( soltab, axisReplicate, fromCell):
     # write back
     soltab.setSelection()
     soltab.setValues(vals)
-    soltab.setValues(weights, weight=True)
+    if updateWeights:
+        soltab.setValues(weights, weight=True)
 
     soltab.addHistory('REPLICATEONAXIS (over axis %s)' % (axisReplicate))
     return 0

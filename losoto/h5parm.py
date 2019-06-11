@@ -771,7 +771,7 @@ class Soltab( object ):
         solset obj
             A solset obj.
         """
-        return Solset(self.obj._g_getparent())
+        return Solset(self.obj._v_parent)
 
 
     def getAddress(self):
