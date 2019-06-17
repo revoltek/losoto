@@ -50,7 +50,7 @@ def run( soltab, soltabsToSub, ratio=False ):
             soltabsub.selection[i] = soltab.selection[soltab.getAxesNames().index(axisName)]
             assert (soltabsub.getAxisValues(axisName) == soltab.getAxisValues(axisName)).all() # table not conform
 
-        if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'phase' or soltabsub.getType() == 'rotationmeasure':
+        if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'rotationmeasure':
 
             freq = soltab.getAxisValues('freq')
             vals = soltab.getValues(retAxesVals=False, weight=False)
@@ -92,10 +92,6 @@ def run( soltab, soltabsToSub, ratio=False ):
 
             elif soltabsub.getType() == 'tec3rd':
                 vals -= - 1.e21 * valsSub / np.power(freq,3)
-
-            elif soltabsub.getType() == 'phase':
-                # assume phases should be inverted -- perhaps an option should be added?
-                vals += valsSub
 
             elif soltabsub.getType() == 'rotationmeasure':
                 # put pol axis at the beginning
