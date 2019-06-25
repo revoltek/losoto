@@ -11,7 +11,7 @@ def _run_parser(soltab, parser, step):
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5)
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
     maxStddev = parser.getfloat( step, 'maxStddev', -1.0)
-    ampRange = parser.getarrayfloat( step, 'ampRange', [50.,200.] )
+    ampRange = parser.getarrayfloat( step, 'ampRange', [0.,0.] )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
     refAnt = parser.getstr( step, 'refAnt', '')
@@ -371,7 +371,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     sigma[flagged] = 1e8
 
     # Set range of allowed values for the median
-    if ampRange is None:
+    if ampRange is None or ampRange == [0.0, 0.0]:
         # Use sensible values depending on correlator
         if np.nanmedian(amps_flagged) > 1.0:
             # new correlator
@@ -495,7 +495,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     ampRange : array, optional
         2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
-        If None, a reasonable range is used.
+        If None or [0, 0], a reasonable range for typical observations is used.
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
