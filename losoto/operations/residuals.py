@@ -50,7 +50,12 @@ def run( soltab, soltabsToSub, ratio=False ):
             soltabsub.selection[i] = soltab.selection[soltab.getAxesNames().index(axisName)]
             assert (soltabsub.getAxisValues(axisName) == soltab.getAxisValues(axisName)).all() # table not conform
 
-        if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'rotationmeasure':
+        if soltab.getValues(retAxesVals=False, weight=False).shape != soltabsub.getValues(retAxesVals=False, weight=False).shape:
+            hasMissingAxes = True
+        else:
+            hasMissingAxes = False
+
+        if soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec' or soltabsub.getType() == 'tec3rd' or soltabsub.getType() == 'rotationmeasure' or hasMissingAxes:
 
             freq = soltab.getAxisValues('freq')
             vals = soltab.getValues(retAxesVals=False, weight=False)
@@ -115,6 +120,12 @@ def run( soltab, soltabsToSub, ratio=False ):
                         vals[1] -= ph[1]
 
                 vals = np.swapaxes(vals, 0, idxPol)
+
+            else:
+                if ratio:
+                    vals = (vals - valsSub) / valsSub
+                else:
+                    vals -= valsSub
 
             # move freq axis back
             vals = np.swapaxes(vals, len(vals.shape)-1, idxFreq)
