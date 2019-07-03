@@ -11,7 +11,7 @@ def _run_parser(soltab, parser, step):
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5)
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
     maxStddev = parser.getfloat( step, 'maxStddev', -1.0)
-    ampRange = parser.getarrayfloat( step, 'ampRange', [50.,200.] )
+    ampRange = parser.getarrayfloat( step, 'ampRange', [0.,0.] )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
     refAnt = parser.getstr( step, 'refAnt', '')
@@ -345,12 +345,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         # Determine which band we're in
         if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
             band = 'hba_low'
-            median_min = ampRange[0]
-            median_max = ampRange[-1]
         elif np.median(freqs) < 90e6:
             band = 'lba'
-            median_min = ampRange[0]
-            median_max = ampRange[-1]
         else:
             print(('The median frequency of {} Hz is outside of any supported LOFAR band '
                   '(LBA and HBA-low)'.format(np.median(freqs))))
@@ -373,6 +369,18 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     sigma[flagged] = 1.0
     sigma = np.sqrt(1.0 / sigma)
     sigma[flagged] = 1e8
+
+    # Set range of allowed values for the median
+    if ampRange is None or ampRange == [0.0, 0.0]:
+        # Use sensible values depending on correlator
+        if np.nanmedian(amps_flagged) > 1.0:
+            # new correlator
+            ampRange = [50.0, 225.0]
+        else:
+            # old correlator
+            ampRange = [0.0004, 0.0018]
+    median_min = ampRange[0]
+    median_max = ampRange[-1]
 
     # Iterate over polarizations
     npols = amps.shape[2]
@@ -464,7 +472,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=[50, 200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=None, telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -487,6 +495,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     ampRange : array, optional
         2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
+        If None or [0, 0], a reasonable range for typical observations is used.
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
