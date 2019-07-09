@@ -14,27 +14,31 @@ def _run_parser(soltab, parser, step):
     soltabError = parser.getstr( step, 'errorTab', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
-    parser.checkSpelling( step, soltab, ['refAnt', 'soltabError'])
+    parser.checkSpelling( step, soltab, ['refAnt', 'errorTab'])
     return run(soltab, refAnt, soltabError, ncpu)
 
 
 def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname, outQueue):
-    import itertools
+    import itertools, random
+
+    extend = 1 # number of point to eaxtend each block
 
     class Block(object):
         """
         Implement blocks of contiguous series of good datapoints
         """
         def __init__(self, jump_idx_init, jump_idx_end, vals, vals_e, tec_jump, type='poly'):
-            self.id = int(np.mean([jump_idx_init,jump_idx_end]))
-            self.tec_jump = tec_jump
-            self.jump_idx_init = jump_idx_init
-            self.jump_idx_end = jump_idx_end
-            self.idx = range(jump_idx_init, jump_idx_end)
-            self.idx_exp = range(jump_idx_init-1, jump_idx_end+1)
+            self.id = int(np.mean([jump_idx_init,jump_idx_end])) # not used
+            self.tec_jump = tec_jump # empirically calculated expected jump size
+            self.jump_idx_init = jump_idx_init # indef of first element of the block
+            self.jump_idx_end = jump_idx_end # index of last element of the block
+            self.idx = range(jump_idx_init, jump_idx_end) # list of indexes
+            self.idx_exp = range(jump_idx_init-extend, jump_idx_end+extend) # add 2 at the edges. These are used to calculate matches with other blocks
             self.vals = vals
             self.vals_e = vals_e
-            self.len = len(vals)
+            self.len = len(vals) # lenght of the block
+
+            # fill expected values outside the block boundaries
             self.expand(type)
 
         def get_vals(self, idx):
@@ -55,9 +59,9 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
 
             if type == 'nearest':
                 self.vals_exp = np.concatenate( \
-                        ( np.full((1), self.vals[0]) ,
+                        ( np.full((extend), self.vals[0]) ,
                           self.vals,\
-                          np.full((1), self.vals[-1])
+                          np.full((extend), self.vals[-1])
                         ) )
                 # errors are between 0.1 and 1
                 #self.vals_e_exp = np.concatenate( \
@@ -66,9 +70,9 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
                 #          np.linspace(0.5,2,1)
                 #        ) )
                 self.vals_e_exp = np.concatenate( \
-                        ( [1] ,
+                        ( [1.]*extend ,
                           self.vals_e,\
-                          [1]
+                          [1.]*extend
                         ) )
 
             elif type == 'poly':
@@ -81,20 +85,20 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
                 p_init = np.poly1d(np.polyfit(idx_init, vals_init, order, w=1./vals_e_init))
                 p_end = np.poly1d(np.polyfit(idx_end, vals_end, order, w=1./vals_e_end))
                 self.vals_exp = np.concatenate( \
-                        ( p_init(self.idx_exp[:1]) ,
+                        ( p_init(self.idx_exp[:extend]) ,
                           self.vals,\
-                          p_end(self.idx_exp[-1:])
+                          p_end(self.idx_exp[-1*extend:])
                         ) )
-                # errors are between 10% and 100%
+                # errors are between 100% and 200%
                 self.vals_e_exp = np.concatenate( \
-                        ( np.linspace(2,0.5,1) ,
+                        ( np.linspace(2,1,extend) ,
                           self.vals_e,\
-                          np.linspace(0.5,2,1)
+                          np.linspace(1,2,extend)
                         ) )
 
         def jump(self, jump=0):
             """
-            Return values+errors of this block after applying a jump
+            Return values of this block after applying a jump
             """
             self.vals_exp += self.tec_jump*jump
 
@@ -141,7 +145,7 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
                     vals.append(block.vals_exp[idx_block])
                     vals_w.append(1./block.vals_e_exp[idx_block])
 
-            if len(vals) == 1: continue
+            if len(vals) == 1: continue # skip inside block
             potential_n = 0
             potential_d = 0
             for idx1, idx2 in itertools.combinations(range(len(vals)),2):
@@ -154,62 +158,55 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
 
     ###############################################################
     
-    i = 0
-    while i<500:
+    for i in range(1000):
 
         # find blocks
         vals_diff = np.diff(vals)
-        vals_diff = np.concatenate(([100], list(vals_diff), [100]))
-        jumps_idx = np.where(np.abs(vals_diff) > tec_jump*(2/3.))[0]
+        vals_diff = np.concatenate(([100], list(vals_diff), [100])) # add edges
+        jumps_idx = np.where(np.abs(vals_diff) > tec_jump*(2/3.))[0] # find jumps
 
         # no more jumps
         if len(jumps_idx) == 2: break
 
-        # add edges and make blocks
+        # make block objects
         blocks = []
         for jump_idx_init, jump_idx_end in zip(jumps_idx[:-1],jumps_idx[1:]):
             blocks.append( Block(jump_idx_init, jump_idx_end, \
                     vals[jump_idx_init:jump_idx_end],  vals_e[jump_idx_init:jump_idx_end], tec_jump=tec_jump) )
 
-        # cycle on blocks and merge 
+        # move the small blocks first
+        lens = [block.len for block in blocks]
+        if len(set(lens)) > 1:
+            max_len = sorted(set(lens))[1]
+            best_block = blocks[random.choice( np.where( np.array(lens) <= max_len )[0] )] # random block from the two smallest length
+        else:
+            best_block = random.choice( blocks ) # random block
+
+        #best_block = random.choice(blocks) # random block
         potentials = []
-        for j, block in enumerate(blocks):
-            block.jump(-1)
-            potentials.append( global_potential(blocks, range(len(vals_init)) ) )
-            block.jump(+1) # return to normality
-            # decrease potential for larger blocks to favour smaller block movements
-            potentials[-1] /= (block.len)**(1/4.)
-            #print(j, potentials[-1], block.len)
-
-            block.jump(+1)
-            potentials.append( global_potential(blocks, range(len(vals_init)) ) )
-            block.jump(-1) # return to normality
-            # decrease potentials for larger blocks to favour smaller block movements
-            potentials[-1] /= (block.len)**(1/4.)
-            #print(j, potentials[-1], block.len)
-
-            # prevent moving if the block is already at the minimum
-            #potentials0 = global_potential(blocks, range(len(vals_init)) )
-            #print(j, potentials0, block.len)
-            #if potentials0 < potentials[-1] and  potentials0 < potentials[-2]:
-            #     potentials[-1] = 1e10
-            #     potentials[-2] = 1e10
+        jump_range = [-5,-4,-3,-2,-1,1,2,3,4,5]
+        for jump_size in jump_range:
+            best_block.jump(jump_size)
+            idx_touse = range(best_block.idx_exp[0], best_block.idx_exp[extend+1]) + \
+                        range(best_block.idx_exp[-1*extend-1], best_block.idx_exp[-1]+1) # check only $extend idx around this block
+            #print('block:',best_block.idx_exp,idx_touse)
+            #print ('Best block (',best_block.id,') idx:',best_block.idx_exp)
+            potentials.append( global_potential(blocks, set(idx_touse) ) )
+            best_block.jump(-1*jump_size) # return to normality
 
         #print "potentials:", potentials
             
         # find best jump
         idx = potentials.index( max(potentials) )
-        if idx%2 == 0: best_jump = -1
-        else: best_jump = +1
-        best_block = blocks[idx//2]
-        logging.debug('(Ant %s - Cycle %i - #jumps: %i) - Best jump (%i) on block: %i (len %i)' % (antname, i, len(jumps_idx), best_jump, idx//2, best_block.len) )
-        #print idx/2., potentials[idx]
+        best_jump = jump_range[idx]
+        logging.debug('(Ant %s - Cycle %i - #jumps: %i) - Best jump (%i) on block: %i (len %i)' % (antname, i, len(jumps_idx), best_jump, best_block.id, best_block.len) )
             
         # recreate vals with the updated block value
         vals[best_block.idx] = best_block.vals + tec_jump*best_jump
 
         plot = False
         if plot:
+            print ("Preapare plot")
             best_block.vals_exp += tec_jump*best_jump
             import matplotlib as mpl
             mpl.use("Agg")
@@ -226,14 +223,13 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
             ax.errorbar(range(len(vals)), vals, vals_e/30., color='green', ecolor='red', marker='.', linestyle='')
             ax.set_xlim(0,len(vals))
             ax.set_ylim(-0.5,0.5)
-            fig.savefig('jump_%s_%03i.png' % (coord['ant'], i), bbox_inches='tight')
+            fig.savefig('jump_%s_%03i.png' % (antname, i), bbox_inches='tight')
             fig.clf()
-        i+=1
 
     # check that this is the closest value to the global minimum
     # (this assumes that the majority of the points are correct)
     distances = []; jumps = []
-    for jump in range(-5,5):
+    for jump in range(-20,20):
         distances.append( np.sum( np.abs(vals_init - (vals + tec_jump*jump) ) ) )
         jumps.append(jump)
     idx = distances.index( min(distances) )
@@ -309,7 +305,7 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
     vals = np.swapaxes(vals, 0, timeAxis)
     vals = vals[1,...] - vals[:-1,...] 
     vals = vals[(vals > tec_jump_theory*1) & (vals < tec_jump_theory*1.5)]
-    tec_jump = np.median(vals)
+    tec_jump = np.nanmedian(vals)
 
     logging.info('TEC jump - theoretical: %.5f TECU - estimated: %.5f TECU' % (tec_jump_theory, tec_jump))
 
@@ -338,6 +334,6 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
         # set back to 0 the values for flagged data
         vals[weights == 0] = 0
         soltab.setValues(vals, selection)
-        soltab.addHistory('TECJUMP')
+    soltab.addHistory('TECJUMP')
 
     return 0
