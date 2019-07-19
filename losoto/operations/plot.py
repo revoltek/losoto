@@ -55,7 +55,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
             if datatype == 'phase':
                 minZ = np.nanmin(flat)
                 maxZ = np.nanmax(flat)
-            elif datatype == 'amplitude':
+            elif datatype == 'amplitude' and len(axesInPlot) > 1:
                 flat[np.isnan(flat)] = np.nanmedian(flat) # get rid of nans (problem in "<" below)
                 maxZ = np.nanmedian( flat ) + 3*np.nanstd( flat[ (flat / np.nanmedian(flat) ) < 100  ] )
                 maxZ = np.nanmin( [np.nanmax( flat ), maxZ] )
