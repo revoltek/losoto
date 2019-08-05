@@ -13,7 +13,9 @@ Contributed code:
 * and the LOFAR Survey Key Science Project
 
 Cite:
-* If you use LoSoTo for your data reduction, please acknowledge it with "This work has made use of the Lofar Solution Tool (LoSoTo), developed by F. de Gasperin."
+* If you use LoSoTo for your data reduction, please cite: de Gasperin et al. 2019, Astronomy & Astrophysics, Volume 622, id.A5
+(https://ui.adsabs.harvard.edu/abs/2019A&A...622A...5D/abstract)
+
 
 Install:
 * Get LoSoTo from https://github.com/revoltek/losoto 
