@@ -164,6 +164,7 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
         vals_diff = np.diff(vals)
         vals_diff = np.concatenate(([100], list(vals_diff), [100])) # add edges
         jumps_idx = np.where(np.abs(vals_diff) > tec_jump*(2/3.))[0] # find jumps
+        print (tec_jump)
 
         # no more jumps
         if len(jumps_idx) == 2: break
@@ -305,6 +306,9 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
     vals = np.swapaxes(vals, 0, timeAxis)
     vals = vals[1,...] - vals[:-1,...] 
     vals = vals[(vals > tec_jump_theory*1) & (vals < tec_jump_theory*1.5)]
+    if len(vals) == 0: 
+        logging.info('TEC jump - theoretical: %.5f TECU - NO JUMP FOUND' % (tec_jump_theory))
+        return 0
     tec_jump = np.nanmedian(vals)
 
     logging.info('TEC jump - theoretical: %.5f TECU - estimated: %.5f TECU' % (tec_jump_theory, tec_jump))
