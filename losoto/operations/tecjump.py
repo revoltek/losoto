@@ -164,7 +164,6 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
         vals_diff = np.diff(vals)
         vals_diff = np.concatenate(([100], list(vals_diff), [100])) # add edges
         jumps_idx = np.where(np.abs(vals_diff) > tec_jump*(2/3.))[0] # find jumps
-        print (tec_jump)
 
         # no more jumps
         if len(jumps_idx) == 2: break
@@ -229,11 +228,14 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
 
     # check that this is the closest value to the global minimum
     # (this assumes that the majority of the points are correct)
-    distances = []; jumps = []
-    for jump in range(-20,20):
-        distances.append( np.sum( np.abs(vals_init - (vals + tec_jump*jump) ) ) )
+    zeros = []; jumps = []
+    for jump in range(-100,101):
+        #print('TEST jump %i' % jump)
+        #print((vals_init - (vals + tec_jump*jump)) )[:10]
+        #print( np.where( np.abs(vals_init - (vals + tec_jump*jump)) < 1e-5 )[0] )
+        zeros.append( len( np.where( np.abs(vals_init - (vals + tec_jump*jump)) < 1e-5 )[0] ) )
         jumps.append(jump)
-    idx = distances.index( min(distances) )
+    idx = zeros.index( max(zeros) )
     logging.info('%s: Rescaling all values by %i jumps.' % (antname, jumps[idx]) )
     vals += tec_jump*jumps[idx]
     
