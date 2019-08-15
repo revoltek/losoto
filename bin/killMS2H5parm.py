@@ -67,8 +67,8 @@ if __name__=='__main__':
     # fix some kMS weirdness with first and last timeslot values
     #otherwise they are off the time solution grid
     mediandiff = np.median(Sols["t1"] - Sols["t0"])
-    times[0]  = times[1] - (0.5*mediandiff)
-    times[-1] = times[-2] + (0.5*mediandiff)
+    times[0]  = times[1] - mediandiff
+    times[-1] = times[-2] + mediandiff
     
     
     # construct solution arrays
