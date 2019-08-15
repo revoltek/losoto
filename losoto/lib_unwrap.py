@@ -3,10 +3,10 @@
 
 #from __future__ import division
 
+import itertools, math
 import numpy as np
 import scipy.fftpack as fft
 import logging
-import itertools
 
 def unwrap_fft(phase, iterations=3):
     """
