@@ -127,7 +127,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
         clock[np.logical_not(weights)]=0
         weights=np.float16(weights)
 
-        if combinePol:
+        if combinePol or not 'pol' in soltab.getAxesNames():
             tf_st = solset.makeSoltab('tec', soltabName = tecsoltabOut,
                              axesNames=['time', 'ant'], axesVals=[times, stations],
                              vals=tec[:,:,0],
