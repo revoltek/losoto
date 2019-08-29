@@ -6,6 +6,7 @@ import sys
 import logging
 from multiprocessing import Pool
 
+#logging.root.setLevel=logging.DEBUG
 has_fitting=True
 try:
     import casacore.tables # must be loaded before expion - used in other operations as lofarbeam
@@ -297,7 +298,7 @@ def getClockTECFit(
                                  ndt=60
                                  # no init clock possible due to large TEC effect
                                  #stepsize of dtec is small
-                                 ndtec=320
+                                 ndtec=520
                 else:
                     # further steps with non success
                     sol[ist, :] = prevsol[ist, :]
@@ -569,7 +570,7 @@ def correctWraps(
     freq,
     pos,
     ):
-    '''corrects solution jumps due to 2 pi phasewraps based on spatial correlations of averaged TEC solutions. Also returns average constant phase  offset per station '''
+    '''corrects solution jumps due to 2 pi phasewraps based on spatial correlations of averaged TEC solutions. Also returns average constant phase  offset per station. International stations should be excluded from this'''
     nT = tecarray.shape[0]
     nSt = tecarray.shape[1]
     flags = tecarray < -5
@@ -580,11 +581,15 @@ def correctWraps(
     lons = np.degrees(np.arctan2(pos[:, 1], pos[:, 0]))
     lons -= lons[0]
     lonlat = np.concatenate((lons, lats)).reshape((2, ) + lons.shape)
-    # refine (is it needed for LBA? check results)
+    # refine (is it needed/helpful for LBA? the offsets seem to make sense for LBA)
+    myselect=np.sqrt(np.sum(lonlat**2,axis=0))>0.5
+    
+
     for nr_iter in range(2):
         # recreate best TEC at the moment
         TEC = tecarray - tecarray[:, [0]] + steps[0] * (np.round(wraps) - np.round(wraps[0]))
-        TEC = np.ma.array(TEC, mask=flags)
+        #TEC = np.ma.array(TEC, mask=flags)
+        TEC = np.ma.array(TEC, mask=np.logical_or(flags,myselect[np.newaxis]))
         # fit 2d linear TEC screen over stations
         slope = np.ma.dot(np.linalg.inv(np.dot(lonlat, lonlat.T)), np.ma.dot(lonlat, TEC.T))
         # flag bad time steps maybe because TEC screen is not linear
@@ -594,6 +599,8 @@ def correctWraps(
         # calculate offset per station wrt time-averaged TEC screen
         offsets = -1 * np.ma.average(TEC[chi2select] - np.ma.dot(slope.T, lonlat)[chi2select], axis=0) * 2. * np.pi / steps[0]
         remainingwraps = np.round(offsets / (2 * np.pi))  # -np.round(wraps[stationIndices])
+        offsets[myselect]=0
+        remainingwraps[myselect]=0
         logging.debug('Offsets: ' + str(offsets))
         logging.debug('AvgTEC: ' + str(np.ma.average(TEC[chi2select], axis=0)))
         logging.debug('Remaining: ' + str(remainingwraps))
@@ -639,6 +646,7 @@ def doFit(
     initoffsets=[],
     n_proc=10
     ):
+    print ("NEWNEWNENENWNENEWNEWNEWNENWEWNEWNEN!!!")
     # make sure order of axes is as expected
     stidx = axes.index('ant')
     freqidx = axes.index('freq')
@@ -788,6 +796,9 @@ def doFit(
         else:
             #always correct for wraps based on average residuals
             wraps, steps = correctWrapsFromResiduals(residualarray, tecarray<-5,freqs)
+        #maximum allowed 2pi phase wrap is +-1
+        wraps = np.min(wraps,1)
+        wraps = np.max(wraps,-1)
         logging.debug('Residual iter 1, pol %d: ' % pol + str(residualarray[0, 0]))
         logging.debug('TEC iter 1, pol %d: ' % pol + str(tecarray[0]))
         logging.debug('Clock iter 1, pol %d: ' % pol + str(clockarray[0]))
