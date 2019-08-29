@@ -651,12 +651,19 @@ def doFit(
     stidx = axes.index('ant')
     freqidx = axes.index('freq')
     timeidx = axes.index('time')
-    polidx = axes.index('pol')
-    data = ma.array(phases, mask=mask).transpose((timeidx, freqidx, stidx, polidx))
+    try:
+        polidx = axes.index('pol')
+        data = ma.array(phases, mask=mask).transpose((timeidx, freqidx, stidx, polidx))
+        npol = data.shape[3]
+    except:
+        data = ma.array(phases, mask=mask).transpose((timeidx, freqidx, stidx))
+        data = data.reshape(data.shape+(1,))
+        npol = 1
+
     nT = data.shape[0]
     nF = data.shape[1]
     nSt = data.shape[2]
-    npol = data.shape[3]
+
     if npol == 4:
         data = data[:, :, :, (0, 3)]
         npol = 2
