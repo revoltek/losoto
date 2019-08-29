@@ -41,4 +41,6 @@ def setLevel(level):
         logging.root.setLevel(logging.INFO)
     elif level == 'debug':
         logging.root.setLevel(logging.DEBUG)
+    else:
+        print("Debug level %s doesn't exist." % level)
 
