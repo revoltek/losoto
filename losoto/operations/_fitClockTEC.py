@@ -6,7 +6,6 @@ import sys
 import logging
 from multiprocessing import Pool
 
-#logging.root.setLevel=logging.DEBUG
 has_fitting=True
 try:
     import casacore.tables # must be loaded before expion - used in other operations as lofarbeam
@@ -107,6 +106,7 @@ def unwrapPhases(phases,fitdata=None,maskrange=15,doFlag=True,flagfitdata=False)
 
         if fitdata is None:
             unmasked=np.copy(np.array(phases))
+            unmasked[np.isnan(phases)]=0
             unmasked=np.unwrap(unmasked)
             wraps=np.ma.round((phases-unmasked)/(2*np.pi))
             phases-=wraps*2*np.pi
@@ -183,6 +183,7 @@ def getInitPar(
         A[:,1]=2*np.pi*1e-9*freqs
         A[:,0]=-8.44797245e9/freqs
     a=np.mgrid[int(-nrTEC/2):int(nrTEC/2)+1,-int(nrClock/2):int(nrClock/2)+1]
+    #a=np.mgrid[int(-nrTEC*50):int(nrTEC*2)+1,-int(nrClock*2):int(nrClock*2)+1]
     if len(initsol)>=2 and not (initsol[0]==0 and initsol[1]==0) and not (initsol[0]==-10 and initsol[1]==-10)  :
         #print "unwrapping with initsol",initsol
         fitdata=np.dot(initsol,A.T)
@@ -207,12 +208,14 @@ def getInitPar(
     #get initial guess, first only for first two parameters
     par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,data))
 
-    #print "intial guess",par,"min 0",a[0][0,0]*steps[0]+par[0],"max 0",a[0][-1,0]*steps[0]+par[0],"min 1",a[1][0,0]*steps[1]+par[1],"max 1",a[1][0,-1]*steps[1]+par[1]
+    #print "intial guess",par,steps,"min 0",a[0][0,0]*steps[0]*0.01+par[0],"max 0",a[0][-1,0]*steps[0]*0.01+par[0],"min 1",a[1][0,0]*steps[1]*0.01+par[1],"max 1",a[1][0,-1]*steps[1]*0.01+par[1]
     bigdata=np.concatenate(tuple([a[i][np.newaxis,:]*steps[i]+par[i] for i  in range(2)]),axis=0).transpose(1,2,0)
+    #bigdata=np.concatenate(tuple([a[i][np.newaxis,:]*steps[i]*0.25+par[i] for i  in range(2)]),axis=0).transpose(1,2,0)
     diffdata=np.dot(bigdata,A[:,:2].T)
     diffdata-=data[np.newaxis,np.newaxis]
     idx=np.unravel_index(np.argmin(np.ma.var(diffdata,axis=-1)),diffdata.shape[:-1])
     par=bigdata[idx]
+    #print "final giess",par,bigdata,"diffffff",idx,np.ma.var(diffdata,axis=-1)
     fitdata=np.dot(par,A[:,:2].T)
     data=unwrapPhases(data,fitdata,doFlag=doFlag,flagfitdata=True)
     if data.mask.sum()<0.5*data.size:
@@ -313,7 +316,7 @@ def getClockTECFit(
                 if datatmpist.count() / float(nF) > 0.5:
                     # do brutforce and update data, unwrp pdata,update flags
                     #if ist==23 or ist==25:
-                    #    logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
+                    #logging.debug("Getting init par for time %d:station %d ntec %d ndt %d n3rd %d"%(itm,ist,ndtec,ndt,n3rd)+str(sol[ist]))
                     par,datatmp[:, ist] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[ist,:])
                     sol[ist, :] = par[:]
                 #if itm%100==0:
@@ -322,13 +325,13 @@ def getClockTECFit(
             #now do the real fitting
             datatmpist=datatmp[:,ist]
             if datatmpist.count() / float(nF) < 0.5:
-                logging.debug("Too many data points flagged t=%d st=%d flags=%d" % (itm,ist,data[itm,:,ist].count()) + str(sol[ist]))
+                logging.debug("Too many data points flagged first t=%d st=%d flags=%d" % (itm,ist,datatmpist.count()) + str(sol[ist]))
                 sol[ist] = [-10.,]*sol.shape[1]
                 continue
             fitdata=np.dot(sol[ist],A.T)
             datatmpist=unwrapPhases(datatmpist,fitdata)
             #if itm%100==0:
-            #    logging.debug(" init par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
+            #logging.debug(" init par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
             mymask=datatmpist.mask
             maskedfreq=np.ma.array(freq,mask=mymask)
             A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
@@ -338,7 +341,7 @@ def getClockTECFit(
                 sol[ist,:]-=np.round((sol[ist,1]-prevsol[ist,1])/steps[1])*steps
                 #logging.debug("removed jumps, par for station %d "%ist+str(sol[ist])+str(prevsol[ist]))
             #if itm%100==0:
-            #    logging.debug("par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
+            #logging.debug("par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
          # calculate chi2 per station
         residual = data[itm] - np.dot(A, sol.T)
         tmpresid = residual - residual[:, 0][:, np.newaxis]  # residuals relative to station 0
@@ -458,12 +461,15 @@ def getClockTECFitStation(
             datatmpist = datatmp[:]
             if datatmpist.count() / float(nF) > 0.5:
                 # do brutforce and update data, unwrp pdata,update flags
+                #logging.debug("Getting init par for time %d:station %s ntec %d ndt %d n3rd %d"%(itm,stationname,ndtec,ndt,n3rd)+str(sol))
                 par,datatmp[:] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[:])
                 sol[:] = par[:]
+                #logging.debug("Getting init par for station %d:%s "%(itm,stationname)+str(sol))
+
         #now do the real fitting
         datatmpist=datatmp[:]
         if datatmpist.count() / float(nF) < 0.5:
-            logging.debug("Too many data points flagged t=%d st=%s flags=%d" % (itm,stationname,data[itm,:].count()) + str(sol[:]))
+            logging.debug("Too many data points flagged 2nd  t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
             sol[:] = [-10.,]*sol.shape[0]
         else:
             fitdata=np.dot(sol,A.T)
@@ -472,7 +478,7 @@ def getClockTECFitStation(
             maskedfreq=np.ma.array(freq,mask=mymask)
             A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
             if datatmpist.count() / float(nF) < 0.5:
-                logging.debug("Too many data points flagged t=%d st=%s flags=%d" % (itm,stationname,data[itm,:].count()) + str(sol[:]))
+                logging.debug("Too many data points flagged 3rd t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                 sol[:] = [-10.,]*sol.shape[0]
             else:
                 sol[:] = np.ma.dot(np.linalg.inv(np.ma.dot(A2.T, A2)), np.ma.dot(A2.T, datatmpist)).T
@@ -646,7 +652,6 @@ def doFit(
     initoffsets=[],
     n_proc=10
     ):
-    print ("NEWNEWNENENWNENEWNEWNEWNENWEWNEWNEN!!!")
     # make sure order of axes is as expected
     stidx = axes.index('ant')
     freqidx = axes.index('freq')
@@ -804,8 +809,8 @@ def doFit(
             #always correct for wraps based on average residuals
             wraps, steps = correctWrapsFromResiduals(residualarray, tecarray<-5,freqs)
         #maximum allowed 2pi phase wrap is +-1
-        wraps = np.min(wraps,1)
-        wraps = np.max(wraps,-1)
+        #wraps = np.minimum(wraps,2)
+        #wraps = np.maximum(wraps,-2)
         logging.debug('Residual iter 1, pol %d: ' % pol + str(residualarray[0, 0]))
         logging.debug('TEC iter 1, pol %d: ' % pol + str(tecarray[0]))
         logging.debug('Clock iter 1, pol %d: ' % pol + str(clockarray[0]))
