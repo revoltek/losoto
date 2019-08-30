@@ -162,7 +162,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         vals = np.log10(vals)
 
                     if datatype == 'phase' or datatype == 'rotation':
-                        #cmap = cm_phase
+                        #cmap = phase_colormap
                         cmap = plt.cm.jet
                     else:
                         try:
