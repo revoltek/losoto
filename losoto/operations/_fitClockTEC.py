@@ -74,7 +74,7 @@ def getInitClock(data, freq):
     A[:, 1] = freq * 2 * np.pi * 1e-9
     return np.ma.dot(np.linalg.inv(np.dot(A.T, A)), np.ma.dot(A.T, avgdata).swapaxes(0, -2))
 
-def unwrapSparsePhases(phases,freqs):
+def unwrapSparsePhases(phases,freqs,doFlag=False):
     '''unwrap phases, using frequency coverage'''
     testwraps=np.arange(-25,26,.1)
     dclock=testwraps*1e9/(freqs[-1]-freqs[0])
@@ -83,7 +83,7 @@ def unwrapSparsePhases(phases,freqs):
     testdata=np.zeros_like(dclock)
     testdata=np.array([testdata,dclock])
     fitdata=np.ma.dot(testdata.T,A.T)
-    offsets=np.average(np.remainder(phases[np.newaxis]-fitdata+0.5*np.pi,np.pi)-0.5*np.pi,axis=-1)
+    offsets=np.ma.average(np.ma.remainder(phases[np.newaxis]-fitdata+0.5*np.pi,np.pi)-0.5*np.pi,axis=-1)
     fitdata=fitdata-offsets[:,np.newaxis]
     wraps=np.ma.round((phases[np.newaxis]-fitdata)/(2*np.pi))
     nphases=phases[np.newaxis]-wraps*2*np.pi
@@ -92,61 +92,93 @@ def unwrapSparsePhases(phases,freqs):
 
     dclock=dclock[idx]
     fitdata=np.ma.dot(np.array([0,dclock]),A.T)+offsets[idx]
-    return unwrapPhases(phases,fitdata=fitdata,doFlag=False)
+    return unwrapPhases(phases,freqs,fitdata=fitdata,doFlag=doFlag)
 
 
-def unwrapPhases(phases,fitdata=None,maskrange=15,doFlag=True,flagfitdata=False):
+def unwrapPhases(phases,freqs,fitdata=None,maskrange=10,doFlag=True,flagfitdata=False):
     '''unwrap phases, remove jumps and get best match with fitdata'''
     mymask=phases.mask
+    freqsstep=np.min(freqs[1:]-freqs[:-1])
+    nfreq=np.arange(freqs[0],freqs[-1]+0.5*freqsstep,freqsstep)
+    freqidx=np.argmin(np.abs(freqs[np.newaxis]-nfreq[:,np.newaxis]),axis=0)
+    maxgap=int(np.round(3.e6/freqsstep))
+    maskrange=max(maskrange,maxgap)
+    unmasked=np.zeros_like(nfreq)
+    full_mask=np.ones(unmasked.shape,dtype=bool)
+    full_mask[freqidx]=mymask
     for nriter in range(2):
         if fitdata is not None and fitdata.shape == phases.shape:
             wraps=np.ma.round((phases-fitdata)/(2*np.pi))
             phases-=wraps*2*np.pi
-            unmasked=np.copy(np.array(phases))
+            unmasked[freqidx]=np.copy(np.array(phases))
+            unmasked[np.isnan(unmasked)]=0.
 
         if fitdata is None:
-            unmasked=np.copy(np.array(phases))
-            unmasked[np.isnan(phases)]=0
+            unmasked[freqidx]=np.copy(np.array(phases))
+            unmasked[np.isnan(unmasked)]=0.
             unmasked=np.unwrap(unmasked)
-            wraps=np.ma.round((phases-unmasked)/(2*np.pi))
+            wraps=np.ma.round((phases-unmasked[freqidx])/(2*np.pi))
             phases-=wraps*2*np.pi
-        maskpoints=np.where(mymask)[0]
+        maskpoints=np.where(full_mask)[0]
         if maskpoints.shape[0]>0:
             Atmp=np.ones((maskrange,2),dtype=np.float64)
             Atmp[:,1]=np.arange(maskrange)
             Atmpinv=np.linalg.inv(np.dot(Atmp.T,Atmp))
         doreverse=False
         for i in maskpoints:
-            if i<maskrange and i>0:
-                unmasked[i]=unmasked[i-1]
+            if i<maskrange:
                 doreverse=True
             if i>=maskrange:
                 #print "changing unmasked[",i,"]:",unmasked[i],"into",
+                unmasked=np.unwrap(unmasked)
+                #print unmasked[i]
                 unmasked[i]=np.dot(np.dot(Atmpinv,np.dot(Atmp.T,unmasked[i-maskrange:i])),[1,maskrange])
                 #print unmasked[i]
         if doreverse:
             for i in maskpoints[::-1]:
                 if i<unmasked.shape[0]-1-maskrange:
-                    #print "changing unmasked[",i,"]:",unmasked[i],"into",
+                    unmasked[i:]=np.unwrap(unmasked[i:])
                     unmasked[i]=np.dot(np.dot(Atmpinv,np.dot(Atmp.T,unmasked[i+1:i+maskrange+1])),[1,-1])
-                    #print unmasked[i],np.dot(Atmp.T,unmasked[i+1:i+maskrange+1])
+        unmasked=np.unwrap(unmasked)
         if doFlag:
             # detect jumps and remove them
             diffdata=unmasked[1:]-unmasked[:-1]
             #detect bad datapoints since they can destroy unwrapping (if the offset is close to np.pi)
+            #wrapflags=np.logical_and(np.absolute(diffdata[:-1])>0.4*np.pi,np.absolute(diffdata[1:])>0.4*np.pi)
             wrapflags=np.logical_and(np.absolute(diffdata[:-1])>0.4*np.pi,np.absolute(diffdata[1:])>0.4*np.pi)
+            #wrapflags=np.absolute(diffdata[:-1])>0.4*np.pi
             newmask=np.zeros_like(diffdata,dtype=bool)
             newmask[:-1]=wrapflags
             diffdata=np.ma.array(diffdata,mask=newmask)
             # use 2.5 pi for calculating jumps, tomake sureyou have a real 2pi jump,instead of a sequence of 2 bad datapoints with order 1pi jump. yes I have seen those in LBA calibrator data
-            phases[1:]-=np.ma.cumsum(np.ma.round(diffdata/(2.5*np.pi)))*2*np.pi
+            unmasked[1:]-=np.ma.cumsum(np.ma.round(diffdata/(2.5*np.pi)))*2*np.pi
             #wrapflags=np.logical_and(np.absolute(np.ma.ediff1d(phases)[:-1])>0.2*np.pi,np.absolute(np.ma.ediff1d(phases)[1:])>0.2*np.pi)
-            mymask[1:-1]=np.logical_or(mymask[1:-1],wrapflags)
-            phases.mask=mymask
+            full_mask[1:-1]=np.logical_or(full_mask[1:-1],wrapflags)
+            phases[:]=unmasked[freqidx]
+            phases.mask=full_mask[freqidx]
             # get best match with fitdata
         if fitdata is None:
             #average around 0
-            phases-=np.ma.round(np.ma.average(phases)/(2*np.pi))*np.pi*2
+            A=np.ma.zeros((freqs.shape[0],2),dtype=np.float64)
+            A.mask=np.zeros((freqs.shape[0],2))
+            A[:,1]=2*np.pi*1e-9*freqs
+            A[:,0]=-8.44797245e9/freqs
+            A.mask[:,0]=phases.mask[:]
+            A.mask[:,1]=phases.mask[:]
+            par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,phases))
+            #print par
+            tmpfitdata=np.ma.dot(par,A.T)
+            wraps=np.ma.round((phases-tmpfitdata)/(2*np.pi))
+            phases-=wraps*2*np.pi
+            par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,phases))
+            tmpfitdata=np.ma.dot(par,A.T)
+            wraps=np.ma.round((phases-tmpfitdata)/(2*np.pi))
+            phases-=wraps*2*np.pi
+            wrapflags=np.absolute(phases-tmpfitdata)>0.4*np.pi
+            full_mask[freqidx]=np.logical_or(full_mask[freqidx],wrapflags)
+            phases.mask=full_mask[freqidx]
+            #print "par agina",par,wraps,phases
+            #phases-=np.ma.round(np.ma.average(phases)/(2*np.pi))*np.pi*2
         else:
 
             phases-=np.ma.round(np.ma.average(phases-fitdata)/(2*np.pi))*np.pi*2
@@ -155,6 +187,7 @@ def unwrapPhases(phases,fitdata=None,maskrange=15,doFlag=True,flagfitdata=False)
                 phases.mask=np.logical_or(mymask,newmask)
         if not doFlag or np.sum(wrapflags)==0:
             return phases
+    #TO DO, if residuals remain too large after unwrapping, do a brute force search
     return phases
 
 
@@ -187,11 +220,11 @@ def getInitPar(
     if len(initsol)>=2 and not (initsol[0]==0 and initsol[1]==0) and not (initsol[0]==-10 and initsol[1]==-10)  :
         #print "unwrapping with initsol",initsol
         fitdata=np.dot(initsol,A.T)
-        data=unwrapPhases(data,fitdata,doFlag=doFlag)
+        data=unwrapPhases(data,freqs,fitdata,doFlag=doFlag)
     else:
         if doFlag:
             #print "unwrapping pahses",data.count()
-            data=unwrapPhases(data,doFlag=doFlag)
+            data=unwrapPhases(data,freqs,doFlag=doFlag)
             #print "unwrapped pahses",data.count()
         else:
             data=unwrapSparsePhases(data,freqs)
@@ -217,7 +250,7 @@ def getInitPar(
     par=bigdata[idx]
     #print "final giess",par,bigdata,"diffffff",idx,np.ma.var(diffdata,axis=-1)
     fitdata=np.dot(par,A[:,:2].T)
-    data=unwrapPhases(data,fitdata,doFlag=doFlag,flagfitdata=True)
+    data=unwrapPhases(data,freqs,fitdata,doFlag=doFlag,flagfitdata=True)
     if data.mask.sum()<0.5*data.size:
         A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
     #now add third parameter if needed:
@@ -231,7 +264,7 @@ def getInitPar(
         idx=np.unravel_index(np.argmin(np.ma.var(diffdata,axis=-1)),diffdata.shape[:-1])
         par=bigdata[idx]
         fitdata=np.dot(par,A.T)
-        data=unwrapPhases(data,fitdata,doFlag=doFlag)
+        data=unwrapPhases(data,freqs,fitdata,doFlag=doFlag)
     return par,data
 
 
@@ -329,7 +362,7 @@ def getClockTECFit(
                 sol[ist] = [-10.,]*sol.shape[1]
                 continue
             fitdata=np.dot(sol[ist],A.T)
-            datatmpist=unwrapPhases(datatmpist,fitdata)
+            datatmpist=unwrapPhases(datatmpist,freq,fitdata)
             #if itm%100==0:
             #logging.debug(" init par for station itm %d:%d "%(itm,ist)+str(sol[ist]))
             mymask=datatmpist.mask
@@ -473,7 +506,7 @@ def getClockTECFitStation(
             sol[:] = [-10.,]*sol.shape[0]
         else:
             fitdata=np.dot(sol,A.T)
-            datatmpist=unwrapPhases(datatmpist,fitdata)
+            datatmpist=unwrapPhases(datatmpist,freq,fitdata)
             mymask=datatmpist.mask
             maskedfreq=np.ma.array(freq,mask=mymask)
             A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
