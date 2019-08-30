@@ -162,8 +162,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         vals = np.log10(vals)
 
                     if datatype == 'phase' or datatype == 'rotation':
-                        cmap = phase_colormap
-                        #cmap = plt.cm.jet
+                        #cmap = phase_colormap
+                        cmap = plt.cm.jet
                     else:
                         try:
                             cmap = plt.cm.viridis
