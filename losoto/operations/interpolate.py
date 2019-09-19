@@ -294,10 +294,3 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
 
     return 0
 
-if __name__ == "__main__":
-    from losoto.h5parm import h5parm
-    outsoltab = 'bandpass'
-    h5 = h5parm('instrument.h5imp_cal_bandpass', readonly=False)
-    ss = h5.getSolset('sol000')
-    soltab = ss.getSoltab('amplitude000')
-    run( soltab, outsoltab, 'freq', '195.3125kHz', delta='', maxFlaggedWidth=30, log=True)
