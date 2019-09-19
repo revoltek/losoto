@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+#from losoto._logging import logger
 from losoto.lib_operations import *
 import scipy.ndimage as nd
 
@@ -40,12 +41,48 @@ def _regrid_axis(vals, delta, newdelta):
         Array of new values
     """
     offset = newdelta / 2.0 - 0.5 * delta
-    freqmin = np.min(vals) + offset
+    freqmin = np.min(vals) - offset
     freqmax = np.max(vals) + offset
     vals_new  = np.arange(freqmin, freqmax + newdelta / 2.0, newdelta)
 
     return vals_new
 
+def _interp(vals, weights, coord, selection, new_axisvals, orig_axisvals, axisind, log, maxFlaggedWidth, outQueue):
+    
+    flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
+    weights[flagged] = 0.0
+    unflagged = np.not_equal(weights, 0.0)
+    if np.sum(unflagged) > 2:
+        # If there are at least two unflagged points, interpolate with mask
+        if log:
+            vals = np.log10(vals)
+        new_vals = np.interp(new_axisvals, orig_axisvals[unflagged],
+                                        vals[unflagged], left=np.nan, right=np.nan)
+
+        # For the weights, interpolate without the mask
+        new_weights = np.round(np.interp(new_axisvals, orig_axisvals, weights,
+                                                    left=np.nan, right=np.nan))
+
+    else:
+        outQueue.put([np.zeros_like(vals), np.zeros_like(weights), selection])
+        return
+
+    # Check for flagged gaps
+    if maxFlaggedWidth > 1:
+        inv_weights = new_weights.astype(bool).squeeze()
+        rank = len(inv_weights.shape)
+        connectivity = nd.generate_binary_structure(rank, rank)
+        mask_labels, count = nd.label(~inv_weights, connectivity)
+        for i in range(count):
+            ind = np.where(mask_labels == i+1)[0]
+            gapsize = len(ind)
+            if gapsize <= maxFlaggedWidth:
+                # Unflag narrow gaps
+                new_weights[ind] = 1.0
+                
+    outQueue.put([new_vals, new_weights, selection])
+                    
+    return
 
 def _convert_strval(val):
     """
@@ -79,6 +116,37 @@ def _convert_strval(val):
         val = val
 
     return val
+
+
+def _unflag_narrow(arr, maxFlaggedWidth):
+    
+    inv_arr = arr.astype(bool).squeeze()
+    rank = len(inv_arr.shape)
+    connectivity = nd.generate_binary_structure(rank, rank)
+    mask_labels, count = nd.label(~inv_arr, connectivity)
+    for i in range(count):
+        ind = np.where(mask_labels == i+1)[0]
+        gapsize = len(ind)
+        if gapsize <= maxFlaggedWidth:
+            # Unflag narrow gaps
+            arr[ind] = 1.0
+                
+    return arr
+
+
+def _interp_array(arr, orig_axisvals, new_axisvals, ignorenan=False, bound=np.nan):
+    
+    if ignorenan:
+        unflagged = np.where(np.isfinite(arr))
+        if np.sum(unflagged) > 2:
+            new_arr = np.interp(new_axisvals, orig_axisvals[unflagged],
+                                    arr[unflagged], left=bound, right=bound)
+        else:
+            new_arr = np.zeros(len(new_axisvals))
+    else:
+        new_arr = np.interp(new_axisvals, orig_axisvals,
+                                    arr, left=bound, right=bound)
+    return new_arr
 
 
 def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0, log=False):
@@ -136,35 +204,79 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     new_shape[axisind] = len(new_axisvals)
     new_vals = np.zeros(new_shape, dtype='float')
     new_weights = np.zeros(new_shape, dtype='float')
+    
+    #mpm = multiprocManager(ncpu, _interp)
+    
+    #import ipdb;  ipdb.set_trace()
+    
+    vals = soltab.getValues(retAxesVals=False)
+    weights  = soltab.getValues(weight=True, retAxesVals=False)
+    flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
+    weights[flagged] = 0.0
+    unflagged = np.not_equal(weights, 0.0)
+    if log:
+        vals = np.log10(vals)
+    
+    #from scipy.interpolate import interp1d
+    ## put nans in vals for interpolation
+    #vals[flagged] = np.nan
+    #vi = interp1d(orig_axisvals, vals, axis=axisind, bounds_error=False, fill_value='extrapolate')
+    #new_vals = vi(new_axisvals)
+    #wi = interp1d(orig_axisvals, weights, axis=axisind, bounds_error=False, fill_value=np.nan)
+    #new_weights = np.round(wi(new_axisvals))
+    
+    #new_vals = np.apply_along_axis(_interp_axis, axisind, vals, orig_axisvals, new_axisvals)
+    #new_weights = np.apply_along_axis(_interp_axis, axisind, weights, orig_axisvals, new_axisvals)
+    
+    
+    vals[flagged] = np.nan
+    ## run interp along the relevant axis (axisind)
+    new_vals = np.apply_along_axis(_interp_array, axisind, vals, orig_axisvals, new_axisvals, ignorenan=True)
+    new_weights = np.apply_along_axis(_interp_array, axisind, weights, orig_axisvals, new_axisvals, ignorenan=False)
+    
+    if maxFlaggedWidth > 1:
+        new_weights = np.apply_along_axis(_unflag_narrow, axisind, new_weights, maxFlaggedWidth)
+        
+    
+    #import ipdb;  ipdb.set_trace()
+        
+    #for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=[axisToRegrid], weight=True):
+        ##logging.debug('i')
+        ##logging.debug(str(vals.shape))
+        ##import ipdb;  ipdb.set_trace()
+        #mpm.put([vals, weights, coord, selection, new_axisvals, orig_axisvals, axisind, log, maxFlaggedWidth])
+    #mpm.wait()
+    #for (v, w, s) in mpm.get():
+        #new_vals[s] = v
+        #new_weights[s] = w
+        
+        #flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
+        #weights[flagged] = 0.0
+        #unflagged = np.not_equal(weights, 0.0)
+        #if np.sum(unflagged) > 2:
+            ## If there are at least two unflagged points, interpolate with mask
+            #if log:
+                #vals = np.log10(vals)
+            #new_vals[selection] = np.interp(new_axisvals, orig_axisvals[unflagged],
+                                            #vals[unflagged], left=np.nan, right=np.nan)
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=[axisToRegrid], weight=True):
-        flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
-        weights[flagged] = 0.0
-        unflagged = np.not_equal(weights, 0.0)
-        if np.sum(unflagged) > 2:
-            # If there are at least two unflagged points, interpolate with mask
-            if log:
-                vals = np.log10(vals)
-            new_vals[selection] = np.interp(new_axisvals, orig_axisvals[unflagged],
-                                            vals[unflagged], left=np.nan, right=np.nan)
+            ## For the weights, interpolate without the mask
+            #new_weights[selection] = np.round(np.interp(new_axisvals, orig_axisvals, weights,
+                                                        #left=np.nan, right=np.nan))
 
-            # For the weights, interpolate without the mask
-            new_weights[selection] = np.round(np.interp(new_axisvals, orig_axisvals, weights,
-                                                        left=np.nan, right=np.nan))
-
-        # Check for flagged gaps
-        if maxFlaggedWidth > 1:
-            inv_weights = new_weights[selection].astype(bool).squeeze()
-            rank = len(inv_weights.shape)
-            connectivity = nd.generate_binary_structure(rank, rank)
-            mask_labels, count = nd.label(~inv_weights, connectivity)
-            for i in range(count):
-                ind = np.where(mask_labels == i+1)
-                gapsize = len(ind[0])
-                if gapsize <= maxFlaggedWidth:
-                    # Unflag narrow gaps
-                    selection[axisind] = ind[0]
-                    new_weights[selection] = 1.0
+        ## Check for flagged gaps
+        #if maxFlaggedWidth > 1:
+            #inv_weights = new_weights[selection].astype(bool).squeeze()
+            #rank = len(inv_weights.shape)
+            #connectivity = nd.generate_binary_structure(rank, rank)
+            #mask_labels, count = nd.label(~inv_weights, connectivity)
+            #for i in range(count):
+                #ind = np.where(mask_labels == i+1)
+                #gapsize = len(ind[0])
+                #if gapsize <= maxFlaggedWidth:
+                    ## Unflag narrow gaps
+                    #selection[axisind] = ind[0]
+                    #new_weights[selection] = 1.0
 
     # Write new soltab
     solset = soltab.getSolset()
@@ -181,3 +293,11 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     s.addHistory('CREATE by INTERPOLATE operation from '+soltab.name+'.')
 
     return 0
+
+if __name__ == "__main__":
+    from losoto.h5parm import h5parm
+    outsoltab = 'bandpass'
+    h5 = h5parm('instrument.h5imp_cal_bandpass', readonly=False)
+    ss = h5.getSolset('sol000')
+    soltab = ss.getSoltab('amplitude000')
+    run( soltab, outsoltab, 'freq', '195.3125kHz', delta='', maxFlaggedWidth=30, log=True)
