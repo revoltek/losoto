@@ -22,6 +22,9 @@ def _run_parser(soltab, parser, step):
 def _savitzky_golay(y, window_size, order):
     from scipy.signal import savgol_filter
 
+    if np.all(np.isnan(y)):
+        return y
+
     # replace any NaNs using linear interpolation
     nans = np.isnan(y)
     if np.any(nans):
@@ -134,13 +137,15 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             soltab.setValues(weights, weight=True)
 
     else:
-        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
 
-            # skip completely flagged selections
-            if (weights == 0).all(): continue
-            if log: vals = np.log10(vals)
+        if mode == 'runningmedian':
+            
+            for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
 
-            if mode == 'runningmedian':
+                # skip completely flagged selections
+                if (weights == 0).all(): continue
+                if log: vals = np.log10(vals)
+            
                 vals_bkp = vals[ weights == 0 ]
 
                 # handle phases by using a complex array
@@ -168,8 +173,19 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
                     weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannoth estrapolate value
                 else:
                     valsnew[ weights == 0 ] = vals_bkp
+                    
+                if log: valsnew = 10**valsnew
+                soltab.setValues(valsnew, selection)
+                if replace: soltab.setValues(weights, selection, weight=True)
 
-            elif mode == 'runningpoly':
+        elif mode == 'runningpoly':
+            
+            for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
+
+                # skip completely flagged selections
+                if (weights == 0).all(): continue
+                if log: vals = np.log10(vals)
+                
                 def polyfit(data):
                     if (np.isnan(data)).all(): return np.nan # all size is flagged
                     x = np.arange(len(data))[ ~np.isnan(data)]
@@ -194,24 +210,59 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
                 else:
                     valsnew[ weights == 0 ] = vals_bkp
                 #print coord['ant'], vals, valsnew
+                
+                if log: valsnew = 10**valsnew
+                soltab.setValues(valsnew, selection)
+                if replace: soltab.setValues(weights, selection, weight=True)
 
-            elif mode == 'savitzky-golay':
-                vals_bkp = vals[ weights == 0 ]
-                np.putmask(vals, weights==0, np.nan)
-                valsnew = _savitzky_golay(vals, size[0], degree)
-                if replace:
-                    weights[ weights == 0] = 1
-                    weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannot extrapolate value
-                else:
-                    valsnew[ weights == 0 ] = vals_bkp
-
+        # can only run this mode if len axesToSmooth is 1 - already checked above
+        # don't iter over the values with soltab.getValuesIter... it's quicker to read all and do the smoothing as an array
+        elif mode == 'savitzky-golay':
+            
+            axisToSmooth = axesToSmooth[0]
+            axisind = soltab.getAxesNames().index(axisToSmooth)
+            
+            vals = soltab.getValues(retAxesVals=False)
+            weights  = soltab.getValues(weight=True, retAxesVals=False)
+            
+            ## skip completely flagged selections
+            #if (weights == 0).all(): continue  ## put in the along axis function as a nan check on vals
+            if log: vals = np.log10(vals)
+        
+            vals_bkp = vals[ weights == 0 ]
+            np.putmask(vals, weights==0, np.nan)
+            valsnew = np.apply_along_axis(_savitzky_golay, axisind, vals, size[0], degree)
+            if replace:
+                weights[ weights == 0] = 1
+                weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannot extrapolate value
             else:
-                logging.error('Mode must be: runningmedian, runningpoly, savitzky-golay, median or mean')
-                return 1
+                valsnew[ weights == 0 ] = vals_bkp
+        
+            #for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
+
+                ## skip completely flagged selections
+                #if (weights == 0).all(): continue
+                #if log: vals = np.log10(vals)
+            
+                #vals_bkp = vals[ weights == 0 ]
+                #np.putmask(vals, weights==0, np.nan)
+                #valsnew = _savitzky_golay(vals, size[0], degree)
+                #if replace:
+                    #weights[ weights == 0] = 1
+                    #weights[ np.isnan(valsnew) ] = 0 # all the size was flagged cannot extrapolate value
+                #else:
+                    #valsnew[ weights == 0 ] = vals_bkp
 
             if log: valsnew = 10**valsnew
-            soltab.setValues(valsnew, selection)
-            if replace: soltab.setValues(weights, selection, weight=True)
+            soltab.setValues(valsnew)
+            if replace: soltab.setValues(weights, weight=True)
+        
+        # if mode...
+        else:
+            logging.error('Mode must be: runningmedian, runningpoly, savitzky-golay, median or mean')
+            return 1
+
+                
 
     soltab.flush()
     soltab.addHistory('SMOOTH (over %s with mode = %s)' % (axesToSmooth, mode))
