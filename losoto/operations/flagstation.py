@@ -322,8 +322,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                    0.15, 0.25, 0.35]
         else:
-            print(('The "{}" band is not supported'.format(band)))
-            sys.exit(1)
+            logging.error('The "{}" band is not supported'.format(band))
+            return None, None
 
         if do_fit:
             lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
@@ -348,8 +348,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         elif np.median(freqs) < 90e6:
             band = 'lba'
         else:
-            logging.warning(('The median frequency of {} Hz is outside of the currently supported LOFAR bands '
-                             '(LBA and HBA-low). Flagging will be skipped'.format(np.median(freqs))))
+            logging.warning('The median frequency of {} Hz is outside of the currently supported LOFAR bands '
+                            '(LBA and HBA-low). Flagging will be skipped'.format(np.median(freqs)))
             outQueue.put([s, weights])
             return
     else:
