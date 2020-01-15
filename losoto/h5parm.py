@@ -1314,7 +1314,7 @@ class Soltab( object ):
         return g()
 
 
-    def addHistory(self, entry):
+    def addHistory(self, entry, date = True):
         """
         Adds entry to the table history with current date and time
 
@@ -1338,7 +1338,10 @@ class Soltab( object ):
                 pass
         historyAttr = "HISTORY%03d" % min(list(set(range(1000)) - set(nums)))
 
-        self.obj.val.attrs[historyAttr] = current_time + ": " + str(entry)
+        if date:
+            self.obj.val.attrs[historyAttr] = current_time + ": " + str(entry)
+        else:
+            self.obj.val.attrs[historyAttr] = str(entry)
 
 
     def getHistory(self):
