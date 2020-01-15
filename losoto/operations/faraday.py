@@ -115,7 +115,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
                         freq       = np.copy(coord['freq'])[idx]
                         phase_diff = 2.*vals[:,t][idx] # a rotation is between -pi and +pi
 
-                    if len(freq) < 30:
+                    if len(freq) < 20:
                         fitweights[t] = 0
                         logging.warning('No valid data found for Faraday fitting for antenna: '+coord['ant']+' at timestamp '+str(t))
                         continue

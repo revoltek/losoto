@@ -107,6 +107,7 @@ if __name__=='__main__':
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
                    "FLAGSTATION": operations.flagstation,
+                   "GLOBALDELAY": operations.globaldelay,
                    "INTERPOLATE": operations.interpolate,
                    "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
@@ -123,7 +124,7 @@ if __name__=='__main__':
                    "PREFACTOR_XYOFFSET": operations.prefactor_XYoffset,
                    "TEC": operations.tec,
                    #"TECFIT": operations.tecfit,
-                   "TECSINGLEFREQ": operations.tecsinglefreq,
+                   #"TECSINGLEFREQ": operations.tecsinglefreq,
                    "TECJUMP": operations.tecjump,
                    #"TECSCREEN": operations.tecscreen,
                    # example operation
