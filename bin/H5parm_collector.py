@@ -22,6 +22,7 @@ parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Inp
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', '-v', default=False, action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--squeeze', '-q', default=False, action='store_true', help='Remove all axes with a length of 1 (default=False)')
+parser.add_argument('--history', '-H', default=False, action='store_true', help='Keep history of the export soltabs (default=False)')
 parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm file instead of appending to it (default=False)')
 args = parser.parse_args()
 
@@ -68,6 +69,7 @@ h5Out = h5parm(args.outh5parm, readonly = False)
 
 for insoltab in insoltabs:
     soltabs = []
+    history = ''
     pointingNames = []; antennaNames = []
     pointingDirections = []; antennaPositions = []
 
@@ -75,6 +77,8 @@ for insoltab in insoltabs:
         solset = h5.getSolset(insolset)
         soltab = solset.getSoltab(insoltab)
         soltabs.append( soltab )
+        history += soltab.getHistory()
+        
         # collect pointings
         sous = solset.getSou()
         for k,v in list(sous.items()):
@@ -88,7 +92,7 @@ for insoltab in insoltabs:
             if k not in antennaNames:
                 antennaNames.append(k)
                 antennaPositions.append(v)
-
+                
     # create output axes
     logging.info("Sorting output axes...")
     axes = soltabs[0].getAxesNames()
@@ -152,9 +156,13 @@ for insoltab in insoltabs:
         solsetOut = h5Out.makeSolset(solsetOutName)
 
     # create soltab
-    solsetOut.makeSoltab(typ, soltabOutName, axesNames=axes, \
+    soltabOut = solsetOut.makeSoltab(typ, soltabOutName, axesNames=axes, \
                      axesVals=[ allAxesVals[axis] for axis in axes ], \
                      vals=allVals, weights=allWeights)
+    
+    # add history table if requested
+    if args.history:
+        soltabOut.addHistory(history, date = False)
 
 sourceTable = solsetOut.obj._f_get_child('source')
 antennaTable = solsetOut.obj._f_get_child('antenna')

@@ -49,20 +49,23 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     logging.info("Replicate axis on soltab: "+soltab.name)
 
     # get the cell to replicate
+    axisReplicateLen = soltab.getAxisLen(axisReplicate, ignoreSelection=False) # keep selection into account
+    old_selection = soltab.selection
+
+    # get slice with 1 value to replicate
     soltab.setSelection(**{axisReplicate:fromCell})
     vals = soltab.getValues(retAxesVals=False)
     if updateWeights:
         weights = soltab.getValues(retAxesVals=False, weight=True)
 
     cellPos = list(soltab.getAxisValues(axisReplicate)).index(fromCell)
-    axisReplicateLen = soltab.getAxisLen(axisReplicate, ignoreSelection=True)
     axisReplicatePos = soltab.getAxesNames().index(axisReplicate)
 
     # expand on the right axis
     vals = np.repeat(vals, repeats=axisReplicateLen, axis=axisReplicatePos)
 
     # write back
-    soltab.setSelection()
+    soltab.selection = old_selection
     soltab.setValues(vals)
     if updateWeights:
         soltab.setValues(weights, weight=True)

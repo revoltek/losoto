@@ -322,8 +322,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                    0.15, 0.25, 0.35]
         else:
-            print(('The "{}" band is not supported'.format(band)))
-            sys.exit(1)
+            logging.error('The "{}" band is not supported'.format(band))
+            return None, None
 
         if do_fit:
             lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
@@ -340,7 +340,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         else:
             return None, bandpass_function(freq, *tuple(init_coeffs))
 
-    # Check that telescope is supported
+    # Check that telescope and band is supported. Skip flagging if not
     if telescope.lower() == 'lofar':
         # Determine which band we're in
         if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
@@ -348,13 +348,15 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         elif np.median(freqs) < 90e6:
             band = 'lba'
         else:
-            print(('The median frequency of {} Hz is outside of any supported LOFAR band '
-                  '(LBA and HBA-low)'.format(np.median(freqs))))
-            sys.exit(1)
+            logging.warning('The median frequency of {} Hz is outside of the currently supported LOFAR bands '
+                            '(LBA and HBA-low). Flagging will be skipped'.format(np.median(freqs)))
+            outQueue.put([s, weights])
+            return
     else:
-        logging.error("Only telescope = 'lofar' is currently supported for bandpass mode.")
+        logging.warning("Only telescope = 'lofar' is currently supported for bandpass mode. "
+                        "Flagging will be skipped")
         outQueue.put([s, weights])
-        return 1
+        return
 
     # Skip fully flagged stations
     if np.all(weights == 0.0):
@@ -535,7 +537,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
     if ('freq' not in axis_names or 'pol' not in axis_names or
         'time' not in axis_names or 'ant' not in axis_names):
         logging.error("Currently, flagstation requires the following axes: "
-                     "freq, pol, time, and ant.")
+                      "freq, pol, time, and ant.")
         return 1
     freq_ind = axis_names.index('freq')
     pol_ind = axis_names.index('pol')
