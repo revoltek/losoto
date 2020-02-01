@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
-import scipy.ndimage as nd
+from losoto._logging import logger as logging
 
 logging.debug('Loading INTERPOLATE module.')
 
@@ -110,6 +109,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     log : bool, optional
         Interpolation is done in log10 space, by default False
     """
+    import scipy.ndimage as nd
+
     # Check inputs
     if axisToRegrid not in soltab.getAxesNames():
         logging.error('Axis \"'+axisToRegrid+'\" not found.')

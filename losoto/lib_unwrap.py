@@ -6,7 +6,7 @@
 import itertools, math
 import numpy as np
 import scipy.fftpack as fft
-import logging
+from losoto._logging import logger as logging
 
 def unwrap_fft(phase, iterations=3):
     """

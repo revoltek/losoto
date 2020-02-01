@@ -6,8 +6,8 @@
 import os, sys, re, itertools
 import numpy as np
 import tables
-import logging
 import losoto._version
+from losoto._logging import logger as logging
 
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:

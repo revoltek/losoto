@@ -5,8 +5,8 @@
 #import warnings
 #warnings.simplefilter('error', UserWarning)
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading PLOT module.')
 

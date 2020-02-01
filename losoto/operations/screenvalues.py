@@ -3,9 +3,8 @@
 
 # This is the operation to get values from screens
 
-
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading SCREENVALUES module.')
 

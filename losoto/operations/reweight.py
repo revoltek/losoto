@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from losoto.lib_operations import *
-import logging
+from losoto._logging import logger as logging
 
 logging.debug('Loading REWEIGHT module.')
 

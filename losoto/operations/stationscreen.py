@@ -3,12 +3,10 @@
 
 # This is the station-screen operation for LoSoTo
 
-
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading STATIONSCREEN module.')
-
 
 def _run_parser(soltab, parser, step):
     outSoltab = parser.getstr( step, "outSoltab" )

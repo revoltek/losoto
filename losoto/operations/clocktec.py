@@ -3,8 +3,8 @@
 
 # This is an example operation for LoSoTo
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading CLOCKTEC module.')
 

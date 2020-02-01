@@ -4,7 +4,6 @@
 # Some utilities for operations
 
 import os, sys, ast, re
-import logging
 from configparser import ConfigParser
 if (sys.version_info > (3, 0)):
     #from configparser import ConfigParser
@@ -12,6 +11,8 @@ if (sys.version_info > (3, 0)):
 else:
     #from ConfigParser import ConfigParser
     from StringIO import StringIO
+
+from losoto._logging import logger as logging
 
 cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
 

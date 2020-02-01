@@ -3,8 +3,8 @@
 import numpy as np
 import numpy.ma as ma
 import sys
-import logging
 from multiprocessing import Pool
+from losoto._logging import logger as logging
 
 has_fitting=True
 try:

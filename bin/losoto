@@ -7,7 +7,6 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 import os, sys, time, gc
 import atexit
 import tables
-import logging
 from losoto import _version, _logging
 from losoto.h5parm import h5parm
 from losoto.lib_losoto import LosotoParser, getStepSoltabs
@@ -47,12 +46,16 @@ if __name__=='__main__':
     parser.add_argument('parset', help='LoSoTo parset.', nargs='?', default='losoto.parset', type=str)
     args = parser.parse_args()
 
+    logger = _logging.Logger('info')
     atexit.register(my_close_open_files, False) # Suppress info about closing open files at exit
+
     if args.quiet:
-        _logging.setLevel('warning')
+        logger.set_level('warning')
     if args.verbose:
-        _logging.setLevel('debug')
+        logger.set_level('debug')
         atexit.register(my_close_open_files, True) # Print info about closing open files at exit
+
+    logging = _logging.logger
 
     # Check h5parm
     if args.h5parm == None:

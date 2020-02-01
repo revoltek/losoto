@@ -3,11 +3,10 @@
 
 # This is the direction-screen operation for LoSoTo
 
-
-import logging
 from losoto.lib_operations import *
 from losoto.operations.stationscreen import _getxy, _radec2xy, _xy2radec, _makeWCS
 from losoto.operations.stationscreen import _flag_outliers, _circ_chi2
+from losoto._logging import logger as logging
 
 logging.debug('Loading DIRECTIONSCREEN module.')
 

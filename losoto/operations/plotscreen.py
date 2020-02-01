@@ -3,10 +3,9 @@
 
 # This operation implements screen plotting
 
-
-import logging
 from losoto.lib_operations import *
 from losoto.operations.directionscreen import _calc_piercepoint
+from losoto._logging import logger as logging
 
 logging.debug('Loading PLOTSCREEN module.')
 

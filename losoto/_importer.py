@@ -15,17 +15,15 @@ It handles Gain/DirectionalGain/RotationAngle/
 import sys, os
 import socket
 import numpy as np
-import logging
 import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
-from losoto import _logging
 from losoto.h5parm import h5parm as h5parm_mod
 try:
     from . import progressbar
 except ImportError:
     import losoto.progressbar as progressbar
-
+from losoto._logging import logger as logging
 
 def parmdbToAxes(solEntry):
     """

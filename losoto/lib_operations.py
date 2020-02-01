@@ -3,10 +3,10 @@
 # Some utilities for operations
 
 import sys, math
-import logging
 from losoto.h5parm import h5parm
 import multiprocessing
 import numpy as np
+from losoto._logging import logger as logging
 
 class multiprocManager(object):
 

@@ -4,8 +4,8 @@
 # This operation for LoSoTo implement a jumps remover for TEC solutions
 # WEIGHH: flag ready
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading TECJUMP module.')
 
