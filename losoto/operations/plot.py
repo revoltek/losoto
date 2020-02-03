@@ -8,6 +8,14 @@
 from losoto.lib_operations import *
 from losoto._logging import logger as logging
 
+# avoids error if re-setting "agg" a second run of plot
+if not 'matplotlib' in sys.modules:
+    import matplotlib as mpl
+    mpl.rcParams['xtick.labelsize'] = 20
+    mpl.rcParams['font.size'] = 20
+    mpl.use("Agg")
+import matplotlib.pyplot as plt # after setting "Agg" to speed up
+
 logging.debug('Loading PLOT module.')
 
 def _run_parser(soltab, parser, step):
@@ -39,13 +47,6 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
         import os
         from itertools import cycle, chain
         import numpy as np
-        # avoids error if re-setting "agg" a second run of plot
-        if not 'matplotlib' in sys.modules:
-            import matplotlib as mpl
-            mpl.rcParams['xtick.labelsize'] = 20
-            mpl.rcParams['font.size'] = 20
-            mpl.use("Agg")
-        import matplotlib.pyplot as plt # after setting "Agg" to speed up
 
         # find common min and max if not set
         flat = dataCube.filled(np.nan).flatten()
