@@ -348,7 +348,7 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: logger.setLevel("debug")
+    if options.verbose: logger.set_level("debug")
 
     # Check input H5parm file
     h5parmFile = args[0]

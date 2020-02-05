@@ -30,7 +30,7 @@ if __name__=='__main__':
     # log
     logger = _logging.Logger('info')
     logging = _logging.logger
-    if options.verbose: logger.setLevel("debug")
+    if options.verbose: logger.set_level("debug")
 
     h5parmFrom = args[0]
     h5parmTo = args[1]

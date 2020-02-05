@@ -41,7 +41,7 @@ if __name__=='__main__':
     # log
     logger = _logging.Logger('info')
     logging = _logging.logger
-    if options.verbose: logger.setLevel("debug")
+    if options.verbose: logger.set_level("debug")
 
     h5parmFile = args[0]
     logging.info("H5parm filename = "+h5parmFile)

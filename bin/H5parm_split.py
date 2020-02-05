@@ -30,7 +30,7 @@ if len(args.h5parmFile) < 1:
 # log
 logger = _logging.Logger('info')
 logging = _logging.logger
-if args.verbose: logger.setLevel("debug")
+if args.verbose: logger.set_level("debug")
 
 ################################
 
