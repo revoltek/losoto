@@ -416,6 +416,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         amps_div /= 10**normval
         bad = np.where(np.abs(np.array(bp_sp) - np.log10(amps_div)) > 0.2)
         sigma_div[bad] = 1e8
+        if np.all(sigma_div > 1e7):
+            logging.info('Flagged {0} (pol {1}) due to poor match to '
+                         'baseline bandpass model'.format(ants[s], pol))
+            weights[:, :, pol] = 0.0
+            outQueue.put([s, weights])
+            return
 
         # Iteratively fit and flag
         maxiter = 5
