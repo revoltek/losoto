@@ -39,6 +39,7 @@ Contents:
 * __tools/__: contains some external tools
 
 Required packages:
+* Python 3
 * PyTables version:  >3.4.0
 * HDF5 version:      >1.8.4
 * NumPy version:     >1.9.0
