@@ -9,7 +9,6 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, time
 import numpy as np
-import logging
 import lofar.parmdb
 from losoto import _version
 from losoto import _logging
@@ -25,7 +24,8 @@ opt.add_option('-s', '--solset', help='Solution-set name (default=sol000)', type
 opt.add_option('-n', '--numiter', help='Number of iterations (default=100)', type=int, default=100)
 (options, args) = opt.parse_args()
 
-_logging.setLevel('debug')
+logger = _logging.Logger('debug')
+logging = _logging.logger
 
 n = options.numiter
 

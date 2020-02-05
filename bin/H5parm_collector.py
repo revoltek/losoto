@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-import sys, os, logging
+import sys, os
 import codecs
 import numpy as np
 from itertools import chain
@@ -30,7 +30,10 @@ if len(args.h5parmFiles) < 1:
     parser.print_help()
     sys.exit(1)
 
-if args.verbose: _logging.setLevel("debug")
+# set logs
+logger = _logging.Logger('info')
+logging = _logging.logger
+if args.verbose: logger.setLevel("debug")
 
 ################################
 

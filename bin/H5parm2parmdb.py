@@ -10,7 +10,6 @@ _author = "Francesco de Gasperin (astro@voo.it), David Rafferty (drafferty@hs.un
 import sys, os, glob, re, time
 import numpy as np
 import shutil
-import logging
 import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
@@ -342,11 +341,14 @@ if __name__=='__main__':
     (options, args) = opt.parse_args()
     global ipbar, pbar
 
+    logger = _logging.Logger('info')
+    logging = _logging.logger
+
     # Check options
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: _logging.setLevel("debug")
+    if options.verbose: logger.setLevel("debug")
 
     # Check input H5parm file
     h5parmFile = args[0]

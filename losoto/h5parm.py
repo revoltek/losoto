@@ -519,8 +519,9 @@ class Solset( object ):
             np_d = np.float64
             pt_d = tables.Float64Atom()
         weight = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np_d), atom=pt_d)
-        val.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
-        weight.attrs['AXES'] = ','.join([axisName for axisName in axesNames])
+        axisNames = ','.join([axisName for axisName in axesNames])
+        val.attrs['AXES'] = axisNames.encode()
+        weight.attrs['AXES'] = axisNames.encode()
 
         return Soltab(soltab)
 
@@ -624,7 +625,7 @@ class Solset( object ):
         ants = {}
         try:
             for x in self.obj.antenna:
-                ants[x['name']] = x['position']
+                ants[x['name'].decode()] = x['position']
         except: pass
 
         return ants
@@ -642,7 +643,7 @@ class Solset( object ):
         sources = {}
         try:
             for x in self.obj.source:
-                sources[x['name']] = x['dir']
+                sources[x['name'].decode()] = x['dir']
         except: pass
 
         return sources
@@ -703,10 +704,7 @@ class Soltab( object ):
         self.name = soltab._v_name
 
         # list of axes names, set once to speed up calls
-        axesNamesInH5 = soltab.val.attrs['AXES']
-        if not isinstance(axesNamesInH5, str):
-            # This is necessary in python3
-            axesNamesInH5 = str(soltab.val.attrs['AXES'], 'utf-8')
+        axesNamesInH5 = soltab.val.attrs['AXES'].decode()
         self.axesNames = axesNamesInH5.split(',')
 
         # dict of axes values, set once to speed up calls (a bit of memory usage though)
@@ -1358,7 +1356,7 @@ class Soltab( object ):
         history_list = []
         for attr in attrs:
             if attr[:-3] == 'HISTORY':
-                history_list.append(self.obj.val.attrs[attr])
+                history_list.append(self.obj.val.attrs[attr].decode())
         if len(history_list) == 0:
             history_str = ""
         else:

@@ -8,7 +8,6 @@ This tool is used to import killms solutions into a H5parm format.
 _author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, glob, pickle
-import logging
 import numpy as np
 from losoto import _version
 from losoto import _logging
@@ -29,7 +28,11 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: _logging.setLevel("debug")
+
+    # log
+    logger = _logging.Logger('info')
+    logging = _logging.logger
+    if options.verbose: logger.setLevel("debug")
 
     inputFile = args[1]
     logging.info("KILLMS filenames = "+str(inputFile))
