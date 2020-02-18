@@ -1183,8 +1183,8 @@ class Soltab( object ):
         dataVals = self._applyAdvSelection(dataVals, self.selection)
 
         if not reference is None:
-            if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd']:
-                logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, and rotation solution tables. Ignore referencing.')
+            if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd', 'rotationmeasure']:
+                logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, rotation and rotationmeasure solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
             elif not reference in self.getAxisValues('ant', ignoreSelection = True) and reference != 'closest':
@@ -1232,7 +1232,7 @@ class Soltab( object ):
                     else:
                         dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
                 
-                if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd':
+                if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
                     dataVals = normalize_phase(dataVals)
 
         if not retAxesVals:
