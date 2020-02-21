@@ -56,7 +56,6 @@ if __name__=='__main__':
 
     # build antenna subtable
     stationNames = SolsDico["StationNames"]
-    print(stationNames)
     antPos = []; antNames = []
     for i, a in enumerate(stationNames):
         antPos.append([0,0,0])
