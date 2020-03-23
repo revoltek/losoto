@@ -704,7 +704,8 @@ class Soltab( object ):
         self.name = soltab._v_name
 
         # list of axes names, set once to speed up calls
-        axesNamesInH5 = soltab.val.attrs['AXES'].decode()
+        axesNamesInH5 = soltab.val.attrs['AXES']
+        axesNamesInH5 = axesNamesInH5.decode() if isinstance(axesNamesInH5, bytes) else axesNamesInH5
         self.axesNames = axesNamesInH5.split(',')
 
         # dict of axes values, set once to speed up calls (a bit of memory usage though)
