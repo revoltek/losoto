@@ -1337,9 +1337,11 @@ class Soltab( object ):
         historyAttr = "HISTORY%03d" % min(list(set(range(1000)) - set(nums)))
 
         if date:
-            self.obj.val.attrs[historyAttr] = current_time + ": " + str(entry)
+            entry = current_time + ": " + str(entry)
         else:
-            self.obj.val.attrs[historyAttr] = str(entry)
+            entry = str(entry)
+
+        self.obj.val.attrs[historyAttr] = entry.encode()
 
 
     def getHistory(self):
