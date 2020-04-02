@@ -21,9 +21,11 @@ Install:
 * Get LoSoTo from https://github.com/revoltek/losoto 
 * Install losoto by simply: python setup.py install --prefix=~/mydir/
 * Alternatively: pip install --upgrade --user https://github.com/revoltek/losoto/archive/master.zip 
-* In cep3 use the copy of the code in ~fdg/scripts/losoto/ (source the tool/lofarinit.[c]sh file which is shipped with the code)
 * Prepare a parset starting from the parset/losoto2.parset
 * in case of problems write to Francesco de Gasperin: astro@voo.it
+
+H5parm plotter (GUI):
+This is an external project maintained by Frits Sweijen: https://github.com/tikk3r/lofar-h5plot
 
 Documentation:
 * Documentation of LoSoTo API is at: __http://revoltek.github.io/losoto/losoto.html__
