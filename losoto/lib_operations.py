@@ -2,10 +2,9 @@
 
 # Some utilities for operations
 
-import sys, math
-from losoto.h5parm import h5parm
-import multiprocessing
+import sys, multiprocessing
 import numpy as np
+from losoto.h5parm import h5parm
 from losoto._logging import logger as logging
 
 class multiprocManager(object):
@@ -83,6 +82,12 @@ class multiprocManager(object):
 
         # wait for all jobs to finish
         self.inQueue.join()
+        self.inQueue.close()
+
+    def __del__(self):
+        for t in self._threads:
+            t.terminate()
+            del t
 
 
 def reorderAxes( a, oldAxes, newAxes ):
