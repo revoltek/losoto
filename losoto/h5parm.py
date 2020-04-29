@@ -334,7 +334,7 @@ class h5parm( object ):
             # operations applied to the table.
             if verbose:
                 logging.warning('Axes values saved in '+self.fileName+'-axes_values.txt')
-                f = file(self.fileName+'-axes_values.txt','a')
+                f = open(self.fileName+'-axes_values.txt','a')
             soltabs = solset.getSoltabs()
             names = np.array([s.name for s in soltabs])
             sorted_soltabs = [x for _, x in sorted(zip(names, soltabs))]

@@ -139,7 +139,6 @@ for insoltab in insoltabs:
             allWeights[np.ix_(*coords)] = soltab.obj.weight
             
 
-
     # TODO: leave correct weights - this is a workaround for h5parm with weight not in float16
     allWeights[ allWeights != 0 ] = 1.
 
