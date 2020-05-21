@@ -9,11 +9,12 @@ logging.debug('Loading NORM module.')
 def _run_parser(soltab, parser, step):
     axesToNorm = parser.getarraystr( step, 'axesToNorm' ) # no default
     normVal = parser.getfloat( step, 'normVal', 1.)
+    log = parser.getbool( step, 'log', False )
 
-    parser.checkSpelling( step, soltab, ['axesToNorm','normVal'])
+    parser.checkSpelling( step, soltab, ['axesToNorm','normVal','log'])
     return run(soltab, axesToNorm, normVal)
 
-def run( soltab, axesToNorm, normVal = 1. ):
+def run( soltab, axesToNorm, normVal = 1., log = False ):
     """
     Normalize the solutions to a given value
     WEIGHT: Weights compliant
@@ -25,6 +26,9 @@ def run( soltab, axesToNorm, normVal = 1. ):
 
     normVal : float, optional
         Number to normalize to vals = vals * (normVal/valsMean), by default 1.
+
+    log : bool, optional
+        clip is done in log10 space, by default False.
     """
     import numpy as np
     
@@ -37,7 +41,12 @@ def run( soltab, axesToNorm, normVal = 1. ):
             logging.error('Normalization axis '+normAxis+' not found.')
             return 1
 
+    if soltab.getType() == 'amplitude' and not log:
+        logging.warning('Amplitude solution tab detected and log=False. Amplitude solution tables should be treated in log space.')
+
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToNorm, weight = True):
+
+        if log: vals = np.log10(vals)
 
         # rescale solutions
         if np.all(weights == 0): continue # skip flagged selections
@@ -46,6 +55,7 @@ def run( soltab, axesToNorm, normVal = 1. ):
         logging.debug("Rescaling by: "+str(normVal/valsMean))
 
         # writing back the solutions
+        if log: vals = 10**vals
         soltab.setValues(vals, selection)
 
     soltab.flush()
