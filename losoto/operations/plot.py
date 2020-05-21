@@ -61,8 +61,12 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
  
         # prevent same min/max (still a problem at 0)
         if minZ == maxZ:
-            minZ *= 0.99
-            maxZ *= 1.01
+            if minZ > 0:
+                minZ *= 0.99
+                maxZ *= 1.01
+            else:
+                minZ *= 1.01
+                maxZ *= 0.99
             
         # add some space for clock plots
         if datatype == 'Clock':
