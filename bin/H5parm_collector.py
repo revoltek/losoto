@@ -145,8 +145,6 @@ for insoltab in insoltabs:
     # TODO: flag nans waiting for DPPP to do it
     allWeights[ np.isnan(allVals) ] = 0.
 
-    # TODO: interpolate on selected axes
-
     logging.info('Writing output...')
     solsetOutName = args.outsolset
     soltabOutName = insoltab
