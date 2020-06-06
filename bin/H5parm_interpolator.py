@@ -44,10 +44,11 @@ if len(args.h5parmFiles) == 1 and (',' in args.h5parmFiles[0] or
 
 # open input
 all_soltabs = {} # {'amplitude':[soltab1, soltab2], 'phase':[soltab3]}
-all_axes_names = {} # {'amplitude':['time','ant','freq'], 'phase':['time','freq','dir']}
+all_axes_names = {} # {'amplitude':['dir','time','ant','freq'], 'phase':['dir','time','freq']} # dir is the first by construction
 all_axes_vals = {} # {'time':[[1,2,34,5],[1,3,5]],'freq':[[1,2,3,4,5],[1,3,5]]}
 pointingNames = []; antennaNames = []; pointingDirections = []; antennaPositions = []
 for h5parmFile in args.h5parmFiles:
+    logging.info('Working on %s...' % h5parmFile)
     h5 = h5parm(h5parmFile.replace("'",""), readonly=True)
     solset = h5.getSolset(args.insolset)
     insoltabs = solset.getSoltabNames()
@@ -76,11 +77,14 @@ for h5parmFile in args.h5parmFiles:
                 all_axes_vals[axis] = [soltab.getAxisValues(axis)]
 
         # add axes names for this table typ
+        axes = ['dir']+[axis for axis in axes if axis != 'dir']
         if typ in all_axes_names.keys():
             if all_axes_names[typ] != axes:
-                logging.error('Table %s has different axes from other tables of the same type.' % insoltab)
+                logging.error('Table %s has different axes from previously loadded tables of the same type.' % insoltab)
+                sys.exit()
         else:
             all_axes_names[typ] = axes
+
 
     # collect pointings
     sous = solset.getSou()
@@ -99,13 +103,16 @@ for h5parmFile in args.h5parmFiles:
 # Find fastest varying (longest) axis for each axis type
 fast_axes_vals = {}
 for axis, all_vals in all_axes_vals.items():
-    logging.info('Looking for fastest axis in %s...' % axis)
-    lens = [len(vals) for vals in all_vals]
-    fast_axes_vals[axis] = all_vals[lens.index(max(lens))]
-    print(lens,'->',len(fast_axes_vals[axis]))
-    if axis not in ['time','freq'] and any([len(fast_axes_vals[axis]) != x for x in lens]):
-        logging.error('Only time and freq can be resampled, not %s.' % axis)
-        sys.exit()
+    if axis == 'dir':
+        fast_axes_vals['dir'] = list(set([val[0] for val in all_vals]))
+    else:
+        logging.info('Looking for fastest axis in %s...' % axis)
+        lens = [len(vals) for vals in all_vals]
+        fast_axes_vals[axis] = all_vals[lens.index(max(lens))]
+        print(lens,'->',len(fast_axes_vals[axis]))
+        if axis not in ['time','freq'] and any([len(fast_axes_vals[axis]) != x for x in lens]):
+            logging.error('Only time and freq can be resampled, not %s.' % axis)
+            sys.exit()
  
 # open output
 if os.path.exists(args.outh5parm) and args.clobber:
@@ -121,6 +128,7 @@ sourceTable.append(list(zip(*(pointingNames,pointingDirections))))
 for typ, soltabs in all_soltabs.items():
     logging.info('Creating new table of type: %s...' % typ)
     shape = [len(fast_axes_vals[axis]) for axis in all_axes_names[typ]]
+    print('Shape: ', shape, ' - ', all_axes_names[typ])
     if typ == 'amplitude':
         new_vals = np.ones(shape=shape)
     else:
@@ -144,12 +152,18 @@ for typ, soltabs in all_soltabs.items():
                 fw = interp1d(axis_vals, weights, kind=args.method, axis=axis_idx, copy=True, fill_value='extrapolate', assume_sorted=True)
                 weights = fw(new_axis_vals)
 
+        # remove direciton axis
+        idx_axis_dir = soltab.getAxesNames().index('dir') # position of the direction axis
+        vals = np.squeeze(vals, axis=idx_axis_dir)
+        weights = np.squeeze(weights, axis=idx_axis_dir)
+        # find direction
+        idx_dir = fast_axes_vals['dir'].index(soltab.getAxisValues('dir'))
         # add to global value
         if typ == 'amplitude':
-            new_vals *= vals
+            new_vals[idx_dir] *= vals
         else:
-            new_vals += vals
-        new_weights *= weights
+            new_vals[idx_dir] += vals
+        new_weights[idx_dir] *= weights
 
     # write new soltab (default name)
     soltabOut = solsetOut.makeSoltab(typ, axesNames=all_axes_names[typ], \
