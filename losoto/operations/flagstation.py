@@ -377,7 +377,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         # Use sensible values depending on correlator
         if np.nanmedian(amps_flagged) > 1.0:
             # new correlator
-            ampRange = [50.0, 225.0]
+            ampRange = [50.0, 325.0]
         else:
             # old correlator
             ampRange = [0.0004, 0.0018]
