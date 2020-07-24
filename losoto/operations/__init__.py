@@ -24,10 +24,10 @@ class Timer(object):
     def __enter__(self):
         self.log.info("--> Starting \'" + self.step + "\' step (operation: " + self.operation + ").")
         self.start = time.time()
-        self.startcpu = time.clock()
+        self.startcpu = time.perf_counter()
 
     def __exit__(self, exit_type, value, tb):
 
         # if not an error
         if exit_type is None:
-            self.log.info("Time for %s step: %i s (cpu: %i s)." % ( self.step, ( time.time() - self.start), (time.clock() - self.startcpu) ))
+            self.log.info("Time for %s step: %i s (cpu: %i s)." % ( self.step, ( time.time() - self.start), (time.perf_counter() - self.startcpu) ))
