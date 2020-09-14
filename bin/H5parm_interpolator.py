@@ -146,11 +146,14 @@ for typ, soltabs in all_soltabs.items():
             new_axis_vals = fast_axes_vals[axis]
 
             if len(axis_vals) < len(new_axis_vals):
-                # interpolate on faster varying axis
-                f = interp1d(axis_vals, vals, kind=args.method, axis=axis_idx, copy=True, fill_value='extrapolate', assume_sorted=True)
-                vals = f(new_axis_vals)
-                fw = interp1d(axis_vals, weights, kind=args.method, axis=axis_idx, copy=True, fill_value='extrapolate', assume_sorted=True)
-                weights = fw(new_axis_vals)
+                if len(axis_vals) == 1:
+                    pass # numpy should do the proper casting
+                else:
+                    # interpolate on faster varying axis
+                    f = interp1d(axis_vals, vals, kind=args.method, axis=axis_idx, copy=True, fill_value='extrapolate', assume_sorted=True)
+                    vals = f(new_axis_vals)
+                    fw = interp1d(axis_vals, weights, kind=args.method, axis=axis_idx, copy=True, fill_value='extrapolate', assume_sorted=True)
+                    weights = fw(new_axis_vals)
 
         # remove direciton axis
         idx_axis_dir = soltab.getAxesNames().index('dir') # position of the direction axis
