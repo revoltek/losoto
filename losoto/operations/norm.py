@@ -12,7 +12,7 @@ def _run_parser(soltab, parser, step):
     log = parser.getbool( step, 'log', False )
 
     parser.checkSpelling( step, soltab, ['axesToNorm','normVal','log'])
-    return run(soltab, axesToNorm, normVal)
+    return run(soltab, axesToNorm, normVal, log)
 
 def run( soltab, axesToNorm, normVal = 1., log = False ):
     """
