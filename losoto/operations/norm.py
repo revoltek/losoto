@@ -51,7 +51,10 @@ def run( soltab, axesToNorm, normVal = 1., log = False ):
         # rescale solutions
         if np.all(weights == 0): continue # skip flagged selections
         valsMean = np.nanmean(vals[weights != 0])
-        vals[weights != 0] *= normVal/valsMean
+
+        if log: vals[weights != 0] += np.log10(normVal)-valsMean
+        else: vals[weights != 0] *= normVal/valsMean
+
         logging.debug("Rescaling by: "+str(normVal/valsMean))
 
         # writing back the solutions
