@@ -20,6 +20,7 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
+    refDir = parser.getstr( step, 'refDir', '' )
     soltabsToAdd = parser.getarraystr( step, 'soltabsToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
@@ -27,9 +28,9 @@ def _run_parser(soltab, parser, step):
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
     parser.checkSpelling( step, soltab, ['axesInPlot', 'axisInTable', 'axisInCol', 'axisDiff', 'NColFig', 'figSize', 'markerSize', 'minmax', 'log', \
-               'plotFlag', 'doUnwrap', 'refAnt', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
+               'plotFlag', 'doUnwrap', 'refAnt', 'refDir', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
-               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+               plotFlag, doUnwrap, refAnt, refDir, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
  
@@ -214,7 +215,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
 
 def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], markerSize=2, minmax=[0,0], log='', \
-               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
+               plotFlag=False, doUnwrap=False, refAnt='', refDir='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
     WEIGHT: flag-only compliant, no need for weight
@@ -256,6 +257,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     refAnt : str, optional
         Reference antenna for phases. By default None.
+
+    refDir : str, optional
+        Reference direction for phases. By default None.
 
     soltabsToAdd : str, optional
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
@@ -313,6 +317,11 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     elif refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
         logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
+
+    if refDir == '': refDir = None
+    elif refDir != 'center' and not refDir in soltab.getAxisValues('dir', ignoreSelection = True):
+        logging.error('Reference direction '+refDir+' not found. Using: '+soltab.getAxisValues('dir')[1])
+        refDir = soltab.getAxisValues('dir')[1]
 
     minZ, maxZ = minmax
 
@@ -467,7 +476,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             # cycle on colors
             soltab2Selection = soltab.selection
             soltab.selection = selection
-            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, refAnt=refAnt, refDir=refDir)):
 
                 # differential plot
                 if axisDiff != []:
