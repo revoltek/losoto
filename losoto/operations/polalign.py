@@ -58,7 +58,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         return 1
     
     if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
     if refAnt == '': refAnt = soltab.getAxisValues('ant')[1]
 

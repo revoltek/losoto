@@ -73,7 +73,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
 
     if refAnt == '': refAnt = None
     elif not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
+        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
 
     if mode == "runningmedian" and len(axesToSmooth) != len(size):
