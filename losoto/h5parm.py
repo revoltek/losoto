@@ -16,7 +16,6 @@ if int(tables.__version__.split('.')[0]) < 3:
     sys.exit(1)
 
 # fancy backwards compatibility of keywords: allow aliases
-# (https://stackoverflow.com/questions/41784308/keyword-arguments-aliases-in-python)
 # https://stackoverflow.com/questions/49802412/how-to-implement-deprecation-in-python-with-argument-alias#
 def deprecated_alias(**aliases):
     def deco(f):
@@ -26,25 +25,16 @@ def deprecated_alias(**aliases):
             return f(*args, **kwargs)
         return wrapper
     return deco
-def alias(param_name: str, param_alias: str):
-    """
-    Decorator for aliasing a param in a function
 
-    Parameters
-    ----------
-    param_name: str, name of param in funtion to alias
-    param_alias: str, alias to use for this param
-    """
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            alias_param_value = kwargs.get(param_alias)
-            if alias_param_value:
-                kwargs[param_name] = alias_param_value
-                del kwargs[param_alias]
-            result = func(*args, **kwargs)
-            return result
-        return wrapper
+def rename_kwargs(func_name, kwargs, aliases):
+    for alias, new in aliases.items():
+        if alias in kwargs:
+            if new in kwargs:
+                raise TypeError('{} received both {} and {}'.format(
+                    func_name, alias, new))
+            warnings.warn('{} is deprecated; use {}'.format(alias, new),
+                          DeprecationWarning)
+            kwargs[new] = kwargs.pop(alias)
 
 def openSoltab(h5parmFile, solsetName=None, soltabName=None, address=None, readonly=True):
     """
@@ -845,7 +835,6 @@ class Soltab( object ):
         for axis, selVal in iter( list(args.items()) ):
             # if None continue and keep all the values
             if selVal is None: continue
-
             if not axis in self.getAxesNames():
                 logging.warning("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
                 continue
@@ -1182,7 +1171,7 @@ class Soltab( object ):
         return self.fullyFlaggedAnts
 
 
-    # @deprecated_alias(refAnt='reference') # Add alias for backwards compatibility
+    @deprecated_alias(reference='refAnt') # Add alias for backwards compatibility
     def getValues(self, retAxesVals=True, weight=False, refAnt=None, refDir=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
@@ -1216,6 +1205,7 @@ class Soltab( object ):
             else: dataVals = self.obj.val
 
         dataVals = self._applyAdvSelection(dataVals, self.selection)
+
         # CASE 1: Reference only to ant
         if refAnt and not refDir:
             # TODO: Should there be a warning if only ant is referenced but multiple directions are present?
@@ -1226,12 +1216,12 @@ class Soltab( object ):
             elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest':
                 logging.error('Cannot find antenna '+refAnt+'. Ignore referencing.')
             else:
-                # if self.useCache:
-                #     if weight: dataValsRef = self.cacheWeight
-                #     else: dataValsRef = self.cacheVal
-                # else:
-                #     if weight: dataValsRef = self.obj.weight
-                #     else: dataValsRef = self.obj.val
+                if self.useCache:
+                    if weight: dataValsRef = self.cacheWeight
+                    else: dataValsRef = self.cacheVal
+                else:
+                    if weight: dataValsRef = self.obj.weight
+                    else: dataValsRef = self.obj.val
 
                 antAxis = self.getAxesNames().index('ant')
                 refSelection = self.selection[:]
@@ -1248,7 +1238,7 @@ class Soltab( object ):
                         refAnt = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
 
                         refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
-                        dataValsRef_i = self._applyAdvSelection(dataVals, refSelection)
+                        dataValsRef_i = self._applyAdvSelection(dataValsRef, refSelection)
                         dataValsRef_i = np.swapaxes(dataValsRef_i, 0, antAxis)
                         if weight:
                             dataVals[i][ dataValsRef_i[0] == 0. ] = 0.
@@ -1259,13 +1249,12 @@ class Soltab( object ):
  
                 else:
                     refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
-                    dataValsRef = self._applyAdvSelection(dataVals, refSelection)
+                    dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
     
                     if weight:
                         dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                     else:
                         dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                
                 # if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
                 #     dataVals = normalize_phase(dataVals)
         # CASE 2: Reference only to dir
@@ -1279,16 +1268,16 @@ class Soltab( object ):
             elif not refDir in self.getAxisValues('dir', ignoreSelection=True) and refDir != 'center':
                 logging.error('Cannot find direction ' + refDir + '. Ignore referencing.')
             else:
-                # if self.useCache:
-                #     if weight:
-                #         dataValsRef = self.cacheWeight
-                #     else:
-                #         dataValsRef = self.cacheVal
-                # else:
-                #     if weight:
-                #         dataValsRef = self.obj.weight
-                #     else:
-                #         dataValsRef = self.obj.val
+                if self.useCache:
+                    if weight:
+                        dataValsRef = self.cacheWeight
+                    else:
+                        dataValsRef = self.cacheVal
+                else:
+                    if weight:
+                        dataValsRef = self.obj.weight
+                    else:
+                        dataValsRef = self.obj.val
 
                 dirAxis = self.getAxesNames().index('dir')
                 refSelection = self.selection[:]
@@ -1300,7 +1289,7 @@ class Soltab( object ):
                     refDir, _ = min(dirsDict.items(), key=lambda kd: np.linalg.norm(kd[1] - meanDir))
 
                 refSelection[dirAxis] = [self.getAxisValues('dir', ignoreSelection=True).tolist().index(refDir)]
-                dataValsRef = self._applyAdvSelection(dataVals, refSelection)
+                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
                 if weight:
                     dataVals[
@@ -1326,18 +1315,16 @@ class Soltab( object ):
             elif not refDir in self.getAxisValues('dir', ignoreSelection=True) and refDir != 'center':
                 logging.error('Cannot find direction ' + refDir + '. Ignore referencing.')
             else:
-                # Is it necessary to define these at this point?
-                # If not, the following if .. else . can be deleted and the dataValsRef selection below can be changed
-                # if self.useCache:
-                #     if weight:
-                #         dataValsRef = self.cacheWeight
-                #     else:
-                #         dataValsRef = self.cacheVal
-                # else:
-                #     if weight:
-                #         dataValsRef = self.obj.weight
-                #     else:
-                #         dataValsRef = self.obj.val
+                if self.useCache:
+                    if weight:
+                        dataValsRef = self.cacheWeight
+                    else:
+                        dataValsRef = self.cacheVal
+                else:
+                    if weight:
+                        dataValsRef = self.obj.weight
+                    else:
+                        dataValsRef = self.obj.val
 
                 antAxis = self.getAxesNames().index('ant')
                 dirAxis = self.getAxesNames().index('dir')
@@ -1352,12 +1339,13 @@ class Soltab( object ):
                 refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                 refSelection[dirAxis] = [self.getAxisValues('dir', ignoreSelection=True).tolist().index(refDir)]
 
-                dataValsRef = self._applyAdvSelection(dataVals, refSelection)
+                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
-                print('cheackmark')
                 if weight:
-                    # dataVals[np.expand_dims(dataValsRef, axis=(antAxis,dirAxis)) == 0.] = 0.
+                    dataValsRef = np.repeat(dataValsRef, dataVals.shape[antAxis], axis=antAxis)
+                    dataValsRef = np.repeat(dataValsRef, dataVals.shape[dirAxis], axis=dirAxis)
                     dataVals[dataValsRef == 0.] = 0.
+
                 else:
                     dataVals = dataVals - dataValsRef # np.expand_dims(dataValsRef, axis=(antAxis,dirAxis))
 
@@ -1371,7 +1359,7 @@ class Soltab( object ):
         return dataVals, axisVals
 
 
-    # @alias('refAnt','reference') # Add alias for backwards compatibility
+    @deprecated_alias(reference='refAnt') # Add alias for backwards compatibility
     def getValuesIter(self, returnAxes=[], weight=False, refAnt=None, refDir=None):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.

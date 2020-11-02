@@ -40,7 +40,7 @@ def run( soltab, ms, inverse=False, useElementResponse=True, useArrayFactor=True
     times = soltab.getAxisValues('time')
 
     for vals, coord, selection in soltab.getValuesIter(returnAxes=['ant','time','pol','freq'], weight=False):
-        vals = reorderAxes( vals, soltab.getAxesNames(), ['ant','time','freq','pol'] )
+        vals = reorderAxes( vals, soltab.getAxesNames(), ['ant','time','freq','pol'])
 
         for stationnum in range(numants):
             logging.debug('Working on station number %i' % stationnum)

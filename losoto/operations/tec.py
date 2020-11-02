@@ -70,149 +70,161 @@ def run( soltab, soltabOut='tec000', refAnt='', maxResidualFlag=2.5, maxResidual
     times = soltab.getAxisValues('time')
 
     # create new table
+    # Axes are either
+    axes = soltab.getAxesNames() # ['time','freq','ant'] or ['time','freq','ant','dir']
+    outaxes = axes.copy()
+    outaxes.remove('freq') # ['ant','time'] or ['ant','time','dir']
     solset = soltab.getSolset()
-    soltabout = solset.makeSoltab(soltype = 'tec', soltabName = soltabOut, axesNames=['ant','time'], \
-                      axesVals=[soltab.getAxisValues(axisName) for axisName in ['ant','time']], \
-                      vals=np.zeros(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))), \
-                      weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))) )
+    soltabout = solset.makeSoltab(soltype = 'tec', soltabName = soltabOut, axesNames=outaxes, \
+                      axesVals=[soltab.getAxisValues(axisName) for axisName in outaxes], \
+                      vals=np.zeros(shape=tuple(soltab.getAxisLen(axisName) for axisName in outaxes)), \
+                      weights=np.ones(shape=tuple(soltab.getAxisLen(axisName) for axisName in outaxes)) )
     soltabout.addHistory('Created by TEC operation from %s.' % soltab.name)
         
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['time','freq'], weight=True, reference=refAnt):
 
         if len(coord['freq']) < 10:
             logging.error('Delay estimation needs at least 10 frequency channels, preferably distributed over a wide range.')
             return 1
+        elif coord['ant'] == refAnt: continue # skip refAnt
 
         # reorder axes
         vals = reorderAxes( vals, soltab.getAxesNames(), ['freq','time'] )
         weights = reorderAxes( weights, soltab.getAxesNames(), ['freq','time'] )
-
         fitd = np.zeros(len(times))
         fitweights = np.ones(len(times)) # all unflagged to start
         #fitdguess = 0.01 # good guess
         ranges = (-0.5,0.5)
         Ns = 1000
 
-        if not coord['ant'] == refAnt:
+        if (weights == 0.).all() == True:
+            logging.warning('Skipping flagged antenna: '+coord['ant'])
+            fitweights[:] = 0
+        else:
+            # unwrap 2d timexfreq
+            #flags = np.array((weights == 0), dtype=bool)
+            #vals = unwrap_2d(vals, flags, coord['freq'], coord['time'])
 
-            if (weights == 0.).all() == True:
-                logging.warning('Skipping flagged antenna: '+coord['ant'])
-                fitweights[:] = 0
-            else:
+            for t, time in enumerate(times):
 
-                # unwrap 2d timexfreq
-                #flags = np.array((weights == 0), dtype=bool)
-                #vals = unwrap_2d(vals, flags, coord['freq'], coord['time'])
+                # apply flags
+                idx       = (weights[:,t] != 0.)
+                freq      = np.copy(coord['freq'])[idx]
 
-                for t, time in enumerate(times):
+                if t == 0: phaseComb_pre  = vals[idx,0]
+                else: phaseComb_pre  = vals[idx,t-1]
+                if t == len(times)-1: phaseComb_post  = vals[idx,-1]
+                else: phaseComb_post  = vals[idx,t+1]
 
-                    # apply flags
-                    idx       = (weights[:,t] != 0.)
-                    freq      = np.copy(coord['freq'])[idx]
+                phaseComb  = vals[idx,t]
 
-                    if t == 0: phaseComb_pre  = vals[idx,0]
-                    else: phaseComb_pre  = vals[idx,t-1]
-                    if t == len(times)-1: phaseComb_post  = vals[idx,-1]
-                    else: phaseComb_post  = vals[idx,t+1]
-                    
-                    phaseComb  = vals[idx,t]
-
-                    if len(freq) < 10:
-                        fitweights[t] = 0
+                if len(freq) < 10:
+                    fitweights[t] = 0
+                    if 'dir' in outaxes:
+                        logging.warning('No valid data found for delay fitting for antenna: '+coord['ant']+'; direction: '+coord['dir']*' at timestamp '+str(t))
+                    else:
                         logging.warning('No valid data found for delay fitting for antenna: '+coord['ant']+' at timestamp '+str(t))
-                        continue
+                    continue
         
-                    # if more than 1/4 of chans are flagged
-                    if (len(idx) - len(freq))/float(len(idx)) > 1/3.:
-                        logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
+                # if more than 1/4 of chans are flagged
+                if (len(idx) - len(freq))/float(len(idx)) > 1/3.:
+                    logging.debug('High number of filtered out data points for the timeslot %i: %i/%i' % (t, len(idx) - len(freq), len(idx)) )
 
-                    # least square 2
-                    #fitresultd2, success = scipy.optimize.leastsq(dreal2, [fitdguess,0.], args=(freq, phaseComb))
-                    #numjumps = np.around(fitresultd2[1]/(2*np.pi))
-                    #print 'best jumps:', numjumps
-                    #phaseComb -= numjumps * 2*np.pi
-                    #fitresultd, success = scipy.optimize.leastsq(dreal, [fitresultd2[0]], args=(freq, phaseComb))
+                # least square 2
+                #fitresultd2, success = scipy.optimize.leastsq(dreal2, [fitdguess,0.], args=(freq, phaseComb))
+                #numjumps = np.around(fitresultd2[1]/(2*np.pi))
+                #print 'best jumps:', numjumps
+                #phaseComb -= numjumps * 2*np.pi
+                #fitresultd, success = scipy.optimize.leastsq(dreal, [fitresultd2[0]], args=(freq, phaseComb))
 
-                    # least square 1
-                    #fitresultd, success = scipy.optimize.leastsq(dreal, [fitdguess], args=(freq, phaseComb))
+                # least square 1
+                #fitresultd, success = scipy.optimize.leastsq(dreal, [fitdguess], args=(freq, phaseComb))
 
-                    # hopper
-                    #fitresultd = scipy.optimize.basinhopping(dreal, [fitdguess], T=1, minimizer_kwargs={'args':(freq, phaseComb)})
-                    #fitresultd = [fitresultd.x]
+                # hopper
+                #fitresultd = scipy.optimize.basinhopping(dreal, [fitdguess], T=1, minimizer_kwargs={'args':(freq, phaseComb)})
+                #fitresultd = [fitresultd.x]
 
-                    #best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
+                #best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
-                    #best_residual = np.inf
-                    #for jump in [-2,-1,0,1,2]:
-                    #    fitresultd, success = scipy.optimize.leastsq(dreal, [fitdguess], args=(freq, phaseComb - jump * 2*np.pi))
-                    #    print fitresultd
-                    #    # fractional residual
-                    #    residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phaseComb - jump * 2*np.pi ) )
-                    #    if residual < best_residual:
-                    #        best_residual = residual
-                    #        fitd[t] = fitresultd[0]
-                    #        best_jump = jump
+                #best_residual = np.inf
+                #for jump in [-2,-1,0,1,2]:
+                #    fitresultd, success = scipy.optimize.leastsq(dreal, [fitdguess], args=(freq, phaseComb - jump * 2*np.pi))
+                #    print fitresultd
+                #    # fractional residual
+                #    residual = np.nanmean(np.abs( (-8.44797245e9*fitresultd[0]/freq) - phaseComb - jump * 2*np.pi ) )
+                #    if residual < best_residual:
+                #        best_residual = residual
+                #        fitd[t] = fitresultd[0]
+                #        best_jump = jump
 
-                    # brute force
-                    fitresultd = scipy.optimize.brute(drealbrute, ranges=(ranges,), Ns=Ns, args=(freq, phaseComb))
-                    fitresultd, success = scipy.optimize.leastsq(dreal, fitresultd, args=(freq, phaseComb))
-                    best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
+                # brute force
+                fitresultd = scipy.optimize.brute(drealbrute, ranges=(ranges,), Ns=Ns, args=(freq, phaseComb))
+                fitresultd, success = scipy.optimize.leastsq(dreal, fitresultd, args=(freq, phaseComb))
+                best_residual = np.nanmean(np.abs( mod(-8.44797245e9*fitresultd[0]/freq) - phaseComb ) )
 
-                    fitd[t] = fitresultd[0]
-                    if maxResidualFlag == 0 or best_residual < maxResidualFlag:
-                        fitweights[t] = 1
-                        if maxResidualProp == 0 or best_residual < maxResidualProp:
-                            ranges = (fitresultd[0]-0.05,fitresultd[0]+0.05)
-                            Ns = 100
-                        else:
-                            ranges = (-0.5,0.5)
-                            Ns = 1000
-                    else:       
-                        # high residual, flag and reset initial guess
-                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiual: '+str(best_residual)+').')
-                        fitweights[t] = 0
+                fitd[t] = fitresultd[0]
+                if maxResidualFlag == 0 or best_residual < maxResidualFlag:
+                    fitweights[t] = 1
+                    if maxResidualProp == 0 or best_residual < maxResidualProp:
+                        ranges = (fitresultd[0]-0.05,fitresultd[0]+0.05)
+                        Ns = 100
+                    else:
                         ranges = (-0.5,0.5)
                         Ns = 1000
+                else:
+                    # high residual, flag and reset initial guess
+                    if 'dir' in outaxes:
+                        logging.warning('Bad solution for ant: '+coord['ant']+'; dir: '+coord['dir']+' (time: '+str(t)+', resdiual: '+str(best_residual)+').')
+                    else:
+                        logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiual: '+str(best_residual)+').')
+                    fitweights[t] = 0
+                    ranges = (-0.5,0.5)
+                    Ns = 1000
 
 
-                    # Debug plot
-                    doplot = False
-                    if doplot and (coord['ant'] == 'RS509LBA' or coord['ant'] == 'RS210LBA') and t%50==0:
-                        print("Plotting")
-                        if not 'matplotlib' in sys.modules:
-                            import matplotlib as mpl
-                            mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-                            mpl.use("Agg")
-                        import matplotlib.pyplot as plt
+                # Debug plot
+                doplot = False
+                if doplot and (coord['ant'] == 'RS509LBA' or coord['ant'] == 'RS210LBA') and t%50==0:
+                    print("Plotting")
+                    if not 'matplotlib' in sys.modules:
+                        import matplotlib as mpl
+                        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+                        mpl.use("Agg")
+                    import matplotlib.pyplot as plt
 
-                        fig = plt.figure()
-                        fig.subplots_adjust(wspace=0)
-                        ax = fig.add_subplot(111)
+                    fig = plt.figure()
+                    fig.subplots_adjust(wspace=0)
+                    ax = fig.add_subplot(111)
 
-                        # plot rm fit
-                        plotd = lambda d, freq: -8.44797245e9*d/freq
-                        ax.plot(freq, plotd(fitresultd[0], freq[:]), "-", color='purple')
-                        ax.plot(freq, mod(plotd(fitresultd[0], freq[:])), ":", color='purple')
+                    # plot rm fit
+                    plotd = lambda d, freq: -8.44797245e9*d/freq
+                    ax.plot(freq, plotd(fitresultd[0], freq[:]), "-", color='purple')
+                    ax.plot(freq, mod(plotd(fitresultd[0], freq[:])), ":", color='purple')
 
-                        #ax.plot(freq, vals[idx,t], '.b' )
-                        #ax.plot(freq, phaseComb + numjumps * 2*np.pi, 'x', color='purple' )                           
-                        ax.plot(freq, phaseComb, 'o', color='purple' )                           
+                    #ax.plot(freq, vals[idx,t], '.b' )
+                    #ax.plot(freq, phaseComb + numjumps * 2*np.pi, 'x', color='purple' )
+                    ax.plot(freq, phaseComb, 'o', color='purple' )
      
-                        residual = mod( plotd(fitd[t], freq[:]) - phaseComb)
-                        ax.plot(freq, residual, '.', color='orange')
+                    residual = mod( plotd(fitd[t], freq[:]) - phaseComb)
+                    ax.plot(freq, residual, '.', color='orange')
         
-                        ax.set_xlabel('freq')
-                        ax.set_ylabel('phase')
-                        #ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+                    ax.set_xlabel('freq')
+                    ax.set_ylabel('phase')
+                    #ax.set_ylim(ymin=-np.pi, ymax=np.pi)
     
-                        logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
-                        plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
-                        del fig
-
+                    logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
+                    plt.savefig(str(t)+'_'+coord['ant']+'.png', bbox_inches='tight')
+                    del fig
+            if 'dir' in outaxes:
+                logging.info('%s; %s: average tec: %f TECU' % (coord['ant'],coord['dir'],np.mean(2*fitd)))
+            else:
                 logging.info('%s: average tec: %f TECU' % (coord['ant'], np.mean(2*fitd)))
 
         # reorder axes back to the original order, needed for setValues
-        soltabout.setSelection(ant=coord['ant'])
+        if 'dir' in outaxes:
+            soltabout.setSelection(ant=coord['ant'],dir=coord['dir'])
+        else:
+            soltabout.setSelection(ant=coord['ant'])
         soltabout.setValues( fitd )
         soltabout.setValues( fitweights, weight=True )
 

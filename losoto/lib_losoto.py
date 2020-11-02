@@ -82,7 +82,14 @@ class LosotoParser(ConfigParser):
     def getarray(self, s, v, default=None):
         if self.has_option(s, v):
             try:
-                return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
+                # why are square brackets being replaced here? What if my selection is a string containing square brackets?
+                # return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
+                parm = self.getstr(s, v) # split also turns str into 1-element lists
+                if parm[0] == '[': # hardcoded for square brackets in parameter set...
+                    parm = parm[1:]
+                if parm[-1] == ']':
+                    parm = parm[:-1]
+                return parm.replace(' ','').split(',')
             except:
                 logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...])' % (s, v))
         elif default is None:
