@@ -76,5 +76,5 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     if updateWeights:
         soltab.setValues(weights, weight=True)
 
-    soltab.addHistory('REPLICATEONAXIS (over axis %s)' % (axisReplicate))
+    soltab.addHistory('REPLICATEONAXIS (over axis %s from cell %s)' % (axisReplicate, str(fromCell)))
     return 0
