@@ -828,7 +828,7 @@ class Soltab( object ):
 
             # string -> regular expression
             elif type(selVal) is str:
-                if not self.getAxisType(axis).char is 'S':
+                if not self.getAxisType(axis).char == 'S':
                     logging.warning("Cannot select on axis \""+axis+"\" with a regular expression. Use all available values.")
                     continue
                 self.selection[idx] = [i for i, item in enumerate(self.getAxisValues(axis)) if re.search(selVal, item)]
