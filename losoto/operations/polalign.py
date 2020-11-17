@@ -41,7 +41,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         replace using smoothed value instead of flag bad data? Smooth must be active. By default, False.
 
     minFreq : float, optional
-        minimum frequency [Hz] to use. By default, 0 (all freqs).
+        minimum frequency [Hz] to use in estimating the PA. By default, 0 (all freqs).
 
     refAnt : str, optional
         Reference antenna, by default the first.
