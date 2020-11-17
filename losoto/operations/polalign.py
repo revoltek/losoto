@@ -12,13 +12,14 @@ def _run_parser(soltab, parser, step):
     fitOffset = parser.getbool( step, 'fitOffset', False )
     average = parser.getbool( step, 'average', False )
     replace = parser.getbool( step, 'replace', False )
+    minFreq = parser.getfloat( step, 'minFreq', 0 )
     refAnt = parser.getstr( step, 'refAnt', '' )
 
-    parser.checkSpelling( step, soltab, ['soltabOut', 'maxResidual', 'fitOffset', 'average', 'replace', 'refAnt'])
-    return run(soltab, soltabOut, maxResidual, fitOffset, average, replace, refAnt)
+    parser.checkSpelling( step, soltab, ['soltabOut', 'maxResidual', 'fitOffset', 'average', 'replace', 'minFreq', 'refAnt'])
+    return run(soltab, soltabOut, maxResidual, fitOffset, average, replace, minFreq, refAnt)
 
 
-def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average=False, replace=False, refAnt='' ):
+def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average=False, replace=False, minFreq=0, refAnt='' ):
     """
     Estimate polarization misalignment as delay.
 
@@ -38,7 +39,10 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
     
     replace : bool, optional
         replace using smoothed value instead of flag bad data? Smooth must be active. By default, False.
-        
+
+    minFreq : float, optional
+        minimum frequency [Hz] to use. By default, 0 (all freqs).
+
     refAnt : str, optional
         Reference antenna, by default the first.
     """
@@ -67,8 +71,8 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
     # create new table
     solset = soltab.getSolset()
-    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
-                      axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
+    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(),
+                      axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()],
                       vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False))
     soltabout.addHistory('Created by POLALIGN operation from %s.' % soltab.name)
 
@@ -100,7 +104,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
             for t, time in enumerate(times):
 
                 # apply flags
-                idx       = ( (weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.))# & (coord['freq'] > 45.e6) & (coord['freq'] < 70.e6) )
+                idx       = ( (weights[coord1,:,t] != 0.) & (weights[coord2,:,t] != 0.) & (coord['freq'] > minFreq) )
                 freq      = np.copy(coord['freq'])[idx]
                 phase1    = vals[coord1,:,t][idx]
                 phase2    = vals[coord2,:,t][idx]
@@ -183,7 +187,6 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
             fit_offset = np.array(fit_offset)
 
             # avg in time
-
             if average:
                 fit_delays_bkp = fit_delays[ fit_weights == 0 ]
                 fit_offset_bkp = fit_offset[ fit_weights == 0 ]
