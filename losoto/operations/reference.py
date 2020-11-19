@@ -68,7 +68,7 @@ def run( soltab, refAnt='', refDir=''):
 
     # use automatic antenna referencing
     elif refAnt != '':
-        vals = soltab.getValues(retAxesVals=False, reference=refAnt)
+        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt)
 
     soltab.setValues(vals)
 

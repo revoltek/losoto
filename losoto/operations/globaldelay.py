@@ -65,7 +65,7 @@ def run( soltab, soltabOut='tec000', refAnt='' ):
                       weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'))) )
     soltabout.addHistory('Created by GLOBALDELAY operation from %s.' % soltab.name)
         
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, refAnt=refAnt):
 
         if len(coord['freq']) < 5:
             logging.error('Delay estimation needs at least 5 frequency channels, preferably distributed over a wide range.')

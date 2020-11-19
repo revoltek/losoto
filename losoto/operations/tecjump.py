@@ -303,7 +303,7 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
     tec_jump_theory = abs(getPhaseWrapBase([42.308e6,42.308e6+23828e6])[0])
 
     # Find the average jump on all antennas by averaging all jumps found to be withing 0.5 and 2 times the tec_jump_theory
-    vals = soltab.getValues( retAxesVals=False, reference=refAnt )
+    vals = soltab.getValues( retAxesVals=False, refAnt=refAnt )
     timeAxis = soltab.getAxesNames().index('time')
     vals = np.swapaxes(vals, 0, timeAxis)
     vals = vals[1,...] - vals[:-1,...] 
@@ -317,7 +317,7 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
 
     mpm = multiprocManager(ncpu, _run_antenna)
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='time', weight = True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes='time', weight = True, refAnt=refAnt):
 
         # skip all flagged
         if (weights == 0).all(): continue

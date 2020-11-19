@@ -57,7 +57,7 @@ def run( soltab, soltabOut='tec000', refAnt='' ):
                       weights=np.ones(shape=(soltab.getAxisLen('ant'),soltab.getAxisLen('time'),soltab.getAxisLen('dir'))) )
     soltabout.addHistory('Created by TEC operation from %s.' % soltab.name)
         
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','time'], weight=True, refAnt=refAnt):
 
         assert len(coord['freq']) == 1 # it works with phase at only 1 freq
 

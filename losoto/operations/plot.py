@@ -169,12 +169,20 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         cmap = plt.cm.viridis
                     except AttributeError:
                         cmap = plt.cm.rainbow
- 
+
+                if not np.all(np.diff(yvals) == np.diff(yvals)[0]): # if not evenly spaced
+                    gapsize = np.amax(np.abs(np.diff(yvals)))
+                    gapidx = np.argmax(np.abs(np.diff(yvals)))  # index BEFORE the gap
+                    y_spacing = np.mean(np.diff(yvals)[np.diff(yvals) != gapsize])  # y-spacing outside of the gap
+                    if gapsize > 2*y_spacing: # if gap greater 2 times y-spacing, pad NaNs
+                        vals = np.insert(vals, gapidx+1, np.nan * np.ones((int(gapsize / y_spacing),len(vals[0]))), axis=0)  # fill gap with NaNs
+
                 # ugly fix to enforce min/max as imshow has some problems with very large numbers
                 if not np.isnan(vals).all():
-                    vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
-                    vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
- 
+                    with np.errstate(invalid='ignore'): # silence warnings that occure for comparison to NaN values
+                        vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
+                        vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
+
                 im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                         extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
  
@@ -514,7 +522,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 #                                newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
 #
 #                    soltabToAdd.setSelection(**newCoord)
-#                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
+#                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, refAnt=refAnt))
 #
 #                    # add missing axes
 #                    print ('shape:', vals.shape)

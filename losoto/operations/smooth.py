@@ -105,7 +105,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
         logging.warning('Amplitude solution tab detected and log=False. Amplitude solution tables should be treated in log space.')
 
     if mode == 'median' or mode == 'mean':
-        vals = soltab.getValues(retAxesVals=False, reference=refAnt)
+        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt)
         if log: vals = np.log10(vals)
         weights = soltab.getValues(retAxesVals=False, weight=True)
         np.putmask(vals, weights==0, np.nan)
@@ -134,7 +134,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
             soltab.setValues(weights, weight=True)
 
     else:
-        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, reference=refAnt):
+        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToSmooth, weight=True, refAnt=refAnt):
 
             # skip completely flagged selections
             if (weights == 0).all(): continue

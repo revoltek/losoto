@@ -77,7 +77,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
                              weights=np.ones((len(ants),len(times))))
     soltabout.addHistory('Created by FARADAY operation from %s.' % soltab.name)
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, refAnt=refAnt):
 
         if len(coord['freq']) < 10:
             logging.error('Faraday rotation estimation needs at least 10 frequency channels, preferably distributed over a wide range.')

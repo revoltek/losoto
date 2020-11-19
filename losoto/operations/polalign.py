@@ -78,7 +78,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         logging.error('Cannot reference to known polarisation.')
         return 1
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','time'], weight=True, refAnt=refAnt):
 
         # reorder axes
         vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','freq','time'] )
