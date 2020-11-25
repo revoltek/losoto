@@ -322,7 +322,7 @@ def run( soltab, soltabOut, refAnt, maxResidualFlag, maxResidualProp, ncpu ):
         return 1
     ants = soltab.getAxisValues('ant')
     if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[0])
         refAnt = ants[0]
     if refAnt == '': refAnt = ants[0]
 

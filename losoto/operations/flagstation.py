@@ -634,7 +634,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
                 else:
                     ants = soltab.getAxisValues('ant')
                     if refAnt not in ants:
-                        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+                        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[0])
                         refAnt = ants[0]
                     refInd = ants.tolist().index(refAnt)
                     if 'dir' in axis_names:

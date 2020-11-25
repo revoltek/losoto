@@ -24,7 +24,8 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
         Axis along which replicate the values.
 
     fromCell : str
-        A cell value in axisReplicate from which to copy the data values.
+        A cell value in axisReplicate from which to copy the data values. If it is the string
+        "first"/"last" then uses the first/last element of the axis.
 
     updateWeights : bool
         If False then weights are untoched, if True they are replicated like data. Default: True.
@@ -34,6 +35,11 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     if not axisReplicate in soltab.getAxesNames():
         logging.error('Cannot find axis %s.' % axisReplicate)
         return 1
+
+    if fromCell == 'first':
+        fromCell = soltab.getAxisValues(axisReplicate)[0]
+    elif fromCell == 'last':
+        fromCell = soltab.getAxisValues(axisReplicate)[-1]
 
     axisType = type(soltab.getAxisValues(axisReplicate)[0])
     try:
@@ -70,5 +76,5 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     if updateWeights:
         soltab.setValues(weights, weight=True)
 
-    soltab.addHistory('REPLICATEONAXIS (over axis %s)' % (axisReplicate))
+    soltab.addHistory('REPLICATEONAXIS (over axis %s from cell %s)' % (axisReplicate, str(fromCell)))
     return 0

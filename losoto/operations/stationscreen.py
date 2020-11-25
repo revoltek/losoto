@@ -49,10 +49,6 @@ def _calculate_piercepoints(station_positions, source_positions):
     """
     import casacore.measures
     import numpy as np
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
 
     logging.info('Calculating screen pierce-point locations...')
     N_sources = source_positions.shape[0]
@@ -286,7 +282,7 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
 
     """
     import numpy as np
-    from losoto.operations.reweight import nancircstd
+    from losoto.operations.reweight import _nancircstd
 
     # Find stddev of the screen
     stddev = np.zeros(weights.shape)
@@ -300,7 +296,7 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
         residual = normalize_phase(residual)
         residual_nan = residual.copy()
         residual_nan[flagged] = np.nan
-        screen_stddev = nancircstd(residual_nan, axis=0)
+        screen_stddev = _nancircstd(residual_nan, axis=0)
     elif screen_type == 'tec' or screen_type == 'amplitude':
         # Use normal stddev
         screen_stddev = np.sqrt(np.average(residual[nonflagged]**2,
@@ -557,10 +553,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     from numpy import newaxis
     import re
     import os
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
 
     # Get screen type
     screen_type = soltab.getType()
@@ -659,8 +651,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
 
     # Fit station screens
     N_total = N_freqs * N_pols * N_stations * niter * N_times
-    pbar = progressbar.ProgressBar(maxval=N_total).start()
-    ipbar = 0
     for freq_ind in range(N_freqs):
         for pol_ind in range(N_pols):
             r = r_full[:, :, freq_ind, :, pol_ind] # order is now [dir, time, ant]
@@ -763,12 +753,9 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                                         hit_lower2 = True
                                     hit_lower = True
                                 screen_order[s, tindx, freq_ind, pol_ind] = target_order
-                        pbar.update(ipbar)
-                        ipbar += 1
                     prev_station_weights = station_weights.copy()
                 weights[:, s, :] = station_weights
             weights_full[:, :, freq_ind, :, pol_ind] = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
-    pbar.finish()
 
     # Write the results to the output solset
     dirs_out = source_names

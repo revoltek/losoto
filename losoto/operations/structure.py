@@ -47,7 +47,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
     ants = soltab.getAxisValues('ant')
     if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
+        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[1])
         refAnt = ants[1]
     if refAnt == '' and doUnwrap:
         logging.error('Unwrap requires reference antenna. Using: '+ants[1])
