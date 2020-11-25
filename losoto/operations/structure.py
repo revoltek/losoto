@@ -58,7 +58,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
     posAll = soltab.getSolset().getAnt()
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','ant','time'], weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','ant','time'], weight=True, refAnt=refAnt):
 
         # reorder axes
         vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','ant','freq','time'] )
