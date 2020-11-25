@@ -4,6 +4,7 @@
 # Some utilities for operations
 
 import os, sys, ast, re
+import functools, warnings # for deprecated_alias decorator
 from configparser import ConfigParser
 if (sys.version_info > (3, 0)):
     #from configparser import ConfigParser

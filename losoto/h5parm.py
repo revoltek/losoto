@@ -4,7 +4,6 @@
 # Retrieving and writing data in H5parm format
 
 import os, sys, re, itertools
-import functools, warnings # for deprecated_alias decorator
 import numpy as np
 import tables
 import losoto._version
