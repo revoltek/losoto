@@ -13,6 +13,7 @@ else:
     #from ConfigParser import ConfigParser
     from StringIO import StringIO
 
+import numpy as np
 from losoto._logging import logger as logging
 
 cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
@@ -83,7 +84,7 @@ class LosotoParser(ConfigParser):
     def getarray(self, s, v, default=None):
         if self.has_option(s, v):
             try:
-                # why are square brackets being replaced here? What if my selection is a string containing square brackets?
+                # TODO: why are square brackets being replaced here? What if my selection is a string containing square brackets?
                 # return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
                 parm = self.getstr(s, v) # split also turns str into 1-element lists
                 if parm[0] == '[': # hardcoded for square brackets in parameter set...
@@ -121,6 +122,20 @@ class LosotoParser(ConfigParser):
             return [int(x) for x in self.getarray(s, v, default)]
         except:
             logging.error('Error interpreting section: %s - values: %s (expected array of int.)' % (s, v))
+
+    def getarrayfloat2d(self, s, v, default=None):
+        """Alternative to parse 1,2 or ndim array input.
+           'getarrayfloat() does not support more than 1 dim.
+           TODO: it might be cleaner to unify these functions..."""
+        try:
+            # Remove space after [
+            x = self.getstr(s, v, default)
+            x = re.sub('\[ +', '[', x.strip())
+            # Replace commas and spaces
+            x = re.sub('[,\s]+', ', ', x)
+            return np.array(ast.literal_eval(x))
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of float.)' % (s, v))
 
 
 def getParAxis( parser, step, axisName ):
