@@ -3,7 +3,7 @@
 
 # Some utilities for operations
 
-import os, sys, ast, re
+import os, sys, ast, re, functools
 from configparser import ConfigParser
 if (sys.version_info > (3, 0)):
     #from configparser import ConfigParser
@@ -136,7 +136,7 @@ def getParAxis( parser, step, axisName ):
 
     step : str
         this step
-    
+
     axisName : str
         an axis name
 
