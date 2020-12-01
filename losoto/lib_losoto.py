@@ -152,7 +152,7 @@ def getParAxis( parser, step, axisName ):
 
     step : str
         this step
-    
+
     axisName : str
         an axis name
 
