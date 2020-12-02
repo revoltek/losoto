@@ -20,6 +20,7 @@ def _run_parser(soltab, parser, step):
     plotFlag = parser.getbool( step, 'plotFlag', False )
     doUnwrap = parser.getbool( step, 'doUnwrap', False )
     refAnt = parser.getstr( step, 'refAnt', '' )
+    refDir = parser.getstr( step, 'refDir', '' )
     soltabsToAdd = parser.getarraystr( step, 'soltabsToAdd', [] )
     makeAntPlot = parser.getbool( step, 'makeAntPlot', False )
     makeMovie = parser.getbool( step, 'makeMovie', False )
@@ -27,9 +28,9 @@ def _run_parser(soltab, parser, step):
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
     parser.checkSpelling( step, soltab, ['axesInPlot', 'axisInTable', 'axisInCol', 'axisDiff', 'NColFig', 'figSize', 'markerSize', 'minmax', 'log', \
-               'plotFlag', 'doUnwrap', 'refAnt', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
+               'plotFlag', 'doUnwrap', 'refAnt', 'refDir', 'soltabsToAdd', 'makeAntPlot', 'makeMovie', 'prefix'])
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
-               plotFlag, doUnwrap, refAnt, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
+               plotFlag, doUnwrap, refAnt, refDir, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
 def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
  
@@ -168,12 +169,20 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                         cmap = plt.cm.viridis
                     except AttributeError:
                         cmap = plt.cm.rainbow
- 
+
+                if not np.all(np.diff(yvals) == np.diff(yvals)[0]): # if not evenly spaced
+                    gapsize = np.amax(np.abs(np.diff(yvals)))
+                    gapidx = np.argmax(np.abs(np.diff(yvals)))  # index BEFORE the gap
+                    y_spacing = np.mean(np.diff(yvals)[np.diff(yvals) != gapsize])  # y-spacing outside of the gap
+                    if gapsize > 2*y_spacing: # if gap greater 2 times y-spacing, pad NaNs
+                        vals = np.insert(vals, gapidx+1, np.nan * np.ones((int(gapsize / y_spacing),len(vals[0]))), axis=0)  # fill gap with NaNs
+
                 # ugly fix to enforce min/max as imshow has some problems with very large numbers
                 if not np.isnan(vals).all():
-                    vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
-                    vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
- 
+                    with np.errstate(invalid='ignore'): # silence warnings that occure for comparison to NaN values
+                        vals.data[vals.filled(np.nanmedian(vals.data)) > maxZ] = maxZ
+                        vals.data[vals.filled(np.nanmedian(vals.data)) < minZ] = minZ
+
                 im = ax.imshow(vals.filled(np.nan), origin='lower', interpolation="none", cmap=cmap, norm=None, \
                         extent=[xvals[0],xvals[-1],yvals[0],yvals[-1]], aspect=str(aspect), vmin=minZ, vmax=maxZ)
  
@@ -214,7 +223,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
 
 
 def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0,0], markerSize=2, minmax=[0,0], log='', \
-               plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
+               plotFlag=False, doUnwrap=False, refAnt='', refDir='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0):
     """
     This operation for LoSoTo implements basic plotting
     WEIGHT: flag-only compliant, no need for weight
@@ -256,6 +265,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     refAnt : str, optional
         Reference antenna for phases. By default None.
+
+    refDir : str, optional
+        Reference direction for phases. By default None.
 
     soltabsToAdd : str, optional
         Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
@@ -313,6 +325,11 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     elif refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
         logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
         refAnt = soltab.getAxisValues('ant')[1]
+
+    if refDir == '': refDir = None
+    elif refDir != 'center' and not refDir in soltab.getAxisValues('dir', ignoreSelection = True):
+        logging.error('Reference direction '+refDir+' not found. Using: '+soltab.getAxisValues('dir')[1])
+        refDir = soltab.getAxisValues('dir')[1]
 
     minZ, maxZ = minmax
 
@@ -467,7 +484,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
             # cycle on colors
             soltab2Selection = soltab.selection
             soltab.selection = selection
-            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, reference=refAnt)):
+            for Ncol, (vals, weight, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=axisDiff+axesInPlot, weight=True, refAnt=refAnt, refDir=refDir)):
 
                 # differential plot
                 if axisDiff != []:
@@ -505,7 +522,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 #                                newCoord[axisName] = [coord[axisName]] # avoid being interpreted as regexp, faster
 #
 #                    soltabToAdd.setSelection(**newCoord)
-#                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, reference=refAnt))
+#                    valsAdd = np.squeeze(soltabToAdd.getValues(retAxesVals=False, weight=False, refAnt=refAnt))
 #
 #                    # add missing axes
 #                    print ('shape:', vals.shape)

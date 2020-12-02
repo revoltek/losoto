@@ -223,9 +223,9 @@ def getInitPar(
         data=unwrapPhases(data,freqs,fitdata,doFlag=doFlag)
     else:
         if doFlag:
-            #print "unwrapping pahses",data.count()
+#            logging.debug("unwrapping pahses %d"%(data.count()))
             data=unwrapPhases(data,freqs,doFlag=doFlag)
-            #print "unwrapped pahses",data.count()
+#            logging.debug("unwrapped pahses %d"%(data.count()))
         else:
             data=unwrapSparsePhases(data,freqs)
         steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
@@ -495,8 +495,13 @@ def getClockTECFitStation(
             if datatmpist.count() / float(nF) > 0.5:
                 # do brutforce and update data, unwrp pdata,update flags
                 #logging.debug("Getting init par for time %d:station %s ntec %d ndt %d n3rd %d"%(itm,stationname,ndtec,ndt,n3rd)+str(sol))
-                par,datatmp[:] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[:])
-                sol[:] = par[:]
+                try:
+                    par,datatmp[:] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[:])
+                    sol[:] = par[:]
+                except np.linalg.LinAlgError:
+                    logging.debug("Init parmaters failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
+                    sol[:] = [-10.,]*sol.shape[0]
+                    
                 #logging.debug("Getting init par for station %d:%s "%(itm,stationname)+str(sol))
 
         #now do the real fitting
@@ -505,19 +510,24 @@ def getClockTECFitStation(
             logging.debug("Too many data points flagged 2nd  t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
             sol[:] = [-10.,]*sol.shape[0]
         else:
-            fitdata=np.dot(sol,A.T)
-            datatmpist=unwrapPhases(datatmpist,freq,fitdata)
-            mymask=datatmpist.mask
-            maskedfreq=np.ma.array(freq,mask=mymask)
-            A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
-            if datatmpist.count() / float(nF) < 0.5:
-                logging.debug("Too many data points flagged 3rd t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
+            try:
+                fitdata=np.dot(sol,A.T)
+                datatmpist=unwrapPhases(datatmpist,freq,fitdata)
+                mymask=datatmpist.mask
+                maskedfreq=np.ma.array(freq,mask=mymask)
+                A2=np.ma.array(A,mask=np.tile(mymask,(A.shape[1],1)).T)
+                if datatmpist.count() / float(nF) < 0.5:
+                    logging.debug("Too many data points flagged 3rd t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
+                    sol[:] = [-10.,]*sol.shape[0]
+                else:
+                    sol[:] = np.ma.dot(np.linalg.inv(np.ma.dot(A2.T, A2)), np.ma.dot(A2.T, datatmpist)).T
+                if initprevsol and np.abs((sol[1]-prevsol[1])/steps[1])>0.5 and (np.abs((sol[1]-prevsol[1])/steps[1])>0.75 or np.abs(np.sum((sol-prevsol)/steps,axis=-1))>0.5*A2.shape[0]):
+                    #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
+                    sol[:]-=np.round((sol[1]-prevsol[1])/steps[1])*steps
+            except np.linalg.LinAlgError:
+                logging.debug("Fit failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                 sol[:] = [-10.,]*sol.shape[0]
-            else:
-                sol[:] = np.ma.dot(np.linalg.inv(np.ma.dot(A2.T, A2)), np.ma.dot(A2.T, datatmpist)).T
-            if initprevsol and np.abs((sol[1]-prevsol[1])/steps[1])>0.5 and (np.abs((sol[1]-prevsol[1])/steps[1])>0.75 or np.abs(np.sum((sol-prevsol)/steps,axis=-1))>0.5*A2.shape[0]):
-                #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
-                sol[:]-=np.round((sol[1]-prevsol[1])/steps[1])*steps
+               
         # calculate chi2 per station
 
         residual = data[itm] - np.dot(A, sol)

@@ -112,6 +112,7 @@ if __name__=='__main__':
                    "FLAGSTATION": operations.flagstation,
                    "GLOBALDELAY": operations.globaldelay,
                    "INTERPOLATE": operations.interpolate,
+                   "INTERPOLATEDIRECTIONS": operations.interpolatedirections,
                    "LOFARBEAM": operations.lofarbeam,
                    "NORM": operations.norm,
                    "PLOT": operations.plot,

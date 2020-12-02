@@ -8,7 +8,7 @@ import numpy as np
 import tables
 import losoto._version
 from losoto._logging import logger as logging
-
+from losoto.lib_losoto import deprecated_alias
 # check for tables version
 if int(tables.__version__.split('.')[0]) < 3:
     logging.critical('pyTables version must be >= 3.0.0, found: '+tables.__version__)
@@ -814,7 +814,6 @@ class Soltab( object ):
         for axis, selVal in iter( list(args.items()) ):
             # if None continue and keep all the values
             if selVal is None: continue
-
             if not axis in self.getAxesNames():
                 logging.warning("Cannot select on axis "+axis+", it doesn't exist. Ignored.")
                 continue
@@ -1151,7 +1150,8 @@ class Soltab( object ):
         return self.fullyFlaggedAnts
 
 
-    def getValues(self, retAxesVals=True, weight=False, reference=None):
+    @deprecated_alias(reference='refAnt') # Add alias for backwards compatibility
+    def getValues(self, retAxesVals=True, weight=False, refAnt=None, refDir=None):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
 
@@ -1163,14 +1163,17 @@ class Soltab( object ):
             By default True.
         weight : bool, optional
             If true get the weights instead that the vals, by defaul False.
-        reference : str, optional
-            In case of phase solutions, reference to this station name. By default no reference.
+        refAnt : str, optional
+            In case of phase or rotation solutions, reference to this station name. By default no reference.
             If "closest" reference to the closest antenna.
+        refDir : str, optional
+            In case of phase or rotation solutions, reference to this Direction. By default no reference.
+            If "center", reference to the central direction.
 
         Returns
         -------
         array
-            A numpy ndarrey (values or weights depending on parameters)
+            A numpy ndarray (values or weights depending on parameters)
             If selected, returns also the axes values
         """
         if self.useCache:
@@ -1182,15 +1185,16 @@ class Soltab( object ):
 
         dataVals = self._applyAdvSelection(dataVals, self.selection)
 
-        if not reference is None:
+        # CASE 1: Reference only to ant
+        if refAnt and not refDir:
+            # TODO: Should there be a warning if only ant is referenced but multiple directions are present?
             if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd', 'rotationmeasure']:
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, rotation and rotationmeasure solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
-            elif not reference in self.getAxisValues('ant', ignoreSelection = True) and reference != 'closest':
-                logging.error('Cannot find antenna '+reference+'. Ignore referencing.')
+            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest':
+                logging.error('Cannot find antenna '+refAnt+'. Ignore referencing.')
             else:
-
                 if self.useCache:
                     if weight: dataValsRef = self.cacheWeight
                     else: dataValsRef = self.cacheVal
@@ -1201,8 +1205,7 @@ class Soltab( object ):
                 antAxis = self.getAxesNames().index('ant')
                 refSelection = self.selection[:]
 
-                if reference == 'closest':
-                    
+                if refAnt == 'closest':
                     # put antenna axis first
                     dataVals = np.swapaxes(dataVals, 0, antAxis)
 
@@ -1211,9 +1214,9 @@ class Soltab( object ):
                         antDists = self.getSolset().getAntDist(antToRef) # this is a dict
                         for badAnt in self._getFullyFlaggedAnts(): del antDists[badAnt] # remove bad ants
 
-                        reference = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
+                        refAnt = list(antDists.keys())[list(antDists.values()).index( sorted(antDists.values())[1] ) ] # get the second closest antenna (the first is itself)
 
-                        refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
+                        refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                         dataValsRef_i = self._applyAdvSelection(dataValsRef, refSelection)
                         dataValsRef_i = np.swapaxes(dataValsRef_i, 0, antAxis)
                         if weight:
@@ -1224,16 +1227,106 @@ class Soltab( object ):
                     dataVals = np.swapaxes(dataVals, 0, antAxis)
  
                 else:
-                    refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(reference)]
+                    refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                     dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
     
                     if weight:
                         dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                     else:
                         dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
-                
-                if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
-                    dataVals = normalize_phase(dataVals)
+                # if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
+                #     dataVals = normalize_phase(dataVals)
+        # CASE 2: Reference only to dir
+        # TODO: should there be a warning if only direction is referenced but multipled ants are present?
+        elif refDir and not refAnt:
+            if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd', 'rotationmeasure']:
+                logging.error(
+                    'Reference possible only for phase, scalarphase, clock, tec, tec3rd, rotation and rotationmeasure solution tables. Ignore referencing.')
+            elif not 'dir' in self.getAxesNames():
+                logging.error('Cannot find direction axis for referencing phases. Ignore referencing.')
+            elif not refDir in self.getAxisValues('dir', ignoreSelection=True) and refDir != 'center':
+                logging.error('Cannot find direction ' + refDir + '. Ignore referencing.')
+            else:
+                if self.useCache:
+                    if weight:
+                        dataValsRef = self.cacheWeight
+                    else:
+                        dataValsRef = self.cacheVal
+                else:
+                    if weight:
+                        dataValsRef = self.obj.weight
+                    else:
+                        dataValsRef = self.obj.val
+
+                dirAxis = self.getAxesNames().index('dir')
+                refSelection = self.selection[:]
+
+                if refDir == 'center':
+                    # get the center (=closest to average) direction
+                    dirsDict = self.getSolset().getSou()
+                    meanDir = np.mean([dirsDict[k] for k in dirsDict], axis=0)
+                    refDir, _ = min(dirsDict.items(), key=lambda kd: np.linalg.norm(kd[1] - meanDir))
+
+                refSelection[dirAxis] = [self.getAxisValues('dir', ignoreSelection=True).tolist().index(refDir)]
+                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+
+                if weight:
+                    dataVals[
+                        np.repeat(dataValsRef, axis=dirAxis, repeats=len(self.getAxisValues('dir'))) == 0.] = 0.
+                else:
+                    dataVals = dataVals - np.repeat(dataValsRef, axis=dirAxis,
+                                                    repeats=len(self.getAxisValues('dir')))
+                # if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
+                #     dataVals = normalize_phase(dataVals)
+
+        # CASE 3: Reference to ant and to dir
+        if refAnt and refDir:
+            if not self.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd', 'rotationmeasure']:
+                logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, rotation and rotationmeasure solution tables. Ignore referencing.')
+            elif not 'ant' in self.getAxesNames():
+                logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
+            elif not 'dir' in self.getAxesNames():
+                logging.error('Cannot find direction axis for referencing phases. Ignore referencing.')
+            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest':
+                logging.error('Cannot find antenna '+refAnt+'. Ignore referencing.')
+            elif refAnt == 'closest': # TODO: This needs to be implemented...
+                logging.error('refAnt=\'closest\' is not supported (yet) when also referencing a direction.')
+            elif not refDir in self.getAxisValues('dir', ignoreSelection=True) and refDir != 'center':
+                logging.error('Cannot find direction ' + refDir + '. Ignore referencing.')
+            else:
+                if self.useCache:
+                    if weight:
+                        dataValsRef = self.cacheWeight
+                    else:
+                        dataValsRef = self.cacheVal
+                else:
+                    if weight:
+                        dataValsRef = self.obj.weight
+                    else:
+                        dataValsRef = self.obj.val
+
+                antAxis = self.getAxesNames().index('ant')
+                dirAxis = self.getAxesNames().index('dir')
+                refSelection = self.selection[:]
+
+                if refDir == 'center':
+                    # get the center (=closest to average) direction
+                    dirsDict = self.getSolset().getSou()
+                    meanDir = np.mean([dirsDict[k] for k in dirsDict], axis=0)
+                    refDir, _ = min(dirsDict.items(), key=lambda kd: np.linalg.norm(kd[1] - meanDir))
+
+                refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
+                refSelection[dirAxis] = [self.getAxisValues('dir', ignoreSelection=True).tolist().index(refDir)]
+
+                dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
+
+                if weight:
+                    dataValsRef = np.repeat(dataValsRef, dataVals.shape[antAxis], axis=antAxis)
+                    dataValsRef = np.repeat(dataValsRef, dataVals.shape[dirAxis], axis=dirAxis)
+                    dataVals[dataValsRef == 0.] = 0.
+
+                else:
+                    dataVals = dataVals - dataValsRef # np.expand_dims(dataValsRef, axis=(antAxis,dirAxis))
 
         if not retAxesVals:
             return dataVals
@@ -1245,7 +1338,8 @@ class Soltab( object ):
         return dataVals, axisVals
 
 
-    def getValuesIter(self, returnAxes=[], weight=False, reference=None):
+    @deprecated_alias(reference='refAnt') # Add alias for backwards compatibility
+    def getValuesIter(self, returnAxes=[], weight=False, refAnt=None, refDir=None):
         """
         Return an iterator which yields the values matrix (with axes = returnAxes) iterating along the other axes.
         E.g. if returnAxes are ['freq','time'], one gets a interetion over all the possible NxM
@@ -1258,8 +1352,10 @@ class Soltab( object ):
             Axes of the returned array, all _others_ will be cycled on each element combinations.
         weight : bool, optional
             If true return also the weights, by default False.
-        reference : str
+        refAnt : str
             In case of phase solutions, reference to this station name.
+        refDir : str
+            In case of phase solutions, reference to this direction name.
 
         Returns
         -------
@@ -1269,8 +1365,8 @@ class Soltab( object ):
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         4) a selection which should be used to write this data back using a setValues()
         """
-        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, reference=reference)
-        dataVals = self.getValues(retAxesVals=False, weight=False, reference=reference)
+        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, refAnt=refAnt, refDir=refDir)
+        dataVals = self.getValues(retAxesVals=False, weight=False, refAnt=refAnt, refDir=refDir)
 
         # get dimensions of non-returned axis (in correct order)
         iterAxesDim = [self.getAxisLen(axis) for axis in self.getAxesNames() if not axis in returnAxes]

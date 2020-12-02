@@ -365,7 +365,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
     solType = soltab.getType()
 
     # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, refAnt=refAnt):
         mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection])
 
     mpm.wait()
