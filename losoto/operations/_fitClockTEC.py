@@ -498,7 +498,7 @@ def getClockTECFitStation(
                 try:
                     par,datatmp[:] = getInitPar(datatmpist, freq,nrTEC=ndtec*(1+double_search_space),nrClock=ndt*(1+double_search_space),nrthird=n3rd*(1+double_search_space),initsol=sol[:])
                     sol[:] = par[:]
-                except:
+                except np.linalg.LinAlgError:
                     logging.debug("Init parmaters failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                     sol[:] = [-10.,]*sol.shape[0]
                     
@@ -524,7 +524,7 @@ def getClockTECFitStation(
                 if initprevsol and np.abs((sol[1]-prevsol[1])/steps[1])>0.5 and (np.abs((sol[1]-prevsol[1])/steps[1])>0.75 or np.abs(np.sum((sol-prevsol)/steps,axis=-1))>0.5*A2.shape[0]):
                     #logging.debug("removing jumps, par for station %d , itm %d"%(ist,itm)+str(sol[ist])+str(prevsol[ist])+str(steps))
                     sol[:]-=np.round((sol[1]-prevsol[1])/steps[1])*steps
-            except:
+            except np.linalg.LinAlgError:
                 logging.debug("Fit failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                 sol[:] = [-10.,]*sol.shape[0]
                
