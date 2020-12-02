@@ -132,7 +132,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         For example: [[ra1,dec1],[ra2,dec2],...]
 
     soltabOut : string,  optional
-        Default: overwrite current Soltab
+        Default: Next soltypeXXX that doesn't exist yet. E.g. phase000 -> phase001.
+        If irregular soltab name: soltab_nameInterp
 
     prefix : string, optional, default = "interp_".
         Name prefix of interpolated directions.
@@ -144,13 +145,30 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
 
     logging.info("Working on soltab: "+soltab.name)
 
+    soltype = soltab.getType()
+    solset = soltab.getSolset()
+
+    if soltabOut == '':
+        try:
+            soltab_suffix = int(soltab.name[-3:])
+            soltabOut = soltab.name[0:-3] + str(soltab_suffix+1).zfill(3)
+            while True:
+                if soltabOut in solset.getSoltabNames():
+                    soltab_suffix = int(soltabOut[-3:])
+                    soltabOut = soltabOut[0:-3] + str(soltab_suffix + 1).zfill(3)
+                else:
+                    break
+        except:
+            soltabOut = soltab.name + 'Interp'
+    logging.info('soltabOut: {}'.format(soltabOut))
+
     # check input
-    if soltab.getType() in ['phase']:
+    if soltype in ['phase']:
         interp_kind = 'wrap'
-    elif soltab.getType() in ['tec', 'amplitude', 'rotationmeasure','tec3rd']:
+    elif soltype in ['tec', 'amplitude', 'rotationmeasure','tec3rd']:
         interp_kind = 'lin'
     else:
-        logging.error('Soltab type {} not supported.'.format(soltab.getType()))
+        logging.error('Soltab type {} not supported.'.format(soltype))
         return 1
     if not 'dir' in soltab.getAxesNames():
         logging.error('Data without dir axis cannot be interpolated in directions...')
@@ -162,7 +180,6 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         logging.error('Not enough directions. Use at least ten for interpolation.')
         return 1
 
-    solset = soltab.getSolset()
     ax_ord_init = soltab.getAxesNames() # original order
     dir_ax, ant_ax = ax_ord_init.index('dir'), ax_ord_init.index('ant')
     vals, weights = soltab.val, soltab.weight
@@ -221,9 +238,9 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         cb = fig.colorbar(im)
         plt.scatter(*cal_dirs.T, c=pvals[:,0], cmap=cmap, edgecolors='k', vmin=-3.14, vmax=3.14)
         plt.scatter(*cal_dirs.T, c=pvals[:,0], cmap=cmap, edgecolors='k', vmin=-3.14, vmax=3.14)
-        if soltab.getType() == 'phase':
+        if soltype == 'phase':
             cb.set_label('phase [rad]', fontsize=7)
-        elif soltab.getType() == 'tec':
+        elif soltype == 'tec':
             cb.set_label('vTEC [TECU]', fontsize=7)
         cb.ax.tick_params(labelsize=6.5)
         plt.savefig('debug_screen_interp.png', dpi=200, bbox_inches='tight', )
@@ -252,10 +269,6 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     vals = np.concatenate([soltab.val,interp_vals], axis=dir_ax)
     weights = np.concatenate([soltab.weight,interp_weights], axis=dir_ax)
 
-    # prepare output - check if soltabOut exists
-    if soltabOut in solset.getSoltabNames():
-        logging.warning('Soltab {} exists. Overwriting...'.format(soltabOut))
-        solset.getSoltab(soltabOut).delete()
 
     # set names for the interpolated directions
     interp_dir_names = np.arange(len(interp_dirs)).astype(str)
@@ -264,8 +277,13 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     axes_vals = [soltab.getAxisValues(axisName) for axisName in ax_ord_init]
     axes_vals[dir_ax] = np.concatenate([axes_vals[dir_ax],interp_dir_names])
 
+    # prepare output - check if soltabOut exists
+    if soltabOut in solset.getSoltabNames():
+        logging.warning('Soltab {} exists. Overwriting...'.format(soltabOut))
+        solset.getSoltab(soltabOut).delete()
+
     # make soltabOut
-    soltabout = solset.makeSoltab(soltype=soltab.getType(), soltabName=soltabOut, axesNames=ax_ord_init, \
+    soltabout = solset.makeSoltab(soltype=soltype, soltabName=soltabOut, axesNames=ax_ord_init, \
                                   axesVals=axes_vals, vals=vals, weights=weights)
 
     # append interpolated dirs to solset source table
