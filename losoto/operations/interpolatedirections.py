@@ -16,7 +16,7 @@ logging.debug('Loading INTERPOLATEDIRECTIONS module.')
 # this funct is called by losoto to set parameters and call the real run()
 def _run_parser(soltab, parser, step):
     interp_dirs = parser.getarrayfloat2d( step, 'interp_dirs') # no default
-    soltabOut = parser.getstr( step, 'soltabOut', "")
+    soltabOut = parser.getstr( step, 'soltabOut', '')
     prefix = parser.getstr( step, 'prefix', 'interp_')
     ncpu = parser.getint( '_global', 'ncpu', 0 )
 
@@ -132,8 +132,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         For example: [[ra1,dec1],[ra2,dec2],...]
 
     soltabOut : string,  optional
-        Default: Next soltypeXXX that doesn't exist yet. E.g. phase000 -> phase001.
-        If irregular soltab name: soltab_nameInterp
+        Default: Guess from soltype. If specifically set to input soltab, the input soltab will be overwritten.
 
     prefix : string, optional, default = "interp_".
         Name prefix of interpolated directions.
@@ -147,20 +146,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
 
     soltype = soltab.getType()
     solset = soltab.getSolset()
-
-    if soltabOut == '':
-        try:
-            soltab_suffix = int(soltab.name[-3:])
-            soltabOut = soltab.name[0:-3] + str(soltab_suffix+1).zfill(3)
-            while True:
-                if soltabOut in solset.getSoltabNames():
-                    soltab_suffix = int(soltabOut[-3:])
-                    soltabOut = soltabOut[0:-3] + str(soltab_suffix + 1).zfill(3)
-                else:
-                    break
-        except:
-            soltabOut = soltab.name + 'Interp'
-    logging.info('soltabOut: {}'.format(soltabOut))
+    soltabOut = None if soltabOut == '' else soltabOut
 
     # check input
     if soltype in ['phase']:
