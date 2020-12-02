@@ -169,8 +169,8 @@ for typ, soltabs in all_soltabs.items():
         new_weights[idx_dir] *= weights
 
     # write new soltab (default name)
-    soltabOut = solsetOut.makeSoltab(typ, axesNames=all_axes_names[typ], \
-                axesVals=[ fast_axes_vals[axis_name] for axis_name in all_axes_names[typ] ], \
+    soltabOut = solsetOut.makeSoltab(typ, axesNames=all_axes_names[typ],
+                axesVals=[ fast_axes_vals[axis_name] for axis_name in all_axes_names[typ] ],
                 vals=new_vals, weights=new_weights)
 
 logging.info(str(h5Out))

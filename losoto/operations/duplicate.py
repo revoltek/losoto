@@ -33,8 +33,8 @@ def run( soltab, soltabOut='', overwrite=False):
         logging.info('Overwriting soltabOut {}'.format(soltabOut))
         solset.getSoltab(soltabOut).delete()
 
-    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(), \
-        axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()], \
+    soltabout = solset.makeSoltab(soltype = soltab.getType(), soltabName = soltabOut, axesNames=soltab.getAxesNames(),
+        axesVals=[soltab.getAxisValues(axisName) for axisName in soltab.getAxesNames()],
         vals=soltab.getValues(retAxesVals = False), weights=soltab.getValues(weight = True, retAxesVals = False))
     # parmdbType=soltab.obj._v_attrs['parmdb_type'] # deprecated
 

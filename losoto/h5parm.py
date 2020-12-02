@@ -65,7 +65,7 @@ class h5parm( object ):
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
 
-        self.H = None # variable to store the pytable object
+        self.H = None  # variable to store the pytable object
         self.fileName = h5parmFile
 
         if os.path.isfile(h5parmFile):
@@ -453,7 +453,7 @@ class Solset( object ):
         axesNames : list
             List with the axes names
         axesVals : list
-            List with the axes values (each is a separate list)
+            List with the axes values (each is a separate np.array)
         chunkShape : list, optional
             List with the chunk shape
         vals : numpy array
@@ -501,7 +501,7 @@ class Solset( object ):
         soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
         soltab._v_attrs['parmdb_type'] = parmdbType
         for i, axisName in enumerate(axesNames):
-            axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=axesVals[i])
+            axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=np.array(axesVals[i]))
 
         # create the val/weight Carrays
         #val = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())

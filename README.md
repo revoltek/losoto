@@ -44,3 +44,4 @@ This is an external project maintained by Frits Sweijen: https://github.com/tikk
 * PyTables version:  >3.4.0
 * HDF5 version:      >1.8.4
 * NumPy version:     >1.9.0
+* Scipy              >1.4 (for interpolatedirections)
