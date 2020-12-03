@@ -279,10 +279,22 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     soltabout = solset.makeSoltab(soltype=soltype, soltabName=soltabOut, axesNames=ax_ord, \
                                   axesVals=axes_vals, vals=vals, weights=weights)
 
+    newSources = dict(zip(interp_dir_names, interp_dirs))
     # append interpolated dirs to solset source table
     sourceTable = solset.obj._f_get_child('source')
-    # vals = [[ra, dec] for ra, dec in zip(ras, decs)]
-    sourceTable.append(list(zip(*(interp_dir_names, interp_dirs))))
+    for row in sourceTable.iterrows():
+        _name, _dir = row['name'].decode(), row['dir']
+        if _name in newSources.keys():
+            if not np.all(np.isclose(_dir, newSources[_name])):
+                logging.debug('Overwrite direction: {}'.format(_name))
+                row['dir'] = newSources[_name]
+            logging.debug('Source already in soltab: {}'.format(_name))
+            del newSources[_name]
+
+    if len(newSources) > 0:
+        logging.debug('Adding to source table: {}'.format(newSources.keys()))
+        sourceTable.append(list(zip(newSources.keys(), newSources.values())))
+        # sourceTable.append(list(zip(newSources.keys(), newSources.values())))
 
     # Add CREATE entry to history
     soltabout.addHistory('Created by INTERPOLATEDIRECTIONS operation from %s.' % soltab.name)
