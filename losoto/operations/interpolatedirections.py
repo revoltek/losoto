@@ -154,7 +154,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     Parameters
     ----------
     interp_dirs : 2d array of floats
-        Shape n x 2, contains ra/dec in rad.
+        Shape n x 2, contains ra/dec in degree.
         For example: [[ra1,dec1],[ra2,dec2],...]
 
     soltabOut : string,  optional
@@ -195,6 +195,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     ax_ord = soltab.getAxesNames() # original order
     dir_ax = ax_ord.index('dir')
 
+    # convert to rad
+    interp_dirs = np.deg2rad(interp_dirs)
     # prepare array for interpolated values - concatenate new directions
     val_shape_inpt = list(soltab.val.shape)
     val_shape_interp = val_shape_inpt.copy()
