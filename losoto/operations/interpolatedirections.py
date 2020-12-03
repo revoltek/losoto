@@ -24,59 +24,65 @@ def _run_parser(soltab, parser, step):
     return run(soltab, interp_dirs, soltabOut, prefix, ncpu)
 
 
-def _haversine(s1, s2):
-    """
-    Calculate the great circle distance between two points
-    (specified in rad)
-    """
-    return 2*np.arcsin(np.sqrt(np.sin((s2[1]-s1[1])/2.0)**2 + np.cos(s1[1]) * np.cos(s2[1]) * np.sin((s2[0]-s1[0])/2.0)**2))
+# def _haversine(s1, s2):
+#     """
+#     Calculate the great circle distance between two points
+#     (specified in rad)
+#     """
+#     return 2*np.arcsin(np.sqrt(np.sin((s2[1]-s1[1])/2.0)**2 + np.cos(s1[1]) * np.cos(s2[1]) * np.sin((s2[0]-s1[0])/2.0)**2))
 
 def _cartesian_from_radec(x):
     return np.array([np.cos(x[:,0])*np.sin(x[:,1]), np.sin(x[:,0])*np.sin(x[:,1]), np.cos(x[:,1])])
 
-def interpolate_directions2d(cal_vals, cal_weights, cal_dirs, interp_dirs, interp_kind, smooth=0.0):
-    """
-    Function to parallelize interpolation. Interpolates and evaluates
-    the interpolation at the new directions for one ant/pol/time etc.
+# def interpolate_directions2d(cal_vals, cal_weights, cal_dirs, dir_ax, interp_dirs, interp_kind, smooth=0.0):
+#     """
+#     Function to parallelize interpolation. Interpolates and evaluates
+#     the interpolation at the new directions for one ant/pol/time etc.
+#
+#     Parameters
+#     ----------
+#     cal_vals: array, values of selection
+#     weights: weights of values
+#     cal_dirs: (2,n) array of floats, ra/dec values of calibrator direc tions
+#     dir_ax: int, index of the dir axis.
+#     interp_dirs: (2,n) array of floats, ra/dec values of interpolate directions
+#     interp_kind: string, 'wrap' or 'lin' dependent on wheter to interpolate phases
+#                  (independently in real and imag) or TEC, amp..
+#
+#     Returns
+#     -------
+#     new_vals: array of floats, interpolated values of selection at new directions
+#     new_weights: array of floats, weights
+#     """
+#     # approximation: Use euclidean norm in 3d instead of haversine. Every implementation of
+#     # haversine I found is much slower than scipy.spatial.distance.cdist for eculidean
+#     # to 3d for euclidean approximation. 2d-interpolating in ra-dec has the issue of wraps.
+#
+#     in_shape = np.shape(cal_vals) # restore shape to reconstruct in output
+#     # swap direction axis to first position
+#     cal_vals, cal_weights = np.swapaxes(cal_vals, 0, dir_ax), np.swapaxes(cal_weights, 0, dir_ax)
+#     # flatten along all other directions
+#     cal_vals, cal_weights = cal_vals.reshape(, 0, dir_ax), np.swapaxes(cal_weights, 0, dir_ax)
+#     new_weights = np.ones((len(interp_dirs),cal_vals.shape[-1]))
+#     cal_weights[np.isnan(cal_vals)] = 0.0 # make sure all NaNs are flagged
+#     cal_vals[np.isnan(cal_vals)] = 0.0 # set flagged values to 0
+#     new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] # Set new weights to 0 where at least one old direction is flagged.
+#
+#     # cal_dirs = _cartesian_from_radec(cal_dirs).T
+#     # interp_dirs = _cartesian_from_radec(interp_dirs).T
+#     if interp_kind == 'wrap': # for phases, interpolate real and imag.
+#         _complex = np.exp(1.j * cal_vals)
+#         f_interp_re = Rbf(*cal_dirs.T, _complex.real, norm=_haversine, mode='N-D', smooth=smooth) # multiquadratic, linear
+#         f_interp_im = Rbf(*cal_dirs.T, _complex.imag, norm=_haversine, mode='N-D', smooth=smooth)
+#         interp_re = f_interp_re(*interp_dirs.T)
+#         interp_im = f_interp_im(*interp_dirs.T)
+#         new_vals = np.angle(interp_re + 1.j * interp_im)
+#     elif interp_kind == 'lin':
+#         f_interp = Rbf(*cal_dirs.T, cal_vals, norm=_haversine, mode='N-D', smooth=smooth)
+#         new_vals = f_interp(*interp_dirs.T)
+#     return new_vals, new_weights
 
-    Parameters
-    ----------
-    cal_vals: array, values of selection, 1st axis: dir, other axes flattened
-    weights: weights of values,
-    cal_dirs: (2,n) array of floats, ra/dec values of calibrator directions
-    interp_dirs: (2,n) array of floats, ra/dec values of interpolate directions
-    interp_kind: string, 'wrap' or 'lin' dependent on wheter to interpolate phases
-                 (independently in real and imag) or TEC, amp..
-
-    Returns
-    -------
-    new_vals: array of floats, interpolated values of selection at new directions
-    new_weights: array of floats, weights
-    """
-    # approximation: Use euclidean norm in 3d instead of haversine. Every implementation of
-    # haversine I found is much slower than scipy.spatial.distance.cdist for eculidean
-    # to 3d for euclidean approximation. 2d-interpolating in ra-dec has the issue of wraps.
-
-    new_weights = np.ones((len(interp_dirs),cal_vals.shape[-1]))
-    cal_weights[np.isnan(cal_vals)] = 0.0 # make sure all NaNs are flagged
-    cal_vals[np.isnan(cal_vals)] = 0.0 # set flagged values to 0
-    new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] # Set new weights to 0 where at least one old direction is flagged.
-
-    # cal_dirs = _cartesian_from_radec(cal_dirs).T
-    # interp_dirs = _cartesian_from_radec(interp_dirs).T
-    if interp_kind == 'wrap': # for phases, interpolate real and imag.
-        _complex = np.exp(1.j * cal_vals)
-        f_interp_re = Rbf(*cal_dirs.T, _complex.real, norm=_haversine, mode='N-D', smooth=smooth) # multiquadratic, linear
-        f_interp_im = Rbf(*cal_dirs.T, _complex.imag, norm=_haversine, mode='N-D', smooth=smooth)
-        interp_re = f_interp_re(*interp_dirs.T)
-        interp_im = f_interp_im(*interp_dirs.T)
-        new_vals = np.angle(interp_re + 1.j * interp_im)
-    elif interp_kind == 'lin':
-        f_interp = Rbf(*cal_dirs.T, cal_vals, norm=_haversine, mode='N-D', smooth=smooth)
-        new_vals = f_interp(*interp_dirs.T)
-    return new_vals, new_weights
-
-def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, interp_dirs, interp_kind, smooth=0.0):
+def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, dir_axis, interp_dirs, interp_kind, smooth=0.0):
     """
     Function to parallelize interpolation. Interpolates and evaluates
     the interpolation at the new directions for one ant/pol/time etc.
@@ -88,8 +94,9 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, interp_dirs, inter
     cal_vals: array, values of selection, 1st axis: dir, other axes flattened
     weights: array, weights of values,
     cal_dirs: (2,n) array of floats, ra/dec values of calibrator directions
+    dir_axis: int, position of dir axis in input values/weights
     interp_dirs: (2,n) array of floats, ra/dec values of interpolate directions
-    interp_kind: string, 'wrap' or 'lin' dependent on wheter to interpolate phases
+    interp_kind: string, 'wrap' or 'lin' dependent on whether to interpolate phases
                  (independently in real and imag) or TEC, amp..
     smooth: float, smooth-parameter for interpolation. For phases, a value between 1e-3 and 0.0
         seems to work well. For TEC, less smoothing should be necessary.
@@ -103,6 +110,18 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, interp_dirs, inter
     # haversine I found is much slower than scipy.spatial.distance.cdist for eculidean
     # to 3d for euclidean approximation. 2d-interpolating in ra-dec has the issue of wraps
     # and no cdist implementation.
+
+    # First reshape the data: move direction axis to first position and flatten all other dims.
+    shape_in = np.shape(cal_vals) # restore initial shape at the end
+    # get shape with dir at first pos
+    shape_swap = list(shape_in)
+    shape_swap[0], shape_swap[dir_axis] = shape_swap[dir_axis], shape_swap[0]
+
+    # swap dir axis to firs position
+    cal_vals, cal_weights = np.swapaxes(cal_vals, 0, dir_axis), np.swapaxes(cal_weights, dir_axis, 0)
+    # flatten along other axes
+    cal_vals = np.reshape(cal_vals, (shape_swap[0], np.product(shape_swap[1:])))
+    cal_weights = np.reshape(cal_weights, (shape_swap[0], np.product(shape_swap[1:])))
 
     new_weights = np.ones((len(interp_dirs),cal_vals.shape[-1]))
     cal_weights[np.isnan(cal_vals)] = 0.0 # make sure all NaNs are flagged
@@ -119,6 +138,13 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, interp_dirs, inter
     elif interp_kind == 'lin':
         f_interp = Rbf(*_cartesian_from_radec(cal_dirs), cal_vals, norm='euclidean', mode='N-D', smooth=smooth)
         new_vals = f_interp(*_cartesian_from_radec(interp_dirs))
+
+    # now reconstruct the initial ax order
+    new_vals = np.reshape(new_vals, (len(interp_dirs), *shape_swap[1:]))
+    new_weights = np.reshape(new_weights, (len(interp_dirs), *shape_swap[1:]))
+    # and move back dir axis
+    new_vals, new_weights = np.swapaxes(new_vals, 0, dir_axis), np.swapaxes(new_weights, dir_axis, 0)
+
     return new_vals, new_weights
 
 
@@ -166,16 +192,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         logging.error('Not enough directions. Use at least ten for interpolation.')
         return 1
 
-    ax_ord_init = soltab.getAxesNames() # original order
-    dir_ax, ant_ax = ax_ord_init.index('dir'), ax_ord_init.index('ant')
-    vals, weights = soltab.val, soltab.weight
-    # AXES ORDER: (dir, ant, others)
-    vals, weights = np.swapaxes(vals, dir_ax, 0), np.swapaxes(weights, dir_ax, 0)
-    vals, weights = np.swapaxes(vals, ant_ax, 1), np.swapaxes(weights, ant_ax, 1)
-    ax_ord_swap = ax_ord_init.copy()
-    ax_ord_swap[0], ax_ord_swap[dir_ax] = ax_ord_swap[dir_ax], ax_ord_swap[0]
-    ax_ord_swap[1], ax_ord_swap[ant_ax] = ax_ord_swap[ant_ax], ax_ord_swap[1]
-    shape_swap = vals.shape # (dir, ant, others...)
+    ax_ord = soltab.getAxesNames() # original order
+    dir_ax = ax_ord.index('dir')
 
     # prepare array for interpolated values - concatenate new directions
     val_shape_inpt = list(soltab.val.shape)
@@ -184,20 +202,16 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     interp_vals = np.zeros(val_shape_interp)
     interp_weights = np.ones(val_shape_interp)
 
-
     # ra/dec of calibrator dirs. Make sure order is the same as in soltab.
     cal_dirs = np.array([soltab.getSolset().getSou()[k] for k in soltab.dir])
 
-
     # Collect arguments for parallelization on antennas
     args, selections = [], []
-    # change shape: (dir, ant, others) -> flatten along others
-    returnAxes = ax_ord_swap.copy()
+    returnAxes = ax_ord.copy()
     returnAxes.remove('ant')
     for i, (vals, weights, coord, selection) in enumerate(soltab.getValuesIter(returnAxes=returnAxes, weight=True)):
-        vals = np.reshape(vals, (shape_swap[0], np.product(shape_swap[2:])))
-        weights = np.reshape(weights, (shape_swap[0], np.product(shape_swap[2:])))
-        args.append([vals, weights, cal_dirs, interp_dirs, interp_kind])
+        dir_ax_sel = returnAxes.index('dir')
+        args.append([vals, weights, cal_dirs, dir_ax_sel, interp_dirs, interp_kind])
         selections.append(selection)
 
     #################### DEBUG PLOT ######################
@@ -241,26 +255,19 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     # reorder results
     for selection, result in zip(selections,results):
         vals, weights = result
-        # reconstruct shape: (dirs, ant, others)
-        vals = np.reshape(vals, (val_shape_interp[dir_ax],1,*shape_swap[2:]))
-        weights = np.reshape(weights, (val_shape_interp[dir_ax],1,*shape_swap[2:]))
-        # reconstruct initial shape -> swap back dir and ant
-        vals, weights = np.swapaxes(vals, 0, dir_ax), np.swapaxes(weights, 0, dir_ax)
-        vals, weights = np.swapaxes(vals, 1, ant_ax), np.swapaxes(weights, 1, ant_ax)
-        # fill output arrays
-        interp_vals[tuple(selection)] = vals
-        interp_weights[tuple(selection)] = weights
+        # fill output arrays - the purpose of the reshape is to get the degenerate dim for the ant
+        interp_vals[tuple(selection)] = vals.reshape(interp_vals[tuple(selection)].shape)
+        interp_weights[tuple(selection)] = weights.reshape(interp_vals[tuple(selection)].shape)
 
     # concatenate existing values and interpolated direction values
     vals = np.concatenate([soltab.val,interp_vals], axis=dir_ax)
     weights = np.concatenate([soltab.weight,interp_weights], axis=dir_ax)
 
-
     # set names for the interpolated directions
     interp_dir_names = np.arange(len(interp_dirs)).astype(str)
     interp_dir_names = [prefix + n.zfill(3) for n in interp_dir_names]
     # prepare axes values, append directions
-    axes_vals = [soltab.getAxisValues(axisName) for axisName in ax_ord_init]
+    axes_vals = [soltab.getAxisValues(axisName) for axisName in ax_ord]
     axes_vals[dir_ax] = np.concatenate([axes_vals[dir_ax],interp_dir_names])
 
     # prepare output - check if soltabOut exists
@@ -269,7 +276,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         solset.getSoltab(soltabOut).delete()
 
     # make soltabOut
-    soltabout = solset.makeSoltab(soltype=soltype, soltabName=soltabOut, axesNames=ax_ord_init, \
+    soltabout = solset.makeSoltab(soltype=soltype, soltabName=soltabOut, axesNames=ax_ord, \
                                   axesVals=axes_vals, vals=vals, weights=weights)
 
     # append interpolated dirs to solset source table
