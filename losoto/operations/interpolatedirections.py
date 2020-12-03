@@ -126,7 +126,7 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, dir_axis, interp_d
     new_weights = np.ones((len(interp_dirs),cal_vals.shape[-1]))
     cal_weights[np.isnan(cal_vals)] = 0.0 # make sure all NaNs are flagged
     cal_vals[np.isnan(cal_vals)] = 0.0 # set flagged values to 0
-    new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] # Set new weights to 0 where at least one old direction is flagged.
+    new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] = 0 # Set new weights to 0 where at least one old direction is flagged.
 
     if interp_kind == 'wrap': # for phases, interpolate real and imag.
         _complex = np.exp(1.j * cal_vals)
