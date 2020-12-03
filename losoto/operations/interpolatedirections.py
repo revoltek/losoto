@@ -288,7 +288,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
             if not np.all(np.isclose(_dir, newSources[_name])):
                 logging.debug('Overwrite direction: {}'.format(_name))
                 row['dir'] = newSources[_name]
-            logging.debug('Source already in soltab: {}'.format(_name))
+            else:
+                logging.debug('Source already in soltab: {}'.format(_name))
             del newSources[_name]
 
     if len(newSources) > 0:
