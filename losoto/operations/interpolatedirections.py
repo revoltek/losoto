@@ -128,17 +128,19 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, dir_axis, interp_d
     cal_vals[np.isnan(cal_vals)] = 0.0 # set flagged values to 0
     new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] = 0 # Set new weights to 0 where at least one old direction is flagged.
 
-    if interp_kind == 'wrap': # for phases, interpolate real and imag.
+    if interp_kind == 'phase': # for phases, interpolate real and imag.
         _complex = np.exp(1.j * cal_vals)
         f_interp_re = Rbf(*_cartesian_from_radec(cal_dirs), _complex.real, norm='euclidean', mode='N-D', smooth=smooth) # multiquadratic, linear
         f_interp_im = Rbf(*_cartesian_from_radec(cal_dirs), _complex.imag, norm='euclidean', mode='N-D', smooth=smooth)
         interp_re = f_interp_re(*_cartesian_from_radec(interp_dirs))
         interp_im = f_interp_im(*_cartesian_from_radec(interp_dirs))
         new_vals = np.angle(interp_re + 1.j * interp_im)
+    elif interp_kind == 'amp': # use absolute value for amps
+        f_interp = Rbf(*_cartesian_from_radec(cal_dirs), cal_vals, norm='euclidean', mode='N-D', smooth=smooth)
+        new_vals = np.abs(f_interp(*_cartesian_from_radec(interp_dirs)))
     elif interp_kind == 'lin':
         f_interp = Rbf(*_cartesian_from_radec(cal_dirs), cal_vals, norm='euclidean', mode='N-D', smooth=smooth)
         new_vals = f_interp(*_cartesian_from_radec(interp_dirs))
-
     # now reconstruct the initial ax order
     new_vals = np.reshape(new_vals, (len(interp_dirs), *shape_swap[1:]))
     new_weights = np.reshape(new_weights, (len(interp_dirs), *shape_swap[1:]))
@@ -175,9 +177,11 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     soltabOut = None if soltabOut == '' else soltabOut
 
     # check input
-    if soltype in ['phase']:
+    if soltype == 'phase':
         interp_kind = 'wrap'
-    elif soltype in ['tec', 'amplitude', 'rotationmeasure','tec3rd']:
+    elif soltype == 'amplitude':
+        interp_kind = 'amp'
+    elif soltype in ['tec', 'rotationmeasure','tec3rd']:
         interp_kind = 'lin'
     else:
         logging.error('Soltab type {} not supported.'.format(soltype))
