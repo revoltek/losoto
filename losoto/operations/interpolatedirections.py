@@ -200,6 +200,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     dir_ax = ax_ord.index('dir')
 
     # convert to rad
+    if interp_dirs.shape == (2,): # if only one direction, add dir axis
+        interp_dirs = interp_dirs[np.newaxis]
     interp_dirs = np.deg2rad(interp_dirs)
     # prepare array for interpolated values - concatenate new directions
     val_shape_inpt = list(soltab.val.shape)
@@ -223,8 +225,8 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     #################### DEBUG PLOT ######################
     if False:
         # What to plot?
-        antidx = 37
-        sel = [500,201]
+        antidx = 32
+        sel = [100,201]
         import matplotlib.pyplot as plt
         minra, maxra = np.min(cal_dirs[:,0])-0.005, np.max(cal_dirs[:,0])+0.005
         ra_range = np.linspace(minra, maxra,500)
@@ -234,20 +236,32 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         plotdirs = np.array((np.array(plotdirs[0]).flatten(),np.array(plotdirs[1]).flatten())).T
         pvals, pweights = args[antidx][0:2]
         pvals, pweights = np.array(pvals)[:,sel], np.array(pweights)[:,sel]
-        plotvals = np.array(interpolate_directions3d(pvals, pweights, cal_dirs, plotdirs, interp_kind, smooth=1.e-3))[0,:,0]
+        plotvals = np.array(interpolate_directions3d(pvals, pweights, cal_dirs, dir_ax, plotdirs, interp_kind, smooth=1.e-3))[0,:,0,0,0]
         plotvals = plotvals.reshape((500,500))
         fig = plt.figure(dpi=200)
         plt.xlabel('RA', labelpad=13, fontsize=7.5)
         plt.ylabel('Dec', labelpad=13, fontsize=7.5)
         cmap = plt.set_cmap('jet')
-        im = plt.imshow(plotvals, cmap=cmap, extent = [minra,maxra,maxdec,mindec], vmin=-3.14, vmax=3.14)
-        cb = fig.colorbar(im)
-        plt.scatter(*cal_dirs.T, c=pvals[:,0], cmap=cmap, edgecolors='k', vmin=-3.14, vmax=3.14)
-        plt.scatter(*cal_dirs.T, c=pvals[:,0], cmap=cmap, edgecolors='k', vmin=-3.14, vmax=3.14)
         if soltype == 'phase':
-            cb.set_label('phase [rad]', fontsize=7)
+            label = 'phase [rad]'
+            vmin, vmax = -np.pi, np.pi
         elif soltype == 'tec':
-            cb.set_label('vTEC [TECU]', fontsize=7)
+            label = 'dTEC [TECU]'
+            vmin, vmax = None, None
+        elif soltype == 'amplitude':
+            label = 'amplitude'
+            # vmin, vmax = 0, 1
+            vmin, vmax = np.min(plotvals), np.max(plotvals)
+            # vmin, vmax = np.min(pvals[:,0,0,0]), np.max(pvals[:,0,0,0])
+        else:
+            label = 'unknown'
+            vmin, vmax = None, None
+        im = plt.imshow(plotvals, cmap=cmap, extent = [minra,maxra,maxdec,mindec], vmin=vmin, vmax=vmax)
+        cb = fig.colorbar(im)
+        plt.scatter(*cal_dirs.T, c=pvals[:,0,0,0], cmap=cmap, edgecolors='k', vmin=vmin, vmax=vmax)
+        plt.scatter(*cal_dirs.T, c=pvals[:,0,0,0], cmap=cmap, edgecolors='k', vmin=vmin, vmax=vmax)
+        plt.scatter(*interp_dirs.T, facecolor="None", marker='D',edgecolors='k')
+        cb.set_label(label, fontsize=7)
         cb.ax.tick_params(labelsize=6.5)
         plt.savefig('debug_screen_interp.png', dpi=200, bbox_inches='tight', )
         import sys
