@@ -139,11 +139,6 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, stype, outQueue):
         pad_vals = np.pad(vals, pad_width, 'constant', constant_values=(np.nan,))
         stddev = np.nanstd(_rolling_window_lastaxis(pad_vals, nstddev), axis=-1)
 
-        if stype == 'amplitude':
-            # Assume lognormal distribution, so transform to non-log values
-            stddev = np.sqrt((np.exp(np.square(stddev)) - 1) *
-                             np.exp(2.0*np.nanmean(vals) + np.square(stddev)))
-
     # Check for periods where standard deviation is zero or NaN and replace
     # with min value to prevent inf in the weights. Also limit weights to
     # float16
