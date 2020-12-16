@@ -22,7 +22,7 @@ def _run_parser(soltab, parser, step):
 
     parser.checkSpelling( step, soltab, ['outSoltab', 'order', 'beta', 'niter', 'nsigma',\
         'refAnt', 'scale_order', 'scale_dist', 'min_order', 'adjust_order'])
-    return run(soltab, outSoltab, order, beta, ncpu, niter, nsigma,
+    return run(soltab, outSoltab, order, beta, niter, nsigma,
         refAnt, scale_order, scale_dist, min_order, adjust_order)
 
 
@@ -47,7 +47,6 @@ def _calculate_piercepoints(station_positions, source_positions):
         Reference Dec for WCS system (deg)
 
     """
-    import casacore.measures
     import numpy as np
 
     logging.info('Calculating screen pierce-point locations...')
@@ -285,7 +284,6 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
     from losoto.operations.reweight import _nancircstd
 
     # Find stddev of the screen
-    stddev = np.zeros(weights.shape)
     flagged = np.where(weights == 0.0)
     nonflagged = np.where(weights > 0.0)
     if nonflagged[0].size == 0:
@@ -370,7 +368,7 @@ def _calculate_svd(pp, r_0, beta, N_piercepoints):
 
     """
     import numpy as np
-    from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
+    from pylab import pinv, svd
 
     D = np.resize(pp, (N_piercepoints, N_piercepoints, 3))
     D = np.transpose(D, (1, 0, 2)) - D
@@ -420,7 +418,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
     """
     import numpy as np
-    from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
+    from pylab import pinv, newaxis
 
     # Identify flagged directions
     N_sources_all = len(source_names)
@@ -502,7 +500,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
     return (screen_fit_white_all, screen_residual_all)
 
 
-def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
+def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
     refAnt=-1, scale_order=True, scale_dist=None, min_order=5, adjust_order=True):
     """
     Fits station screens to input soltab (type 'phase' or 'amplitude' only).
@@ -528,8 +526,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     beta: float, optional
         Power-law index for amp structure function (5/3 => pure Kolmogorov
         turbulence)
-    ncpu: int, optional
-        Number of CPUs to use. If 0, all are used
     niter: int, optional
         Number of iterations to do when determining weights
     nsigma: float, optional
@@ -551,8 +547,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     """
     import numpy as np
     from numpy import newaxis
-    import re
-    import os
 
     # Get screen type
     screen_type = soltab.getType()
@@ -650,7 +644,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
         full_matrices.append(_calculate_svd(pp_s, r_0, beta, N_piercepoints))
 
     # Fit station screens
-    N_total = N_freqs * N_pols * N_stations * niter * N_times
     for freq_ind in range(N_freqs):
         for pol_ind in range(N_pols):
             r = r_full[:, :, freq_ind, :, pol_ind] # order is now [dir, time, ant]
@@ -662,6 +655,9 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
             for s, stat in enumerate(station_names):
                 if s == refAnt and (screen_type == 'phase' or screen_type == 'tec'):
                     # skip reference station (phase- or tec-type only)
+                    continue
+                if np.all(np.isnan(r[:, s, :])) or np.all(weights[:, s, :] == 0):
+                    # skip fully flagged stations
                     continue
                 screen_order[s, :, freq_ind, pol_ind] = station_order[s]
                 rr = np.reshape(r[:, s, :], [N_piercepoints, N_times])
@@ -682,8 +678,8 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                             screen_diff = residual[:, s, :, freq_ind, pol_ind]
                         elif screen_type == 'amplitude':
                             # Use log residuals
-                            screen_diff = np.log10(rr) - np.log10(rr -
-                                residual[:, s, :, freq_ind, pol_ind])
+                            screen_diff = np.log10(rr) - np.log10(np.abs(rr -
+                                residual[:, s, :, freq_ind, pol_ind]))
                         station_weights = _flag_outliers(init_station_weights,
                                 screen_diff, nsigma, screen_type)
 
@@ -727,6 +723,11 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
                                 if screen_type == 'phase':
                                     redchi2 =  _circ_chi2(residual[:, s, tindx, freq_ind, pol_ind],
                                         station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
+                                elif screen_type == 'amplitude':
+                                    # Use log residuals
+                                    screen_diff = np.log10(rr[:, tindx]) - np.log10(np.abs(rr[:, tindx] - residual[:, s, tindx, freq_ind, pol_ind]))
+                                    redchi2 = np.sum(np.square(screen_diff) *
+                                                     station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
                                 else:
                                     redchi2 = np.sum(np.square(residual[:, s, tindx, freq_ind, pol_ind]) *
                                         station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
