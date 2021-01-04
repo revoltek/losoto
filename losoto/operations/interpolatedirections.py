@@ -24,15 +24,9 @@ def _run_parser(soltab, parser, step):
     return run(soltab, interp_dirs, soltabOut, prefix, ncpu)
 
 
-# def _haversine(s1, s2):
-#     """
-#     Calculate the great circle distance between two points
-#     (specified in rad)
-#     """
-#     return 2*np.arcsin(np.sqrt(np.sin((s2[1]-s1[1])/2.0)**2 + np.cos(s1[1]) * np.cos(s2[1]) * np.sin((s2[0]-s1[0])/2.0)**2))
-
-def _cartesian_from_radec(x):
-    return np.array([np.cos(x[:,0])*np.sin(x[:,1]), np.sin(x[:,0])*np.sin(x[:,1]), np.cos(x[:,1])])
+def _cartesian_from_radec(x): # TODO is definition of dec correct here?
+    return np.array([np.cos(x[:,0])*np.cos(x[:,1]), np.sin(x[:,0])*np.cos(x[:,1]), np.sin(x[:,1])])
+    # return np.array([np.cos(x[:,0])*np.sin(x[:,1]), np.sin(x[:,0])*np.sin(x[:,1]), np.cos(x[:,1])])
 
 # def interpolate_directions2d(cal_vals, cal_weights, cal_dirs, dir_ax, interp_dirs, interp_kind, smooth=0.0):
 #     """
@@ -127,8 +121,7 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, dir_axis, interp_d
     cal_weights[np.isnan(cal_vals)] = 0.0 # make sure all NaNs are flagged
     cal_vals[np.isnan(cal_vals)] = 0.0 # set flagged values to 0
     new_weights[:,np.sum(cal_weights, axis=0) < len(cal_weights)] = 0 # Set new weights to 0 where at least one old direction is flagged.
-
-    if interp_kind == 'phase': # for phases, interpolate real and imag.
+    if interp_kind == 'wrap': # for phases, interpolate real and imag.
         _complex = np.exp(1.j * cal_vals)
         f_interp_re = Rbf(*_cartesian_from_radec(cal_dirs), _complex.real, norm='euclidean', mode='N-D', smooth=smooth) # multiquadratic, linear
         f_interp_im = Rbf(*_cartesian_from_radec(cal_dirs), _complex.imag, norm='euclidean', mode='N-D', smooth=smooth)
@@ -275,6 +268,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     # reorder results
     for selection, result in zip(selections,results):
         vals, weights = result
+        selection[dir_ax] = slice(None, None, None) # reset dir selection to apply inout selection to output
         # fill output arrays - the purpose of the reshape is to get the degenerate dim for the ant
         interp_vals[tuple(selection)] = vals.reshape(interp_vals[tuple(selection)].shape)
         interp_weights[tuple(selection)] = weights.reshape(interp_vals[tuple(selection)].shape)
