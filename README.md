@@ -6,6 +6,7 @@ LoSoTo: LOFAR solutions tool
 
 ### Contributed code:
 * David Rafferty
+* Henrik Edler
 * Maaijke Mevius
 * Jose Sabater Montes
 * Martin Hardcastle
