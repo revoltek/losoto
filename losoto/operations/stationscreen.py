@@ -368,7 +368,7 @@ def _calculate_svd(pp, r_0, beta, N_piercepoints):
 
     """
     import numpy as np
-    from pylab import pinv, svd
+    from scipy.linalg import pinv, svd
 
     D = np.resize(pp, (N_piercepoints, N_piercepoints, 3))
     D = np.transpose(D, (1, 0, 2)) - D
@@ -418,7 +418,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
     """
     import numpy as np
-    from pylab import pinv, newaxis
+    from scipy.linalg import pinv
 
     # Identify flagged directions
     N_sources_all = len(source_names)
@@ -481,7 +481,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
     # Calculate screen in all directions
     if N_sources != N_sources_all:
-        screen_fit_all[unflagged[0], :] = screen_fit[:, newaxis]
+        screen_fit_all[unflagged[0], :] = screen_fit[:, np.newaxis]
         flagged = np.where(weights <= 0.0)
         for findx in flagged[0]:
             p = pp_all[findx, :]
@@ -546,7 +546,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
 
     """
     import numpy as np
-    from numpy import newaxis
 
     # Get screen type
     screen_type = soltab.getType()
@@ -575,9 +574,9 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
         is_scalar = True
         N_pols = 1
         r_full = r_full.transpose([dir_ind, time_ind, freq_ind, ant_ind])
-        r_full = r_full[:, :, :, :, newaxis]
+        r_full = r_full[:, :, :, :, np.newaxis]
         weights_full = weights_full.transpose([dir_ind, time_ind, freq_ind, ant_ind])
-        weights_full = weights_full[:, :, :, :, newaxis]
+        weights_full = weights_full[:, :, :, :, np.newaxis]
 
     # Collect station and source names and positions and times, making sure
     # that they are ordered correctly.
@@ -600,7 +599,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
     N_freqs = len(freqs)
     N_piercepoints = N_sources
 
-    # Set ref station
+    # Set ref station and reference phases if needed
     if type(refAnt) is str:
         if N_stations == 1:
             refAnt = -1
@@ -608,6 +607,10 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
             refAnt = station_names.index(refAnt)
         else:
             refAnt = -1
+    if refAnt != -1 and screen_type == 'phase' or screen_type == 'tec':
+        r_ref = r_full[:, :, :, refAnt, :].copy()
+        for i in range(len(station_names)):
+            r_full[:, :, :, i, :] -= r_ref
 
     if scale_order:
         dist = []
