@@ -213,12 +213,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             invert = False
         return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(list(range(n)), extrap))
 
-    def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
+    def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15):
         """
         Defines the functional form of the LBA bandpass in terms of splines of degree 3
 
         The spline fit was done using LSQUnivariateSpline() on the median bandpass between
-        30 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
+        10 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
         minimum number of parameters.
 
         Parameters
@@ -234,11 +234,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         bandpass : list
             List of bandpass values as function of frequency
         """
-        knots = np.array([30003357.0, 30003357.0, 30003357.0, 30003357.0, 40000000.0,
-                          50000000.0, 55000000.0, 56000000.0, 60000000.0, 62000000.0,
-                          63000000.0, 64000000.0, 70000000.0, 77610779.0, 77610779.0,
-                          77610779.0, 77610779.0])
-        coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13])
+        knots = np.array([10850524.0, 10850524.0, 10850524.0, 10850524.0,
+                          20000000.0, 30000000.0, 40000000.0, 50000000.0,
+                          55000000.0, 56000000.0, 60000000.0, 62000000.0,
+                          63000000.0, 64000000.0, 70000000.0, 77610779.0,
+                          77610779.0, 77610779.0, 77610779.0])
+        coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15])
         return [_bspline(f, knots, coeffs, 3) for f in freq]
 
     def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
@@ -313,13 +314,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             bounds_deltas_upper = [0.06, 0.1, 0.1, 0.1, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
         elif band.lower() == 'lba':
             bandpass_function = _bandpass_LBA
-            init_coeffs = np.array([-0.22654016, -0.1950495, -0.07763014, 0.10002095,
-                                    0.32797671, 0.46900048, 0.47155583, 0.31945897,
-                                    0.29072278, 0.08064795, -0.15761538, -0.36020451,
-                                    -0.51163338])
-            bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.1, 0.1, 0.16, 0.2, 0.15,
+            init_coeffs = np.array([-0.19996913, -0.10604762, -0.29063847, -0.17248618,  0.05588799,
+                                    0.21518069,  0.46090289,  0.59503671,  0.6278482 ,  0.42936404,
+                                    0.43576633,  0.29100915, -0.00448301, -0.16566164, -0.3667639 ])
+            bounds_deltas_lower = [0.1, 0.2, 0.25, 0.2, 0.05, 0.05, 0.05, 0.1, 0.1, 0.16, 0.2, 0.15,
                                    0.15, 0.25, 0.3]
-            bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+            bounds_deltas_upper = [0.1, 0.3, 0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                    0.15, 0.25, 0.35]
         else:
             logging.error('The "{}" band is not supported'.format(band))
