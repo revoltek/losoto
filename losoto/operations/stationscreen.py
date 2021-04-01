@@ -465,7 +465,7 @@ def _fit_screen(source_names, full_matrices, pp, rr, weights, order, r_0, beta,
         amp_fit_log = np.dot(pinvC, np.dot(U[:, :order], np.dot(invU, rr1)))
 
         # Calculate amp screen
-        screen_fit = 10**(np.dot(C, amp_fit_log))
+        screen_fit = np.dot(C, amp_fit_log)
         screen_fit_white = np.dot(pinvC, screen_fit)
     elif screen_type == 'tec':
         # Calculate tec screen
@@ -488,10 +488,16 @@ def _fit_screen(source_names, full_matrices, pp, rr, weights, order, r_0, beta,
             screen_fit_all[findx, :] = np.dot(c, screen_fit_white)
         C, pinvC, U = full_matrices
         screen_fit_white_all = np.dot(pinvC, screen_fit_all)
-        screen_residual_all = rr_all - screen_fit_all.reshape(N_piercepoints_all)
+        if screen_type == 'amplitude':
+            screen_residual_all = rr_all - 10**(screen_fit_all.reshape(N_piercepoints_all))
+        else:
+            screen_residual_all = rr_all - screen_fit_all.reshape(N_piercepoints_all)
     else:
         screen_fit_white_all = screen_fit_white
-        screen_residual_all = rr_all - np.dot(C, screen_fit_white)
+        if screen_type == 'amplitude':
+            screen_residual_all = rr_all - 10**(np.dot(C, screen_fit_white))
+        else:
+            screen_residual_all = rr_all - np.dot(C, screen_fit_white)
     screen_fit_white_all = screen_fit_white_all.reshape((N_sources_all, 1))
     screen_residual_all = screen_residual_all.reshape((N_sources_all, 1))
 
@@ -840,6 +846,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
     freqs_out = freqs
 
     # Store screen values
+    # Note: amplitude screens are log10() values with non-log residuals!
     vals = screen.transpose([2, 3, 1, 0, 4]) # order is now ['time', 'freq', 'ant', 'dir', 'pol']
     weights = weights_full.transpose([1, 2, 3, 0, 4]) # order is now ['time', 'freq', 'ant', 'dir', 'pol']
     if is_scalar:
