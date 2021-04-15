@@ -51,8 +51,8 @@ setup(
     version=get_version('losoto/_version.py'),
     url='http://github.com/revoltek/losoto/',
     project_urls={
-        "Documentation": "",
-        "Source": ""
+        "Documentation": "https://revoltek.github.io/losoto/",
+        "Source": "https://github.com/revoltek/losoto/"
     },
     author='Francesco de Gasperin',
     author_email='astro@voo.it',
@@ -63,7 +63,7 @@ setup(
     platforms='any',
     classifiers=[
         'Programming Language :: Python',
-        'Development Status :: Stable',
+        'Development Status :: 5 - Production/Stable',
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
         'Operating System :: POSIX :: Linux',
