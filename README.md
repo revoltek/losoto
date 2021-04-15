@@ -18,11 +18,14 @@ LoSoTo: LOFAR solutions tool
 (https://ui.adsabs.harvard.edu/abs/2019A&A...622A...5D/abstract)
 
 ### Install:
-* Get LoSoTo from https://github.com/revoltek/losoto 
-* Install losoto by simply: python setup.py install --prefix=~/mydir/
-* Alternatively: pip install --upgrade --user https://github.com/revoltek/losoto/archive/master.zip 
-* Prepare a parset starting from the parset/losoto2.parset
-* in case of problems write to Francesco de Gasperin: astro@voo.it
+* Install latest official release of LoSoTo from PyPI:
+  `pip install --upgrade losoto`
+* Or, install latest development version of LoSTo:
+  `pip install --upgrade --user https://github.com/revoltek/losoto/archive/master.zip`
+* Alternatively, get LoSoTo from GitHub: https://github.com/revoltek/losoto, and install it using:
+  `python setup.py install --prefix=~/mydir/`
+* Prepare a `parset` file, which can be based on the file `parset/losoto2.parset`
+* In case of problems write to Francesco de Gasperin: astro@voo.it
 
 ### H5parm plotter (GUI):
 This is an external project maintained by Frits Sweijen: https://github.com/tikk3r/lofar-h5plot
@@ -36,7 +39,7 @@ This is an external project maintained by Frits Sweijen: https://github.com/tikk
 * __bin/__: the losoto executable and some manipulators for H5parms
 * __docs/__: documentation
 * __examples/__: some examples h5parm to use with validation/test parsets
-* __losoto/operations/__: containts all the modules for operations
+* __losoto/operations/__: contains all the modules for operations
 * __parsets/__: some examples parsets
 * __tools/__: contains some external tools
 
