@@ -45,7 +45,7 @@ setup(
         ],
     tests_require=['pytest'],
     install_requires=['numpy>=1.9','cython','numexpr>=2.0','tables>=3.4','configparser'],
-    scripts = ['bin/losoto', 'bin/H5parm_benchmark.py', 'bin/H5parm_split.py',
+    scripts = ['bin/losoto', 'bin/H5parm_split.py',
                'bin/H5parm2parmdb.py', 'bin/parmdb2H5parm.py', 'bin/killMS2H5parm.py',
                'bin/H5parm_collector.py','bin/H5parm_copy.py','bin/H5parm_interpolator.py'],
     packages=['losoto','losoto.operations','losoto.progressbar'],

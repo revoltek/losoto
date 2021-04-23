@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This tool is used to merge 2 H5parms.
@@ -9,7 +9,6 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 import sys, os, glob
 import numpy as np
 import pyrap.tables as pt
-import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 import losoto.h5parm
