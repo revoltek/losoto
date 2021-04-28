@@ -20,9 +20,9 @@ LoSoTo: LOFAR solutions tool
 ### Install:
 * Install latest official release of LoSoTo from PyPI:
   `pip install --upgrade losoto`
-* Or, install latest development version of LoSTo:
+* Or, install latest development version of LoSoTo from GitHub:
   `pip install --upgrade --user https://github.com/revoltek/losoto/archive/master.zip`
-* Alternatively, get LoSoTo from GitHub: https://github.com/revoltek/losoto, and install it using:
+* Or clone the LoSoTo repository from https://github.com/revoltek/losoto, and install LoSoTo using:
   `python setup.py install --prefix=~/mydir/`
 * Prepare a `parset` file, which can be based on the file `parset/losoto2.parset`
 * In case of problems write to Francesco de Gasperin: astro@voo.it
