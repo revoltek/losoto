@@ -148,8 +148,8 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
                 # Debug plot
                 doplot = False
-                #if doplot and t%100==0 and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'CS301LBA'):
-                if doplot and t%10==0 and (coord['ant'] == 'W04'):
+                if doplot and t%100==0 and (coord['ant'] == 'RS310LBA' or coord['ant'] == 'CS301LBA'):
+                # if doplot and t%10==0 and (coord['ant'] == 'W04'):
                     if not 'matplotlib' in sys.modules:
                         import matplotlib as mpl
                         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
@@ -162,22 +162,22 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
                     # plot rm fit
                     plotdelay = lambda delay, offset, freq: np.mod( delay*freq + offset + np.pi, 2.*np.pi) - np.pi
-                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='purple', label=r'delay:%f$\nu$ (ns) + %f ' % (fitresultdelay[0]*1e9,fitresultdelay[1]) )
+                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='black',  zorder=10, label=r'delay:%f$\nu$ (ns) + %f ' % (fitresultdelay[0]*1e9,fitresultdelay[1]) )
 
-                    ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' )
-                    ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' )
+                    ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' , label='phase XX/RR')
+                    ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' , label='phase YY/LL' )
                     #ax.plot(freq, np.mod(phase_diff + np.pi, 2.*np.pi) - np.pi, '.', color='purple' )                           
-                    ax.plot(freq, phase_diff, '.', color='purple' )                           
+                    ax.plot(freq, phase_diff, '.', color='purple' , label='phase difference')
  
                     residual = np.mod(plotdelay(fitresultdelay[0], fitresultdelay[1], freq)-phase_diff + np.pi,2.*np.pi)-np.pi
-                    ax.plot(freq, residual, '.', color='yellow')
+                    ax.plot(freq, residual, '.', color='yellow', label='residual')
     
                     ax.set_xlabel('freq')
                     ax.set_ylabel('phase')
                     #ax.set_ylim(ymin=-np.pi, ymax=np.pi)
 
                     logging.warning('Save pic: '+str(t)+'_'+coord['ant']+'.png')
-                    fig.legend(loc='upper left')
+                    fig.legend()
                     plt.savefig(coord['ant']+'_'+str(t)+'.png', bbox_inches='tight')
                     del fig
             # end cycle in time

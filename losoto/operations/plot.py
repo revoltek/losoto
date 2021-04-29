@@ -163,7 +163,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
  
                 if datatype == 'phase' or datatype == 'rotation':
                     #cmap = phase_colormap
-                    cmap = plt.cm.jet
+                    cmap = plt.cm.hsv
                 else:
                     try:
                         cmap = plt.cm.viridis
