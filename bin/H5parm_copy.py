@@ -52,20 +52,19 @@ if __name__=='__main__':
     # write table
     ht = losoto.h5parm.h5parm(h5parmToFile, readonly=False)
     # check if the solset exists
-    if solsetTo in ht.getSolsets():
+    if solsetTo in ht.getSolsetNames():
         logging.critical('Destination solset already exists, quitting.')
         sys.exit(1)
     ssT = ht.makeSolset(solsetName = solsetTo, addTables=False)
     # write the soltabs
-    ssF._f_copy_children(ssT, recursive=True)
+    ssF.obj._f_copy_children(ssT.obj, recursive=True)
 
     del hf
 
     # Add entry to history
-    soltabs = ht.getSoltabs(solset=solsetTo)
+    soltabs = ht.getSolset(solsetTo).getSoltabs()
     for st in soltabs:
-        sw = losoto.h5parm.solWriter(soltabs[st])
-        sw.addHistory('Copied (from {0}:{1})'.format(h5parmFromFile, solsetFrom))
+        st.addHistory('Copied (from {0}:{1})'.format(h5parmFromFile, solsetFrom))
     del ht
 
     logging.info("Done.")
