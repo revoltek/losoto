@@ -102,6 +102,7 @@ if __name__=='__main__':
                    "ABS": operations.abs,
                    "CLIP": operations.clip,
                    "CLOCKTEC": operations.clocktec,
+                   "DELETEAXIS": operations.deleteaxis,
                    "POLALIGN": operations.polalign,
                    "DIRECTIONSCREEN": operations.directionscreen,
                    "DUPLICATE": operations.duplicate,
