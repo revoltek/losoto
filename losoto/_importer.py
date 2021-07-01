@@ -16,7 +16,6 @@ import sys, os
 import socket
 import numpy as np
 import pyrap.tables as pt
-import lofar.parmdb
 from losoto import _version
 from losoto.h5parm import h5parm as h5parm_mod
 try:
@@ -112,7 +111,36 @@ def parmdbToAxes(solEntry):
 
     return pol, dir, ant, parm
 
-
+def getValuesGrid(parmdb,solType):
+    '''Get values grid mimics the behaviour of getValues grid of lofar.parmdb. 
+    We assume the data is stored as a regular grid in frequency and time. '''
+    names = pt.table(parmdb+"/NAMES").getcol("NAME")
+    myt = pt.table(parmdb)
+    indices = [i for i,j in enumerate(names) if all([True if name in j else False for name in solType])]
+    data = {}
+    parmkeys = ['freqs', 'timewidths', 'freqwidths', 'values', 'times']
+    for idx in indices:
+         newt = pt.taql("SELECT * from $parmdb where NAMEID == $idx")
+         data[names[idx]] = {}
+         freqsc = [newt.getcol("STARTX")[0], newt.getcol("ENDX")[0]]
+         timesc = [newt.getcol("STARTY"), newt.getcol("ENDY")]
+         values = newt.getcol("VALUES")
+         Ntimes = values.shape[0]*values.shape[1]
+         Nfreq = values.shape[2]
+         dfreq = (freqsc[1]-freqsc[0])/Nfreq
+         freqs = np.linspace(freqsc[0]+0.5*dfreq,freqsc[1]+0.5*dfreq, Nfreq, endpoint=False)
+         freqwidths = dfreq*np.ones_like(freqs)
+         dtimes = (timesc[-1][-1] - timesc[0][0])/Ntimes
+         times = np.linspace(timesc[0][0]+0.5*dtimes,timesc[-1][-1]+0.5*dtimes, Ntimes, endpoint=False)
+         timewidths = dtimes*np.ones_like(times)
+         data[names[idx]]['freqs'] = freqs
+         data[names[idx]]['freqwidths'] = freqwidths
+         data[names[idx]]['times'] = times
+         data[names[idx]]['timewidths'] = timewidths
+         data[names[idx]]['values'] = values
+    return data
+         
+         
 def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                   h5parmFile, complevel, solsetName, globaldbFile=None, verbose=False):
     """
@@ -136,9 +164,12 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     
     # Create tables using the first instrumentdb
     # TODO: all the instrument tables should be checked
-    pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
-
-    solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))
+    #pdb = lofar.parmdb.parmdb(instrumentdbFiles[0])
+    pdb = pt.table(instrumentdbFiles[0])
+    #    solTypes = list(set(x[0] for x in  (x.split(":") for x in pdb.getNames())))
+    names = pt.table(instrumentdbFiles[0]+"/NAMES").getcol("NAME")
+    
+    solTypes = list(set(x[0] for x in  (x.split(":") for x in names)))
     logging.info('Found solution types: '+', '.join(solTypes))
 
     # rewrite solTypes in order to put together
@@ -147,44 +178,82 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     # CommonScalarPhase <-> ScalarPhase
     # CommonScalarAmplitude <-> ScalarAmplitude
     # it also separate Real/Imag/Ampl/Phase into different solTypes
+    #    if "Gain" in solTypes:
+    #        solTypes.remove('Gain')
+    #        solTypes.append('*Gain:*:Real')
+    #        solTypes.append('*Gain:*:Imag')
+    #        solTypes.append('*Gain:*:Ampl')
+    #        solTypes.append('*Gain:*:Phase')
+    #    if "DirectionalGain" in solTypes:
+    #        solTypes.remove('DirectionalGain')
+    #        solTypes.append('*Gain:*:Real')
+    #        solTypes.append('*Gain:*:Imag')
+    #        solTypes.append('*Gain:*:Ampl')
+    #        solTypes.append('*Gain:*:Phase')
+    #    if "RotationAngle" in solTypes:
+    #        solTypes.remove('RotationAngle')
+    #        solTypes.append('*RotationAngle')
+    #    if "CommonRotationAngle" in solTypes:
+    #        solTypes.remove('CommonRotationAngle')
+    #        solTypes.append('*RotationAngle')
+    #    if "RotationMeasure" in solTypes:
+    #        solTypes.remove('RotationMeasure')
+    #        solTypes.append('*RotationMeasure')
+    #    if "ScalarPhase" in solTypes:
+    #        solTypes.remove('ScalarPhase')
+    #        solTypes.append('*ScalarPhase')
+    #    if "CommonScalarPhase" in solTypes:
+    #        solTypes.remove('CommonScalarPhase')
+    #        solTypes.append('*ScalarPhase')
+    #    if "CommonScalarAmplitude" in solTypes:
+    #        solTypes.remove('CommonScalarAmplitude')
+    #        solTypes.append('*ScalarAmplitude')
     if "Gain" in solTypes:
         solTypes.remove('Gain')
-        solTypes.append('*Gain:*:Real')
-        solTypes.append('*Gain:*:Imag')
-        solTypes.append('*Gain:*:Ampl')
-        solTypes.append('*Gain:*:Phase')
+        solTypes.append(['Gain','Real'])
+        solTypes.append(['Gain','Imag'])
+        solTypes.append(['Gain','Ampl'])
+        solTypes.append(['Gain','Phase'])
     if "DirectionalGain" in solTypes:
         solTypes.remove('DirectionalGain')
-        solTypes.append('*Gain:*:Real')
-        solTypes.append('*Gain:*:Imag')
-        solTypes.append('*Gain:*:Ampl')
-        solTypes.append('*Gain:*:Phase')
+        solTypes.append(['Gain','Real'])
+        solTypes.append(['Gain','Imag'])
+        solTypes.append(['Gain','Ampl'])
+        solTypes.append(['Gain','Phase'])
     if "RotationAngle" in solTypes:
         solTypes.remove('RotationAngle')
-        solTypes.append('*RotationAngle')
+        solTypes.append(['RotationAngle'])
     if "CommonRotationAngle" in solTypes:
         solTypes.remove('CommonRotationAngle')
-        solTypes.append('*RotationAngle')
+        solTypes.append(['RotationAngle'])
     if "RotationMeasure" in solTypes:
         solTypes.remove('RotationMeasure')
-        solTypes.append('*RotationMeasure')
+        solTypes.append(['RotationMeasure'])
     if "ScalarPhase" in solTypes:
         solTypes.remove('ScalarPhase')
-        solTypes.append('*ScalarPhase')
+        solTypes.append(['ScalarPhase'])
     if "CommonScalarPhase" in solTypes:
         solTypes.remove('CommonScalarPhase')
-        solTypes.append('*ScalarPhase')
+        solTypes.append(['ScalarPhase'])
     if "CommonScalarAmplitude" in solTypes:
         solTypes.remove('CommonScalarAmplitude')
-        solTypes.append('*ScalarAmplitude')
+        solTypes.append(['ScalarAmplitude'])
     solTypes = list(set(solTypes))
 
     # every soltype creates a different solution-table
     for solType in solTypes:
 
         # skip missing solTypes (not all parmdbs have e.g. TEC)
-        if len(pdb.getNames(solType+':*')) == 0: continue
-
+        #if len(pdb.getNames(solType+':*')) == 0: continue
+        
+        found = False
+        for name in names:
+            if all([True if soli in name else False for soli in solType]):
+                found = True
+                break
+        if not found:
+            continue
+                        
         pols = set() 
         dirs = set() 
         ants = set()
@@ -192,18 +261,18 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         times = set() 
         ptype = set()
 
-        logging.info('Reading '+solType+'.')
+        logging.info('Reading '+':'.join(solType)+'.')
 
         pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)).start()
         ipbar = 0
 
         for instrumentdbFile in sorted(instrumentdbFiles):
 
-            pdb = lofar.parmdb.parmdb(instrumentdbFile)
-
+            #pdb = lofar.parmdb.parmdb(instrumentdbFile)
+            
             # create the axes grid, necessary if not all entries have the same axes lenght
-            data = pdb.getValuesGrid(solType+':*')
-
+            #data = pdb.getValuesGrid(solType+':*')
+            data = getValuesGrid(instrumentdbFile,solType)
             # check good instrument table
             if len(data) == 0:
                 logging.error('Instrument table %s is empty, ignoring.' % instrumentdbFile)
@@ -237,12 +306,15 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
 
         for instrumentdbFile in instrumentdbFiles:
 
-            pdb = lofar.parmdb.parmdb(instrumentdbFile)
+            #pdb = lofar.parmdb.parmdb(instrumentdbFile)
 
             # fill the values
-            data = pdb.getValuesGrid(solType+':*')
-            if 'Real' in solType: dataIm = pdb.getValuesGrid(solType.replace('Real','Imag')+':*')
-            if 'Imag' in solType: dataRe = pdb.getValuesGrid(solType.replace('Imag','Real')+':*')
+            #data = pdb.getValuesGrid(solType+':*')
+            data = getValuesGrid(instrumentdbFile,solType)
+            #if 'Real' in solType: dataIm = pdb.getValuesGrid(solType.replace('Real','Imag')+':*')
+            #if 'Imag' in solType: dataRe = pdb.getValuesGrid(solType.replace('Imag','Real')+':*')
+            if 'Real' in solType: dataIm = getValuesGrid(instrumentdbFile,[solType[0],'Imag'])
+            if 'Imag' in solType: dataRe = getValuesGrid(instrumentdbFile,[solType[0],'Real'])
             for solEntry in data:
 
                 pol, dir, ant, parm = parmdbToAxes(solEntry)
