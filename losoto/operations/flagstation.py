@@ -540,22 +540,37 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     # Axis order must be [time, ant, freq, pol], so reorder if necessary
     axis_names = soltab.getAxesNames()
-    if ('freq' not in axis_names or 'pol' not in axis_names or
+    if ('freq' not in axis_names or
         'time' not in axis_names or 'ant' not in axis_names):
         logging.error("Currently, flagstation requires the following axes: "
-                      "freq, pol, time, and ant.")
+                      "freq, time, and ant.")
         return 1
     freq_ind = axis_names.index('freq')
-    pol_ind = axis_names.index('pol')
     time_ind = axis_names.index('time')
     ant_ind = axis_names.index('ant')
-    if 'dir' in axis_names:
-        dir_ind = axis_names.index('dir')
-        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
-        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+    if 'pol' in axis_names:
+        has_pol_axis = True
+        pol_ind = axis_names.index('pol')
+        if 'dir' in axis_names:
+            dir_ind = axis_names.index('dir')
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        else:
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
     else:
-        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
-        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        has_pol_axis = False
+        if 'dir' in axis_names:
+            dir_ind = axis_names.index('dir')
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, dir_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, dir_ind])
+            vals_arraytmp = np.expand_dims(vals_arraytmp, axis=3)
+            weights_arraytmp = np.expand_dims(weights_arraytmp, axis=3)
+        else:
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind])
+            vals_arraytmp = np.expand_dims(vals_arraytmp, axis=-1)
+            weights_arraytmp = np.expand_dims(weights_arraytmp, axis=-1)
 
     # Check for NaN solutions and flag
     flagged = np.where(np.isnan(vals_arraytmp))
@@ -667,17 +682,27 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
                 weights_arraytmp[:, s, :, :] = w
 
         # Make sure that fully flagged stations have all pols flagged
+        if has_pol_axis:
+            npol = len(soltab.pol)
+        else:
+            npol = 1
         for s in range(len(soltab.ant)):
-            for p in range(len(soltab.pol)):
+            for p in range(npol):
                 if np.all(weights_arraytmp[:, s, :, p] == 0.0):
                     weights_arraytmp[:, s, :, :] = 0.0
                     break
 
         # Write new weights
         if 'dir' in axis_names:
-            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            if has_pol_axis:
+                weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            else:
+                weights_array = weights_arraytmp[:, :, :, 0, :].transpose([time_ind, ant_ind, freq_ind, dir_ind])
         else:
-            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            if has_pol_axis:
+                weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            else:
+                weights_array = weights_arraytmp[:, :, :, 0].transpose([time_ind, ant_ind, freq_ind])
         soltab.setValues(weights_array, weight=True)
         soltab.addHistory('FLAGSTATION (mode=resid, maxFlaggedFraction={0}, '
                           'nSigma={1})'.format(maxFlaggedFraction, nSigma))
