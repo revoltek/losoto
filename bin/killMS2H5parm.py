@@ -115,15 +115,17 @@ if __name__=='__main__':
     # write to h5pram
     h5parm = h5parm_mod.h5parm(h5parmFile, readonly = False, complevel = complevel)
     solset = h5parm.makeSolset(solsetName)
-    solset.makeSoltab('amplitude', axesNames=['time','freq','ant','dir','pol'], \
-            axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_amp, weights=weights)
-    solset.makeSoltab('phase', axesNames=['time','freq','ant','dir','pol'], \
-            axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_ph, weights=weights)
+
     if is_tec:
         solset.makeSoltab('tec', axesNames=['ant','dir','time'], \
                 axesVals=[antNames,dirNames,times], vals=vals_tec, weights=weights_tec)
         solset.makeSoltab('phase', 'offset', axesNames=['ant','dir','time'], \
                 axesVals=[antNames,dirNames,times], vals=vals_csp, weights=weights_tec)
+    else:
+        solset.makeSoltab('amplitude', axesNames=['time','freq','ant','dir','pol'], \
+                axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_amp, weights=weights)
+        solset.makeSoltab('phase', axesNames=['time','freq','ant','dir','pol'], \
+                axesVals=[times,freqs,antNames,dirNames,pols], vals=vals_ph, weights=weights)
 
     # fill source table
     sourceTable = solset.obj._f_get_child('source')
