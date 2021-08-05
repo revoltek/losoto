@@ -112,18 +112,19 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
         variances = []; pars = []
         avgdph = avgdph[...,avgdph.shape[-1]%ndiv:] # remove a few timeslots to make the array divisible by np.split
+        avgdph[avgdph.mask] = np.nan
         for i, avgdphSplit in enumerate( np.split(avgdph, ndiv, axis=-1) ):
-            variance = np.ma.var(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
+            variance = np.nanvar(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
 
             # linear regression
             #A = np.ones((2,D2[myselect].shape[0]),dtype=float)
             #A[1,:] = np.log10(D2[myselect][~variance.mask])
             #par = np.dot(np.linalg.inv(np.dot(A,A.T)),np.dot(A,np.log10(variance[myselect])))
-            mask = variance[myselect].mask
+            mask = np.isnan(variance[myselect])
             A = np.vstack([np.log10(D2[myselect][~mask]), np.ones(len(D2[myselect][~mask]))])
             par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) )[0] 
             S0 = 10**(-1*par[1]/par[0])
-            logging.info(r't%i: beta=%.2f - R_diff=%.2f km' % (i, par[0], S0/1.e3))
+            logging.info(r't%i: beta=%.2f - R_diff=%.3f km' % (i, par[0], S0/1.e3))
             variances.append(variance)
             pars.append(par)
 
