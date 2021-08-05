@@ -58,20 +58,29 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
     posAll = soltab.getSolset().getAnt()
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','ant','time'], weight=True, refAnt=refAnt):
+    if 'pol' in soltab.getAxesNames(): returnAxes = ['freq','pol','ant','time']
+    else: returnAxes = ['freq','ant','time']
 
-        # reorder axes
-        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','ant','freq','time'] )
-        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, refAnt=refAnt):
 
         # order positions
         pos = np.array([list(posAll[ant]) for ant in coord['ant']])
 
         # avg pols
-        vals = np.cos(vals) + 1.j * np.sin(vals)
-        vals = np.nansum(vals, axis=0)
-        vals = np.angle(vals)
-        flags = np.array((weights[0]==0)|(weights[1]==0), dtype=bool)
+        if 'pol' in soltab.getAxesNames():
+            # reorder axes
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+            weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+
+            vals = np.cos(vals) + 1.j * np.sin(vals)
+            vals = np.nansum(vals, axis=0)
+            vals = np.angle(vals)
+            flags = np.array((weights[0]==0)|(weights[1]==0), dtype=bool)
+        else:
+            # reorder axes
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['ant','freq','time'] )
+            weights = reorderAxes( weights, soltab.getAxesNames(), ['ant','freq','time'] )
+            flags = np.array((weights==0), dtype=bool)
 
         # unwrap
         if doUnwrap:
