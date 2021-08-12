@@ -64,7 +64,6 @@ def run( soltab, axesToClip=None, clipLevel=5., log=False, mode='median' ):
             del axesToClip[i]
             logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
-    print(axesToClip)
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToClip, weight = True):
 
         initPercent = percentFlagged(weights)
