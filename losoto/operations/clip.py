@@ -45,10 +45,10 @@ def run( soltab, axesToClip=None, clipLevel=5., log=False, mode='median' ):
     logging.info("Clipping soltab: "+soltab.name)
 
     # input check
-    if len(axesToClip) < 1 and mode == 'median':
+    if len(axesToClip) == 1 and mode == 'median':
         logging.error("Please specify axes to clip.")
         return 1
-    else:
+    elif len(axesToClip) == 0:
         axesToClip = soltab.getAxesNames()
 
     if mode != 'median' and mode != 'above' and mode != 'below':
@@ -64,6 +64,7 @@ def run( soltab, axesToClip=None, clipLevel=5., log=False, mode='median' ):
             del axesToClip[i]
             logging.warning('Axis \"'+axis+'\" not found. Ignoring.')
 
+    print(axesToClip)
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToClip, weight = True):
 
         initPercent = percentFlagged(weights)
