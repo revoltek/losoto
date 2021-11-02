@@ -14,6 +14,8 @@ def _run_parser(soltab, parser, step):
     parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
     return run(soltab, soltabOut, refAnt, maxResidual)
 
+def costfunctionRM(RM, wav, phase):
+    return np.sum(abs(np.cos(2.*RM[0]*wav*wav) - np.cos(phase)) + abs(np.sin(2.*RM[0]*wav*wav) - np.sin(phase)))
 
 def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
     """
@@ -125,7 +127,10 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
 
                     wav = c/freq
     
-                    fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
+                    #fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
+                    ranges = slice(-0.1, 0.1, 1e-4)
+                    fitresultrm_wav, success = scipy.optimize.brute(costfunctionRM, (ranges,), finish=scipy.optimize.leastsq, args=(wav, phase_diff))        
+            
                     # fractional residual
                     residual = np.nanmean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff + np.pi, 2.*np.pi) - np.pi))
 
