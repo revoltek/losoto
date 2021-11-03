@@ -104,7 +104,14 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
                 logging.warning('Skipping flagged antenna: '+coord['ant'])
                 fitweights[:] = 0
             else:
-                tuples = [(t,coord_rr,coord_ll,weights,vals,solType,coord,maxResidual) for t,time in enumerate(times)]
+                if solType == 'phase':
+                    weightsliced = [weights[:,:,t] for t,_ in enumerate(times)]
+                    valsliced = [vals[:,:,t] for t,_ in enumerate(times)]
+                else: # rotation table
+                    weightsliced = [weights[:,t] for t,_ in enumerate(times)]
+                    valsliced = [vals[:,t] for t,_ in enumerate(times)]
+
+                tuples = [(t,coord_rr,coord_ll,wt,vl,solType,coord,maxResidual) for t,wt,vl in zip(list(np.arange(len(times))), weightsliced, valsliced)]
                 fitrm,fitweights = zip(*pl.starmap(_run_timestep,tuples))
 
         soltabout.setSelection(ant=coord['ant'], time=coord['time'])

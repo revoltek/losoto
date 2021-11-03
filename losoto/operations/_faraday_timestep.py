@@ -10,16 +10,16 @@ def costfunctionRM(RM, wav, phase):
 def _run_timestep(t,coord_rr,coord_ll,weights,vals,solType,coord,maxResidual):
     c = 2.99792458e8
     if solType == 'phase':
-        idx       = ((weights[coord_rr,:,t] != 0.) & (weights[coord_ll,:,t] != 0.))
+        idx       = ((weights[coord_rr,:] != 0.) & (weights[coord_ll,:] != 0.))
         freq      = np.copy(coord['freq'])[idx]
-        phase_rr  = vals[coord_rr,:,t][idx]
-        phase_ll  = vals[coord_ll,:,t][idx]
+        phase_rr  = vals[coord_rr,:][idx]
+        phase_ll  = vals[coord_ll,:][idx]
         # RR-LL to be consistent with BBS/NDPPP
         phase_diff  = (phase_rr - phase_ll)      # not divide by 2 otherwise jump problem, then later fix this
     else: # rotation table
-        idx        = ((weights[:,t] != 0.) & (weights[:,t] != 0.))
+        idx        = ((weights[:] != 0.) & (weights[:] != 0.))
         freq       = np.copy(coord['freq'])[idx]
-        phase_diff = 2.*vals[:,t][idx] # a rotation is between -pi and +pi
+        phase_diff = 2.*vals[:][idx] # a rotation is between -pi and +pi
 
     if len(freq) < 20:
         fitresultrm_wav = [0]
@@ -33,7 +33,7 @@ def _run_timestep(t,coord_rr,coord_ll,weights,vals,solType,coord,maxResidual):
         wav = c/freq
 
         #fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
-        ranges = slice(-0.1, 0.1, 1e-4)
+        ranges = slice(-0.1, 0.1, 2e-4)
         fitresultrm_wav = scipy.optimize.brute(costfunctionRM, (ranges,), finish=scipy.optimize.leastsq, args=(wav, phase_diff))        
 
         # fractional residual
