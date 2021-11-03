@@ -6,8 +6,6 @@ from losoto._logging import logger as logging
 import multiprocessing as mp
 from losoto.operations._faraday_timestep import _run_timestep
 
-pl = mp.Pool(mp.cpu_count())
-
 logging.debug('Loading FARADAY module.')
 
 
@@ -15,12 +13,14 @@ def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'rotationmeasure000' )
     refAnt = parser.getstr( step, 'refAnt', '')
     maxResidual = parser.getfloat( step, 'maxResidual', 1. )
+    ncpu = parser.getint( step, 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
-    return run(soltab, soltabOut, refAnt, maxResidual)
+    parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual','ncpu'])
+    return run(soltab, soltabOut, refAnt, maxResidual, ncpu)
 
 
-def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
+def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=0):
+    logging.info(f'ncpus: {ncpu}')
     """
     Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).
 
@@ -112,7 +112,10 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
                     valsliced = [vals[:,t] for t,_ in enumerate(times)]
 
                 tuples = [(t,coord_rr,coord_ll,wt,vl,solType,coord,maxResidual) for t,wt,vl in zip(list(np.arange(len(times))), weightsliced, valsliced)]
-                fitrm,fitweights = zip(*pl.starmap(_run_timestep,tuples))
+                if ncpu == 0:
+                    ncpu = mp.cpu_count()
+                with mp.Pool(ncpu) as pool:
+                    fitrm,fitweights = zip(*pool.starmap(_run_timestep,tuples))
 
         soltabout.setSelection(ant=coord['ant'], time=coord['time'])
         soltabout.setValues( np.expand_dims(fitrm, axis=1) )
