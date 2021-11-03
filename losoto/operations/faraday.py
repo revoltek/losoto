@@ -19,6 +19,8 @@ def _run_parser(soltab, parser, step):
     parser.checkSpelling( step, soltab, ['soltabOut', 'refAnt', 'maxResidual'])
     return run(soltab, soltabOut, refAnt, maxResidual)
 
+def costfunctionRM(RM, wav, phase):
+    return np.sum(abs(np.cos(2.*RM[0]*wav*wav) - np.cos(phase)) + abs(np.sin(2.*RM[0]*wav*wav) - np.sin(phase)))
 
 def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1. ):
     """
