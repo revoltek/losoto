@@ -110,6 +110,7 @@ if __name__=='__main__':
                    "FLAG": operations.flag,
                    "FLAGEXTEND": operations.flagextend,
                    "FLAGSTATION": operations.flagstation,
+                   "FRJUMP": operations.frjump,
                    "GLOBALDELAY": operations.globaldelay,
                    "INTERPOLATE": operations.interpolate,
                    "INTERPOLATEDIRECTIONS": operations.interpolatedirections,
