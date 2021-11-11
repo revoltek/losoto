@@ -59,21 +59,23 @@ def dejump(vals,wavels):
 
 def run( soltab, soltabOut,clipping,soltabPhase):
     """
-    Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).
+    'Dejumps' the Faraday solutions. Because Faraday rotation is a rotation, there are generally multiple possible values for the rotation measure
+    that yield a similar rotation angle - but are offset from the main trend. This code will fix this.
 
     Parameters
     ----------
     
     soltabOut : str, optional
-        output table name (same solset), by deault "rotationmeasure000".
+        output table name (same solset), by deault "rotationmeasure001".
         
-    refAnt : str, optional
-        Reference antenna, by default the first.
+    clipping : arr, optional
+        Refers to the frequency range that is used in the Faraday step. This is important to get a good estimate for the difference in RM
 
-    maxResidual : float, optional
-        Max average residual in radians before flagging datapoint, by default 1. If 0: no check.
-
+    soltabPhase : str, optional
+        name of soltab that contains the phases. The only reason we need this, is for the frequency axis (so it really doesnt matter what's in 
+        this soltab. Default: phase000
     """
+
     import numpy as np
     import scipy.optimize
 
