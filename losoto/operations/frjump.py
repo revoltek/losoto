@@ -4,7 +4,6 @@
 from losoto.lib_operations import *
 from losoto._logging import logger as logging
 from losoto.operations._faraday_timestep import _run_timestep
-import astropy.constants as c
 
 logging.debug('Loading FRjump module.')
 logging.warning('FRjump module is still experimental - we strongly recommend to check the results carefully')
@@ -78,7 +77,7 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     import numpy as np
     import scipy.optimize
 
-    # c = 2.99792458e8
+    c = 2.99792458e8
 
     vals = soltab.getValues(retAxesVals=False)
     ants = soltab.getAxisValues('ant')
@@ -89,7 +88,7 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     selection = (freqs > clipping[0]) * (freqs < clipping[1]) # Only take the frequencies used for fitting
     selected_freqs = freqs[selection]
 
-    wavels = (c.c/selected_freqs).value # in meters
+    wavels = c/selected_freqs # in meters
 
     if soltabOut not in solset.getSoltabNames():
         soltabout = solset.makeSoltab('rotationmeasure',soltabName=soltabOut, 
@@ -106,7 +105,7 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     for vals,weights,coord,_ in soltab.getValuesIter(returnAxes='time',weight=True):
         antname = coord['ant']
         newvals = dejump(vals,wavels)
-        logging.info(f'Doing antenna {antname}')
+        logging.debug(f'Doing antenna {antname}')
         soltabout.setSelection(ant=coord['ant'],time=coord['time'])          
         soltabout.setValues(np.expand_dims(newvals,axis=1))
     
