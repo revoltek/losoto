@@ -7,14 +7,15 @@ from losoto.operations._faraday_timestep import _run_timestep
 import astropy.constants as c
 
 logging.debug('Loading FRjump module.')
+logging.warning('FRjump module is still experimental - we strongly recommend to check the results carefully')
 
 
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'rotationmeasure002' )
     soltabPhase = parser.getstr( step, 'soltabPhase', 'phase000')
-    clipping = parser.getarray(step, 'clipping', [0,1e9])
+    clipping = np.array(parser.getarray(step, 'clipping', [0,1e9]),dtype=float)
 
-    parser.checkSpelling( step, soltab, ['soltabOut'])
+    parser.checkSpelling( step, soltab, ['soltabOut','soltabPhase','clipping'])
     return run(soltab, soltabOut,clipping, soltabPhase)
 
 def costfunctionRM(RM, wav, phase):
@@ -77,7 +78,7 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     import numpy as np
     import scipy.optimize
 
-    c = 2.99792458e8
+    # c = 2.99792458e8
 
     vals = soltab.getValues(retAxesVals=False)
     ants = soltab.getAxisValues('ant')
@@ -88,7 +89,7 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     selection = (freqs > clipping[0]) * (freqs < clipping[1]) # Only take the frequencies used for fitting
     selected_freqs = freqs[selection]
 
-    wavels = c/selected_freqs # in meters
+    wavels = (c.c/selected_freqs).value # in meters
 
     if soltabOut not in solset.getSoltabNames():
         soltabout = solset.makeSoltab('rotationmeasure',soltabName=soltabOut, 
