@@ -334,8 +334,8 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
                                        bounds=param_bounds, method='dogbox', ftol=1e-3,
                                        xtol=1e-3, gtol=1e-3)
                 return popt, bandpass_function(freq, *tuple(popt))
-            except RuntimeError:
-                logging.error('Fitting failed.' )
+            except Exception as err:
+                logging.error('Fitting failed. {}: {}'.format(err.__class__.__name__, err))
                 return None, bandpass_function(freq, *tuple(init_coeffs))
         else:
             return None, bandpass_function(freq, *tuple(init_coeffs))
