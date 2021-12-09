@@ -18,10 +18,6 @@ import numpy as np
 import pyrap.tables as pt
 from losoto import _version
 from losoto.h5parm import h5parm as h5parm_mod
-try:
-    from . import progressbar
-except ImportError:
-    import losoto.progressbar as progressbar
 from losoto._logging import logger as logging
 
 def parmdbToAxes(solEntry):
@@ -238,7 +234,8 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
     if "CommonScalarAmplitude" in solTypes:
         solTypes.remove('CommonScalarAmplitude')
         solTypes.append(['ScalarAmplitude'])
-    solTypes = list(set(solTypes))
+    # solTypes = list(set(solTypes))
+    print(solTypes)
 
     # every soltype creates a different solution-table
     for solType in solTypes:
@@ -263,8 +260,6 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
 
         logging.info('Reading '+':'.join(solType)+'.')
 
-        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)).start()
-        ipbar = 0
 
         for instrumentdbFile in sorted(instrumentdbFiles):
 
@@ -285,10 +280,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                 if ant is not None: ants |= set([ant])
                 freqs |= set(data[solEntry]['freqs'])
                 times |= set(data[solEntry]['times'])
-                pbar.update(ipbar)
-            ipbar += 1
 
-        pbar.finish()
 
         pols = np.sort(list(pols)) 
         dirs = np.sort(list(dirs)) 
@@ -301,8 +293,6 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         weights = np.zeros(shape, dtype=np.float16)
 
         logging.info('Filling table.')
-        pbar = progressbar.ProgressBar(maxval=len(instrumentdbFiles)).start()
-        ipbar = 0
 
         for instrumentdbFile in instrumentdbFiles:
 
@@ -347,15 +337,12 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
                     coords.append(antCoord)
                 freqCoord = np.searchsorted(freqs, freq)
                 timeCoord = np.searchsorted(times, time)
-                vals[tuple(coords)][np.ix_(freqCoord,timeCoord)] = val.T
+                vals[tuple(coords)][np.ix_(freqCoord,timeCoord)] = val.T[:,:,0]
                 weights[tuple(coords)][np.ix_(freqCoord,timeCoord)] = 1
-                pbar.update(ipbar)
-            ipbar += 1
 
         np.putmask(vals, ~np.isfinite(vals), 0) # put inf and nans to 0
         #vals = np.nan_to_num(vals) # replace nans with 0 (flagged later)
 
-        pbar.finish()
         if solType == '*RotationAngle':
             np.putmask(weights, vals == 0., 0) # flag where val=0
             solset.makeSoltab('rotation', axesNames=['dir','ant','freq','time'], \
@@ -390,16 +377,17 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
             else:
                 solset.makeSoltab('tec', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
-        elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl':
+        elif solType == '*Gain:*:Real' or solType == '*Gain:*:Ampl' or solType == ['Gain','Real'] or solType == ['Gain','Ampl']:
             np.putmask(vals, vals == 0, 1) # nans were put to 0 before, set them to 1
             np.putmask(weights, vals == 1., 0) # flag where val=1
             solset.makeSoltab('amplitude', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
-        elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase':
+        elif solType == '*Gain:*:Imag' or solType == '*Gain:*:Phase' or solType == ['Gain','Imag'] or solType == ['Gain','Phase']:
             np.putmask(weights, vals == 0., 0) # falg where val=0
             solset.makeSoltab('phase', axesNames=['pol','dir','ant','freq','time'], \
                     axesVals=[pols,dirs,ants,freqs,times], vals=vals, weights=weights, parmdbType=', '.join(list(ptype)))
 
+        print(solType)
         logging.info('Flagged data: %.3f%%' % (100.*(len(weights.flat)-np.count_nonzero(weights))/len(weights.flat)))
 
     logging.info('Collecting information from the ANTENNA table.')
