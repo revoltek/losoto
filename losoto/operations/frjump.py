@@ -13,9 +13,10 @@ def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'rotationmeasure002' )
     soltabPhase = parser.getstr( step, 'soltabPhase', 'phase000')
     clipping = np.array(parser.getarray(step, 'clipping', [0,1e9]),dtype=float)
+    frequencies = np.array(parser.getarray(step, 'frequencies', []),dtype=float)
 
-    parser.checkSpelling( step, soltab, ['soltabOut','soltabPhase','clipping'])
-    return run(soltab, soltabOut,clipping, soltabPhase)
+    parser.checkSpelling( step, soltab, ['soltabOut','soltabPhase','clipping','frequencies'])
+    return run(soltab, soltabOut,clipping, soltabPhase,frequencies)
 
 def costfunctionRM(RM, wav, phase):
     return np.sum(abs(np.cos(2.*RM[0]*wav*wav) - np.cos(phase)) + abs(np.sin(2.*RM[0]*wav*wav) - np.sin(phase)))
@@ -32,8 +33,26 @@ def getPhaseWrapBase(wavels):
     steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float))
     return steps
 
-def dejump(vals,wavels):
-    phasewrap = getPhaseWrapBase(wavels)
+def getPhaseWrapBase_TEC(freqs):
+    """
+    freqs: frequency grid of the data
+    return the step size from a local minima (2pi phase wrap) to the others [0]: TEC, [1]: clock
+    """
+    freqs = np.array(freqs)
+    nF = freqs.shape[0]
+    A = np.zeros((nF, 2), dtype=np.float)
+    A[:, 1] = freqs * 2 * np.pi * 1e-9
+    A[:, 0] = -8.44797245e9 / freqs
+    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 4 * np.pi * np.ones((nF, ), dtype=np.float))
+    return steps[0]
+
+def dejump(vals,wavels,dotec=False):
+    if dotec:
+        c = 2.99792458e8
+        freqs = c/wavels
+        phasewrap = np.abs(getPhaseWrapBase_TEC(freqs))
+    else:
+        phasewrap = getPhaseWrapBase(wavels)
     diffs = np.diff(vals)
     
     # Fix the jumps in diff-space
@@ -57,7 +76,7 @@ def dejump(vals,wavels):
             newvals += phasewrap
     return newvals
 
-def run( soltab, soltabOut,clipping,soltabPhase):
+def run( soltab, soltabOut,clipping,soltabPhase,frequencies):
     """
     'Dejumps' the Faraday solutions. Because Faraday rotation is a rotation, there are generally multiple possible values for the rotation measure
     that yield a similar rotation angle - but are offset from the main trend. This code will fix this.
@@ -74,6 +93,9 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     soltabPhase : str, optional
         name of soltab that contains the phases. The only reason we need this, is for the frequency axis (so it really doesnt matter what's in 
         this soltab. Default: phase000
+
+    frequencies : arr, optional
+        if the frequency axis is missing, you need to give the freq range used for TEC/FR fitting manually here.
     """
 
     import numpy as np
@@ -85,8 +107,11 @@ def run( soltab, soltabOut,clipping,soltabPhase):
     ants = soltab.getAxisValues('ant')
     times = soltab.getAxisValues('time')
     solset = soltab.getSolset()
-    phases = solset.getSoltab(soltabPhase)
-    freqs = phases.getValues()[1]['freq']
+    if frequencies == np.array([]):
+        phases = solset.getSoltab(soltabPhase)
+        freqs = phases.getValues()[1]['freq']
+    else:
+        freqs = np.arange(*frequencies)
     selection = (freqs > clipping[0]) * (freqs < clipping[1]) # Only take the frequencies used for fitting
     selected_freqs = freqs[selection]
 
@@ -101,12 +126,13 @@ def run( soltab, soltabOut,clipping,soltabPhase):
         soltabout = solset.getSoltab(soltabOut)
     soltabout.addHistory('Created by the FRJUMP operation from %s.'%soltab.name)
 
+    dotec = (soltab.getType()=='tec')
 
     # Iterate through all antennas
     
     for vals,weights,coord,_ in soltab.getValuesIter(returnAxes='time',weight=True):
         antname = coord['ant']
-        newvals = dejump(vals,wavels)
+        newvals = dejump(vals,wavels,dotec)
         logging.debug(f'Doing antenna {antname}')
         soltabout.setSelection(ant=coord['ant'],time=coord['time'])          
         soltabout.setValues(np.expand_dims(newvals,axis=1))
