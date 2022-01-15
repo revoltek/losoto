@@ -107,7 +107,7 @@ def run( soltab, soltabOut,clipping,soltabPhase,frequencies):
     ants = soltab.getAxisValues('ant')
     times = soltab.getAxisValues('time')
     solset = soltab.getSolset()
-    if frequencies == np.array([]):
+    if len(frequencies) == 0:
         phases = solset.getSoltab(soltabPhase)
         freqs = phases.getValues()[1]['freq']
     else:
