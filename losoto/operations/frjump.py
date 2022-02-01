@@ -118,7 +118,7 @@ def run( soltab, soltabOut,clipping,soltabPhase,frequencies):
     wavels = c/selected_freqs # in meters
 
     if soltabOut not in solset.getSoltabNames():
-        soltabout = solset.makeSoltab('rotationmeasure',soltabName=soltabOut, 
+        soltabout = solset.makeSoltab(soltab.getType(),soltabName=soltabOut, 
                             axesNames=['ant','time'], axesVals=[ants,times],
                             vals = np.zeros((len(ants),len(times))),
                             weights = np.ones((len(ants),len(times))))
