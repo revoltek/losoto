@@ -135,8 +135,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     orig_shape = soltab.val.shape
     new_shape = list(orig_shape)
     new_shape[axisind] = len(new_axisvals)
-    new_vals = np.zeros(new_shape, dtype='float')
-    new_weights = np.zeros(new_shape, dtype='float')
+    new_vals = np.zeros(new_shape, dtype='float').astype('object')
+    new_weights = np.zeros(new_shape, dtype='float').astype('object')
 
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=[axisToRegrid], weight=True):
         flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
@@ -147,11 +147,11 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
             if log:
                 vals = np.log10(vals)
             new_vals[selection] = np.interp(new_axisvals, orig_axisvals[unflagged],
-                                            vals[unflagged], left=np.nan, right=np.nan, dtype=object)
+                                            vals[unflagged], left=np.nan, right=np.nan)
 
             # For the weights, interpolate without the mask
             new_weights[selection] = np.round(np.interp(new_axisvals, orig_axisvals, weights,
-                                                        left=np.nan, right=np.nan, dtype=object))
+                                                        left=np.nan, right=np.nan))
 
         # Check for flagged gaps
         if maxFlaggedWidth > 1:
