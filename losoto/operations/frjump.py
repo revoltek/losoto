@@ -6,8 +6,6 @@ from losoto._logging import logger as logging
 from losoto.operations._faraday_timestep import _run_timestep
 
 logging.debug('Loading FRjump module.')
-logging.warning('FRjump module is still experimental - we strongly recommend to check the results carefully')
-
 
 def _run_parser(soltab, parser, step):
     soltabOut = parser.getstr( step, 'soltabOut', 'rotationmeasure002' )
