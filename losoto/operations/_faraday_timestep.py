@@ -43,7 +43,7 @@ def _run_timestep(t,coord_rr,coord_ll,weights,vals,solType,coord,maxResidual):
             weight = 1
         else:       
             # high residual, flag
-            logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', resdiaul: '+str(residual)+').')
+            logging.warning('Bad solution for ant: '+coord['ant']+' (time: '+str(t)+', residual: '+str(residual)+').')
             weight = 0
 
     return fitresultrm_wav[0],weight
