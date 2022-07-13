@@ -15,10 +15,7 @@ import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
-try:
-    import progressbar
-except ImportError:
-    import losoto.progressbar as progressbar
+import losoto.progressbar as progressbar
 
 
 def parmdbToAxes(solEntry):
