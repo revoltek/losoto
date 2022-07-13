@@ -654,24 +654,25 @@ class Solset( object ):
 
         Parameters
         ----------
-        ant : str
-            An antenna name.
+        ant : str (optional)
+            An antenna name. If None, then w.r.t. the antennas centroid. 
 
         Returns
         -------
         str
             Dict of distances to each antenna. The distance with the antenna "ant" is 0.
         """
-        if ant is None:
-            raise "Missing antenna name."
-
         ants = self.getAnt()
 
-        if not ant in list(ants.keys()):
+        if ant is None:
+            ants_x = [loc[0] for a, loc in ants.items()]
+            ants_y = [loc[1] for a, loc in ants.items()]
+            ants_z = [loc[2] for a, loc in ants.items()]
+            return {a:np.sqrt( (loc[0]-np.median(ants_x))**2 + (loc[1]-np.median(ants_y))**2 + (loc[2]-np.median(ants_z))**2 ) for a, loc in ants.items() }
+        elif not ant in list(ants.keys()):
             raise "Missing antenna %s in antenna table." % ant 
-
-        return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.items() }
-
+        else:
+            return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.items() }
 
 
 class Soltab( object ):
@@ -721,6 +722,7 @@ class Soltab( object ):
             self.setCache(self.obj.val, self.obj.weight)
 
         self.fullyFlaggedAnts = None # this is populated if required by reference
+        self.cacheAutoRefAnt = None
 
 
     def delete(self):
@@ -1098,11 +1100,12 @@ class Soltab( object ):
             #return None
 
 
-    def _applyAdvSelection(self, data, selection):
+    def _applyAdvSelection(self, data, selection, ignoreSelection=False):
         # NOTE: pytables has a nasty limitation that only one list can be applied when selecting.
         # Conversely, one can apply how many slices he wants.
         # Single values/contigous values are converted in slices in h5parm.
         # This implements a workaround for this limitation. Once the pytables will be updated, the except can be removed.
+        # ignoreSelection here is just to be used in rare cases (e.g. in the auto selection of refAnt
         if np.sum( [1. for sel in selection if type(sel) is list] ) > 1 and \
            ( type(data) is np.ndarray or \
            np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
@@ -1120,11 +1123,11 @@ class Soltab( object ):
                 #if i == selectionListsIdx[0]: secondSelection.append(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False)))
                 if i == selectionListsIdx[0]: secondSelection.append(list(range(len(sel))))
                 elif type(sel) is list: secondSelection.append(sel)
-                elif type(sel) is slice: secondSelection.append(list(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=False))))
-            #print firstSelection
-            #print secondSelection
-            #print data[tuple(firstSelection)].shape
-            #print data[tuple(firstSelection)][np.ix_(*secondSelection)].shape
+                elif type(sel) is slice: secondSelection.append(list(range(self.getAxisLen(self.getAxesNames()[i], ignoreSelection=ignoreSelection))))
+            #print(firstSelection)
+            #print(secondSelection)
+            #print(data[tuple(firstSelection)].shape)
+            #print(data[tuple(firstSelection)][np.ix_(*secondSelection)].shape)
             return data[tuple(firstSelection)][np.ix_(*secondSelection)]
         else:
             return data[tuple(selection)]
@@ -1166,6 +1169,7 @@ class Soltab( object ):
         refAnt : str, optional
             In case of phase or rotation solutions, reference to this station name. By default no reference.
             If "closest" reference to the closest antenna.
+            If "auto" select automatically from least flagged and closest to the centre
         refDir : str, optional
             In case of phase or rotation solutions, reference to this Direction. By default no reference.
             If "center", reference to the central direction.
@@ -1192,7 +1196,7 @@ class Soltab( object ):
                 logging.error('Reference possible only for phase, scalarphase, clock, tec, tec3rd, rotation and rotationmeasure solution tables. Ignore referencing.')
             elif not 'ant' in self.getAxesNames():
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
-            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest':
+            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest' and refAnt != 'auto':
                 logging.error('Cannot find antenna '+refAnt+'. Ignore referencing.')
             else:
                 if self.useCache:
@@ -1225,8 +1229,13 @@ class Soltab( object ):
                             dataVals[i] -= dataValsRef_i[0]
 
                     dataVals = np.swapaxes(dataVals, 0, antAxis)
- 
+
                 else:
+
+                    # autoselect a refAnt that has low flags
+                    if refAnt == 'auto':
+                        refAnt = self.autoRefAnt()
+
                     refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                     dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
     
@@ -1236,6 +1245,7 @@ class Soltab( object ):
                         dataVals = dataVals - np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant')))
                 # if not weight and not self.getType() != 'tec' and not self.getType() != 'clock' and not self.getType() != 'tec3rd' and not self.getType() != 'rotationmeasure':
                 #     dataVals = normalize_phase(dataVals)
+
         # CASE 2: Reference only to dir
         # TODO: should there be a warning if only direction is referenced but multipled ants are present?
         elif refDir and not refAnt:
@@ -1287,13 +1297,17 @@ class Soltab( object ):
                 logging.error('Cannot find antenna axis for referencing phases. Ignore referencing.')
             elif not 'dir' in self.getAxesNames():
                 logging.error('Cannot find direction axis for referencing phases. Ignore referencing.')
-            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest':
+            elif not refAnt in self.getAxisValues('ant', ignoreSelection = True) and refAnt != 'closest' and refAnt != 'auto':
                 logging.error('Cannot find antenna '+refAnt+'. Ignore referencing.')
             elif refAnt == 'closest': # TODO: This needs to be implemented...
-                logging.error('refAnt=\'closest\' is not supported (yet) when also referencing a direction.')
+                logging.error('refAnt=\'closest\' is not supported (yet) when also referencing a direction. Ignore referencing.')
             elif not refDir in self.getAxisValues('dir', ignoreSelection=True) and refDir != 'center':
                 logging.error('Cannot find direction ' + refDir + '. Ignore referencing.')
             else:
+
+                if refAnt == 'auto':
+                    refAnt = self.autoRefAnt()
+
                 if self.useCache:
                     if weight:
                         dataValsRef = self.cacheWeight
@@ -1360,12 +1374,12 @@ class Soltab( object ):
         Returns
         -------
         1) data ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
-        2) (if weight == True) weigth ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
+        2) (if weight == True) weight ndarray of dim=dim(returnAxes) and with the axes ordered as in getAxesNames()
         3) a dict with axis values in the form:
         {'axisname1':[axisvals1],'axisname2':[axisvals2],...}
         4) a selection which should be used to write this data back using a setValues()
         """
-        if weight: weigthVals = self.getValues(retAxesVals=False, weight=True, refAnt=refAnt, refDir=refDir)
+        if weight: weightVals = self.getValues(retAxesVals=False, weight=True, refAnt=refAnt, refDir=refDir)
         dataVals = self.getValues(retAxesVals=False, weight=False, refAnt=refAnt, refDir=refDir)
 
         # get dimensions of non-returned axis (in correct order)
@@ -1400,12 +1414,45 @@ class Soltab( object ):
                 # costly command
                 data = dataVals[tuple(refSelection)]
                 if weight:
-                    weights = weigthVals[tuple(refSelection)]
+                    weights = weightVals[tuple(refSelection)]
                     yield (data, weights, thisAxesVals, returnSelection)
                 else:
                     yield (data, thisAxesVals, returnSelection)
 
         return g()
+
+
+    def autoRefAnt(self):
+        """
+        Get the least flagged antennas usign the 10 closest to the array centre
+        """
+        if self.cacheAutoRefAnt:
+            return self.cacheAutoRefAnt
+
+        if self.useCache:
+            weights = self.cacheWeight
+        else:
+            weights = self.obj.weight
+
+        # get all antennas weights
+        refSelectionAuto = self.selection[:]
+        antAxis = self.getAxesNames().index('ant')
+        refSelectionAuto[antAxis] = slice(None) # remove antenna selection
+        weights = self._applyAdvSelection(weights, refSelectionAuto, ignoreSelection=True)
+
+        # collect other info
+        dists_from_centroid = self.getSolset().getAntDist()
+
+        nonflagged = np.count_nonzero(weights, axis=tuple([i for i in range(len(self.getAxesNames())) if i != antAxis]))
+        # get 10 closest antennas to the centroid
+        ants = np.array(list(dists_from_centroid.keys()))
+        dists =  np.array([dists_from_centroid[_] for _ in ants])
+        idxCentralAnts = np.argpartition(dists, 10)[:10]
+        
+        autoRefAnt = ants[idxCentralAnts][ np.argmax(nonflagged[idxCentralAnts]) ]
+        logging.info('Auto-selected reference antenna: %s' % autoRefAnt)
+        self.cacheAutoRefAnt = autoRefAnt
+        return autoRefAnt
 
 
     def addHistory(self, entry, date = True):

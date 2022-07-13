@@ -44,7 +44,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         minimum frequency [Hz] to use in estimating the PA. By default, 0 (all freqs).
 
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default 'auto'.
     """
     import numpy as np
     import scipy.optimize
@@ -61,10 +61,10 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         logging.warning("Soltab type of "+soltab.name+" is of type "+solType+", should be phase. Ignoring.")
         return 1
     
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
-        refAnt = soltab.getAxisValues('ant')[1]
-    if refAnt == '': refAnt = soltab.getAxisValues('ant')[1]
+    if refAnt == '': refAnt = 'auto'
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')

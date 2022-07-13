@@ -33,7 +33,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
         output table name (same solset), by deault "rotationmeasure000".
         
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default 'auto'.
 
     maxResidual : float, optional
         Max average residual in radians before flagging datapoint, by default 1. If 0: no check.
@@ -67,14 +67,14 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase or rotation. Ignoring.")
        return 1
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[0]
-    if refAnt == '': refAnt = ants[0]
+    if refAnt == '': refAnt = 'auto'
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')
+    ants = soltab.getAxisValues('ant')
 
     # create new table
     solset = soltab.getSolset()

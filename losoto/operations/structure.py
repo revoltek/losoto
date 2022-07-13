@@ -25,7 +25,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
     doUnwrap : bool, optional
 
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default None.
 
     plotName : str, optional
         Plot file name, by default no plot.
@@ -45,14 +45,13 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase.")
        return 1
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[1]
-    if refAnt == '' and doUnwrap:
-        logging.error('Unwrap requires reference antenna. Using: '+ants[1])
-        refAnt = ants[1]
     if refAnt == '': refAnt = None
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
+    if refAnt is None and doUnwrap:
+        logging.error('Unwrap requires reference antenna. Using: automatic search')
+        refAnt = 'auto'
 
     soltab.setSelection(ant='CS*', update=True)
 

@@ -42,11 +42,10 @@ def run( soltab, soltabOutTEC='tec000', soltabOutBP='phase000', refAnt=''):
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
        return 1
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[0]
-    if refAnt == '': refAnt = ants[0]
+    if refAnt == '': refAnt = None
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # create new table
     solset = soltab.getSolset()

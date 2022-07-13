@@ -322,9 +322,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         os.makedirs(os.path.dirname(prefix))
 
     if refAnt == '': refAnt = None
-    elif refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
-        refAnt = soltab.getAxisValues('ant')[1]
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     if refDir == '': refDir = None
     elif refDir != 'center' and not refDir in soltab.getAxisValues('dir', ignoreSelection = True):
