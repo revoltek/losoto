@@ -16,6 +16,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOut='tec000', refAnt='' ):
     """
+    EXPERIMENTAL
     Estimate TEC from ph solutions assuming no wrap for solution at t=0
 
     Parameters

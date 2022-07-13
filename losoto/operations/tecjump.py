@@ -245,6 +245,7 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
 
 def run( soltab, refAnt='', soltabError='', ncpu=0 ):
     """
+    EXPERIMENTAL
     Remove jumps from TEC solutions.
     WEIGHT: uses the errors.
 

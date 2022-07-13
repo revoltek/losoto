@@ -76,6 +76,7 @@ def dejump(vals,wavels,dotec=False):
 
 def run( soltab, soltabOut,clipping,soltabPhase,frequencies):
     """
+    EXPERIMENTAL
     'Dejumps' the Faraday solutions. Because Faraday rotation is a rotation, there are generally multiple possible values for the rotation measure
     that yield a similar rotation angle - but are offset from the main trend. This code will fix this.
 
