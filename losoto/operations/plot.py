@@ -270,7 +270,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         Reference direction for phases. By default None.
 
     soltabsToAdd : str, optional
-        Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None.
+        Tables to "add" (e.g. 'sol000/tec000'), it works only for tec and clock to be added to phases. By default None. [To Be Implemented]
 
     makeAntPlot : bool, optional
         Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.
