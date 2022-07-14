@@ -72,9 +72,9 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
     from scipy.ndimage import generic_filter
 
     if refAnt == '': refAnt = None
-    elif not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
-        refAnt = soltab.getAxisValues('ant')[1]
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     if mode == "runningmedian" and len(axesToSmooth) != len(size):
         logging.error("Axes and Size lengths must be equal for runningmedian.")

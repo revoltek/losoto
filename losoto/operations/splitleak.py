@@ -15,7 +15,8 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOutG=None, soltabOutD=None):
     """
-    Duplicate a table
+    EXPERIMENTAL
+    Derive leackage
 
     Parameters
     ----------

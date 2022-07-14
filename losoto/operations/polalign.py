@@ -44,7 +44,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         minimum frequency [Hz] to use in estimating the PA. By default, 0 (all freqs).
 
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default 'auto'.
     """
     import numpy as np
     import scipy.optimize
@@ -61,10 +61,10 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
         logging.warning("Soltab type of "+soltab.name+" is of type "+solType+", should be phase. Ignoring.")
         return 1
     
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+soltab.getAxisValues('ant')[1])
-        refAnt = soltab.getAxisValues('ant')[1]
-    if refAnt == '': refAnt = soltab.getAxisValues('ant')[1]
+    if refAnt == '': refAnt = 'auto'
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')
@@ -162,7 +162,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
 
                     # plot rm fit
                     plotdelay = lambda delay, offset, freq: np.mod( delay*freq + offset + np.pi, 2.*np.pi) - np.pi
-                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='black',  zorder=10, label=r'delay:%f$\nu$ (ns) + %f ' % (fitresultdelay[0]*1e9,fitresultdelay[1]) )
+                    ax.plot(freq, fitresultdelay[0]*freq + fitresultdelay[1], "-", color='black',  zorder=10, label=r'delay:%f$\nu$ (ns) + %f ' % (fitresultdelay[0]*1e9/(2*np.pi),fitresultdelay[1]) )
 
                     ax.plot(freq, np.mod(phase1 + np.pi, 2.*np.pi) - np.pi, 'ob' , label='phase XX/RR')
                     ax.plot(freq, np.mod(phase2 + np.pi, 2.*np.pi) - np.pi, 'og' , label='phase YY/LL' )
@@ -203,7 +203,7 @@ def run( soltab, soltabOut='phasediff', maxResidual=1., fitOffset=False, average
                     fit_delays[ fit_weights == 0 ] = fit_delays_bkp
                     fit_offset[ fit_weights == 0 ] = fit_offset_bkp
 
-            logging.info('%s: average delay: %f ns (offset: %f)' % ( coord['ant'], np.mean(fit_delays)*1e9, np.mean(fit_offset)))
+            logging.info('%s: average delay: %f ns (offset: %f)' % ( coord['ant'], np.nanmean(fit_delays)*1e9/(2*np.pi), np.nanmean(fit_offset)))
             for t, time in enumerate(times):
                 #vals[:,:,t] = 0.
                 #vals[coord1,:,t] = fit_delays[t]*np.array(coord['freq'])/2.

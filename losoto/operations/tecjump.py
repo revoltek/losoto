@@ -245,6 +245,7 @@ def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname,
 
 def run( soltab, refAnt='', soltabError='', ncpu=0 ):
     """
+    EXPERIMENTAL
     Remove jumps from TEC solutions.
     WEIGHT: uses the errors.
 
@@ -293,11 +294,10 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
 
     logging.info("Removing TEC jumps from soltab: "+soltab.name)
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[0]
     if refAnt == '': refAnt = None
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # Get the theoretical tec jump
     tec_jump_theory = abs(getPhaseWrapBase([42.308e6,42.308e6+23828e6])[0])

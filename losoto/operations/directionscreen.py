@@ -51,10 +51,7 @@ def _calculate_piercepoints(station_positions, source_positions, times, height=2
     """
     import pyrap.measures
     import numpy as np
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
+    import losoto.progressbar as progressbar
 
     logging.info('Calculating screen pierce-point locations and airmass values...')
     N_sources = source_positions.shape[0]

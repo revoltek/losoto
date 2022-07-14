@@ -16,6 +16,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOut='tec000', refAnt='' ):
     """
+    EXPERIMENTAL
     Estimate TEC from ph solutions assuming no wrap for solution at t=0
 
     Parameters
@@ -24,7 +25,7 @@ def run( soltab, soltabOut='tec000', refAnt='' ):
         output table name (same solset), by deault "tec".
 
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default 'auto'.
 
     """
 
@@ -40,11 +41,10 @@ def run( soltab, soltabOut='tec000', refAnt='' ):
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase. Ignoring.")
        return 1
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[0]
-    if refAnt == '': refAnt = ants[0]
+    if refAnt == '': refAnt = 'auto'
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
 
     # times and ants needs to be complete or selection is much slower
     times = soltab.getAxisValues('time')
