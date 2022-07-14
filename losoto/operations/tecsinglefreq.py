@@ -61,7 +61,7 @@ def run( soltab, soltabOut='tec000', refAnt='' ):
 
         assert len(coord['freq']) == 1 # it works with phase at only 1 freq
 
-        if not coord['ant'] == refAnt:
+        if not coord['ant'] == refAnt and not (refAnt == 'auto' and coord['ant'] == soltab.cacheAutoRefAnt):
 
             if (weights == 0.).all() == True:
                 logging.warning('Skipping flagged antenna: '+coord['ant'])

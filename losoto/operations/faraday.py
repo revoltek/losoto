@@ -99,7 +99,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
         fitweights = np.ones(len(times)) # all unflagged to start
         fitrmguess = 0.001 # good guess
 
-        if not coord['ant'] == refAnt:
+        if not coord['ant'] == refAnt and not (refAnt == 'auto' and coord['ant'] == soltab.cacheAutoRefAnt):
             logging.debug('Working on ant: '+coord['ant']+'...')
 
             if (weights == 0.).all() == True:
