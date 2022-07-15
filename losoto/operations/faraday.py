@@ -63,6 +63,8 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
             return 1
     elif solType == 'rotation':
         returnAxes = ['freq','time']
+        coord_rr = None
+        coord_ll = None
     else:
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase or rotation. Ignoring.")
        return 1
