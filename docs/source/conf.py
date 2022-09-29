@@ -49,7 +49,7 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The master toctree document.
-master_doc = 'losoto'
+#master_doc = 'losoto'
 root_doc = 'index'
 
 # General information about the project.
@@ -134,7 +134,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'LoSoTo.tex', u'LoSoTo Documentation',
+    (root_doc, 'LoSoTo.tex', u'LoSoTo Documentation',
      u'Francesco de Gasperin', 'manual'),
 ]
 
@@ -144,7 +144,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'losoto', u'LoSoTo Documentation',
+    (root_doc, 'losoto', u'LoSoTo Documentation',
      [author], 1)
 ]
 
@@ -155,7 +155,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'LoSoTo', u'LoSoTo Documentation',
+    (root_doc, 'LoSoTo', u'LoSoTo Documentation',
      author, 'LoSoTo', 'One line description of project.',
      'Miscellaneous'),
 ]
