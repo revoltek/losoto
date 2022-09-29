@@ -50,7 +50,7 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'losoto'
-root_doc = 'losoto'
+root_doc = 'index'
 
 # General information about the project.
 project = u'LoSoTo'
