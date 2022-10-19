@@ -146,8 +146,6 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
             # If there are at least two unflagged points, interpolate with mask
             if log:
                 vals = np.log10(vals)
-            print(selection)
-            print(type(selection))
             new_vals[tuple(selection)] = np.interp(new_axisvals, orig_axisvals[unflagged],
                                             vals[unflagged], left=np.nan, right=np.nan)
 
