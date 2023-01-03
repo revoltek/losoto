@@ -79,7 +79,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
     # if user-defined number of col use that
     if NColFig != 0: Nc = NColFig
     else: Nc = int(np.ceil(np.sqrt(Nplots)))
-    Nr = int(np.ceil(np.float(Nplots)/Nc))
+    Nr = int(np.ceil(float(Nplots)/Nc))
     
     if figSize[0] == 0:
         if makeMovie: figSize[0]=5+2*Nc
