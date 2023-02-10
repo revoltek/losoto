@@ -501,7 +501,7 @@ def getClockTECFitStation(
                 except np.linalg.LinAlgError:
                     logging.debug("Init parmaters failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                     sol[:] = [-10.,]*sol.shape[0]
-                    
+
                 #logging.debug("Getting init par for station %d:%s "%(itm,stationname)+str(sol))
 
         #now do the real fitting
@@ -527,7 +527,7 @@ def getClockTECFitStation(
             except np.linalg.LinAlgError:
                 logging.debug("Fit failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                 sol[:] = [-10.,]*sol.shape[0]
-               
+
         # calculate chi2 per station
 
         residual = data[itm] - np.dot(A, sol)
@@ -632,7 +632,7 @@ def correctWraps(
     lonlat = np.concatenate((lons, lats)).reshape((2, ) + lons.shape)
     # refine (is it needed/helpful for LBA? the offsets seem to make sense for LBA)
     myselect=np.sqrt(np.sum(lonlat**2,axis=0))>0.5
-    
+
 
     for nr_iter in range(2):
         # recreate best TEC at the moment
@@ -740,7 +740,7 @@ def doFit(
     indices = np.arange(nF)
 
     if flagBadChannels:
-        mymask=np.zeros((nF), dtype=np.bool)
+        mymask=np.zeros((nF), dtype=bool)
         for nr_iter in range(2):
             rms = np.ma.std(np.ma.std(refdata, axis=0), axis=1)
             freqselect = rms < flagcut * np.average(rms)
