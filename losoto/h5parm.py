@@ -648,7 +648,7 @@ class Solset( object ):
 
         return sources
 
-    def getAntDist(self, ant=None):
+    def getAntDist(self, ant=None, ant_subset=[]):
         """
         Get antenna distance to a specified one.
 
@@ -657,12 +657,17 @@ class Solset( object ):
         ant : str (optional)
             An antenna name. If None, then w.r.t. the antennas centroid. 
 
+        ant_subset : list (optional)
+            Restrict search to a subset of ants
+
         Returns
         -------
         str
             Dict of distances to each antenna. The distance with the antenna "ant" is 0.
         """
         ants = self.getAnt()
+        if len(ant_subset) > 0:
+            ants = {ant: ants[ant] for ant in ant_subset}
 
         if ant is None:
             ants_x = [loc[0] for a, loc in ants.items()]
@@ -1439,17 +1444,16 @@ class Soltab( object ):
         antAxis = self.getAxesNames().index('ant')
         refSelectionAuto[antAxis] = slice(None) # remove antenna selection
         weights = self._applyAdvSelection(weights, refSelectionAuto, ignoreSelection=True)
-
-        # collect other info
-        dists_from_centroid = self.getSolset().getAntDist()
-
+        # count of good datapoints
         nonflagged = np.count_nonzero(weights, axis=tuple([i for i in range(len(self.getAxesNames())) if i != antAxis]))
+
         # get 10 closest antennas to the centroid
-        ants = np.array(list(dists_from_centroid.keys()))
-        dists =  np.array([dists_from_centroid[_] for _ in ants])
+        usable_ants = self.getAxisValues('ant')
+        dists_from_centroid = self.getSolset().getAntDist(ant_subset=usable_ants)
+        dists =  np.array([dists_from_centroid[_] for _ in usable_ants])
         idxCentralAnts = np.argpartition(dists, 10)[:10]
         
-        autoRefAnt = ants[idxCentralAnts][ np.argmax(nonflagged[idxCentralAnts]) ]
+        autoRefAnt = usable_ants[idxCentralAnts][ np.argmax(nonflagged[idxCentralAnts]) ]
         logging.info('Auto-selected reference antenna: %s' % autoRefAnt)
         self.cacheAutoRefAnt = autoRefAnt
         return autoRefAnt
