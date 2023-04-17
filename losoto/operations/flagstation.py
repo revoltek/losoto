@@ -3,6 +3,7 @@
 
 from losoto.lib_operations import *
 from losoto._logging import logger as logging
+import warnings
 
 logging.debug('Loading FLAGSTATION module.')
 
@@ -392,9 +393,9 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             continue
 
         # Take median over time and divide out the median offset
-        with np.warnings.catch_warnings():
+        with warnings.catch_warnings():
             # Filter NaN warnings -- we deal with NaNs below
-            np.warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+            warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
             amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
             median_val = np.nanmedian(amps_div)
         amps_div /= median_val

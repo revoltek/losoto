@@ -146,16 +146,16 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
             # If there are at least two unflagged points, interpolate with mask
             if log:
                 vals = np.log10(vals)
-            new_vals[selection] = np.interp(new_axisvals, orig_axisvals[unflagged],
+            new_vals[tuple(selection)] = np.interp(new_axisvals, orig_axisvals[unflagged],
                                             vals[unflagged], left=np.nan, right=np.nan)
 
             # For the weights, interpolate without the mask
-            new_weights[selection] = np.round(np.interp(new_axisvals, orig_axisvals, weights,
+            new_weights[tuple(selection)] = np.round(np.interp(new_axisvals, orig_axisvals, weights,
                                                         left=np.nan, right=np.nan))
 
         # Check for flagged gaps
         if maxFlaggedWidth > 1:
-            inv_weights = new_weights[selection].astype(bool).squeeze()
+            inv_weights = new_weights[tuple(selection)].astype(bool).squeeze()
             rank = len(inv_weights.shape)
             connectivity = nd.generate_binary_structure(rank, rank)
             mask_labels, count = nd.label(~inv_weights, connectivity)
@@ -165,7 +165,7 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
                 if gapsize <= maxFlaggedWidth:
                     # Unflag narrow gaps
                     selection[axisind] = ind[0]
-                    new_weights[selection] = 1.0
+                    new_weights[tuple(selection)] = 1.0
 
     # Write new soltab
     solset = soltab.getSolset()

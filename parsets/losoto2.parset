@@ -65,7 +65,7 @@ windowNoise = 11 # window for the running rms
 reaplce = False # replace bad values with the interpolated ones, instead of flagging them
 preFlagZeros = False # flag zeros/ones (bad solutions in BBS). They should be flagged at import time
 mode = smooth # smooth / poly / spline
-refAnt = '' # antenna name for referencing phases
+refAnt = '' # antenna name for referencing phases, can be "auto" to get the least flagged among the 10 closest to the array centre
 
 [faraday]
 operation = FARADAY

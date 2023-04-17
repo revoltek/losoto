@@ -78,7 +78,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
     solset = soltab.getSolset()
     station_dict = solset.getAnt()
     stations = soltab.getAxisValues('ant')
-    station_positions = np.zeros((len(stations), 3), dtype=np.float)
+    station_positions = np.zeros((len(stations), 3), dtype=np.float16)
     for i, station_name in enumerate(stations):
         station_positions[i, 0] = station_dict[station_name][0]
         station_positions[i, 1] = station_dict[station_name][1]
