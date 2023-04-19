@@ -1448,7 +1448,7 @@ class Soltab( object ):
         nonflagged = np.count_nonzero(weights, axis=tuple([i for i in range(len(self.getAxesNames())) if i != antAxis]))
 
         # get 10 closest antennas to the centroid
-        usable_ants = self.getAxisValues('ant')
+        usable_ants = self.getAxisValues('ant', ignoreSelection=True)
         dists_from_centroid = self.getSolset().getAntDist(ant_subset=usable_ants)
         dists =  np.array([dists_from_centroid[_] for _ in usable_ants])
         idxCentralAnts = np.argpartition(dists, 10)[:10]
