@@ -61,68 +61,35 @@ class h5parm( object ):
         compression level from 0 to 9 when creating the file, by default 5.
     complib : str, optional
         library for compression: lzo, zlib, bzip2, by default zlib.
-
-    Notes
-    -----
-    An `h5parm` object may be used in a ``with`` context. However, be aware
-    that the underlying HDF5 file object will be closed as soon as you exit
-    the context, and cannot be used anymore after that!
     """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
-
+        """
+        Initialize `h5parm` object.
+        """
         self.H = None  # variable to store the pytable object
         self.fileName = h5parmFile
 
-        if os.path.isfile(h5parmFile):
-            if not tables.is_hdf5_file(h5parmFile):
-                logging.critical('Not a HDF5 file: '+h5parmFile+'.')
-                raise Exception('Not a HDF5 file: '+h5parmFile+'.')
-            if readonly:
-                logging.debug('Reading from '+h5parmFile+'.')
-                self.H = tables.open_file(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
-            else:
-                logging.debug('Appending to '+h5parmFile+'.')
-                self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+        self._readonly = readonly
+        self._complevel = complevel
+        self._complib = complib
 
-            # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any solset
-            is_h5parm = True
-            for node in self.H.root:
-                if 'h5parm_version' not in node._v_attrs:
-                    is_h5parm=False
-                    break
-            if not is_h5parm:
-                logging.warning('Missing H5pram version. Is this a properly made h5parm?')
-
-        else:
-            if readonly:
-                raise Exception('Missing file '+h5parmFile+'.')
-            else:
-                logging.debug('Creating '+h5parmFile+'.')
-                # add a compression filter
-                f = tables.Filters(complevel=complevel, complib=complib)
-                self.H = tables.open_file(h5parmFile, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+        self.open()
 
 
     def __enter__(self):
         """
         Called when entering a context.
-
         """
+        self.open()
         return self
+
 
     def __exit__(self, *exc):
         """
         Called when exiting a context.
         """
         self.close()
-
-    def close(self):
-        """
-        Close the open table.
-        """
-        logging.debug('Closing table.')
-        self.H.close()
 
 
     def __str__(self):
@@ -133,6 +100,52 @@ class h5parm( object ):
             Info about H5parm contents.
         """
         return self.printInfo()
+
+
+    def open(self):
+        """
+        Create and open the HDF5 file object, unless it already exists and is
+        already opened.
+        """
+        if self.H and self.H.isopen:
+            return
+
+        if os.path.isfile(self.fileName):
+            if not tables.is_hdf5_file(self.fileName):
+                logging.critical('Not a HDF5 file: '+self.fileName+'.')
+                raise Exception('Not a HDF5 file: '+self.fileName+'.')
+            if self._readonly:
+                logging.debug('Reading from '+self.fileName+'.')
+                self.H = tables.open_file(self.fileName, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+            else:
+                logging.debug('Appending to '+self.fileName+'.')
+                self.H = tables.open_file(self.fileName, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+
+            # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any solset
+            is_h5parm = True
+            for node in self.H.root:
+                if 'h5parm_version' not in node._v_attrs:
+                    is_h5parm=False
+                    break
+            if not is_h5parm:
+                logging.warning('Missing H5parm version. Is this a properly made h5parm?')
+
+        else:
+            if self._readonly:
+                raise Exception('Missing file '+self.fileName+'.')
+            else:
+                logging.debug('Creating '+self.fileName+'.')
+                # add a compression filter
+                f = tables.Filters(complevel=self._complevel, complib=self._complib)
+                self.H = tables.open_file(self.fileName, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+
+
+    def close(self):
+        """
+        Close the open table.
+        """
+        logging.debug('Closing table.')
+        self.H.close()
 
 
     def makeSolset(self, solsetName=None, addTables=True):
