@@ -61,6 +61,13 @@ class h5parm( object ):
         compression level from 0 to 9 when creating the file, by default 5.
     complib : str, optional
         library for compression: lzo, zlib, bzip2, by default zlib.
+
+    Notes
+    -----
+    An `h5parm` object may be used in a ``with`` context. However, be aware
+    that the underlying HDF5 file object will be closed as soon as you exit
+    the context. You either need to call `h5parm.open()`, or create a new
+    context using the current `h5parm` object to re-open the HDF5 file object.
     """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
