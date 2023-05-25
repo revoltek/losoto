@@ -66,8 +66,10 @@ class h5parm( object ):
     -----
     An `h5parm` object may be used in a ``with`` context. However, be aware
     that the underlying HDF5 file object will be closed as soon as you exit
-    the context. You either need to call `h5parm.open()`, or create a new
-    context using the current `h5parm` object to re-open the HDF5 file object.
+    the context. To re-open the HDF5 file object, you need to create a new
+    ``with`` context using the current `h5parm` object.
+    Calling `h5parm.open()` explicitly is *not* recommended, because it is
+    not exception-safe.
     """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
@@ -82,31 +84,6 @@ class h5parm( object ):
         self._complib = complib
 
         self.open()
-
-
-    def __enter__(self):
-        """
-        Called when entering a context.
-        """
-        self.open()
-        return self
-
-
-    def __exit__(self, *exc):
-        """
-        Called when exiting a context.
-        """
-        self.close()
-
-
-    def __str__(self):
-        """
-        Returns
-        -------
-        string
-            Info about H5parm contents.
-        """
-        return self.printInfo()
 
 
     def open(self):
@@ -153,6 +130,31 @@ class h5parm( object ):
         """
         logging.debug('Closing table.')
         self.H.close()
+
+
+    def __enter__(self):
+        """
+        Called when entering a context.
+        """
+        self.open()
+        return self
+
+
+    def __exit__(self, *exc):
+        """
+        Called when exiting a context.
+        """
+        self.close()
+
+
+    def __str__(self):
+        """
+        Returns
+        -------
+        string
+            Info about H5parm contents.
+        """
+        return self.printInfo()
 
 
     def makeSolset(self, solsetName=None, addTables=True):
