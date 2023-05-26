@@ -96,7 +96,6 @@ class h5parm( object ):
 
         if os.path.isfile(self.fileName):
             if not tables.is_hdf5_file(self.fileName):
-                logging.critical('Not a HDF5 file: '+self.fileName+'.')
                 raise Exception('Not a HDF5 file: '+self.fileName+'.')
             if self._readonly:
                 logging.debug('Reading from '+self.fileName+'.')
