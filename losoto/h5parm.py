@@ -61,23 +61,48 @@ class h5parm( object ):
         compression level from 0 to 9 when creating the file, by default 5.
     complib : str, optional
         library for compression: lzo, zlib, bzip2, by default zlib.
+
+    Notes
+    -----
+    An `h5parm` object may be used in a ``with`` context. However, be aware
+    that the underlying HDF5 file object will be closed as soon as you exit
+    the context. To re-open the HDF5 file object, you need to create a new
+    ``with`` context using the current `h5parm` object.
+    Calling `h5parm.open()` explicitly is *not* recommended, because it is
+    not exception-safe.
     """
 
     def __init__(self, h5parmFile, readonly=True, complevel=0, complib='zlib'):
-
+        """
+        Initialize `h5parm` object.
+        """
         self.H = None  # variable to store the pytable object
         self.fileName = h5parmFile
 
-        if os.path.isfile(h5parmFile):
-            if not tables.is_hdf5_file(h5parmFile):
-                logging.critical('Not a HDF5 file: '+h5parmFile+'.')
-                raise Exception('Not a HDF5 file: '+h5parmFile+'.')
-            if readonly:
-                logging.debug('Reading from '+h5parmFile+'.')
-                self.H = tables.open_file(h5parmFile, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+        self._readonly = readonly
+        self._complevel = complevel
+        self._complib = complib
+
+        self.open()
+
+
+    def open(self):
+        """
+        Create and open the HDF5 file object, unless it already exists and is
+        already opened.
+        """
+        if self.H and self.H.isopen:
+            return
+
+        if os.path.isfile(self.fileName):
+            if not tables.is_hdf5_file(self.fileName):
+                raise Exception('Not a HDF5 file: '+self.fileName+'.')
+            if self._readonly:
+                logging.debug('Reading from '+self.fileName+'.')
+                self.H = tables.open_file(self.fileName, 'r', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
             else:
-                logging.debug('Appending to '+h5parmFile+'.')
-                self.H = tables.open_file(h5parmFile, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+                logging.debug('Appending to '+self.fileName+'.')
+                self.H = tables.open_file(self.fileName, 'r+', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
 
             # Check if it's a valid H5parm file: attribute h5parm_version should be defined in any solset
             is_h5parm = True
@@ -86,16 +111,16 @@ class h5parm( object ):
                     is_h5parm=False
                     break
             if not is_h5parm:
-                logging.warning('Missing H5pram version. Is this a properly made h5parm?')
+                logging.warning('Missing H5parm version. Is this a properly made h5parm?')
 
         else:
-            if readonly:
-                raise Exception('Missing file '+h5parmFile+'.')
+            if self._readonly:
+                raise Exception('Missing file '+self.fileName+'.')
             else:
-                logging.debug('Creating '+h5parmFile+'.')
+                logging.debug('Creating '+self.fileName+'.')
                 # add a compression filter
-                f = tables.Filters(complevel=complevel, complib=complib)
-                self.H = tables.open_file(h5parmFile, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
+                f = tables.Filters(complevel=self._complevel, complib=self._complib)
+                self.H = tables.open_file(self.fileName, filters=f, mode='w', IO_BUFFER_SIZE=1024*1024*10, BUFFER_TIMES=500)
 
 
     def close(self):
@@ -104,6 +129,21 @@ class h5parm( object ):
         """
         logging.debug('Closing table.')
         self.H.close()
+
+
+    def __enter__(self):
+        """
+        Called when entering a context.
+        """
+        self.open()
+        return self
+
+
+    def __exit__(self, *exc):
+        """
+        Called when exiting a context.
+        """
+        self.close()
 
 
     def __str__(self):
@@ -655,7 +695,7 @@ class Solset( object ):
         Parameters
         ----------
         ant : str (optional)
-            An antenna name. If None, then w.r.t. the antennas centroid. 
+            An antenna name. If None, then w.r.t. the antennas centroid.
 
         ant_subset : list (optional)
             Restrict search to a subset of ants
@@ -675,7 +715,7 @@ class Solset( object ):
             ants_z = [loc[2] for a, loc in ants.items()]
             return {a:np.sqrt( (loc[0]-np.median(ants_x))**2 + (loc[1]-np.median(ants_y))**2 + (loc[2]-np.median(ants_z))**2 ) for a, loc in ants.items() }
         elif not ant in list(ants.keys()):
-            raise "Missing antenna %s in antenna table." % ant 
+            raise "Missing antenna %s in antenna table." % ant
         else:
             return {a:np.sqrt( (loc[0]-ants[ant][0])**2 + (loc[1]-ants[ant][1])**2 + (loc[2]-ants[ant][2])**2 ) for a, loc in ants.items() }
 
@@ -809,10 +849,10 @@ class Soltab( object ):
         ----------
         **args :
             Valid axes names of the form: pol='XX', ant=['CS001HBA','CS002HBA'], time={'min':1234,'max':'2345','step':4}.
-        
+
         update : bool
             Only update axes passed as arguments, the rest is maintained. Default: False.
-            
+
         """
         # create an initial selection which selects all values
         if not update:
@@ -1114,7 +1154,7 @@ class Soltab( object ):
         if np.sum( [1. for sel in selection if type(sel) is list] ) > 1 and \
            ( type(data) is np.ndarray or \
            np.sum( [len(sel)-1 for sel in selection if type(sel) is list] ) > 0 ):
-        
+
             #logging.debug('Optimizing selection reading '+str(selection))
             # for performances is important to minimize the fetched data
             # move all slices at the first selection and lists afterwards (first list is allowd in firstselection)
@@ -1243,7 +1283,7 @@ class Soltab( object ):
 
                     refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                     dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
-    
+
                     if weight:
                         dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                     else:
@@ -1452,7 +1492,7 @@ class Soltab( object ):
         dists_from_centroid = self.getSolset().getAntDist(ant_subset=usable_ants)
         dists =  np.array([dists_from_centroid[_] for _ in usable_ants])
         idxCentralAnts = np.argpartition(dists, 10)[:10]
-        
+
         autoRefAnt = usable_ants[idxCentralAnts][ np.argmax(nonflagged[idxCentralAnts]) ]
         logging.info('Auto-selected reference antenna: %s' % autoRefAnt)
         self.cacheAutoRefAnt = autoRefAnt
