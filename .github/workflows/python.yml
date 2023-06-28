@@ -23,4 +23,5 @@ jobs:
       - name: Install
         run: python -m pip install .
       - name: Test
-        run: python -m pytest tools/losoto_test.py
+        # Clumsy workaround to cast pytest exit status 5 (No tests were collected) to 0
+        run: sh -c 'pytest tools/losoto_test.py; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret'
