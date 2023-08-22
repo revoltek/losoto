@@ -545,13 +545,13 @@ class Solset( object ):
 
         # create the val/weight Carrays
         #val = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
-        #weight = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(np.float16), chunkshape=None, atom=tables.Float16Atom())
+        #weight = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'weight', obj=weights.astype(float), chunkshape=None, atom=tables.FloatAtom())
         # array do not have compression but are much faster
         val = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), atom=tables.Float64Atom())
         assert weightDtype in ['f16','f32', 'f64'], "Allowed weight dtypes are 'f16','f32', 'f64'"
         if weightDtype == 'f16':
-            np_d = np.float16
-            pt_d = tables.Float16Atom()
+            np_d = float
+            pt_d = tables.FloatAtom()
         elif weightDtype == 'f32':
             np_d = np.float32
             pt_d = tables.Float32Atom()

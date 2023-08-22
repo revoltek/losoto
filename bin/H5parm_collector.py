@@ -121,7 +121,7 @@ for insoltab in insoltabs:
     logging.debug("Shape:"+str(allShape))
     allVals = np.empty( shape=allShape )
     allVals[:] = np.nan
-    allWeights = np.zeros( shape=allShape )#, dtype=np.float16 )
+    allWeights = np.zeros( shape=allShape )#, dtype=float )
 
     # fill arrays
     logging.info("Filling new table...")
