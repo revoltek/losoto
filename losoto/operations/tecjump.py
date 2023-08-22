@@ -272,10 +272,10 @@ def run( soltab, refAnt='', soltabError='', ncpu=0 ):
         """
         freqs = np.array(freqs)
         nF = freqs.shape[0]
-        A = np.zeros((nF, 2), dtype=np.float16)
+        A = np.zeros((nF, 2), dtype=float)
         A[:, 1] = freqs * 2 * np.pi * 1e-9
         A[:, 0] = -8.44797245e9 / freqs
-        steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float16))
+        steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=float))
         return steps
 
     if soltab.getType() != 'tec':

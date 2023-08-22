@@ -78,7 +78,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
     solset = soltab.getSolset()
     station_dict = solset.getAnt()
     stations = soltab.getAxisValues('ant')
-    station_positions = np.zeros((len(stations), 3), dtype=np.float16)
+    station_positions = np.zeros((len(stations), 3), dtype=float)
     for i, station_name in enumerate(stations):
         station_positions[i, 0] = station_dict[station_name][0]
         station_positions[i, 1] = station_dict[station_name][1]
@@ -125,7 +125,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
         weights=tec>-5
         tec[np.logical_not(weights)]=0
         clock[np.logical_not(weights)]=0
-        weights=np.float16(weights)
+        weights=weights.astype(float)
 
         if combinePol or not 'pol' in soltab.getAxesNames():
             tf_st = solset.makeSoltab('tec', soltabName = tecsoltabOut,
@@ -141,7 +141,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
             tf_st = solset.makeSoltab('phase', soltabName = offsetsoltabOut,
                              axesNames=['ant'], axesVals=[stations],
                              vals=offset[:,0],
-                             weights=np.ones_like(offset[:,0],dtype=np.float16))
+                             weights=np.ones_like(offset[:,0],dtype=float))
             tf_st.addHistory('CREATE (by CLOCKTECFIT operation)')
             if fit3rdorder:
                 tf_st = solset.makeSoltab('tec3rd', soltabName = tec3rdsoltabOut,
@@ -162,7 +162,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
             tf_st = solset.makeSoltab('phase', soltabName = offsetsoltabOut,
                              axesNames=['ant','pol'], axesVals=[stations, ['XX','YY']],
                              vals=offset,
-                             weights=np.ones_like(offset,dtype=np.float16))
+                             weights=np.ones_like(offset,dtype=float))
             tf_st.addHistory('CREATE (by CLOCKTECFIT operation)')
             if fit3rdorder:
                 tf_st = solset.makeSoltab('tec3rd', soltabName = tec3rdsoltabOut,
