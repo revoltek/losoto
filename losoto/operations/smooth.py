@@ -118,8 +118,7 @@ def run( soltab, axesToSmooth, size=[], mode='runningmedian', degree=1, replace=
         if mode == 'median':
             vals[:] = np.nanmedian( vals, axis=idx_axes, keepdims=True)
         if mode == 'mean':
-            logging.warning('Mean does not support NaN yet, use median if it is a problem.')
-            vals[:] = np.mean( vals, axis=idx_axes, keepdims=True) # annoying np.nanmean does not accept axis=list!
+            vals[:] = np.nanmean( vals, axis=tuple(idx_axes), keepdims=True) # annoying np.nanmean does not accept axis=list!
 
         # go back to phases
         if soltab.getType() == 'phase':
