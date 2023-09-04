@@ -26,7 +26,7 @@ apt-get install -y casacore libcasacore-dev
 apt-get install -y ipython python-matplotlib python-matplotlib-data python-pip \
 python-pyfits python-numpy python-scipy python-virtualenv python-sphinx \
 python-pygments python-jinja2 python-nose python-tornado cython python-zmq \
-python-pywcs python-astropy python-numexpr python-tables python-pandas \
+python-pywcs python-astropy python-tables python-pandas \
 ipython-notebook ipython-qtconsole
 
 
@@ -49,7 +49,6 @@ ipython-notebook ipython-qtconsole
 # pip install --upgrade matplotlib
 # pip install --upgrade astropy
 # pip install --upgrade pywcs
-# pip install --upgrade numexpr
 # pip install --upgrade tables
 # pip install --upgrade pandas
 # pip install --upgrade ipython
