@@ -112,7 +112,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             #par = np.dot(np.linalg.inv(np.dot(A,A.T)),np.dot(A,np.log10(variance[myselect])))
             mask = variance[myselect].mask
             A = np.vstack([np.log10(D2[myselect][~mask]), np.ones(len(D2[myselect][~mask]))])
-            par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) )[0] 
+            par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) ,rcond=None)[0] 
             S0 = 10**(-1*par[1]/par[0])
             logging.info(r't%i: beta=%.2f - R_diff=%.2f km' % (i, par[0], S0/1.e3))
             variances.append(variance)
@@ -149,7 +149,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             ax.set_xscale('log')
             ax.set_yscale('log')
 
-            ymin = np.min(variance[myselect])
+            ymin = np.max(1e-9,np.min(variance[myselect]))
             ymax = np.max(variance[myselect])
             ax.set_xlim(xmin=0.1,xmax=3)
             ax.set_ylim(ymin,ymax)
