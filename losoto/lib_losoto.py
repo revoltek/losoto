@@ -225,7 +225,8 @@ def getStepSoltabs(parser, step, H):
     soltabs = []
     for solset in H.getSolsets():
         for soltabName in solset.getSoltabNames():
-            if any(re.compile(this_stsel).match(solset.name+'/'+soltabName) for this_stsel in stsel):
+            #if any(re.compile(this_stsel).match(solset.name+'/'+soltabName) for this_stsel in stsel):
+            if any(this_stsel == solset.name+'/'+soltabName for this_stsel in stsel):
                 if parser.getstr(step, 'operation').lower() in cacheSteps:
                     soltabs.append( solset.getSoltab(soltabName, useCache=True) )
                 else:

@@ -20,7 +20,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, ms, useElementResponse=True, useArrayFactor=True, allChan=False ):
     """
-    Generic unspecified step for easy expansion.
+    Fill an existing table with beam solutions
 
     Parameters
     ----------
