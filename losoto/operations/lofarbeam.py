@@ -55,6 +55,8 @@ def run( soltab, ms, useElementResponse=True, useArrayFactor=True, allChan=False
             for itime, time in enumerate(times):
                 if allChan:
                     beam = tel.station_response(time=time, station_idx=stationnum)
+                    # reshape and get the inverse (this is the standard for to save solutions in losoto, so one can use these to CORRECT)
+                    beam = np.linalg.inv( beam )
                     beam = beam.reshape(beam.shape[0], 4)
                     if soltab.getAxisLen('pol') == 2:
                         beam = beam[:,[0,3]] # get only XX and YY
@@ -66,6 +68,7 @@ def run( soltab, ms, useElementResponse=True, useArrayFactor=True, allChan=False
                 else:
                     for ifreq, freq in enumerate(freqs):
                         beam = tel.station_response(time=time, station_idx=stationnum, freq=freq)
+                        beam = np.linalg.inv( beam )
                         # Reshape from [2, 2] to [4]
                         beam = beam.reshape(4)
     
