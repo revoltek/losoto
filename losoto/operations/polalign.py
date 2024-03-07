@@ -117,35 +117,35 @@ def run( soltab, soltabOut='phasediff', minFreq=0, refAnt='' ):
 
             logging.info('%s: average delay: %f ns (offset: %f)' % ( coord['ant'], popt[0]*1e9/(2*np.pi), popt[1]))
 
-            if coord['ant'] == 'UK608HBA':
-                print(phase_diff_mean[:100], phase_diff_var[:100], np.count_nonzero(~np.isnan(phase_diff[:100]), axis=1))
-                if not 'matplotlib' in sys.modules:
-                    import matplotlib as mpl
-                    mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
-                    mpl.use("Agg")
-                    import matplotlib.pyplot as plt
+            #if coord['ant'] == 'UK608HBA':
+            #    print(phase_diff_mean[:100], phase_diff_var[:100], np.count_nonzero(~np.isnan(phase_diff[:100]), axis=1))
+            #    if not 'matplotlib' in sys.modules:
+            #        import matplotlib as mpl
+            #        mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )
+            #        mpl.use("Agg")
+            #        import matplotlib.pyplot as plt
 
-                fig = plt.figure()
-                fig.subplots_adjust(wspace=0)
-                ax = fig.add_subplot(111)
+            #    fig = plt.figure()
+            #    fig.subplots_adjust(wspace=0)
+            #    ax = fig.add_subplot(111)
 
-                # plot rm fit
-                plotdelay = lambda delay, offset, freq: np.mod( delay*freq + offset + np.pi, 2.*np.pi) - np.pi
-                ax.plot(coord['freq']/1e6, popt[0]*coord['freq'] + popt[1], "-", color='black',  zorder=10, label=r'delay:%f$\nu$ (ns) + %f ' % (popt[0]*1e9/(2*np.pi),popt[1]) )
+            #    # plot rm fit
+            #    plotdelay = lambda delay, offset, freq: np.mod( delay*freq + offset + np.pi, 2.*np.pi) - np.pi
+            #    ax.plot(coord['freq']/1e6, popt[0]*coord['freq'] + popt[1], "-", color='black',  zorder=10, label=r'delay:%f$\nu$ (ns) + %f ' % (popt[0]*1e9/(2*np.pi),popt[1]) )
 
-                ax.plot(coord['freq']/1e6, phase_diff_mean, '.', color='purple' , label='phase difference')
+            #    ax.plot(coord['freq']/1e6, phase_diff_mean, '.', color='purple' , label='phase difference')
 
-                residual = np.mod(plotdelay(popt[0], popt[1], coord['freq'])-phase_diff_mean + np.pi,2.*np.pi)-np.pi
-                ax.plot(coord['freq']/1e6, residual, '.', color='yellow', label='residual')
+            #    residual = np.mod(plotdelay(popt[0], popt[1], coord['freq'])-phase_diff_mean + np.pi,2.*np.pi)-np.pi
+            #    ax.plot(coord['freq']/1e6, residual, '.', color='yellow', label='residual')
 
-                ax.set_xlabel('freq [MHz]')
-                ax.set_ylabel('phase')
-                ax.set_ylim(ymin=-np.pi, ymax=np.pi)
+            #    ax.set_xlabel('freq [MHz]')
+            #    ax.set_ylabel('phase')
+            #    ax.set_ylim(ymin=-np.pi, ymax=np.pi)
 
-                logging.warning('Save pic: '+coord['ant']+'.png')
-                fig.legend()
-                plt.savefig(coord['ant']+'.png', bbox_inches='tight')
-                del fig
+            #    logging.warning('Save pic: '+coord['ant']+'.png')
+            #    fig.legend()
+            #    plt.savefig(coord['ant']+'.png', bbox_inches='tight')
+            #    del fig
 
             vals[coord1,:,:] = 0
             phase = np.mod(popt[0]*coord['freq'] + popt[1] + np.pi, 2.*np.pi) - np.pi

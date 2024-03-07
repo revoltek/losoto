@@ -15,7 +15,7 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOut='', overwrite=False):
     """
-    Duplicate a table
+    Duplicate a table, with selection can be used to remove unwanted axes
 
     Parameters
     ----------
