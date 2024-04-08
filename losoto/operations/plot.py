@@ -550,7 +550,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 #                    vals += valsAdd
 
                 # normalize
-                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
+                if (soltab.getType() == 'phase'):
                     vals = normalize_phase(vals)
                 if (soltab.getType() == 'rotation'):
                     vals = np.mod(vals + np.pi/2., np.pi) - np.pi/2.
@@ -562,7 +562,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                         weight = weight.T
 
                 # unwrap if required
-                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase') and doUnwrap:
+                if (soltab.getType() == 'phase') and doUnwrap:
                     if len(axesInPlot) == 1:
                         vals = unwrap(vals)
                     else:

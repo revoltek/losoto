@@ -254,7 +254,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
     initPercentFlag = percentFlagged(weights)
 
     # works in phase-space (assume no wraps), remove just the mean to prevent problems if the phase is constantly around +/-pi
-    if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
+    if solType == 'phase' or solType == 'rotation':
         # remove mean of vals
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
