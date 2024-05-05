@@ -33,9 +33,8 @@ def _run_timestep(t,coord_rr,coord_ll,weights,vals,solType,coord,maxResidual):
         wav = c/freq
 
         #fitresultrm_wav, success = scipy.optimize.leastsq(rmwavcomplex, [fitrmguess], args=(wav, phase_diff))
-        ranges = slice(-0.1, 0.1, 2e-4)
-        fitresultrm_wav = scipy.optimize.brute(costfunctionRM, (ranges,), finish=scipy.optimize.leastsq, args=(wav, phase_diff))        
-
+        ranges = slice(-0.5, 0.5, 2e-4) # large range is necessary for IS observations, but slows things down.
+        fitresultrm_wav = scipy.optimize.brute(costfunctionRM, (ranges,), finish=scipy.optimize.leastsq, args=(wav, phase_diff))
         # fractional residual
         residual = np.nanmean(np.abs(np.mod((2.*fitresultrm_wav*wav*wav)-phase_diff + np.pi, 2.*np.pi) - np.pi))
         if maxResidual == 0 or residual < maxResidual:
