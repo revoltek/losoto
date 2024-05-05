@@ -712,6 +712,9 @@ def doFit(
     nF = data.shape[1]
     nSt = data.shape[2]
 
+    # mask where data is NaN
+    data.mask = np.logical_or(data.mask,np.isnan(data))
+
     if npol == 4:
         data = data[:, :, :, (0, 3)]
         npol = 2
