@@ -2,9 +2,10 @@
 
 # Some utilities for operations
 
-import sys, multiprocessing
+# import sys, multiprocessing
+import multiprocessing
 import numpy as np
-from losoto.h5parm import h5parm
+# from losoto.h5parm import h5parm
 from losoto._logging import logger as logging
 
 class multiprocManager(object):
@@ -51,7 +52,7 @@ class multiprocManager(object):
         self.runs = 0
         
         logging.debug('Spawning %i threads...' % self.procs)
-        for proc in range(self.procs):
+        for _ in range(self.procs):
             t = self.multiThread(self.inQueue, self.outQueue, funct)
             self._threads.append(t)
             t.start()
