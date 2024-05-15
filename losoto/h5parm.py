@@ -540,8 +540,8 @@ class Solset( object ):
         # if input is OK, create table
         soltab = self.obj._v_file.create_group("/"+self.name, soltabName, title=soltype)
         soltab._v_attrs['parmdb_type'] = parmdbType
-        # for i, axisName in enumerate(axesNames):
-        #     axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=np.array(axesVals[i]))
+        for i, axisName in enumerate(axesNames):
+            axis = self.obj._v_file.create_array('/'+self.name+'/'+soltabName, axisName, obj=np.array(axesVals[i]))
 
         # create the val/weight Carrays
         #val = self.obj._v_file.create_carray('/'+self.name+'/'+soltabName, 'val', obj=vals.astype(np.float64), chunkshape=None, atom=tables.Float64Atom())
