@@ -42,8 +42,8 @@ def unwrap_fft(phase, iterations=3):
 
     phase2D = phase[:, None]
     i = 0
-    if iterations < 1:
-        interations = 1
+    # if iterations < 1:
+    #     interations = 1
     while i < iterations:
         i += 1
         phase2D = phaseUnwrapper(phase2D)
