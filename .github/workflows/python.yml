@@ -23,4 +23,5 @@ jobs:
       - name: Install
         run: pip install .
       - name: Test
-        run: pytest -sv tools/losoto_test.py
+        # We cannot yet use `pytest`; requires different test file names
+        run: python tools/losoto_test.py
