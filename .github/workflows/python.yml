@@ -23,4 +23,4 @@ jobs:
       - name: Install
         run: pip install .
       - name: Test
-        run: pytest
+        run: pytest -sv tools/losoto_test.py
