@@ -248,9 +248,9 @@ def _fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, tim
             D = np.transpose(D, (1, 0, 2)) - D
             D2 = np.sum(D**2, axis=2)
             C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
-            pinvC = pinv(C, rcond=1e-3)
+            pinvC = pinv(C, rtol=1e-3)
             U, S, V = svd(C)
-            invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], U[:, :order])), rcond=1e-3)
+            invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], U[:, :order])), rtol=1e-3)
 
             # Calculate real screen
             rr1 = np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], rr_real[:, k]))
@@ -337,9 +337,9 @@ def _fit_tec_screen(station_names, source_names, pp, airmass, rr, weights, times
         D = np.transpose(D, (1, 0, 2)) - D
         D2 = np.sum(D**2, axis=2)
         C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
-        pinvC = pinv(C, rcond=1e-3)
+        pinvC = pinv(C, rtol=1e-3)
         U, S, V = svd(C)
-        invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], U[:, :order])), rcond=1e-3)
+        invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], U[:, :order])), rtol=1e-3)
 
         # Calculate screen
         rr1 = np.dot(np.transpose(U[:, :order]), np.dot(weights[:, :, k], rr[:, k]))
