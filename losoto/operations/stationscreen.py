@@ -375,7 +375,7 @@ def _calculate_svd(pp, r_0, beta, N_piercepoints):
     D = np.transpose(D, (1, 0, 2)) - D
     D2 = np.sum(D**2, axis=2)
     C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
-    pinvC = pinv(C, rcond=1e-3)
+    pinvC = pinv(C, rtol=1e-3)
     U, S, V = svd(C)
 
     return C, pinvC, U
@@ -439,7 +439,7 @@ def _fit_screen(source_names, full_matrices, pp, rr, weights, order, r_0, beta,
     else:
         # Recalculate for unflagged directions
         C, pinvC, U = _calculate_svd(pp, r_0, beta, N_piercepoints)
-    invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(w, U)[:, :order]), rcond=1e-3)
+    invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(w, U)[:, :order]), rtol=1e-3)
 
     # Fit screen to unflagged directions
     if screen_type == 'phase':
