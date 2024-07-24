@@ -519,7 +519,7 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
     if autoFlag:
         if ncpu == 0:
             import multiprocessing
-            ncpu = multiprocessing.cpu_count()
+            ncpu = nproc()
         mpm = multiprocManager(ncpu, _flag_amplitudes)
         for s in range(nants):
             mpm.put([soltab.freq[:], amplitude_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
