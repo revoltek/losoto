@@ -356,7 +356,7 @@ def run( soltab, soltabOut, refAnt, maxResidualFlag, maxResidualProp, ncpu ):
         selections.append(selection)
 
     if ncpu == 0:
-        ncpu = mp.cpu_count()
+        ncpu = nproc()
     with mp.Pool(ncpu) as pool:
         logging.info('Start TEC fitting.')
         results = pool.starmap(fit_tec_to_phases, args)
