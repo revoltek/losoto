@@ -117,7 +117,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
 
                 tuples = [(t,coord_rr,coord_ll,wt,vl,solType,coord,maxResidual) for t,wt,vl in zip(list(np.arange(len(times))), weightsliced, valsliced)]
                 if ncpu == 0:
-                    ncpu = mp.cpu_count()
+                    ncpu = nproc()
                 with mp.Pool(ncpu) as pool:
                     fitrm,fitweights = zip(*pool.starmap(_run_timestep,tuples))
 

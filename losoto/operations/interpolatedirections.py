@@ -260,7 +260,7 @@ def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
         import sys
         sys.exit()
     # run the interpolation
-    ncpu = mp.cpu_count() if ncpu == 0 else ncpu # default use all cores
+    ncpu = nproc() if ncpu == 0 else ncpu # default use all cores
     with mp.Pool(ncpu) as pool:
         logging.info('Start interpolation.')
         results = pool.starmap(interpolate_directions3d, args)

@@ -2,10 +2,21 @@
 
 # Some utilities for operations
 
-import sys, multiprocessing
+import multiprocessing
+import os
 import numpy as np
 from losoto.h5parm import h5parm
 from losoto._logging import logger as logging
+
+def nproc():
+    """
+    Return the number of CPU cores _available_ to the current process, similar
+    to what the Linux `nproc` command does. This can be less than the total
+    number of CPU cores in the machine, which is returned by, e.g.,
+    `multiprocessing.cpu_count()`
+    """
+    return len(os.sched_getaffinity(0))
+
 
 class multiprocManager(object):
 
@@ -43,7 +54,7 @@ class multiprocManager(object):
         and it will be linked to the output queue
         """
         if procs == 0:
-            procs = multiprocessing.cpu_count()
+            procs = nproc()
         self.procs = procs
         self._threads = []
         self.inQueue = multiprocessing.JoinableQueue()
