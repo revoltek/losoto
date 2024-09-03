@@ -158,8 +158,8 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             ax.set_xscale('log')
             ax.set_yscale('log')
 
-            ymin = np.max(1e-9,np.min(variance[myselect]))
-            ymax = np.max(variance[myselect])
+            ymin = np.max([1e-9,np.min(variance[myselect])])
+            ymax = np.max([variance[myselect]])
             ax.set_xlim(xmin=0.1,xmax=3)
             ax.set_ylim(ymin,ymax)
             ax1.set_ylim(np.log10(ymin),np.log10(ymax))
