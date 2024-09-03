@@ -130,6 +130,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
         if plotName != '':
             if plotName.split('.')[-1] != 'png': plotName += '.png' # add png
 
+            import sys
             if not 'matplotlib' in sys.modules:
                 import matplotlib as mpl
                 mpl.use("Agg")
