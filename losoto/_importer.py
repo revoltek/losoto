@@ -290,7 +290,7 @@ def create_h5parm(instrumentdbFiles, antennaFile, fieldFile, skydbFile,
         shape = [i for i in (len(pols), len(dirs), len(ants), len(freqs), len(times)) if i != 0]
         vals = np.empty(shape)
         vals[:] = np.nan
-        weights = np.zeros(shape, dtype=np.float16)
+        weights = np.zeros(shape, dtype=float)
 
         logging.info('Filling table.')
 

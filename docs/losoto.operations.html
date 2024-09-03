@@ -1,20 +1,23 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>losoto.operations package &#8212; LoSoTo 2.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="losoto.tests package" href="losoto.tests.html" />
     <link rel="prev" title="losoto package" href="losoto.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -27,9 +30,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="losoto.tests.html" title="losoto.tests package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
           <a href="losoto.html" title="losoto package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">losoto.operations package</a></li> 
       </ul>
     </div>  
 
@@ -38,92 +45,123 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="losoto-operations-package">
+  <section id="losoto-operations-package">
 <h1>losoto.operations package<a class="headerlink" href="#losoto-operations-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submodules">
+<section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-losoto.operations.abs">
+</section>
+<section id="module-losoto.operations.abs">
 <span id="losoto-operations-abs-module"></span><h2>losoto.operations.abs module<a class="headerlink" href="#module-losoto.operations.abs" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.abs.run">
-<code class="descclassname">losoto.operations.abs.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.abs.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.abs.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.abs.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.abs.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take absolute value. Needed before smooth if amplitudes are negative!
 WEIGHT: no need to be weight compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>soltab</strong> (<em>soltab obj</em>) – Solution table.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-losoto.operations.clip">
-<span id="losoto-operations-clip-module"></span><h2>losoto.operations.clip module<a class="headerlink" href="#module-losoto.operations.clip" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.clip.run">
-<code class="descclassname">losoto.operations.clip.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToClip</em>, <em>clipLevel=5.0</em>, <em>log=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clip.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clip solutions around the median by a factor specified by the user.
-WEIGHT: flag compliant, putting weights into median is tricky</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesToClip</strong> (<em>list of str</em>) – axes along which to calculate the median (e.g. [time,freq])</li>
-<li><strong>clipLevel</strong> (<em>float</em><em>, </em><em>optional</em>) – factor above/below median at which to clip, by default 5</li>
-<li><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – clip is done in log10 space, by default False</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-losoto.operations.clocktec">
-<span id="losoto-operations-clocktec-module"></span><h2>losoto.operations.clocktec module<a class="headerlink" href="#module-losoto.operations.clocktec" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.clocktec.run">
-<code class="descclassname">losoto.operations.clocktec.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>flagBadChannels=True</em>, <em>flagCut=5.0</em>, <em>chi2cut=3000.0</em>, <em>combinePol=False</em>, <em>removePhaseWraps=True</em>, <em>fit3rdorder=False</em>, <em>circular=False</em>, <em>reverse=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clocktec.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Separate phase solutions into Clock and TEC.
-The Clock and TEC values are stored in the specified output soltab with type ‘clock’, ‘tec’, ‘tec3rd’.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>flagBadChannels</strong> (<em>bool</em><em>, </em><em>optional</em>) – Detect and remove bad channel before fitting, by default True.</li>
-<li><strong>flagCut</strong> (<em>float</em><em>, </em><em>optional</em>) – </li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>chi2cut : float, optional</p>
-<dl class="docutils">
-<dt>combinePol <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
-<dd>Find a combined polarization solution, by default False.</dd>
-<dt>removePhaseWraps <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
-<dd>Detect and remove phase wraps, by default True.</dd>
-<dt>fit3rdorder <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
-<dd>Fit a 3rd order ionospheric ocmponent (usefult &lt;40 MHz). By default False.</dd>
-<dt>circular <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
-<dd>Assume circular polarization with FR not removed. By default False.</dd>
-<dt>reverse <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
-<dd>Reverse the time axis. By default False.</dd>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>soltab</strong> (<em>soltab obj</em>) – Solution table.</p>
+</dd>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.directionscreen">
+</section>
+<section id="module-losoto.operations.bandpasstec">
+<span id="losoto-operations-bandpasstec-module"></span><h2>losoto.operations.bandpasstec module<a class="headerlink" href="#module-losoto.operations.bandpasstec" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.bandpasstec.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.bandpasstec.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOutTEC</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tec000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOutBP</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'phase000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.bandpasstec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Isolate BP from TEC in a calibrator (uGMRT data)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOutTEC</strong> (<em>str</em><em>, </em><em>optional</em>) – output TEC table name (same solset), by deault “tec000”.</p></li>
+<li><p><strong>soltabOutBP</strong> (<em>str</em><em>, </em><em>optional</em>) – output bandpass table name (same solset), by deault “phase000”.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default get the closest for each antenna.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.clip">
+<span id="losoto-operations-clip-module"></span><h2>losoto.operations.clip module<a class="headerlink" href="#module-losoto.operations.clip" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.clip.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.clip.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesToClip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clipLevel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'median'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clip.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clip solutions around the median by a factor specified by the user.
+WEIGHT: flag compliant, putting weights into median is tricky</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesToClip</strong> (<em>list of str</em>) – axes along which to calculate the median (e.g. [time,freq]).</p></li>
+<li><p><strong>clipLevel</strong> (<em>float</em><em>, </em><em>optional</em>) – factor above/below median at which to clip, by default 5.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – clip is done in log10 space, by default False.</p></li>
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – if “median” then flag at rms*clipLevel times away from the median, if it is “above”,
+then flag all values above clipLevel, if it is “below” then flag all values below clipLevel.
+By default median.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.clocktec">
+<span id="losoto-operations-clocktec-module"></span><h2>losoto.operations.clocktec module<a class="headerlink" href="#module-losoto.operations.clocktec" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.clocktec.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.clocktec.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tecsoltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tec000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clocksoltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'clock000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsetsoltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'phase_offset000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tec3rdsoltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tec3rd000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flagBadChannels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flagCut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chi2cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combinePol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removePhaseWraps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit3rdorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circular</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invertOffset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nproc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.clocktec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate phase solutions into Clock and TEC.
+The Clock and TEC values are stored in the specified output soltab with type ‘clock’, ‘tec’, ‘tec3rd’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flagBadChannels</strong> (<em>bool</em><em>, </em><em>optional</em>) – Detect and remove bad channel before fitting, by default True.</p></li>
+<li><p><strong>flagCut</strong> (<em>float</em><em>, </em><em>optional</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<p>chi2cut : float, optional</p>
+<dl class="simple">
+<dt>combinePol<span class="classifier">bool, optional</span></dt><dd><p>Find a combined polarization solution, by default False.</p>
+</dd>
+<dt>removePhaseWraps<span class="classifier">bool, optional</span></dt><dd><p>Detect and remove phase wraps, by default True.</p>
+</dd>
+<dt>fit3rdorder<span class="classifier">bool, optional</span></dt><dd><p>Fit a 3rd order ionospheric ocmponent (usefult &lt;40 MHz). By default False.</p>
+</dd>
+<dt>circular<span class="classifier">bool, optional</span></dt><dd><p>Assume circular polarization with FR not removed. By default False.</p>
+</dd>
+<dt>reverse<span class="classifier">bool, optional</span></dt><dd><p>Reverse the time axis. By default False.</p>
+</dd>
+<dt>invertOffset<span class="classifier">bool, optional</span></dt><dd><p>Invert (reverse the sign of) the phase offsets. By default False. Set to True
+if you want to use them with the residuals operation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.deleteaxis">
+<span id="losoto-operations-deleteaxis-module"></span><h2>losoto.operations.deleteaxis module<a class="headerlink" href="#module-losoto.operations.deleteaxis" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.deleteaxis.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.deleteaxis.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisDelete</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromCell</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.deleteaxis.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an axis only keeping the values of a certain slice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axisDelete</strong> (<em>str</em>) – Axis to delete.</p></li>
+<li><p><strong>fromCell</strong> (<em>str</em>) – A cell value in axisDelete from which to keep the data values. If it is the string
+“first”/”last” then uses the first/last element of the axis.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.directionscreen">
 <span id="losoto-operations-directionscreen-module"></span><h2>losoto.operations.directionscreen module<a class="headerlink" href="#module-losoto.operations.directionscreen" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.directionscreen.run">
-<code class="descclassname">losoto.operations.directionscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>outSoltab='tecscreen'</em>, <em>height=200000.0</em>, <em>order=12</em>, <em>beta=1.6666666666666667</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.directionscreen.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.directionscreen.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.directionscreen.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outSoltab</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tecscreen'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.6666666666666667</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.directionscreen.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fits a screen to TEC + scalaraphase values.</p>
 <p>The results of the fit are stored in the soltab parent solset in
 “outSoltab” and the residual phases (actual-screen) are stored in
@@ -131,531 +169,609 @@ The Clock and TEC values are stored in the specified output soltab with type ‘
 pierce point per solution interval. The pierce point locations are stored in
 an auxiliary array in the output soltabs.</p>
 <p>Screens can be plotted with the PLOTSCREEN operation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltab</strong> (<em>solution table</em>) – Soltab containing phase solutions</li>
-<li><strong>outSoltab</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of output soltab</li>
-<li><strong>height</strong> (<em>float</em><em>, </em><em>optional</em>) – Height in m of screen</li>
-<li><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of screen (i.e., number of KL base vectors to keep).</li>
-<li><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Power-law index for phase structure function (5/3 =&gt; pure Kolmogorov
-turbulence)</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</li>
-<li><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to do when determining weights</li>
-<li><strong>nsigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma above which directions are flagged</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltab</strong> (<em>solution table</em>) – Soltab containing phase solutions</p></li>
+<li><p><strong>outSoltab</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of output soltab</p></li>
+<li><p><strong>height</strong> (<em>float</em><em>, </em><em>optional</em>) – Height in m of screen</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of screen (i.e., number of KL base vectors to keep).</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Power-law index for phase structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</p></li>
+<li><p><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to do when determining weights</p></li>
+<li><p><strong>nsigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma above which directions are flagged</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.duplicate">
+</section>
+<section id="module-losoto.operations.duplicate">
 <span id="losoto-operations-duplicate-module"></span><h2>losoto.operations.duplicate module<a class="headerlink" href="#module-losoto.operations.duplicate" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.duplicate.run">
-<code class="descclassname">losoto.operations.duplicate.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.duplicate.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.duplicate.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.duplicate.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.duplicate.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Duplicate a table</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name. By default choose next available from table type.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name. By default choose next available from table type.</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Overwrite soltabOut if it already exists?</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.example">
+</section>
+<section id="module-losoto.operations.example">
 <span id="losoto-operations-example-module"></span><h2>losoto.operations.example module<a class="headerlink" href="#module-losoto.operations.example" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.example.run">
-<code class="descclassname">losoto.operations.example.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, opt1, opt2=[1.0, 2.0, 3.0], opt3=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.example.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.example.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.example.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.0,</span> <span class="pre">2.0,</span> <span class="pre">3.0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.example.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic unspecified step for easy expansion.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>opt1</strong> (<em>float</em>) – Is a mandatory parameter.</li>
-<li><strong>opt2</strong> (<em>int</em><em>, </em><em>optional</em>) – Is optional, by default [1.,2.,3.]</li>
-<li><strong>opt2</strong> – Is optional, by default 0.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opt1</strong> (<em>float</em>) – Is a mandatory parameter.</p></li>
+<li><p><strong>opt2</strong> (<em>int</em><em>, </em><em>optional</em>) – Is optional, by default [1.,2.,3.]</p></li>
+<li><p><strong>opt2</strong> – Is optional, by default 0.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.faraday">
+</section>
+<section id="module-losoto.operations.faraday">
 <span id="losoto-operations-faraday-module"></span><h2>losoto.operations.faraday module<a class="headerlink" href="#module-losoto.operations.faraday" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.faraday.run">
-<code class="descclassname">losoto.operations.faraday.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>refAnt=''</em>, <em>maxResidual=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Faraday rotation extraction from either a rotation table or a circular phase (of which the operation get the polarisation difference).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
-<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Max average residual in radians before flagging datapoint, by default 1. If 0: no check.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.faraday.costfunctionRM">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.faraday.</span></span><span class="sig-name descname"><span class="pre">costfunctionRM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wav</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.costfunctionRM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.flag">
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.faraday.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.faraday.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rotationmeasure000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxResidual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.faraday.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-losoto.operations.flag">
 <span id="losoto-operations-flag-module"></span><h2>losoto.operations.flag module<a class="headerlink" href="#module-losoto.operations.flag" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.flag.run">
-<code class="descclassname">losoto.operations.flag.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToFlag</em>, <em>order</em>, <em>maxCycles=5</em>, <em>maxRms=5.0</em>, <em>maxRmsNoise=0.0</em>, <em>fixRms=0.0</em>, <em>fixRmsNoise=0.0</em>, <em>windowNoise=11</em>, <em>replace=False</em>, <em>preflagzeros=False</em>, <em>mode='smooth'</em>, <em>refAnt=''</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flag.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.flag.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.flag.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesToFlag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxCycles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxRms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxRmsNoise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixRms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixRmsNoise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windowNoise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preflagzeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'smooth'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flag.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implement a flagging procedure
 WEIGHT: compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesToFlag</strong> (<em>array of str</em>) – Axes along which to smooth+find outlier (e.g. [‘time’, ‘freq’]), max 2 values.</li>
-<li><strong>order</strong> (<em>array of int</em>) – Order of the function fitted during detrending. Array must have same size of axesToFlag. If mode=smooth these are the window of the running median (0=all axis).</li>
-<li><strong>maxCycles</strong> (<em>int</em><em>, </em><em>optional</em>) – Max number of independent flagging cycles, by default 5.</li>
-<li><strong>maxRms</strong> (<em>float</em><em>, </em><em>optional</em>) – Rms to clip outliers, by default 5.</li>
-<li><strong>maxRmsNoise</strong> (<em>float</em><em>, </em><em>optional</em>) – Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, by default 0 (ignored).</li>
-<li><strong>fixRms</strong> (<em>float</em><em>, </em><em>optional</em>) – Instead of calculating rms use this value, by default 0 (ignored).</li>
-<li><strong>fixRmsNoise</strong> (<em>float</em><em>, </em><em>optional</em>) – Instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), by default 0 (ignored).</li>
-<li><strong>windowNoise</strong> (<em>int</em><em>, </em><em>optional</em>) – Window size for the running rms, by default 11.</li>
-<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Replace bad values with the interpolated ones, instead of flagging them. By default False.</li>
-<li><strong>preflagzeros</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag zeros/ones (bad solutions in BBS/DPPP). They should be flagged at import time. By default False.</li>
-<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Detrending/fitting algorithm: smooth / poly / spline. By default smooth.</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default None.</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpu to use, by default all available.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesToFlag</strong> (<em>array of str</em>) – Axes along which to smooth+find outlier (e.g. [‘time’, ‘freq’]), max 2 values.</p></li>
+<li><p><strong>order</strong> (<em>array of int</em>) – Order of the function fitted during detrending. Array must have same size of axesToFlag. If mode=smooth these are the window of the running median (0=all axis).</p></li>
+<li><p><strong>maxCycles</strong> (<em>int</em><em>, </em><em>optional</em>) – Max number of independent flagging cycles, by default 5.</p></li>
+<li><p><strong>maxRms</strong> (<em>float</em><em>, </em><em>optional</em>) – Rms to clip outliers, by default 5.</p></li>
+<li><p><strong>maxRmsNoise</strong> (<em>float</em><em>, </em><em>optional</em>) – Do a running rms and then flag those regions that have a rms higher than MaxRmsNoise*rms_of_rmses, by default 0 (ignored).</p></li>
+<li><p><strong>fixRms</strong> (<em>float</em><em>, </em><em>optional</em>) – Instead of calculating rms use this value, by default 0 (ignored).</p></li>
+<li><p><strong>fixRmsNoise</strong> (<em>float</em><em>, </em><em>optional</em>) – Instead of calculating rms of the rmses use this value (it will not be multiplied by the MaxRmsNoise), by default 0 (ignored).</p></li>
+<li><p><strong>windowNoise</strong> (<em>int</em><em>, </em><em>optional</em>) – Window size for the running rms, by default 11.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Replace bad values with the interpolated ones, instead of flagging them. By default False.</p></li>
+<li><p><strong>preflagzeros</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag zeros/ones (bad solutions in BBS/DPPP). They should be flagged at import time. By default False.</p></li>
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Detrending/fitting algorithm: smooth / poly / spline. By default smooth.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default None.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpu to use, by default all available.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.flagextend">
+</section>
+<section id="module-losoto.operations.flagextend">
 <span id="losoto-operations-flagextend-module"></span><h2>losoto.operations.flagextend module<a class="headerlink" href="#module-losoto.operations.flagextend" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.flagextend.run">
-<code class="descclassname">losoto.operations.flagextend.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToExt</em>, <em>size</em>, <em>percent=50.0</em>, <em>maxCycles=3</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagextend.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.flagextend.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.flagextend.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesToExt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxCycles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagextend.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implement a extend flag procedure
 It can work in multi dimensional space and for each datum check if the surrounding data are flagged to a certain %, then flag also that datum
 The size of the surrounding footprint can be tuned
 WEIGHT: compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesToExt</strong> (<em>list of str</em>) – Axes used to find close flags.</li>
-<li><strong>size</strong> (<em>list of int</em>) – Size of the window (diameter), per axis. If 0 is given then the entire length of the axis is assumed.
-Must be a vector of same length of Axes.</li>
-<li><strong>percent</strong> (<em>float</em><em>, </em><em>optional</em>) – Percent of flagged data around the point to flag it, by default 50.</li>
-<li><strong>maxCycles</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of independent cycles of flag expansion, by default 3.</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPU used, by default all available.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesToExt</strong> (<em>list of str</em>) – Axes used to find close flags.</p></li>
+<li><p><strong>size</strong> (<em>list of int</em>) – Size of the window (diameter), per axis. If 0 is given then the entire length of the axis is assumed.
+Must be a vector of same length of Axes.</p></li>
+<li><p><strong>percent</strong> (<em>float</em><em>, </em><em>optional</em>) – Percent of flagged data around the point to flag it, by default 50.</p></li>
+<li><p><strong>maxCycles</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of independent cycles of flag expansion, by default 3.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPU used, by default all available.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.flagstation">
+</section>
+<section id="module-losoto.operations.flagstation">
 <span id="losoto-operations-flagstation-module"></span><h2>losoto.operations.flagstation module<a class="headerlink" href="#module-losoto.operations.flagstation" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.flagstation.run">
-<code class="descclassname">losoto.operations.flagstation.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>mode</em>, <em>maxFlaggedFraction=0.5</em>, <em>nSigma=5.0</em>, <em>telescope='lofar'</em>, <em>refAnt=''</em>, <em>soltabExport=''</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagstation.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.flagstation.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.flagstation.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxFlaggedFraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nSigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxStddev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ampRange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">telescope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lofar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipInternational</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabExport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.flagstation.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
 WEIGHT: compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mode</strong> (<em>str</em>) – Fitting algorithm: bandpass or phaseresid. Bandpass mode clips amplitudes relative to a model bandpass (only LOFAR is currently supported). Phaseresid mode clips residual phases relative to the mean.</li>
-<li><strong>maxFlaggedFraction</strong> (<em>float</em><em>, </em><em>optional</em>) – This sets the maximum allowable fraction of flagged solutions above which the entire station is flagged.</li>
-<li><strong>nSigma</strong> (<em>float</em><em>, </em><em>optional</em>) – This sets the number of standard deviations considered when outlier clipping is done</li>
-<li><strong>telescope</strong> (<em>str</em><em>, </em><em>optional</em>) – Specifies the telescope if mode = ‘bandpass’.</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – If mode=phaseresid, this sets the reference antenna, by default None.</li>
-<li><strong>soltabExport</strong> (<em>str</em><em>, </em><em>optional</em>) – Soltab to export station flags to. Note: exported flags are not time- or frequency-dependent.</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpu to use, by default all available.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>str</em>) – Fitting algorithm: bandpass or resid. Bandpass mode clips amplitudes relative to a model bandpass (only LOFAR is currently supported). Resid mode clips residual phases or log(amplitudes).</p></li>
+<li><p><strong>maxFlaggedFraction</strong> (<em>float</em><em>, </em><em>optional</em>) – This sets the maximum allowable fraction of flagged solutions above which the entire station is flagged.</p></li>
+<li><p><strong>nSigma</strong> (<em>float</em><em>, </em><em>optional</em>) – This sets the number of standard deviations considered when outlier clipping is done.</p></li>
+<li><p><strong>maxStddev</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum allowable standard deviation when outlier clipping is done. For phases, this should value
+should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is
+used for phases and 0.01 for amplitudes.</p></li>
+<li><p><strong>ampRange</strong> (<em>array</em><em>, </em><em>optional</em>) – 2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
+If None or [0, 0], a reasonable range for typical observations is used.</p></li>
+<li><p><strong>telescope</strong> (<em>str</em><em>, </em><em>optional</em>) – Specifies the telescope if mode = ‘bandpass’.</p></li>
+<li><p><strong>skipInternational</strong> (<em>str</em><em>, </em><em>optional</em>) – If True, skip flagging of international LOFAR stations (only used if telescope = ‘lofar’)</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – If mode = resid, this sets the reference antenna for phase solutions, by default None.</p></li>
+<li><p><strong>soltabExport</strong> (<em>str</em><em>, </em><em>optional</em>) – Soltab to export station flags to. Note: exported flags are not time- or frequency-dependent.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpu to use, by default all available.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.interpolate">
+</section>
+<section id="module-losoto.operations.frjump">
+<span id="losoto-operations-frjump-module"></span><h2>losoto.operations.frjump module<a class="headerlink" href="#module-losoto.operations.frjump" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.frjump.costfunctionRM">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.frjump.</span></span><span class="sig-name descname"><span class="pre">costfunctionRM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wav</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.frjump.costfunctionRM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.frjump.getPhaseWrapBase">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.frjump.</span></span><span class="sig-name descname"><span class="pre">getPhaseWrapBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.frjump.getPhaseWrapBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>freqs: frequency grid of the data
+return the step size from a local minima (2pi phase wrap) to the others [0]: TEC, [1]: clock</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.frjump.getPhaseWrapBase_TEC">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.frjump.</span></span><span class="sig-name descname"><span class="pre">getPhaseWrapBase_TEC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freqs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.frjump.getPhaseWrapBase_TEC" title="Permalink to this definition">¶</a></dt>
+<dd><p>freqs: frequency grid of the data
+return the step size from a local minima (2pi phase wrap) to the others [0]: TEC, [1]: clock</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.frjump.dejump">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.frjump.</span></span><span class="sig-name descname"><span class="pre">dejump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dotec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.frjump.dejump" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.frjump.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.frjump.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clipping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabPhase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.frjump.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPERIMENTAL
+‘Dejumps’ the Faraday solutions. Because Faraday rotation is a rotation, there are generally multiple possible values for the rotation measure
+that yield a similar rotation angle - but are offset from the main trend. This code will fix this.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “rotationmeasure001”.</p></li>
+<li><p><strong>clipping</strong> (<em>arr</em><em>, </em><em>optional</em>) – Refers to the frequency range that is used in the Faraday step. This is important to get a good estimate for the difference in RM</p></li>
+<li><p><strong>soltabPhase</strong> (<em>str</em><em>, </em><em>optional</em>) – name of soltab that contains the phases. The only reason we need this, is for the frequency axis (so it really doesnt matter what’s in
+this soltab. Default: phase000</p></li>
+<li><p><strong>frequencies</strong> (<em>arr</em><em>, </em><em>optional</em>) – if the frequency axis is missing, you need to give the freq range used for TEC/FR fitting manually here.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.globaldelay">
+<span id="losoto-operations-globaldelay-module"></span><h2>losoto.operations.globaldelay module<a class="headerlink" href="#module-losoto.operations.globaldelay" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.globaldelay.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.globaldelay.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tec000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.globaldelay.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bruteforce TEC extraction from phase solutions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “tec”.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default ‘auto’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.interpolate">
 <span id="losoto-operations-interpolate-module"></span><h2>losoto.operations.interpolate module<a class="headerlink" href="#module-losoto.operations.interpolate" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.interpolate.run">
-<code class="descclassname">losoto.operations.interpolate.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>outsoltab</em>, <em>axisToRegrid</em>, <em>newdelta</em>, <em>delta=''</em>, <em>maxFlaggedWidth=0</em>, <em>log=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.interpolate.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.interpolate.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.interpolate.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outsoltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisToRegrid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newdelta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxFlaggedWidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.interpolate.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements regridding and linear interpolation of data for an axis.
 WEIGHT: compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>outsoltab</strong> (<em>str</em>) – Name of output soltab</li>
-<li><strong>axisToRegrid</strong> (<em>str</em>) – Name of the axis for which regridding/interpolation will be done</li>
-<li><strong>newdelta</strong> (<em>float</em><em> or </em><em>str</em>) – Fundamental width between samples after regridding. E.g., “100kHz” or “10s”</li>
-<li><strong>delta</strong> (<em>float</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – Fundamental width between samples in axisToRegrid. E.g., “100kHz” or “10s”. If “”,
-it is calculated from the axisToRegrid values</li>
-<li><strong>maxFlaggedWidth</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum allowable width in number of samples (after regridding) above which
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outsoltab</strong> (<em>str</em>) – Name of output soltab</p></li>
+<li><p><strong>axisToRegrid</strong> (<em>str</em>) – Name of the axis for which regridding/interpolation will be done</p></li>
+<li><p><strong>newdelta</strong> (<em>float</em><em> or </em><em>str</em>) – Fundamental width between samples after regridding. E.g., “100kHz” or “10s”</p></li>
+<li><p><strong>delta</strong> (<em>float</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – Fundamental width between samples in axisToRegrid. E.g., “100kHz” or “10s”. If “”,
+it is calculated from the axisToRegrid values</p></li>
+<li><p><strong>maxFlaggedWidth</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum allowable width in number of samples (after regridding) above which
 interpolated values are flagged (e.g., maxFlaggedWidth = 5 would allow gaps of
 5 samples or less to be interpolated across but gaps of 6 or more would be
-flagged)</li>
-<li><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpolation is done in log10 space, by default False</li>
+flagged)</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpolation is done in log10 space, by default False</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.lofarbeam">
+</section>
+<section id="module-losoto.operations.interpolatedirections">
+<span id="losoto-operations-interpolatedirections-module"></span><h2>losoto.operations.interpolatedirections module<a class="headerlink" href="#module-losoto.operations.interpolatedirections" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.interpolatedirections.interpolate_directions3d">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.interpolatedirections.</span></span><span class="sig-name descname"><span class="pre">interpolate_directions3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cal_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_dirs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_dirs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.interpolatedirections.interpolate_directions3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to parallelize interpolation. Interpolates and evaluates
+the interpolation at the new directions for one ant/pol/time etc.
+This function interpolates values on a unit sphere in 3d. This is faster because
+we can use scipy.staptial.distance.cdist euclidean for this.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cal_vals</strong> (<em>array</em><em>, </em><em>values of selection</em><em>, </em><em>1st axis: dir</em><em>, </em><em>other axes flattened</em>) – </p></li>
+<li><p><strong>weights</strong> (<em>array</em><em>, </em><em>weights of values</em><em>,</em>) – </p></li>
+<li><p><strong>cal_dirs</strong> (<em>(</em><em>2</em><em>,</em><em>n</em><em>) </em><em>array of floats</em><em>, </em><em>ra/dec values of calibrator directions</em>) – </p></li>
+<li><p><strong>dir_axis</strong> (<em>int</em><em>, </em><em>position of dir axis in input values/weights</em>) – </p></li>
+<li><p><strong>interp_dirs</strong> (<em>(</em><em>2</em><em>,</em><em>n</em><em>) </em><em>array of floats</em><em>, </em><em>ra/dec values of interpolate directions</em>) – </p></li>
+<li><p><strong>interp_kind</strong> (<em>string</em><em>, </em><em>'wrap'</em><em> or </em><em>'lin' dependent on whether to interpolate phases</em>) – (independently in real and imag) or TEC, amp..</p></li>
+<li><p><strong>smooth</strong> (<em>float</em><em>, </em><em>smooth-parameter for interpolation. For phases</em><em>, </em><em>a value between 1e-3 and 0.0</em>) – seems to work well. For TEC, less smoothing should be necessary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>new_vals</strong> (<em>array of floats, interpolated values of selection at new directions</em>)</p></li>
+<li><p><strong>new_weights</strong> (<em>array of floats, weights</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.interpolatedirections.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.interpolatedirections.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp_dirs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'interp_'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.interpolatedirections.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add interpolated directions to h5parm
+:param interp_dirs: Shape n x 2, contains ra/dec in degree.</p>
+<blockquote>
+<div><p>For example: [[ra1,dec1],[ra2,dec2],…]</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>string</em><em>,  </em><em>optional</em>) – Default: Guess from soltype. If specifically set to input soltab, the input soltab will be overwritten.</p></li>
+<li><p><strong>prefix</strong> (string, optional, default = “<a href="#id1"><span class="problematic" id="id2">interp_</span></a>”.) – Name prefix of interpolated directions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.lofarbeam">
 <span id="losoto-operations-lofarbeam-module"></span><h2>losoto.operations.lofarbeam module<a class="headerlink" href="#module-losoto.operations.lofarbeam" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.lofarbeam.run">
-<code class="descclassname">losoto.operations.lofarbeam.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>ms</em>, <em>inverse=False</em>, <em>useElementResponse=True</em>, <em>useArrayFactor=True</em>, <em>useChanFreq=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.lofarbeam.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.lofarbeam.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.lofarbeam.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useElementResponse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useArrayFactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useChanFreq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.lofarbeam.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic unspecified step for easy expansion.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>opt1</strong> (<em>float</em>) – Is a mandatory parameter.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>opt1</strong> (<em>float</em>) – Is a mandatory parameter.</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.norm">
+</section>
+<section id="module-losoto.operations.norm">
 <span id="losoto-operations-norm-module"></span><h2>losoto.operations.norm module<a class="headerlink" href="#module-losoto.operations.norm" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.norm.run">
-<code class="descclassname">losoto.operations.norm.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToNorm</em>, <em>normVal=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.norm.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.norm.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.norm.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesToNorm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normVal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.norm.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Normalize the solutions to a given value
 WEIGHT: Weights compliant</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesToNorm</strong> (<em>array of str</em>) – Axes along which compute the normalization.</li>
-<li><strong>normVal</strong> (<em>float</em><em>, </em><em>optional</em>) – Number to normalize to vals = vals * (normVal/valsMean), by default 1.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesToNorm</strong> (<em>array of str</em>) – Axes along which compute the normalization.</p></li>
+<li><p><strong>normVal</strong> (<em>float</em><em>, </em><em>optional</em>) – Number to normalize to vals = vals * (normVal/valsMean), by default 1.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – clip is done in log10 space, by default False.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.plot">
+</section>
+<section id="module-losoto.operations.plot">
 <span id="losoto-operations-plot-module"></span><h2>losoto.operations.plot module<a class="headerlink" href="#module-losoto.operations.plot" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.plot.run">
-<code class="descclassname">losoto.operations.plot.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0, figSize=[0, 0], markerSize=2, minmax=[0, 0], log='', plotFlag=False, doUnwrap=False, refAnt='', soltabsToAdd='', makeAntPlot=False, makeMovie=False, prefix='', ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.plot.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.plot.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesInPlot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisInTable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisInCol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisDiff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NColFig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markerSize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doUnwrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabsToAdd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">makeAntPlot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">makeMovie</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plot.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements basic plotting
 WEIGHT: flag-only compliant, no need for weight</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesInPlot</strong> (<em>array of str</em>) – 1- or 2-element array which says the coordinates to plot (2 for 3D plots).</li>
-<li><strong>axisInTable</strong> (<em>str</em><em>, </em><em>optional</em>) – the axis to plot on a page - e.g. ant to get all antenna’s on one file. By default ‘’.</li>
-<li><strong>axisInCol</strong> (<em>str</em><em>, </em><em>optional</em>) – The axis to plot in different colours - e.g. pol to get correlations with different colors. By default ‘’.</li>
-<li><strong>axisDiff</strong> (<em>str</em><em>, </em><em>optional</em>) – This must be a len=2 axis and the plot will have the differential value - e.g. ‘pol’ to plot XX-YY. By default ‘’.</li>
-<li><strong>NColFig</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of columns in a multi-table image. By default is automatically chosen.</li>
-<li><strong>figSize</strong> (<em>array of int</em><em>, </em><em>optional</em>) – Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.</li>
-<li><strong>markerSize</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the markers in the 2D plot. By default 2.</li>
-<li><strong>minmax</strong> (<em>array of float</em><em>, </em><em>optional</em>) – Min max value for the independent variable (0 means automatic). By default 0.</li>
-<li><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use Log=’XYZ’ to set which axes to put in Log. By default ‘’.</li>
-<li><strong>plotFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot also flags as red points in 2D plots. By default False.</li>
-<li><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Unwrap phases. By default False.</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. By default None.</li>
-<li><strong>soltabsToAdd</strong> (<em>str</em><em>, </em><em>optional</em>) – Tables to “add” (e.g. ‘sol000/tec000’), it works only for tec and clock to be added to phases. By default None.</li>
-<li><strong>makeAntPlot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.</li>
-<li><strong>makeMovie</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a movie summing up all the produced plots, by default False.</li>
-<li><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – Prefix to add before the self-generated filename, by default None.</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpus, by default all available.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesInPlot</strong> (<em>array of str</em>) – 1- or 2-element array which says the coordinates to plot (2 for 3D plots).</p></li>
+<li><p><strong>axisInTable</strong> (<em>str</em><em>, </em><em>optional</em>) – the axis to plot on a page - e.g. ant to get all antenna’s on one file. By default ‘’.</p></li>
+<li><p><strong>axisInCol</strong> (<em>str</em><em>, </em><em>optional</em>) – The axis to plot in different colours - e.g. pol to get correlations with different colors. By default ‘’.</p></li>
+<li><p><strong>axisDiff</strong> (<em>str</em><em>, </em><em>optional</em>) – This must be a len=2 axis and the plot will have the differential value - e.g. ‘pol’ to plot XX-YY. By default ‘’.</p></li>
+<li><p><strong>NColFig</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of columns in a multi-table image. By default is automatically chosen.</p></li>
+<li><p><strong>figSize</strong> (<em>array of int</em><em>, </em><em>optional</em>) – Size of the image [x,y], if one of the values is 0, then it is automatically chosen. By default automatic set.</p></li>
+<li><p><strong>markerSize</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the markers in the 2D plot. By default 2.</p></li>
+<li><p><strong>minmax</strong> (<em>array of float</em><em>, </em><em>optional</em>) – Min max value for the independent variable (0 means automatic). By default 0.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use Log=’XYZ’ to set which axes to put in Log. By default ‘’.</p></li>
+<li><p><strong>plotFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to plot also flags as red points in 2D plots. By default False.</p></li>
+<li><p><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – Unwrap phases. By default False.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. By default None.</p></li>
+<li><p><strong>refDir</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference direction for phases. By default None.</p></li>
+<li><p><strong>soltabsToAdd</strong> (<em>str</em><em>, </em><em>optional</em>) – Tables to “add” (e.g. ‘sol000/tec000’), it works only for tec and clock to be added to phases. By default None. [To Be Implemented]</p></li>
+<li><p><strong>makeAntPlot</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a plot containing antenna coordinates in x,y and in color the value to plot, axesInPlot must be [ant]. By default False.</p></li>
+<li><p><strong>makeMovie</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make a movie summing up all the produced plots, by default False.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – Prefix to add before the self-generated filename, by default None.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cpus, by default all available.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.plotscreen">
+</section>
+<section id="module-losoto.operations.plotscreen">
 <span id="losoto-operations-plotscreen-module"></span><h2>losoto.operations.plotscreen module<a class="headerlink" href="#module-losoto.operations.plotscreen" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.plotscreen.run">
-<code class="descclassname">losoto.operations.plotscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>resSoltab=''</em>, <em>minZ=-3.2</em>, <em>maxZ=3.2</em>, <em>prefix=''</em>, <em>remove_gradient=False</em>, <em>show_source_names=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.plotscreen.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.plotscreen.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resSoltab</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">3.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_source_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.plotscreen.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot screens (one plot is made per time and per station)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltab</strong> (<em>solution table</em>) – Soltab containing screen.</li>
-<li><strong>resSoltab</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screen residuals.</li>
-<li><strong>minZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of colorbar scale.</li>
-<li><strong>maxZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Max value of colorbar scale.</li>
-<li><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – String to prepend to output plots.</li>
-<li><strong>remove_gradient</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, remove gradient before plotting.</li>
-<li><strong>show_source_names</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, source names are overplotted.</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltab</strong> (<em>solution table</em>) – Soltab containing screen.</p></li>
+<li><p><strong>resSoltab</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screen residuals.</p></li>
+<li><p><strong>minZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of colorbar scale.</p></li>
+<li><p><strong>maxZ</strong> (<em>float</em><em>, </em><em>optional</em>) – Max value of colorbar scale.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – String to prepend to output plots.</p></li>
+<li><p><strong>remove_gradient</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, remove gradient before plotting.</p></li>
+<li><p><strong>show_source_names</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, source names are overplotted.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.polalign">
+</section>
+<section id="module-losoto.operations.polalign">
 <span id="losoto-operations-polalign-module"></span><h2>losoto.operations.polalign module<a class="headerlink" href="#module-losoto.operations.polalign" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.polalign.run">
-<code class="descclassname">losoto.operations.polalign.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='phasediff'</em>, <em>maxResidual=1.0</em>, <em>fitOffset=False</em>, <em>average=False</em>, <em>replace=False</em>, <em>refAnt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.polalign.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.polalign.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'phasediff'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minFreq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.polalign.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate polarization misalignment as delay.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “phasediff”.</li>
-<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum acceptable rms of the residuals in radians before flagging, by default 1. If 0: No check.</li>
-<li><strong>fitOffset</strong> (<em>bool</em><em>, </em><em>optional</em>) – Assume that together with a delay each station has also a differential phase offset (important for old LBA observations). By default False.</li>
-<li><strong>average</strong> (<em>bool</em><em>, </em><em>optional</em>) – Mean-average in time the resulting delays/offset. By default False.</li>
-<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – replace using smoothed value instead of flag bad data? Smooth must be active. By default, False.</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “phasediff”.</p></li>
+<li><p><strong>minFreq</strong> (<em>float</em><em>, </em><em>optional</em>) – minimum frequency [Hz] to use in estimating the PA. By default, 0 (all freqs).</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default ‘auto’.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.prefactor_XYoffset">
+</section>
+<section id="module-losoto.operations.prefactor_XYoffset">
 <span id="losoto-operations-prefactor-xyoffset-module"></span><h2>losoto.operations.prefactor_XYoffset module<a class="headerlink" href="#module-losoto.operations.prefactor_XYoffset" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.prefactor_XYoffset.normalize">
-<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.normalize" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.prefactor_XYoffset.normalize">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.prefactor_XYoffset.</span></span><span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Normalize phase to the range [-pi, pi].</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="losoto.operations.prefactor_XYoffset.run">
-<code class="descclassname">losoto.operations.prefactor_XYoffset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>chanWidth</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.prefactor_XYoffset.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.prefactor_XYoffset.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chanWidth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_XYoffset.run" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.prefactor_bandpass">
+</section>
+<section id="module-losoto.operations.prefactor_bandpass">
 <span id="losoto-operations-prefactor-bandpass-module"></span><h2>losoto.operations.prefactor_bandpass module<a class="headerlink" href="#module-losoto.operations.prefactor_bandpass" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.prefactor_bandpass.run">
-<code class="descclassname">losoto.operations.prefactor_bandpass.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>chanWidth=''</em>, <em>outSoltabName='bandpass'</em>, <em>BadSBList=''</em>, <em>interpolate=True</em>, <em>removeTimeAxis=True</em>, <em>autoFlag=False</em>, <em>nSigma=5.0</em>, <em>maxFlaggedFraction=0.5</em>, <em>maxStddev=0.01</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.prefactor_bandpass.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.prefactor_bandpass.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chanWidth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outSoltabName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bandpass'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BadSBList</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removeTimeAxis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoFlag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nSigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxFlaggedFraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxStddev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.prefactor_bandpass.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation for LoSoTo implements the Prefactor bandpass operation
 WEIGHT: flag-only compliant, no need for weight</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>chanWidth</strong> (<em>str</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – the width of each channel in the data from which solutions were obtained. Can be
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chanWidth</strong> (<em>str</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – the width of each channel in the data from which solutions were obtained. Can be
 either a string like “48kHz” or a float in Hz. If interpolate = True, chanWidth
-must be specified</li>
-<li><strong>BadSBList</strong> (<em>str</em><em>, </em><em>optional</em>) – a list of bad subbands that will be flagged</li>
-<li><strong>outSoltabName</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the output bandpass soltab. An existing soltab with this name will be
-overwritten</li>
-<li><strong>interpolate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, interpolate to a regular frequency grid and then smooth, ignoring bad
+must be specified</p></li>
+<li><p><strong>BadSBList</strong> (<em>str</em><em>, </em><em>optional</em>) – a list of bad subbands that will be flagged</p></li>
+<li><p><strong>outSoltabName</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the output bandpass soltab. An existing soltab with this name will be
+overwritten</p></li>
+<li><p><strong>interpolate</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, interpolate to a regular frequency grid and then smooth, ignoring bad
 subbands. If False, neither interpolation nor smoothing is done and the output
 frequency grid is the same as the input one. If interpolate = True, chanWidth
-must be specified</li>
-<li><strong>removeTimeAxis</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the time axis of the output bandpass soltab is removed by doing a median
-over time. If False, the output time grid is the same as the input one</li>
-<li><strong>autoFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, automatically flag bad frequencies and stations</li>
-<li><strong>nSigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma for autoFlagging. Amplitudes outside of nSigma*stddev are flagged</li>
-<li><strong>maxFlaggedFraction</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum allowable fraction of flagged frequencies for autoFlagging. Stations with
-higher fractions will be completely flagged</li>
-<li><strong>maxStddev</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum allowable standard deviation for autoFlagging</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use during autoFlagging (0 = all)</li>
+must be specified</p></li>
+<li><p><strong>removeTimeAxis</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the time axis of the output bandpass soltab is removed by doing a median
+over time. If False, the output time grid is the same as the input one</p></li>
+<li><p><strong>autoFlag</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, automatically flag bad frequencies and stations</p></li>
+<li><p><strong>nSigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma for autoFlagging. Amplitudes outside of nSigma*stddev are flagged</p></li>
+<li><p><strong>maxFlaggedFraction</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum allowable fraction of flagged frequencies for autoFlagging. Stations with
+higher fractions will be completely flagged</p></li>
+<li><p><strong>maxStddev</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum allowable standard deviation for autoFlagging</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use during autoFlagging (0 = all)</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.reset">
+</section>
+<section id="module-losoto.operations.reference">
+<span id="losoto-operations-reference-module"></span><h2>losoto.operations.reference module<a class="headerlink" href="#module-losoto.operations.reference" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.reference.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.reference.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refDir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reference.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reference to an antenna</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. Empty string does not change phases. Default: ‘’.</p></li>
+<li><p><strong>refDir</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference direction for phases. Empty string does not change phases. Default: ‘’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.replicateonaxis">
+<span id="losoto-operations-replicateonaxis-module"></span><h2>losoto.operations.replicateonaxis module<a class="headerlink" href="#module-losoto.operations.replicateonaxis" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.replicateonaxis.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.replicateonaxis.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axisReplicate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fromCell</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updateWeights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.replicateonaxis.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the values along a certain axis taking them from one specific axic cell</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axisReplicate</strong> (<em>str</em>) – Axis along which replicate the values.</p></li>
+<li><p><strong>fromCell</strong> (<em>str</em>) – A cell value in axisReplicate from which to copy the data values. If it is the string
+“first”/”last” then uses the first/last element of the axis.</p></li>
+<li><p><strong>updateWeights</strong> (<em>bool</em>) – If False then weights are untoched, if True they are replicated like data. Default: True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.reset">
 <span id="losoto-operations-reset-module"></span><h2>losoto.operations.reset module<a class="headerlink" href="#module-losoto.operations.reset" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.reset.run">
-<code class="descclassname">losoto.operations.reset.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>dataVal=-999.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reset.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.reset.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.reset.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataVal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">999.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reset.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This operation reset all the selected solution values.
 WEIGHT: flag compliant, no need for weight</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dataVal</strong> (<em>float</em><em>, </em><em>optional</em>) – If given set values to this number, otherwise uses 1 for amplitude and 0 for all other soltab types.</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataVal</strong> (<em>float</em><em>, </em><em>optional</em>) – If given set values to this number, otherwise uses 1 for amplitude and 0 for all other soltab types.</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.residuals">
+</section>
+<section id="module-losoto.operations.residuals">
 <span id="losoto-operations-residuals-module"></span><h2>losoto.operations.residuals module<a class="headerlink" href="#module-losoto.operations.residuals" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.residuals.run">
-<code class="descclassname">losoto.operations.residuals.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabsToSub</em>, <em>ratio=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.residuals.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.residuals.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.residuals.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabsToSub</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.residuals.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subtract/divide two tables or a clock/tec/tec3rd/rm from a phase.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltabsToSub</strong> (<em>list of str</em>) – List of soltabs to subtract</li>
-<li><strong>ratio</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return the ratio instead of subtracting, by default False.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabsToSub</strong> (<em>list of str</em>) – List of soltabs to subtract</p></li>
+<li><p><strong>ratio</strong> (<em>bool</em><em>, </em><em>optional</em>) – Return the ratio instead of subtracting, by default False.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.reweight">
+</section>
+<section id="module-losoto.operations.reweight">
 <span id="losoto-operations-reweight-module"></span><h2>losoto.operations.reweight module<a class="headerlink" href="#module-losoto.operations.reweight" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.reweight.run">
-<code class="descclassname">losoto.operations.reweight.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>mode='uniform'</em>, <em>weightVal=1.0</em>, <em>nmedian=3</em>, <em>nstddev=251</em>, <em>soltabImport=''</em>, <em>flagBad=False</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.reweight.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.reweight.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uniform'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weightVal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmedian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstddev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">251</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabImport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flagBad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.reweight.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the the weight values.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘uniform’ (single value), ‘window’ (sliding window in time), or ‘copy’ (copy from another table), by default ‘uniform’.</li>
-<li><strong>weightVal</strong> (<em>float</em><em>, </em><em>optional</em>) – Set weights to this values (0=flagged), by default 1.</li>
-<li><strong>nmedian</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Median window size in number of timeslots for ‘window’ mode.
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – One of ‘uniform’ (single value), ‘window’ (sliding window in time), or ‘copy’ (copy from another table), by default ‘uniform’.</p></li>
+<li><p><strong>weightVal</strong> (<em>float</em><em>, </em><em>optional</em>) – Set weights to this values (0=flagged), by default 1.</p></li>
+<li><p><strong>nmedian</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Median window size in number of timeslots for ‘window’ mode.
 If nonzero, a median-smoothed version of the input values is
 subtracted to detrend them. If 0, no smoothing or subtraction is
-done, by default 3.</li>
-<li><strong>nstddev</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Standard deviation window size in number of timeslots for ‘window’ mode, by default 251.</li>
-<li><strong>soltabImport</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of a soltab. Copy weights from this soltab (must have same axes shape), by default none.</li>
-<li><strong>flagBad</strong> (<em>bool</em><em>, </em><em>optional</em>) – Re-apply flags to bad values (1 for amp, 0 for other tables), by default False.</li>
+done, by default 3.</p></li>
+<li><p><strong>nstddev</strong> (<em>odd int</em><em>, </em><em>optional</em>) – Standard deviation window size in number of timeslots for ‘window’ mode, by default 251.</p></li>
+<li><p><strong>soltabImport</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of a soltab. Copy weights from this soltab (must have same axes shape), by default none.</p></li>
+<li><p><strong>flagBad</strong> (<em>bool</em><em>, </em><em>optional</em>) – Re-apply flags to bad values (1 for amp, 0 for other tables), by default False.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.screenvalues">
+</section>
+<section id="module-losoto.operations.screenvalues">
 <span id="losoto-operations-screenvalues-module"></span><h2>losoto.operations.screenvalues module<a class="headerlink" href="#module-losoto.operations.screenvalues" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.screenvalues.run">
-<code class="descclassname">losoto.operations.screenvalues.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab1</em>, <em>source_dict</em>, <em>outsoltab</em>, <em>soltab2=None</em>, <em>ncpu=0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.screenvalues.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.screenvalues.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outsoltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltab2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.screenvalues.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate phases from screens</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltab1</strong> (<em>solution table</em>) – Soltab containing the screen at frequency 1</li>
-<li><strong>source_dict</strong> (<em>dict</em>) – Dictionary of source positions for which phases are desired</li>
-<li><strong>outsoltab</strong> (<em>str</em>) – Name of output solution table. If TEC+scalarphase solutions are desired,
-two solution tables are made: ‘tecoutsoltab’ and ‘scalarphaseoutsoltab’</li>
-<li><strong>soltab2</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screens at frequency 2 (needed for TEC+scalar
-phase)</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltab1</strong> (<em>solution table</em>) – Soltab containing the screen at frequency 1</p></li>
+<li><p><strong>source_dict</strong> (<em>dict</em>) – Dictionary of source positions for which phases are desired</p></li>
+<li><p><strong>outsoltab</strong> (<em>str</em>) – Name of output solution table. If TEC+scalarphase solutions are desired,
+two solution tables are made: ‘tecoutsoltab’ and ‘scalarphaseoutsoltab’</p></li>
+<li><p><strong>soltab2</strong> (<em>solution table</em><em>, </em><em>optional</em>) – Soltab containing the screens at frequency 2 (needed for TEC+scalar
+phase)</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.smooth">
+</section>
+<section id="module-losoto.operations.smooth">
 <span id="losoto-operations-smooth-module"></span><h2>losoto.operations.smooth module<a class="headerlink" href="#module-losoto.operations.smooth" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.smooth.run">
-<code class="descclassname">losoto.operations.smooth.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>axesToSmooth</em>, <em>size=[]</em>, <em>mode='runningmedian'</em>, <em>degree=1</em>, <em>replace=False</em>, <em>log=False</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.smooth.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.smooth.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.smooth.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axesToSmooth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runningmedian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.smooth.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>A smoothing function: running-median on an arbitrary number of axes, running polyfit and Savitzky-Golay on one axis, or set all solutions to the mean/median value.
 WEIGHT: flag ready.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>axesToSmooth</strong> (<em>array of str</em>) – Axes used to compute the smoothing function.</li>
-<li><strong>size</strong> (<em>array of int</em><em>, </em><em>optional</em>) – Window size for the runningmedian, savitzky-golay, and runningpoly (array of same size of axesToSmooth), by default [].</li>
-<li><strong>mode</strong> (<em>{'runningmedian'</em><em>,</em><em>'runningpoly'</em><em>,</em><em>'savitzky-golay'</em><em>,</em><em>'mean'</em><em>,</em><em>'median'}</em><em>, </em><em>optional</em>) – Runningmedian or runningpoly or Savitzky-Golay or mean or median (these last two values set all the solutions to the mean/median), by default “runningmedian”.</li>
-<li><strong>degree</strong> (<em>int</em><em>, </em><em>optional</em>) – Degrees of the polynomia for the runningpoly or savitzky-golay modes, by default 1.</li>
-<li><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flagged data are replaced with smoothed value and unflagged, by default False.</li>
-<li><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – clip is done in log10 space, by default False</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axesToSmooth</strong> (<em>array of str</em>) – Axes used to compute the smoothing function.</p></li>
+<li><p><strong>size</strong> (<em>array of int</em><em>, </em><em>optional</em>) – Window size for the runningmedian, savitzky-golay, and runningpoly (array of same size of axesToSmooth), by default [].</p></li>
+<li><p><strong>mode</strong> (<em>{'runningmedian'</em><em>,</em><em>'runningpoly'</em><em>,</em><em>'savitzky-golay'</em><em>,</em><em>'mean'</em><em>,</em><em>'median'}</em><em>, </em><em>optional</em>) – Runningmedian or runningpoly or Savitzky-Golay or mean or median (these last two values set all the solutions to the mean/median), by default “runningmedian”.</p></li>
+<li><p><strong>degree</strong> (<em>int</em><em>, </em><em>optional</em>) – Degrees of the polynomia for the runningpoly or savitzky-golay modes, by default 1.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flagged data are replaced with smoothed value and unflagged, by default False.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – clip is done in log10 space, by default False</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. By default None.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.splitleak">
+</section>
+<section id="module-losoto.operations.splitleak">
 <span id="losoto-operations-splitleak-module"></span><h2>losoto.operations.splitleak module<a class="headerlink" href="#module-losoto.operations.splitleak" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.splitleak.run">
-<code class="descclassname">losoto.operations.splitleak.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOutG=None</em>, <em>soltabOutD=None</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.splitleak.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Duplicate a table</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltabOutG</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name (diagonal component). By default choose next available from table type.</li>
-<li><strong>soltabOutD</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name (leakage component). By default choose next available from table type.</li>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.splitleak.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.splitleak.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOutG</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOutD</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.splitleak.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPERIMENTAL
+Derive leackage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOutG</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name (diagonal component). By default choose next available from table type.</p></li>
+<li><p><strong>soltabOutD</strong> (<em>str</em><em>, </em><em>optional</em>) – Output table name (leakage component). By default choose next available from table type.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.stationscreen">
+</section>
+<section id="module-losoto.operations.stationscreen">
 <span id="losoto-operations-stationscreen-module"></span><h2>losoto.operations.stationscreen module<a class="headerlink" href="#module-losoto.operations.stationscreen" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.stationscreen.run">
-<code class="descclassname">losoto.operations.stationscreen.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>outsoltab</em>, <em>order=12</em>, <em>beta=1.6666666666666667</em>, <em>ncpu=0</em>, <em>niter=2</em>, <em>nsigma=5.0</em>, <em>refAnt=-1</em>, <em>scale_order=True</em>, <em>scale_dist=None</em>, <em>min_order=5</em>, <em>adjust_order=True</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.stationscreen.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.stationscreen.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outsoltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.6666666666666667</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.stationscreen.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fits station screens to input soltab (type ‘phase’ or ‘amplitude’ only).</p>
 <p>The results of the fit are stored in the soltab parent solset in “outsoltab”
 and the residual values (actual - screen) are stored in “outsoltabresid”.
@@ -663,108 +779,206 @@ These values are the screen amplitude values per station per pierce point
 per solution interval. The pierce point locations are stored in an auxiliary
 array in the output soltabs.</p>
 <p>Screens can be plotted with the PLOTSCREEN operation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltab</strong> (<em>solution table</em>) – Soltab containing amplitude solutions</li>
-<li><strong>outsoltab</strong> (<em>str</em>) – Name of output soltab</li>
-<li><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of screen (i.e., number of KL base vectors to keep). If the order
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltab</strong> (<em>solution table</em>) – Soltab containing amplitude solutions</p></li>
+<li><p><strong>outsoltab</strong> (<em>str</em>) – Name of output soltab</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of screen (i.e., number of KL base vectors to keep). If the order
 is scaled by dist (scale_order = True), the order is calculated as
-order * sqrt(dist/scale_dist)</li>
-<li><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Power-law index for amp structure function (5/3 =&gt; pure Kolmogorov
-turbulence)</li>
-<li><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</li>
-<li><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to do when determining weights</li>
-<li><strong>nsigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma above which directions are flagged</li>
-<li><strong>refAnt</strong> (<em>str</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Index (if int) or name (if str) of reference station (-1 =&gt; no ref)</li>
-<li><strong>scale_order</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, scale the screen order with sqrt of distance/scale_dist to the
-reference station</li>
-<li><strong>scale_dist</strong> (<em>float</em><em>, </em><em>optional</em>) – Distance used to normalize the distances used to scale the screen order.
-If None, the max distance is used</li>
-<li><strong>adjust_order</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, adjust the screen order to obtain a reduced chi^2 of approx.
-unity</li>
-<li><strong>min_order</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum allowed order if adjust_order = True.</li>
+order * sqrt(dist/scale_dist)</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Power-law index for amp structure function (5/3 =&gt; pure Kolmogorov
+turbulence)</p></li>
+<li><p><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to do when determining weights</p></li>
+<li><p><strong>nsigma</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of sigma above which directions are flagged</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Index (if int) or name (if str) of reference station (-1 =&gt; no ref)</p></li>
+<li><p><strong>scale_order</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, scale the screen order with sqrt of distance/scale_dist to the
+reference station</p></li>
+<li><p><strong>scale_dist</strong> (<em>float</em><em>, </em><em>optional</em>) – Distance used to normalize the distances used to scale the screen order.
+If None, the max distance is used</p></li>
+<li><p><strong>adjust_order</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, adjust the screen order to obtain a reduced chi^2 of approx.
+unity</p></li>
+<li><p><strong>min_order</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum allowed order if adjust_order = True.</p></li>
+<li><p><strong>ncpu</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CPUs to use. If 0, all are used</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.structure">
+</section>
+<section id="module-losoto.operations.structure">
 <span id="losoto-operations-structure-module"></span><h2>losoto.operations.structure module<a class="headerlink" href="#module-losoto.operations.structure" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.structure.run">
-<code class="descclassname">losoto.operations.structure.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>doUnwrap=False</em>, <em>refAnt=''</em>, <em>plotName=''</em>, <em>ndiv=1</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.structure.run" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.structure.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.structure.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doUnwrap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndiv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.structure.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the structure function from phase solutions of core stations.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – </li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
-<li><strong>plotName</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot file name, by default no plot.</li>
-<li><strong>ndiv</strong> (<em>int</em><em>, </em><em>optional</em>) – </li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>doUnwrap</strong> (<em>bool</em><em>, </em><em>optional</em>) – </p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default None.</p></li>
+<li><p><strong>plotName</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot file name, by default no plot.</p></li>
+<li><p><strong>ndiv</strong> (<em>int</em><em>, </em><em>optional</em>) – </p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.tec">
+</section>
+<section id="module-losoto.operations.tec">
 <span id="losoto-operations-tec-module"></span><h2>losoto.operations.tec module<a class="headerlink" href="#module-losoto.operations.tec" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.tec.run">
-<code class="descclassname">losoto.operations.tec.</code><code class="descname">run</code><span class="sig-paren">(</span><em>soltab</em>, <em>soltabOut='tec000'</em>, <em>refAnt=''</em>, <em>maxResidual=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bruteforce TEC extraction from phase solutions.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “tec”.</li>
-<li><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default the first.</li>
-<li><strong>maxResidual</strong> (<em>float</em><em>, </em><em>optional</em>) – Max average residual in radians before flagging datapoint, by default 1. If 0: no check.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tec.mod">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tec.</span></span><span class="sig-name descname"><span class="pre">mod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.mod" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrap phases to (-pi,pi)</p>
 </dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations.tecjump">
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tec.tec_merit_brute">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tec.</span></span><span class="sig-name descname"><span class="pre">tec_merit_brute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dTEC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.tec_merit_brute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merit function for brute-force grid search.
+:param dTEC:
+:type dTEC: float, dTEC in TECU
+:param freq:
+:type freq: np array of floats, phases in Hz
+:param phases:
+:type phases: phases to fit in rad
+:param weight:
+:type weight: bool, default True. Whether to weight residuals by noise or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rms_phase_residual</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float, rms of phase residuals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tec.tec_merit">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tec.</span></span><span class="sig-name descname"><span class="pre">tec_merit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dTEC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.tec_merit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merit function for least-square fit.
+:param dTEC:
+:type dTEC: float, dTEC in TECU
+:param freq:
+:type freq: np array of floats, phases in Hz
+:param phases:
+:type phases: phases to fit in rad
+:param weight:
+:type weight: bool, default True. Whether to weight residuals by noise or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>rms_phase_residuals</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>array of floats, rms of phase residuals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tec.fit_tec_to_phases">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tec.</span></span><span class="sig-name descname"><span class="pre">fit_tec_to_phases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxResidualFlag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxResidualProp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.fit_tec_to_phases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit dTEC to phases and frequencies for a range of times.
+:param vals:
+:type vals: numpy array of floats, phases to fit in rad. Shape (n_times, n_freq)
+:param weights:
+:type weights: numpy array of floats, phases to fit in rad. Shape (n_times, n_freq)
+:param coord:
+:type coord: dict of coords of current selection. Contains time, freq, ant, (optional: dir)
+:param refAnt:
+:type refAnt: string, reference antenna
+:param maxResidualFlag:
+:type maxResidualFlag: float, default = 2.5 Maximum residual that is not flagged. 0=don’t flag.
+:param maxResidualProp:
+:type maxResidualProp: float, default = 1. Maximum residual that is propagated. 0=propagate all.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>[fitdTEC, fitweights]</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list of numpy array of floats, dTEC restults in TECU / weights</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tec.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tec.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxResidualFlag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxResidualProp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bruteforce TEC extraction from phase solutions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “tec”.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default ‘auto’.</p></li>
+<li><p><strong>maxResidualFlag</strong> (<em>float</em><em>, </em><em>optional</em>) – Max average residual in radians before flagging datapoint, by default 2.5 If 0: no check.</p></li>
+<li><p><strong>maxResidualProp</strong> (<em>float</em><em>, </em><em>optional</em>) – Max average residual in radians before stop propagating solutions, by default 1. If 0: no check.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations.tecjump">
 <span id="losoto-operations-tecjump-module"></span><h2>losoto.operations.tecjump module<a class="headerlink" href="#module-losoto.operations.tecjump" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="losoto.operations.tecjump.run">
-<code class="descclassname">losoto.operations.tecjump.</code><code class="descname">run</code><span class="sig-paren">(</span><em>step</em>, <em>parset</em>, <em>H</em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecjump.run" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tecjump.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tecjump.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabError</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecjump.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPERIMENTAL
+Remove jumps from TEC solutions.
+WEIGHT: uses the errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabError</strong> (<em>str</em><em>, </em><em>optional</em>) – The table name with solution errors. By default it has the same name of soltab with “error” in place of “tec”.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna for phases. By default None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-</div>
-<div class="section" id="module-losoto.operations">
+</section>
+<section id="module-losoto.operations.tecsinglefreq">
+<span id="losoto-operations-tecsinglefreq-module"></span><h2>losoto.operations.tecsinglefreq module<a class="headerlink" href="#module-losoto.operations.tecsinglefreq" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="losoto.operations.tecsinglefreq.run">
+<span class="sig-prename descclassname"><span class="pre">losoto.operations.tecsinglefreq.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soltab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soltabOut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tec000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refAnt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#losoto.operations.tecsinglefreq.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPERIMENTAL
+Estimate TEC from ph solutions assuming no wrap for solution at t=0</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>soltabOut</strong> (<em>str</em><em>, </em><em>optional</em>) – output table name (same solset), by deault “tec”.</p></li>
+<li><p><strong>refAnt</strong> (<em>str</em><em>, </em><em>optional</em>) – Reference antenna, by default ‘auto’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-losoto.operations">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-losoto.operations" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="losoto.html">Table Of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="losoto.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">losoto.operations package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.abs">losoto.operations.abs module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.bandpasstec">losoto.operations.bandpasstec module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clip">losoto.operations.clip module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.clocktec">losoto.operations.clocktec module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.deleteaxis">losoto.operations.deleteaxis module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.directionscreen">losoto.operations.directionscreen module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.duplicate">losoto.operations.duplicate module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.example">losoto.operations.example module</a></li>
@@ -772,7 +986,10 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.flag">losoto.operations.flag module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.flagextend">losoto.operations.flagextend module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.flagstation">losoto.operations.flagstation module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.frjump">losoto.operations.frjump module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.globaldelay">losoto.operations.globaldelay module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.interpolate">losoto.operations.interpolate module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.interpolatedirections">losoto.operations.interpolatedirections module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.lofarbeam">losoto.operations.lofarbeam module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.norm">losoto.operations.norm module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.plot">losoto.operations.plot module</a></li>
@@ -780,6 +997,8 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.polalign">losoto.operations.polalign module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.prefactor_XYoffset">losoto.operations.prefactor_XYoffset module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.prefactor_bandpass">losoto.operations.prefactor_bandpass module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.reference">losoto.operations.reference module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.replicateonaxis">losoto.operations.replicateonaxis module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reset">losoto.operations.reset module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.residuals">losoto.operations.residuals module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.reweight">losoto.operations.reweight module</a></li>
@@ -790,14 +1009,23 @@ unity</li>
 <li><a class="reference internal" href="#module-losoto.operations.structure">losoto.operations.structure module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.tec">losoto.operations.tec module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations.tecjump">losoto.operations.tecjump module</a></li>
+<li><a class="reference internal" href="#module-losoto.operations.tecsinglefreq">losoto.operations.tecsinglefreq module</a></li>
 <li><a class="reference internal" href="#module-losoto.operations">Module contents</a></li>
 </ul>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="losoto.html"
-                        title="previous chapter">losoto package</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="losoto.html"
+                          title="previous chapter">losoto package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="losoto.tests.html"
+                          title="next chapter">losoto.tests package</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -806,17 +1034,15 @@ unity</li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -831,14 +1057,18 @@ unity</li>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="losoto.tests.html" title="losoto.tests package"
+             >next</a> |</li>
+        <li class="right" >
           <a href="losoto.html" title="losoto package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="losoto.html">LoSoTo 2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">losoto.operations package</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Francesco de Gasperin.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.9.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
   </body>
 </html>

@@ -70,7 +70,7 @@ def getInitClock(data, freq):
             avgdata[ist, :, pol][~mymask] = np.float32(unwrapSparsePhases(avgdata[ist, :, pol][~mymask],freq[~mymask]))
             # logging.debug("average unwrapped data station %d pol %d "%(ist,pol) +str(avgdata[ist,:,pol]))
             # logging.debug("remainder " +str(np.remainder(avgdata[ist,:,pol]+np.pi,2*np.pi)-np.pi))
-    A = np.ones((nF, 2), dtype=np.float)
+    A = np.ones((nF, 2), dtype=np.float32)
     A[:, 1] = freq * 2 * np.pi * 1e-9
     return np.ma.dot(np.linalg.inv(np.dot(A.T, A)), np.ma.dot(A.T, avgdata).swapaxes(0, -2))
 
@@ -78,7 +78,7 @@ def unwrapSparsePhases(phases,freqs,doFlag=False):
     '''unwrap phases, using frequency coverage'''
     testwraps=np.arange(-25,26,.1)
     dclock=testwraps*1e9/(freqs[-1]-freqs[0])
-    A = np.ones((freqs.shape[0], 2), dtype=np.float)
+    A = np.ones((freqs.shape[0], 2), dtype=np.float32)
     A[:, 1] = freqs * 2 * np.pi * 1e-9
     testdata=np.zeros_like(dclock)
     testdata=np.array([testdata,dclock])
@@ -228,7 +228,7 @@ def getInitPar(
 #            logging.debug("unwrapped pahses %d"%(data.count()))
         else:
             data=unwrapSparsePhases(data,freqs)
-        steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
+        steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float32))
         par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,data))
         #get parameters close to 0
         data-=np.round(np.average(np.round(par/steps)))*2*np.pi
@@ -237,7 +237,7 @@ def getInitPar(
         nrClock+=np.abs(np.round(par[1]/steps[1]))
     if data.mask.sum()<0.5*data.size:
         A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
-    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
+    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T, A[:,:2])), A[:,:2].T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float32))
     #get initial guess, first only for first two parameters
     par=np.ma.dot(np.linalg.inv(np.ma.dot(A[:,:2].T,A[:,:2])),np.ma.dot(A[:,:2].T,data))
 
@@ -255,7 +255,7 @@ def getInitPar(
         A=np.ma.array(A,mask=np.tile(data.mask,(A.shape[1],1)).T)
     #now add third parameter if needed:
     if nrthird>0:
-        steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float))
+        steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freqs.shape[0], ), dtype=np.float32))
         par=np.ma.dot(np.linalg.inv(np.ma.dot(A.T,A)),np.ma.dot(A.T,data))
         a=np.mgrid[max(-1,int(-nrTEC/2)):min(2,int(nrTEC/2)+1),max(-1,int(-nrClock/2)):min(2,int(nrClock/2)+1),-int(nrthird/2):int(nrthird/2)+1] #assume dTEC and dClock are already close
         bigdata=np.concatenate(tuple([a[i][np.newaxis,:]*steps[i]+par[i] for i  in range(3)]),axis=0).transpose(1,2,3,0)
@@ -289,16 +289,16 @@ def getClockTECFit(
         residualarray = np.zeros((nT, nF, nSt), dtype=np.float32)
     if fit3rdorder:
         tec3rdarray= np.zeros((nT, nSt), dtype=np.float32)
-    A = np.ones((nF, 2+fit3rdorder), dtype=np.float)
+    A = np.ones((nF, 2+fit3rdorder), dtype=np.float32)
     A[:, 1] = freq * 2 * np.pi * 1e-9
     A[:, 0] = -8.44797245e9 / freq
     if fit3rdorder:
         A[:, 2] = -1e21 / freq**3
-    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freq.shape[0], ), dtype=np.float))
+    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freq.shape[0], ), dtype=np.float32))
     succes=False
     initprevsol=np.zeros(nSt,dtype=bool)
     nrFail=np.zeros(nSt,dtype=int)
-    sol = np.zeros((nSt, 2+fit3rdorder), dtype=np.float)
+    sol = np.zeros((nSt, 2+fit3rdorder), dtype=np.float32)
     prevsol = np.zeros_like(sol)
     n3rd=0
     for itm in range(nT):
@@ -436,16 +436,16 @@ def getClockTECFitStation(
         residualarrayst = np.zeros((nT, nF), dtype=np.float32)
     if fit3rdorder:
         tec3rdarrayst= np.zeros((nT,), dtype=np.float32)
-    A = np.ones((nF, 2+fit3rdorder), dtype=np.float)
+    A = np.ones((nF, 2+fit3rdorder), dtype=np.float32)
     A[:, 1] = freq * 2 * np.pi * 1e-9
     A[:, 0] = -8.44797245e9 / freq
     if fit3rdorder:
         A[:, 2] = -1e21 / freq**3
-    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freq.shape[0], ), dtype=np.float))
+    steps = np.ma.dot(np.ma.dot(np.linalg.inv(np.ma.dot(A.T, A)), A.T), 2 * np.pi * np.ones((freq.shape[0], ), dtype=np.float32))
     succes=False
     initprevsol=False
     nrFail=0
-    sol = np.zeros((2+fit3rdorder), dtype=np.float)
+    sol = np.zeros((2+fit3rdorder), dtype=np.float32)
     prevsol = np.zeros_like(sol)
     n3rd=0
     for itm in range(nT):
@@ -501,7 +501,7 @@ def getClockTECFitStation(
                 except np.linalg.LinAlgError:
                     logging.debug("Init parmaters failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                     sol[:] = [-10.,]*sol.shape[0]
-                    
+
                 #logging.debug("Getting init par for station %d:%s "%(itm,stationname)+str(sol))
 
         #now do the real fitting
@@ -527,7 +527,7 @@ def getClockTECFitStation(
             except np.linalg.LinAlgError:
                 logging.debug("Fit failed   t=%d st=%s flags=%d" % (itm,stationname,datatmpist.count()) + str(sol[:]))
                 sol[:] = [-10.,]*sol.shape[0]
-               
+
         # calculate chi2 per station
 
         residual = data[itm] - np.dot(A, sol)
@@ -571,10 +571,10 @@ def getPhaseWrapBase(freqs):
     """
 
     nF = freqs.shape[0]
-    A = np.zeros((nF, 2), dtype=np.float)
+    A = np.zeros((nF, 2), dtype=np.float32)
     A[:, 1] = freqs * 2 * np.pi * 1e-9
     A[:, 0] = -8.44797245e9 / freqs
-    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float))
+    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float32))
     basef = np.dot(A, steps) - 2 * np.pi
     return (basef, steps)
 
@@ -583,7 +583,7 @@ def getResidualPhaseWraps(avgResiduals, freqs):
     flags = np.average(avgResiduals.mask,axis=1)>0.5
     nSt = avgResiduals.shape[1]
     nF = freqs.shape[0]
-    wraps = np.zeros((nSt, ), dtype=np.float)
+    wraps = np.zeros((nSt, ), dtype=np.float32)
     tmpflags = flags
     tmpfreqs = freqs[np.logical_not(tmpflags)]
     steps=[0,0]
@@ -632,7 +632,7 @@ def correctWraps(
     lonlat = np.concatenate((lons, lats)).reshape((2, ) + lons.shape)
     # refine (is it needed/helpful for LBA? the offsets seem to make sense for LBA)
     myselect=np.sqrt(np.sum(lonlat**2,axis=0))>0.5
-    
+
 
     for nr_iter in range(2):
         # recreate best TEC at the moment
@@ -712,6 +712,9 @@ def doFit(
     nF = data.shape[1]
     nSt = data.shape[2]
 
+    # mask where data is NaN
+    data.mask = np.logical_or(data.mask,np.isnan(data))
+
     if npol == 4:
         data = data[:, :, :, (0, 3)]
         npol = 2
@@ -740,7 +743,7 @@ def doFit(
     indices = np.arange(nF)
 
     if flagBadChannels:
-        mymask=np.zeros((nF), dtype=np.bool)
+        mymask=np.zeros((nF), dtype=bool)
         for nr_iter in range(2):
             rms = np.ma.std(np.ma.std(refdata, axis=0), axis=1)
             freqselect = rms < flagcut * np.average(rms)

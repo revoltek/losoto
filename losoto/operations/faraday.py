@@ -101,7 +101,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
         fitweights = np.ones(len(times)) # all unflagged to start
         fitrmguess = 0.001 # good guess
 
-        if not coord['ant'] == refAnt:
+        if not coord['ant'] == refAnt and not (refAnt == 'auto' and coord['ant'] == soltab.cacheAutoRefAnt):
             logging.debug('Working on ant: '+coord['ant']+'...')
 
             if (weights == 0.).all() == True:
@@ -117,7 +117,7 @@ def run( soltab, soltabOut='rotationmeasure000', refAnt='', maxResidual=1.,ncpu=
 
                 tuples = [(t,coord_rr,coord_ll,wt,vl,solType,coord,maxResidual) for t,wt,vl in zip(list(np.arange(len(times))), weightsliced, valsliced)]
                 if ncpu == 0:
-                    ncpu = mp.cpu_count()
+                    ncpu = nproc()
                 with mp.Pool(ncpu) as pool:
                     fitrm,fitweights = zip(*pool.starmap(_run_timestep,tuples))
 

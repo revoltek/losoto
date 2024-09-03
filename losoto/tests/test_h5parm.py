@@ -7,7 +7,7 @@ def test_h5parm():
     assert isinstance(H, h5parm)
     assert isinstance(str(H), str)
     H.makeSolset('test_solset')
-    assert 'test_solset' in H.getSolsets(0
+    assert 'test_solset' in H.getSolsets()
     H.close()
     #TODO: assert closed somehow
 

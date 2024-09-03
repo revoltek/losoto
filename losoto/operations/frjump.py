@@ -26,9 +26,9 @@ def getPhaseWrapBase(wavels):
     """
     wavels = np.array(wavels)
     nF = wavels.shape[0]
-    A = np.zeros((nF, 1), dtype=np.float)
+    A = np.zeros((nF, 1), dtype=float)
     A[:, 0] = 2*wavels**2
-    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=np.float))
+    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 2 * np.pi * np.ones((nF, ), dtype=float))
     return steps
 
 def getPhaseWrapBase_TEC(freqs):
@@ -38,10 +38,10 @@ def getPhaseWrapBase_TEC(freqs):
     """
     freqs = np.array(freqs)
     nF = freqs.shape[0]
-    A = np.zeros((nF, 2), dtype=np.float)
+    A = np.zeros((nF, 2), dtype=float)
     A[:, 1] = freqs * 2 * np.pi * 1e-9
     A[:, 0] = -8.44797245e9 / freqs
-    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 4 * np.pi * np.ones((nF, ), dtype=np.float))
+    steps = np.dot(np.dot(np.linalg.inv(np.dot(A.T, A)), A.T), 4 * np.pi * np.ones((nF, ), dtype=float))
     return steps[0]
 
 def dejump(vals,wavels,dotec=False):

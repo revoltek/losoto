@@ -79,7 +79,7 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
     # if user-defined number of col use that
     if NColFig != 0: Nc = NColFig
     else: Nc = int(np.ceil(np.sqrt(Nplots)))
-    Nr = int(np.ceil(np.float(Nplots)/Nc))
+    Nr = int(np.ceil(float(Nplots)/Nc))
     
     if figSize[0] == 0:
         if makeMovie: figSize[0]=5+2*Nc
@@ -162,7 +162,6 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
                     vals = np.log10(vals)
  
                 if datatype == 'phase' or datatype == 'rotation':
-                    #cmap = phase_colormap
                     cmap = plt.cm.hsv
                 else:
                     try:
@@ -550,7 +549,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 #                    vals += valsAdd
 
                 # normalize
-                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase'):
+                if (soltab.getType() == 'phase'):
                     vals = normalize_phase(vals)
                 if (soltab.getType() == 'rotation'):
                     vals = np.mod(vals + np.pi/2., np.pi) - np.pi/2.
@@ -562,7 +561,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                         weight = weight.T
 
                 # unwrap if required
-                if (soltab.getType() == 'phase' or soltab.getType() == 'scalarphase') and doUnwrap:
+                if (soltab.getType() == 'phase') and doUnwrap:
                     if len(axesInPlot) == 1:
                         vals = unwrap(vals)
                     else:

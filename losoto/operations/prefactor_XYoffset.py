@@ -116,7 +116,7 @@ def run( soltab, chanWidth ):
     new_soltab = solset.makeSoltab(soltype='phase', soltabName='XYoffset',
                              axesNames=['freq', 'ant', 'pol'], axesVals=[freqs_new, soltab.ant, ['XX','YY']],
                              vals=global_stat_offsets_smoothed_interp,
-                             weights=np.ones_like(global_stat_offsets_smoothed_interp, dtype=np.float16))
+                             weights=np.ones_like(global_stat_offsets_smoothed_interp, dtype=float))
     new_soltab.addHistory('CREATE (by PREFACTOR_XYOFFSET operation)')
 
     return 0

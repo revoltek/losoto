@@ -71,7 +71,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     tests_require=['pytest'],
-    install_requires=['numpy>=1.9', 'cython', 'numexpr>=2.0', 'tables>=3.4', 'configparser',
+    install_requires=['numpy>=1.9,<2.0', 'cython', 'tables>=3.4', 'configparser',
                       'scipy', 'matplotlib', 'python-casacore>=3.0'],
     scripts=['bin/losoto', 'bin/H5parm_split.py',
              'bin/H5parm2parmdb.py', 'bin/parmdb2H5parm.py', 'bin/killMS2H5parm.py',

@@ -549,13 +549,13 @@ if __name__=='__main__':
                     # check whether this is clock or tec; if so, reshape properly to account for all freqs in the parmdb
                     # anyway these tables are freq-indep
                     if solType == "Clock":# or solType == "TEC" or solType == "RotationMeasure":
-                        # find freq-dimensionality 
+                        # find freq-dimensionality
                         nfreq = freqs.shape[0]
                         #print val.shape
                         # reshape such that all freq arrays are filled properly
-                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape),dtype=np.int) ) )
+                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape),dtype=int) ) )
                         #print val.shape
-                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape),dtype=np.int) ) )
+                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape),dtype=int) ) )
 
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True
