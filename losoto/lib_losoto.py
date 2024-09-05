@@ -32,7 +32,7 @@ class LosotoParser(ConfigParser):
         # add [_global] fake section at beginning
         config.write('[_global]\n'+open(parsetFile).read())
         config.seek(0, os.SEEK_SET)
-        self.readfp(config)
+        self.read_file(config)
 
     def checkSpelling(self, s, soltab, availValues=[]):
         """
