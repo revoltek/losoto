@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This tool is used to merge 2 H5parms.
@@ -8,9 +8,7 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, glob
 import numpy as np
-import logging
 import pyrap.tables as pt
-import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 import losoto.h5parm
@@ -27,7 +25,11 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: _logging.setLevel("debug")
+
+    # log
+    logger = _logging.Logger('info')
+    logging = _logging.logger
+    if options.verbose: logger.set_level("debug")
 
     h5parmFrom = args[0]
     h5parmTo = args[1]
@@ -50,20 +52,19 @@ if __name__=='__main__':
     # write table
     ht = losoto.h5parm.h5parm(h5parmToFile, readonly=False)
     # check if the solset exists
-    if solsetTo in ht.getSolsets():
+    if solsetTo in ht.getSolsetNames():
         logging.critical('Destination solset already exists, quitting.')
         sys.exit(1)
     ssT = ht.makeSolset(solsetName = solsetTo, addTables=False)
     # write the soltabs
-    ssF._f_copy_children(ssT, recursive=True)
+    ssF.obj._f_copy_children(ssT.obj, recursive=True)
 
     del hf
 
     # Add entry to history
-    soltabs = ht.getSoltabs(solset=solsetTo)
+    soltabs = ht.getSolset(solsetTo).getSoltabs()
     for st in soltabs:
-        sw = losoto.h5parm.solWriter(soltabs[st])
-        sw.addHistory('Copied (from {0}:{1})'.format(h5parmFromFile, solsetFrom))
+        st.addHistory('Copied (from {0}:{1})'.format(h5parmFromFile, solsetFrom))
     del ht
 
     logging.info("Done.")

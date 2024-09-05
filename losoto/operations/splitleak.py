@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading SPLITLEAK module.')
 
@@ -15,7 +15,8 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabOutG=None, soltabOutD=None):
     """
-    Duplicate a table
+    EXPERIMENTAL
+    Derive leackage
 
     Parameters
     ----------

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 This tool is used to convert a parmdb into a H5parm format.
@@ -17,7 +17,6 @@ _author = "Francesco de Gasperin (astro@voo.it)"
 
 import sys, os, glob
 import socket
-import logging
 from losoto import _version
 from losoto import _logging
 from losoto._importer import create_h5parm
@@ -38,7 +37,11 @@ if __name__=='__main__':
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: _logging.setLevel("debug")
+
+    # log
+    logger = _logging.Logger('info')
+    logging = _logging.logger
+    if options.verbose: logger.set_level("debug")
 
     h5parmFile = args[0]
     logging.info("H5parm filename = "+h5parmFile)

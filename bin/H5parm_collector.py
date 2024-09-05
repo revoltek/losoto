@@ -1,9 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
-import sys, os, logging
+import sys, os
 import codecs
 import numpy as np
 from itertools import chain
@@ -22,6 +20,7 @@ parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Inp
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', '-v', default=False, action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--squeeze', '-q', default=False, action='store_true', help='Remove all axes with a length of 1 (default=False)')
+parser.add_argument('--history', '-H', default=False, action='store_true', help='Keep history of the export soltabs (default=False)')
 parser.add_argument('--clobber', '-c', default=False, action='store_true', help='Replace exising outh5parm file instead of appending to it (default=False)')
 args = parser.parse_args()
 
@@ -29,7 +28,10 @@ if len(args.h5parmFiles) < 1:
     parser.print_help()
     sys.exit(1)
 
-if args.verbose: _logging.setLevel("debug")
+# set logs
+logger = _logging.Logger('info')
+logging = _logging.logger
+if args.verbose: logger.set_level("debug")
 
 ################################
 
@@ -68,6 +70,7 @@ h5Out = h5parm(args.outh5parm, readonly = False)
 
 for insoltab in insoltabs:
     soltabs = []
+    history = ''
     pointingNames = []; antennaNames = []
     pointingDirections = []; antennaPositions = []
 
@@ -75,6 +78,8 @@ for insoltab in insoltabs:
         solset = h5.getSolset(insolset)
         soltab = solset.getSoltab(insoltab)
         soltabs.append( soltab )
+        history += soltab.getHistory()
+        
         # collect pointings
         sous = solset.getSou()
         for k,v in list(sous.items()):
@@ -88,12 +93,17 @@ for insoltab in insoltabs:
             if k not in antennaNames:
                 antennaNames.append(k)
                 antennaPositions.append(v)
-
+                
     # create output axes
     logging.info("Sorting output axes...")
     axes = soltabs[0].getAxesNames()
     if args.squeeze:
-        axes = [axis for axis in axes if soltabs[0].getAxisLen(axis) > 1]
+        axes = [axis for axis in axes if soltabs[0].getAxisLen(axis) > 1 or axis == 'freq' ]
+        removed_axes = list(set(soltabs[0].getAxesNames()) - set(axes))
+        if len(removed_axes) == 0:
+            args.squeeze = False
+        else:
+            axes_squeeze = tuple([soltabs[0].getAxesNames().index(removed_axis) for removed_axis in removed_axes ])
     typ = soltabs[0].getType()
     allAxesVals = {axis:[] for axis in axes}
     allShape = []
@@ -111,7 +121,7 @@ for insoltab in insoltabs:
     logging.debug("Shape:"+str(allShape))
     allVals = np.empty( shape=allShape )
     allVals[:] = np.nan
-    allWeights = np.zeros( shape=allShape )#, dtype=np.float16 )
+    allWeights = np.zeros( shape=allShape )#, dtype=float )
 
     # fill arrays
     logging.info("Filling new table...")
@@ -119,21 +129,19 @@ for insoltab in insoltabs:
         coords = []
         for axis in axes:
             coords.append( np.searchsorted( allAxesVals[axis], soltab.getAxisValues(axis) ) )
-        if args.squeeze:    
-            allVals[np.ix_(*coords)] = np.squeeze(soltab.obj.val)
-            allWeights[np.ix_(*coords)] = np.squeeze(soltab.obj.weight)
+        if args.squeeze:
+            allVals[np.ix_(*coords)] = np.squeeze(np.array(soltab.obj.val), axis = axes_squeeze)
+            allWeights[np.ix_(*coords)] = np.squeeze(np.array(soltab.obj.weight), axis = axes_squeeze)
         else:
             allVals[np.ix_(*coords)] = soltab.obj.val
             allWeights[np.ix_(*coords)] = soltab.obj.weight
-
+            
 
     # TODO: leave correct weights - this is a workaround for h5parm with weight not in float16
     allWeights[ allWeights != 0 ] = 1.
 
     # TODO: flag nans waiting for DPPP to do it
     allWeights[ np.isnan(allVals) ] = 0.
-
-    # TODO: interpolate on selected axes
 
     logging.info('Writing output...')
     solsetOutName = args.outsolset
@@ -146,9 +154,13 @@ for insoltab in insoltabs:
         solsetOut = h5Out.makeSolset(solsetOutName)
 
     # create soltab
-    solsetOut.makeSoltab(typ, soltabOutName, axesNames=axes, \
+    soltabOut = solsetOut.makeSoltab(typ, soltabOutName, axesNames=axes, \
                      axesVals=[ allAxesVals[axis] for axis in axes ], \
                      vals=allVals, weights=allWeights)
+    
+    # add history table if requested
+    if args.history:
+        soltabOut.addHistory(history, date = False)
 
 sourceTable = solsetOut.obj._f_get_child('source')
 antennaTable = solsetOut.obj._f_get_child('antenna')

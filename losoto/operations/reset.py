@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from losoto.lib_operations import *
-import logging
+from losoto._logging import logger as logging
 
 logging.debug('Loading RESET module.')
 
@@ -21,13 +21,25 @@ def run( soltab, dataVal=-999. ):
     ----------
     dataVal : float, optional
         If given set values to this number, otherwise uses 1 for amplitude and 0 for all other soltab types.
+
+    Example : to reset a fulljones amplitude
+              [resetA]
+              operation=RESET
+              soltab=sol000/amplitude000
+              pol=XX,YY
+              dataVal=1.
+              [resetB]
+              operation=RESET
+              soltab=sol000/amplitude000
+              pol=XY,YX
+              dataVal=0.
     """
 
     logging.info("Resetting soltab: "+soltab.name)
 
     solType = soltab.getType()
 
-    if dataVal is -999.:
+    if dataVal == -999.:
         if solType == 'amplitude':
             dataVal = 1.
         else:

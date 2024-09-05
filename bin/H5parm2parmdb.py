@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This tool is used to convert an H5parm file to parmdb format by writing to
@@ -10,16 +10,12 @@ _author = "Francesco de Gasperin (astro@voo.it), David Rafferty (drafferty@hs.un
 import sys, os, glob, re, time
 import numpy as np
 import shutil
-import logging
 import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
-try:
-    import progressbar
-except ImportError:
-    import losoto.progressbar as progressbar
+import losoto.progressbar as progressbar
 
 
 def parmdbToAxes(solEntry):
@@ -342,11 +338,14 @@ if __name__=='__main__':
     (options, args) = opt.parse_args()
     global ipbar, pbar
 
+    logger = _logging.Logger('info')
+    logging = _logging.logger
+
     # Check options
     if len(args) != 2:
         opt.print_help()
         sys.exit()
-    if options.verbose: _logging.setLevel("debug")
+    if options.verbose: logger.set_level("debug")
 
     # Check input H5parm file
     h5parmFile = args[0]
@@ -550,13 +549,13 @@ if __name__=='__main__':
                     # check whether this is clock or tec; if so, reshape properly to account for all freqs in the parmdb
                     # anyway these tables are freq-indep
                     if solType == "Clock":# or solType == "TEC" or solType == "RotationMeasure":
-                        # find freq-dimensionality 
+                        # find freq-dimensionality
                         nfreq = freqs.shape[0]
                         #print val.shape
                         # reshape such that all freq arrays are filled properly
-                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape),dtype=np.int) ) )
+                        val = np.tile( val, np.append([nfreq], np.ones(len(val.shape),dtype=int) ) )
                         #print val.shape
-                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape),dtype=np.int) ) )
+                        weights = np.tile( weights, np.append([nfreq], np.ones(len(weights.shape),dtype=int) ) )
 
                     flags = np.zeros(shape=weights.shape, dtype=bool)
                     flags[np.where(weights == 0)] = True

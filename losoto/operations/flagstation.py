@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
+import warnings
 
 logging.debug('Loading FLAGSTATION module.')
 
@@ -11,7 +12,7 @@ def _run_parser(soltab, parser, step):
     maxFlaggedFraction = parser.getfloat( step, 'maxFlaggedFraction', 0.5)
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
     maxStddev = parser.getfloat( step, 'maxStddev', -1.0)
-    ampRange = parser.getarrayfloat( step, 'ampRange', [50.,200.] )
+    ampRange = parser.getarrayfloat( step, 'ampRange', [0.,0.] )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
     refAnt = parser.getstr( step, 'refAnt', '')
@@ -213,12 +214,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             invert = False
         return sum(c[i] * _B(x, k, i, t, e, invert) for i, e in zip(list(range(n)), extrap))
 
-    def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13):
+    def _bandpass_LBA(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15):
         """
         Defines the functional form of the LBA bandpass in terms of splines of degree 3
 
         The spline fit was done using LSQUnivariateSpline() on the median bandpass between
-        30 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
+        10 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
         minimum number of parameters.
 
         Parameters
@@ -234,11 +235,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         bandpass : list
             List of bandpass values as function of frequency
         """
-        knots = np.array([30003357.0, 30003357.0, 30003357.0, 30003357.0, 40000000.0,
-                          50000000.0, 55000000.0, 56000000.0, 60000000.0, 62000000.0,
-                          63000000.0, 64000000.0, 70000000.0, 77610779.0, 77610779.0,
-                          77610779.0, 77610779.0])
-        coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13])
+        knots = np.array([10850524.0, 10850524.0, 10850524.0, 10850524.0,
+                          20000000.0, 30000000.0, 40000000.0, 50000000.0,
+                          55000000.0, 56000000.0, 60000000.0, 62000000.0,
+                          63000000.0, 64000000.0, 70000000.0, 77610779.0,
+                          77610779.0, 77610779.0, 77610779.0])
+        coeffs = np.array([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15])
         return [_bspline(f, knots, coeffs, 3) for f in freq]
 
     def _bandpass_HBA_low(freq, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
@@ -313,17 +315,16 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             bounds_deltas_upper = [0.06, 0.1, 0.1, 0.1, 0.04, 0.04, 0.04, 0.04, 0.05, 0.06]
         elif band.lower() == 'lba':
             bandpass_function = _bandpass_LBA
-            init_coeffs = np.array([-0.22654016, -0.1950495, -0.07763014, 0.10002095,
-                                    0.32797671, 0.46900048, 0.47155583, 0.31945897,
-                                    0.29072278, 0.08064795, -0.15761538, -0.36020451,
-                                    -0.51163338])
-            bounds_deltas_lower = [0.25, 0.2, 0.05, 0.05, 0.05, 0.1, 0.1, 0.16, 0.2, 0.15,
+            init_coeffs = np.array([-0.19996913, -0.10604762, -0.29063847, -0.17248618,  0.05588799,
+                                    0.21518069,  0.46090289,  0.59503671,  0.6278482 ,  0.42936404,
+                                    0.43576633,  0.29100915, -0.00448301, -0.16566164, -0.3667639 ])
+            bounds_deltas_lower = [0.1, 0.2, 0.25, 0.2, 0.05, 0.05, 0.05, 0.1, 0.1, 0.16, 0.2, 0.15,
                                    0.15, 0.25, 0.3]
-            bounds_deltas_upper = [0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
+            bounds_deltas_upper = [0.1, 0.3, 0.4, 0.3, 0.15, 0.05, 0.05, 0.05, 0.08, 0.05, 0.08, 0.15,
                                    0.15, 0.25, 0.35]
         else:
-            print(('The "{}" band is not supported'.format(band)))
-            sys.exit(1)
+            logging.error('The "{}" band is not supported'.format(band))
+            return None, None
 
         if do_fit:
             lower = [c - b for c, b in zip(init_coeffs, bounds_deltas_lower)]
@@ -334,31 +335,29 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
                                        bounds=param_bounds, method='dogbox', ftol=1e-3,
                                        xtol=1e-3, gtol=1e-3)
                 return popt, bandpass_function(freq, *tuple(popt))
-            except RuntimeError:
-                logging.error('Fitting failed.' )
+            except Exception as err:
+                logging.error('Fitting failed. {}: {}'.format(err.__class__.__name__, err))
                 return None, bandpass_function(freq, *tuple(init_coeffs))
         else:
             return None, bandpass_function(freq, *tuple(init_coeffs))
 
-    # Check that telescope is supported
+    # Check that telescope and band is supported. Skip flagging if not
     if telescope.lower() == 'lofar':
         # Determine which band we're in
         if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
             band = 'hba_low'
-            median_min = ampRange[0]
-            median_max = ampRange[-1]
         elif np.median(freqs) < 90e6:
             band = 'lba'
-            median_min = ampRange[0]
-            median_max = ampRange[-1]
         else:
-            print(('The median frequency of {} Hz is outside of any supported LOFAR band '
-                  '(LBA and HBA-low)'.format(np.median(freqs))))
-            sys.exit(1)
+            logging.warning('The median frequency of {} Hz is outside of the currently supported LOFAR bands '
+                            '(LBA and HBA-low). Flagging will be skipped'.format(np.median(freqs)))
+            outQueue.put([s, weights])
+            return
     else:
-        logging.error("Only telescope = 'lofar' is currently supported for bandpass mode.")
+        logging.warning("Only telescope = 'lofar' is currently supported for bandpass mode. "
+                        "Flagging will be skipped")
         outQueue.put([s, weights])
-        return 1
+        return
 
     # Skip fully flagged stations
     if np.all(weights == 0.0):
@@ -374,6 +373,18 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     sigma = np.sqrt(1.0 / sigma)
     sigma[flagged] = 1e8
 
+    # Set range of allowed values for the median
+    if ampRange is None or ampRange == [0.0, 0.0]:
+        # Use sensible values depending on correlator
+        if np.nanmedian(amps_flagged) > 1.0:
+            # new correlator
+            ampRange = [50.0, 325.0]
+        else:
+            # old correlator
+            ampRange = [0.0004, 0.0018]
+    median_min = ampRange[0]
+    median_max = ampRange[-1]
+
     # Iterate over polarizations
     npols = amps.shape[2]
     for pol in range(npols):
@@ -382,9 +393,9 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             continue
 
         # Take median over time and divide out the median offset
-        with np.warnings.catch_warnings():
+        with warnings.catch_warnings():
             # Filter NaN warnings -- we deal with NaNs below
-            np.warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+            warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
             amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
             median_val = np.nanmedian(amps_div)
         amps_div /= median_val
@@ -406,6 +417,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         amps_div /= 10**normval
         bad = np.where(np.abs(np.array(bp_sp) - np.log10(amps_div)) > 0.2)
         sigma_div[bad] = 1e8
+        if np.all(sigma_div > 1e7):
+            logging.info('Flagged {0} (pol {1}) due to poor match to '
+                         'baseline bandpass model'.format(ants[s], pol))
+            weights[:, :, pol] = 0.0
+            outQueue.put([s, weights])
+            return
 
         # Iteratively fit and flag
         maxiter = 5
@@ -464,7 +481,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=[50, 200], telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=None, telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -487,6 +504,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     ampRange : array, optional
         2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
+        If None or [0, 0], a reasonable range for typical observations is used.
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
@@ -523,22 +541,37 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
 
     # Axis order must be [time, ant, freq, pol], so reorder if necessary
     axis_names = soltab.getAxesNames()
-    if ('freq' not in axis_names or 'pol' not in axis_names or
+    if ('freq' not in axis_names or
         'time' not in axis_names or 'ant' not in axis_names):
         logging.error("Currently, flagstation requires the following axes: "
-                     "freq, pol, time, and ant.")
+                      "freq, time, and ant.")
         return 1
     freq_ind = axis_names.index('freq')
-    pol_ind = axis_names.index('pol')
     time_ind = axis_names.index('time')
     ant_ind = axis_names.index('ant')
-    if 'dir' in axis_names:
-        dir_ind = axis_names.index('dir')
-        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
-        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+    if 'pol' in axis_names:
+        has_pol_axis = True
+        pol_ind = axis_names.index('pol')
+        if 'dir' in axis_names:
+            dir_ind = axis_names.index('dir')
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        else:
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
     else:
-        vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
-        weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        has_pol_axis = False
+        if 'dir' in axis_names:
+            dir_ind = axis_names.index('dir')
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind, dir_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind, dir_ind])
+            vals_arraytmp = np.expand_dims(vals_arraytmp, axis=3)
+            weights_arraytmp = np.expand_dims(weights_arraytmp, axis=3)
+        else:
+            vals_arraytmp = soltab.val[:].transpose([time_ind, ant_ind, freq_ind])
+            weights_arraytmp = soltab.weight[:].transpose([time_ind, ant_ind, freq_ind])
+            vals_arraytmp = np.expand_dims(vals_arraytmp, axis=-1)
+            weights_arraytmp = np.expand_dims(weights_arraytmp, axis=-1)
 
     # Check for NaN solutions and flag
     flagged = np.where(np.isnan(vals_arraytmp))
@@ -617,7 +650,7 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
                 else:
                     ants = soltab.getAxisValues('ant')
                     if refAnt not in ants:
-                        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[0])
+                        logging.warning('Reference antenna '+refAnt+' not found. Using: '+ants[0])
                         refAnt = ants[0]
                     refInd = ants.tolist().index(refAnt)
                     if 'dir' in axis_names:
@@ -650,17 +683,27 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
                 weights_arraytmp[:, s, :, :] = w
 
         # Make sure that fully flagged stations have all pols flagged
+        if has_pol_axis:
+            npol = len(soltab.pol)
+        else:
+            npol = 1
         for s in range(len(soltab.ant)):
-            for p in range(len(soltab.pol)):
+            for p in range(npol):
                 if np.all(weights_arraytmp[:, s, :, p] == 0.0):
                     weights_arraytmp[:, s, :, :] = 0.0
                     break
 
         # Write new weights
         if 'dir' in axis_names:
-            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            if has_pol_axis:
+                weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+            else:
+                weights_array = weights_arraytmp[:, :, :, 0, :].transpose([time_ind, ant_ind, freq_ind, dir_ind])
         else:
-            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            if has_pol_axis:
+                weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+            else:
+                weights_array = weights_arraytmp[:, :, :, 0].transpose([time_ind, ant_ind, freq_ind])
         soltab.setValues(weights_array, weight=True)
         soltab.addHistory('FLAGSTATION (mode=resid, maxFlaggedFraction={0}, '
                           'nSigma={1})'.format(maxFlaggedFraction, nSigma))

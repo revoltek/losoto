@@ -53,7 +53,7 @@ def soltab_swap_freq_time(soltab):
     soltab.obj.weight._f_remove()
     # Create new val here
     soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'val', obj=vals, atom=tables.Float64Atom())
-    soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'weight', obj=weights, atom=tables.Float16Atom())
+    soltab.obj._v_file.create_array(soltab.obj._v_pathname, 'weight', obj=weights, atom=tables.FloatAtom())
     # Restore the original attributes
     for attrname in attrsdict:
         soltab.obj.val._f_setattr(attrname, attrsdict[attrname])

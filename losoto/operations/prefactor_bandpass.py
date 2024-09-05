@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading PREFACTOR_BANDPASS module.')
 
@@ -80,8 +80,8 @@ def _savitzky_golay(y, window_size, order, deriv=0, rate=1):
     from math import factorial
 
     try:
-        window_size = np.abs(np.int(window_size))
-        order = np.abs(np.int(order))
+        window_size = np.abs(int(window_size))
+        order = np.abs(int(order))
     except ValueError as msg:
         raise ValueError("window_size and order have to be of type int")
     if window_size % 2 != 1 or window_size < 1:
@@ -294,7 +294,7 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
         band = 'hba_low'
         median_min = 50.0
-        median_max = 200.0
+        median_max = 225.0
     elif np.median(freqs) < 90e6:
         band = 'lba'
         median_min = 50.0
@@ -519,7 +519,7 @@ def run(soltab, chanWidth='', outSoltabName='bandpass', BadSBList = '', interpol
     if autoFlag:
         if ncpu == 0:
             import multiprocessing
-            ncpu = multiprocessing.cpu_count()
+            ncpu = nproc()
         mpm = multiprocManager(ncpu, _flag_amplitudes)
         for s in range(nants):
             mpm.put([soltab.freq[:], amplitude_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],

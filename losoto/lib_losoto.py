@@ -4,7 +4,7 @@
 # Some utilities for operations
 
 import os, sys, ast, re
-import logging
+import functools, warnings # for deprecated_alias decorator
 from configparser import ConfigParser
 if (sys.version_info > (3, 0)):
     #from configparser import ConfigParser
@@ -12,6 +12,9 @@ if (sys.version_info > (3, 0)):
 else:
     #from ConfigParser import ConfigParser
     from StringIO import StringIO
+
+import numpy as np
+from losoto._logging import logger as logging
 
 cacheSteps = ['plot','clip','flag','norm','smooth'] # steps to use chaced data
 
@@ -81,7 +84,14 @@ class LosotoParser(ConfigParser):
     def getarray(self, s, v, default=None):
         if self.has_option(s, v):
             try:
-                return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
+                # TODO: why are square brackets being replaced here? What if my selection is a string containing square brackets?
+                # return self.getstr(s, v).replace(' ','').replace('[','').replace(']','').split(',') # split also turns str into 1-element lists
+                parm = self.getstr(s, v) # split also turns str into 1-element lists
+                if parm[0] == '[': # hardcoded for square brackets in parameter set...
+                    parm = parm[1:]
+                if parm[-1] == ']':
+                    parm = parm[:-1]
+                return parm.replace(' ','').split(',')
             except:
                 logging.error('Error interpreting section: %s - values: %s (should be a list as [xxx,yyy,zzz...])' % (s, v))
         elif default is None:
@@ -113,6 +123,20 @@ class LosotoParser(ConfigParser):
         except:
             logging.error('Error interpreting section: %s - values: %s (expected array of int.)' % (s, v))
 
+    def getarrayfloat2d(self, s, v, default=None):
+        """Alternative to parse 1,2 or ndim array input.
+           'getarrayfloat() does not support more than 1 dim.
+           TODO: it might be cleaner to unify these functions..."""
+        try:
+            # Remove space after [
+            x = self.getstr(s, v, default)
+            x = re.sub('\[ +', '[', x.strip())
+            # Replace commas and spaces
+            x = re.sub('[,\s]+', ', ', x)
+            return np.array(ast.literal_eval(x))
+        except:
+            logging.error('Error interpreting section: %s - values: %s (expected array of float.)' % (s, v))
+
 
 def getParAxis( parser, step, axisName ):
     """
@@ -128,7 +152,7 @@ def getParAxis( parser, step, axisName ):
 
     step : str
         this step
-    
+
     axisName : str
         an axis name
 
@@ -201,7 +225,8 @@ def getStepSoltabs(parser, step, H):
     soltabs = []
     for solset in H.getSolsets():
         for soltabName in solset.getSoltabNames():
-            if any(re.compile(this_stsel).match(solset.name+'/'+soltabName) for this_stsel in stsel):
+            #if any(re.compile(this_stsel).match(solset.name+'/'+soltabName) for this_stsel in stsel):
+            if any(this_stsel == solset.name+'/'+soltabName for this_stsel in stsel):
                 if parser.getstr(step, 'operation').lower() in cacheSteps:
                     soltabs.append( solset.getSoltab(soltabName, useCache=True) )
                 else:
@@ -218,3 +243,24 @@ def getStepSoltabs(parser, step, H):
         soltab.setSelection(**userSel)
 
     return soltabs
+
+# fancy backwards compatibility of keywords: allow aliases
+# https://stackoverflow.com/questions/49802412/how-to-implement-deprecation-in-python-with-argument-alias#
+def deprecated_alias(**aliases):
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            rename_kwargs(f.__name__, kwargs, aliases)
+            return f(*args, **kwargs)
+        return wrapper
+    return deco
+
+def rename_kwargs(func_name, kwargs, aliases):
+    for alias, new in aliases.items():
+        if alias in kwargs:
+            if new in kwargs:
+                raise TypeError('{} received both {} and {}'.format(
+                    func_name, alias, new))
+            warnings.warn('{} is deprecated; use {}'.format(alias, new),
+                          DeprecationWarning)
+            kwargs[new] = kwargs.pop(alias)

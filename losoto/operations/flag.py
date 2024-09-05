@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading FLAG module.')
 
@@ -254,7 +254,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
     initPercentFlag = percentFlagged(weights)
 
     # works in phase-space (assume no wraps), remove just the mean to prevent problems if the phase is constantly around +/-pi
-    if solType == 'phase' or solType == 'scalarphase' or solType == 'rotation':
+    if solType == 'phase' or solType == 'rotation':
         # remove mean of vals
         mean = np.angle( np.sum( weights.flatten() * np.exp(1j*vals.flatten()) ) / ( vals.flatten().size * sum(weights.flatten()) ) )
         logging.debug('Working in phase-space, remove angular mean '+str(mean)+'.')
@@ -365,7 +365,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
     solType = soltab.getType()
 
     # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, reference=refAnt):
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, refAnt=refAnt):
         mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection])
 
     mpm.wait()

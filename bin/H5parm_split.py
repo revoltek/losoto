@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # This tool is used to split an H5parm into multiple smaller ones.
 
-
-import sys, os, logging
+import sys, os
 import numpy as np
 from losoto.h5parm import h5parm
 from losoto import _version, _logging
@@ -28,7 +27,10 @@ if len(args.h5parmFile) < 1:
     parser.print_help()
     sys.exit(1)
 
-if args.verbose: _logging.setLevel("debug")
+# log
+logger = _logging.Logger('info')
+logging = _logging.logger
+if args.verbose: logger.set_level("debug")
 
 ################################
 

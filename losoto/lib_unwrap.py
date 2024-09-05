@@ -3,10 +3,10 @@
 
 #from __future__ import division
 
+import itertools, math
 import numpy as np
 import scipy.fftpack as fft
-import logging
-import itertools
+from losoto._logging import logger as logging
 
 def unwrap_fft(phase, iterations=3):
     """
@@ -182,67 +182,67 @@ def unwrap_2d(arr, flags = None, coord_x = None, coord_y = None):
         arr = arr.reshape(shapeOrig)
     return arr + np.round( ( laplacian( np.cos(arr)*laplacian(np.sin(arr)) - np.sin(arr)*laplacian(np.cos(arr)), inverse=True ) - arr ) / 2/np.pi ) * 2*np.pi
 
-if __name__ == "__main__":
-
-    import matplotlib.pyplot as pl
-    from time import time
-
-    # phase map dims, zeropadding and masking should be avoided if possible
-    N = 1024
-    M = 1024
-    
-    # make some coordinates for the synthetic phase map
-    x = np.arange(N)
-    y = np.arange(M)
-    x,y = np.meshgrid(x,y)
-    x = x / (np.max(x)/(2*np.pi))
-    y = y / (np.max(y)/(2*np.pi))
-    
-    snr = 1 # SNR for the Gaussian noise
-    
-    # some synthetic phase maps
-    #phase_orig = np.sin(x)*x+np.cos(y)*y
-    phase_orig = np.sin(x*y)*x+np.cos(x*x+y*y)*y
-    #phase_orig = (x-np.max(x)/2)**2 + (y-np.max(y)/2)**2
-    x = y = None
-    phase_orig /= np.max(np.abs(phase_orig)) / (np.pi*4.) # scale phase map amplitude
-    phase_orig += np.array( np.random.normal(scale=np.sqrt(0.5/snr),size=(N,M)).astype(np.float32) ) # add noise
-    
-    phase_wrapped = np.arctan2( np.sin(phase_orig), np.cos(phase_orig) ) # wrap phase map to [-pi,+pi]
-    
-    # precompute Fourier domain coordinates for the Laplacians of phase_wrapped
-    m = np.arange(N)
-    n = np.arange(M)
-    m,n = np.meshgrid(m,n)
-    m = m.astype(float)
-    n = n.astype(float)
-    m[:,0] = (1./np.sqrt(M))
-    n[0,:] = (1./np.sqrt(N))
-    coord = m*m+n*n
-    m = n = None
-    
-    #k = 1 # timing iterations
-    t0=time()
-    phase_unwrapped = unwrap_dct(phase_wrapped) # warm-up
-    #for i in range(k):
-    #    phase_unwrapped = unwrap_dct(phase_wrapped)
-    t1 = time()-t0
-    coord = None
-    #print('time:\t%fs'%(t1))
-    
-    #print('norm:', np.abs(phase_unwrapped-phase_orig) )
-    
-    fig, ((ax1,ax2),(ax3,ax4)) = pl.subplots(2,2)
-    im1 = ax1.imshow(phase_orig.__array__())
-    pl.colorbar(im1,ax=ax1)
-    ax1.set_title('original phase, SNR=%i'%snr)
-    im2 = ax2.imshow(phase_wrapped.__array__())
-    pl.colorbar(im2,ax=ax2)
-    ax2.set_title('wrapped phase')
-    im3 = ax3.imshow(phase_unwrapped.__array__())
-    pl.colorbar(im3,ax=ax3)
-    ax3.set_title('unwrapped phase')
-    im4 = ax4.imshow((phase_unwrapped-phase_orig).__array__())
-    pl.colorbar(im4,ax=ax4)
-    ax4.set_title('difference')
-    pl.savefig('test.png')
+#if __name__ == "__main__":
+#
+#    import matplotlib.pyplot as pl
+#    from time import time
+#
+#    # phase map dims, zeropadding and masking should be avoided if possible
+#    N = 1024
+#    M = 1024
+#    
+#    # make some coordinates for the synthetic phase map
+#    x = np.arange(N)
+#    y = np.arange(M)
+#    x,y = np.meshgrid(x,y)
+#    x = x / (np.max(x)/(2*np.pi))
+#    y = y / (np.max(y)/(2*np.pi))
+#    
+#    snr = 1 # SNR for the Gaussian noise
+#    
+#    # some synthetic phase maps
+#    #phase_orig = np.sin(x)*x+np.cos(y)*y
+#    phase_orig = np.sin(x*y)*x+np.cos(x*x+y*y)*y
+#    #phase_orig = (x-np.max(x)/2)**2 + (y-np.max(y)/2)**2
+#    x = y = None
+#    phase_orig /= np.max(np.abs(phase_orig)) / (np.pi*4.) # scale phase map amplitude
+#    phase_orig += np.array( np.random.normal(scale=np.sqrt(0.5/snr),size=(N,M)).astype(np.float32) ) # add noise
+#    
+#    phase_wrapped = np.arctan2( np.sin(phase_orig), np.cos(phase_orig) ) # wrap phase map to [-pi,+pi]
+#    
+#    # precompute Fourier domain coordinates for the Laplacians of phase_wrapped
+#    m = np.arange(N)
+#    n = np.arange(M)
+#    m,n = np.meshgrid(m,n)
+#    m = m.astype(float)
+#    n = n.astype(float)
+#    m[:,0] = (1./np.sqrt(M))
+#    n[0,:] = (1./np.sqrt(N))
+#    coord = m*m+n*n
+#    m = n = None
+#    
+#    #k = 1 # timing iterations
+#    t0=time()
+#    phase_unwrapped = unwrap_dct(phase_wrapped) # warm-up
+#    #for i in range(k):
+#    #    phase_unwrapped = unwrap_dct(phase_wrapped)
+#    t1 = time()-t0
+#    coord = None
+#    #print('time:\t%fs'%(t1))
+#    
+#    #print('norm:', np.abs(phase_unwrapped-phase_orig) )
+#    
+#    fig, ((ax1,ax2),(ax3,ax4)) = pl.subplots(2,2)
+#    im1 = ax1.imshow(phase_orig.__array__())
+#    pl.colorbar(im1,ax=ax1)
+#    ax1.set_title('original phase, SNR=%i'%snr)
+#    im2 = ax2.imshow(phase_wrapped.__array__())
+#    pl.colorbar(im2,ax=ax2)
+#    ax2.set_title('wrapped phase')
+#    im3 = ax3.imshow(phase_unwrapped.__array__())
+#    pl.colorbar(im3,ax=ax3)
+#    ax3.set_title('unwrapped phase')
+#    im4 = ax4.imshow((phase_unwrapped-phase_orig).__array__())
+#    pl.colorbar(im4,ax=ax4)
+#    ax4.set_title('difference')
+#    pl.savefig('test.png')

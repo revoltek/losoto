@@ -3,12 +3,10 @@
 
 # This is the station-screen operation for LoSoTo
 
-
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading STATIONSCREEN module.')
-
 
 def _run_parser(soltab, parser, step):
     outSoltab = parser.getstr( step, "outSoltab" )
@@ -21,11 +19,12 @@ def _run_parser(soltab, parser, step):
     scale_dist = parser.getfloat( step, "scaleDist", 25000.0 )
     min_order = parser.getint( step, "MinOrder", 5 )
     adjust_order = parser.getbool( step, "AdjustOrder", True )
+    ncpu = parser.getint( step, "ncpu", 0 )
 
     parser.checkSpelling( step, soltab, ['outSoltab', 'order', 'beta', 'niter', 'nsigma',\
         'refAnt', 'scale_order', 'scale_dist', 'min_order', 'adjust_order'])
-    return run(soltab, outSoltab, order, beta, ncpu, niter, nsigma,
-        refAnt, scale_order, scale_dist, min_order, adjust_order)
+    return run(soltab, outSoltab, order, beta, niter, nsigma,
+        refAnt, scale_order, scale_dist, min_order, adjust_order, ncpu)
 
 
 def _calculate_piercepoints(station_positions, source_positions):
@@ -49,12 +48,7 @@ def _calculate_piercepoints(station_positions, source_positions):
         Reference Dec for WCS system (deg)
 
     """
-    import casacore.measures
     import numpy as np
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
 
     logging.info('Calculating screen pierce-point locations...')
     N_sources = source_positions.shape[0]
@@ -288,10 +282,9 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
 
     """
     import numpy as np
-    from losoto.operations.reweight import nancircstd
+    from losoto.operations.reweight import _nancircstd
 
     # Find stddev of the screen
-    stddev = np.zeros(weights.shape)
     flagged = np.where(weights == 0.0)
     nonflagged = np.where(weights > 0.0)
     if nonflagged[0].size == 0:
@@ -302,7 +295,7 @@ def _flag_outliers(weights, residual, nsigma, screen_type):
         residual = normalize_phase(residual)
         residual_nan = residual.copy()
         residual_nan[flagged] = np.nan
-        screen_stddev = nancircstd(residual_nan, axis=0)
+        screen_stddev = _nancircstd(residual_nan, axis=0)
     elif screen_type == 'tec' or screen_type == 'amplitude':
         # Use normal stddev
         screen_stddev = np.sqrt(np.average(residual[nonflagged]**2,
@@ -376,27 +369,25 @@ def _calculate_svd(pp, r_0, beta, N_piercepoints):
 
     """
     import numpy as np
-    from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
+    from scipy.linalg import pinv, svd
 
     D = np.resize(pp, (N_piercepoints, N_piercepoints, 3))
     D = np.transpose(D, (1, 0, 2)) - D
     D2 = np.sum(D**2, axis=2)
     C = -(D2 / r_0**2)**(beta / 2.0) / 2.0
-    pinvC = pinv(C, rcond=1e-3)
+    pinvC = pinv(C, rtol=1e-3)
     U, S, V = svd(C)
 
     return C, pinvC, U
 
 
-def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, order, r_0, beta,
+def _fit_screen(source_names, full_matrices, pp, rr, weights, order, r_0, beta,
     screen_type):
     """
     Fits a screen to amplitudes or phases using Karhunen-Lo`eve base vectors
 
     Parameters
     ----------
-    station_names: array
-        Array of station names
     source_names: array
         Array of source names
     full_matrices : list of arrays
@@ -426,7 +417,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
     """
     import numpy as np
-    from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
+    from scipy.linalg import pinv
 
     # Identify flagged directions
     N_sources_all = len(source_names)
@@ -434,10 +425,9 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
     N_sources = len(source_names[unflagged])
 
     # Initialize arrays
-    N_stations = len(station_names)
-    N_piercepoints = N_sources * N_stations
-    N_piercepoints_all = N_sources_all * N_stations
-    screen_fit_all = np.zeros((N_sources_all, N_stations))
+    N_piercepoints = N_sources
+    N_piercepoints_all = N_sources_all
+    screen_fit_all = np.zeros((N_sources_all, 1))
     pp_all = pp.copy()
     rr_all = rr.copy()
     pp = pp_all[unflagged[0], :]
@@ -449,7 +439,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
     else:
         # Recalculate for unflagged directions
         C, pinvC, U = _calculate_svd(pp, r_0, beta, N_piercepoints)
-    invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(w, U)[:, :order]), rcond=1e-3)
+    invU = pinv(np.dot(np.transpose(U[:, :order]), np.dot(w, U)[:, :order]), rtol=1e-3)
 
     # Fit screen to unflagged directions
     if screen_type == 'phase':
@@ -475,7 +465,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
         amp_fit_log = np.dot(pinvC, np.dot(U[:, :order], np.dot(invU, rr1)))
 
         # Calculate amp screen
-        screen_fit = 10**(np.dot(C, amp_fit_log))
+        screen_fit = np.dot(C, amp_fit_log)
         screen_fit_white = np.dot(pinvC, screen_fit)
     elif screen_type == 'tec':
         # Calculate tec screen
@@ -489,7 +479,7 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
 
     # Calculate screen in all directions
     if N_sources != N_sources_all:
-        screen_fit_all[unflagged[0], :] = screen_fit[:, newaxis]
+        screen_fit_all[unflagged[0], :] = screen_fit[:, np.newaxis]
         flagged = np.where(weights <= 0.0)
         for findx in flagged[0]:
             p = pp_all[findx, :]
@@ -498,18 +488,199 @@ def _fit_screen(station_names, source_names, full_matrices, pp, rr, weights, ord
             screen_fit_all[findx, :] = np.dot(c, screen_fit_white)
         C, pinvC, U = full_matrices
         screen_fit_white_all = np.dot(pinvC, screen_fit_all)
-        screen_residual_all = rr_all - screen_fit_all.reshape(N_piercepoints_all)
+        if screen_type == 'amplitude':
+            screen_residual_all = rr_all - 10**(screen_fit_all.reshape(N_piercepoints_all))
+        else:
+            screen_residual_all = rr_all - screen_fit_all.reshape(N_piercepoints_all)
     else:
         screen_fit_white_all = screen_fit_white
-        screen_residual_all = rr_all - np.dot(C, screen_fit_white)
-    screen_fit_white_all = screen_fit_white_all.reshape((N_sources_all, N_stations))
-    screen_residual_all = screen_residual_all.reshape((N_sources_all, N_stations))
+        if screen_type == 'amplitude':
+            screen_residual_all = rr_all - 10**(np.dot(C, screen_fit_white))
+        else:
+            screen_residual_all = rr_all - np.dot(C, screen_fit_white)
+    screen_fit_white_all = screen_fit_white_all.reshape((N_sources_all, 1))
+    screen_residual_all = screen_residual_all.reshape((N_sources_all, 1))
 
     return (screen_fit_white_all, screen_residual_all)
 
+def _process_station(rr, pp, screen_order, station_weights, screen_type, niter, nsigma,
+                     adjust_order, source_names, full_matrix, beta, r_0):
+    """
+    Processes a station
 
-def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
-    refAnt=-1, scale_order=True, scale_dist=None, min_order=5, adjust_order=True):
+    Parameters
+    ----------
+    soltab: solution table
+        Soltab containing amplitude solutions
+    outsoltab: str
+        Name of output soltab
+    order : int, optional
+        Order of screen (i.e., number of KL base vectors to keep). If the order
+        is scaled by dist (scale_order = True), the order is calculated as
+        order * sqrt(dist/scale_dist)
+    beta: float, optional
+        Power-law index for amp structure function (5/3 => pure Kolmogorov
+        turbulence)
+    niter: int, optional
+        Number of iterations to do when determining weights
+    nsigma: float, optional
+        Number of sigma above which directions are flagged
+    refAnt: str or int, optional
+        Index (if int) or name (if str) of reference station (-1 => no ref)
+    scale_order : bool, optional
+        If True, scale the screen order with sqrt of distance/scale_dist to the
+        reference station
+    scale_dist : float, optional
+        Distance used to normalize the distances used to scale the screen order.
+        If None, the max distance is used
+    adjust_order : bool, optional
+        If True, adjust the screen order to obtain a reduced chi^2 of approx.
+        unity
+    min_order : int, optional
+        The minimum allowed order if adjust_order = True.
+
+    """
+    # Iterate:
+    # 1. fit screens
+    # 2. flag nsigma outliers
+    # 3. refit with new weights
+    # 4. repeat for niter
+    target_redchi2 = 1.0
+    N_sources = rr.shape[0]
+    N_times = rr.shape[1]
+    screen = np.zeros((N_sources, N_times))
+    residual = np.zeros((N_sources, N_times))
+    station_order = screen_order[0]
+    init_station_weights = station_weights.copy() # preserve initial weights
+    for iterindx in range(niter):
+        if iterindx > 0:
+            # Flag outliers
+            if screen_type == 'phase' or screen_type == 'tec':
+                # Use residuals
+                screen_diff = residual.copy()
+            elif screen_type == 'amplitude':
+                # Use log residuals
+                screen_diff = np.log10(rr) - np.log10(np.abs(rr - residual))
+            station_weights = _flag_outliers(init_station_weights,
+                    screen_diff, nsigma, screen_type)
+
+        # Fit the screens
+        norderiter = 1
+        if adjust_order:
+            if iterindx > 0:
+                norderiter = 4
+        for tindx in range(N_times):
+            N_unflagged = np.where(station_weights[:, tindx] > 0.0)[0].size
+            if N_unflagged == 0:
+                continue
+            if screen_order[tindx] > N_unflagged-1:
+                screen_order[tindx] = N_unflagged-1
+            hit_upper = False
+            hit_lower = False
+            hit_upper2 = False
+            hit_lower2 = False
+            sign = 1.0
+            for oindx in range(norderiter):
+                skip_fit = False
+                if iterindx > 0:
+                    if np.all(station_weights[:, tindx] == prev_station_weights[:, tindx]):
+                        if not adjust_order:
+                            # stop fitting if weights did not change
+                            break
+                        elif oindx == 0:
+                            # Skip the fit for first iteration, as it is the same as the prev one
+                            skip_fit = True
+                if not np.all(station_weights[:, tindx] == 0.0) and not skip_fit:
+                    scr, res = _fit_screen(source_names, full_matrix, pp[:, :], rr[:, tindx],
+                                           station_weights[:, tindx],
+                                           int(screen_order[tindx]), r_0,
+                                           beta, screen_type)
+                    screen[:, tindx] = scr[:, 0]
+                    residual[:, tindx] = res[:, 0]
+
+                if hit_lower2 or hit_upper2:
+                    break
+
+                if adjust_order and iterindx > 0:
+                    if screen_type == 'phase':
+                        redchi2 =  _circ_chi2(residual[:, tindx],
+                            station_weights[:, tindx]) / (N_unflagged - screen_order[tindx])
+                    elif screen_type == 'amplitude':
+                        # Use log residuals
+                        screen_diff = np.log10(rr[:, tindx]) - np.log10(np.abs(rr[:, tindx] - residual[:, tindx]))
+                        redchi2 = np.sum(np.square(screen_diff) *
+                                         station_weights[:, tindx]) / (N_unflagged - screen_order[tindx])
+                    else:
+                        redchi2 = np.sum(np.square(residual[:, tindx]) *
+                            station_weights[:, tindx]) / (N_unflagged - screen_order[tindx])
+                    if oindx > 0:
+                        if redchi2 > 1.0 and prev_redchi2 < redchi2:
+                            sign *= -1
+                        if redchi2 < 1.0 and prev_redchi2 > redchi2:
+                            sign *= -1
+                    prev_redchi2 = redchi2
+                    order_factor = (N_unflagged - screen_order[tindx])**0.2
+                    target_order = float(screen_order[tindx]) - sign * order_factor * (target_redchi2 - redchi2)
+                    target_order = max(station_order, target_order)
+                    target_order = min(int(round(target_order)), N_unflagged-1)
+                    if target_order <= 0:
+                        target_order = min(station_order, N_unflagged-1)
+                    if target_order == screen_order[tindx]:# don't fit again if order is the same as last one
+                        break
+                    if target_order == N_unflagged-1:# check whether we've been here before. If so, break
+                        if hit_upper:
+                            hit_upper2 = True
+                        hit_upper = True
+                    if target_order == station_order:# check whether we've been here before. If so, break
+                        if hit_lower:
+                            hit_lower2 = True
+                        hit_lower = True
+                    screen_order[tindx] = target_order
+        prev_station_weights = station_weights.copy()
+
+    return screen, station_weights, residual, screen_order
+
+
+def _process_single_freq(freq_ind, screen_type, niter, nsigma, refAnt,
+                         adjust_order, source_names, station_names, beta, r_0, outQueue):
+    global r_full, weights_full, screen, residual, full_matrices, screen_order, pp
+
+    N_sources, N_stations, N_times, N_freqs, N_pols = screen.shape
+    weights_out = np.zeros(weights_full[:, :, 0, :, :].shape)
+    screen_out = np.zeros(screen[:, :, :, 0, :].shape)
+    residual_out = np.zeros(residual[:, :, :, 0, :].shape)
+    screen_order_out = np.zeros(screen_order[:, :, 0, :].shape)
+    for pol_ind in range(N_pols):
+        r = r_full[:, :, freq_ind, :, pol_ind] # order is now [dir, time, ant]
+        r = r.transpose([0, 2, 1]) # order is now [dir, ant, time]
+        weights = weights_full[:, :, freq_ind, :, pol_ind]
+        weights = weights.transpose([0, 2, 1])
+
+        # Fit screens
+        for s, stat in enumerate(station_names):
+            if s == refAnt and (screen_type == 'phase' or screen_type == 'tec'):
+                # skip reference station (phase- or tec-type only)
+                continue
+            if np.all(np.isnan(r[:, s, :])) or np.all(weights[:, s, :] == 0):
+                # skip fully flagged stations
+                continue
+            rr = np.reshape(r[:, s, :], [N_sources, N_times])
+            station_weights = weights[:, s, :]
+            station_screen_order = screen_order[s, :, freq_ind, pol_ind]
+            scr, wgt, res, sord = _process_station(rr, pp, station_screen_order, station_weights,
+                                             screen_type, niter, nsigma, adjust_order,
+                                             source_names, full_matrices, beta, r_0)
+            screen_out[:, s, :, pol_ind] = scr
+            weights[:, s, :] = wgt
+            residual_out[:, s, :, pol_ind] = res
+            screen_order_out[s, :, pol_ind] = sord
+        weights_out[:, :, :, pol_ind] = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
+
+    outQueue.put([freq_ind, screen_out, weights_out, residual_out, screen_order_out])
+
+
+def run(soltab, outsoltab, order=12, beta=5.0/3.0, niter=2, nsigma=5.0,
+    refAnt=-1, scale_order=True, scale_dist=None, min_order=5, adjust_order=True, ncpu=0):
     """
     Fits station screens to input soltab (type 'phase' or 'amplitude' only).
 
@@ -534,8 +705,6 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     beta: float, optional
         Power-law index for amp structure function (5/3 => pure Kolmogorov
         turbulence)
-    ncpu: int, optional
-        Number of CPUs to use. If 0, all are used
     niter: int, optional
         Number of iterations to do when determining weights
     nsigma: float, optional
@@ -553,16 +722,12 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
         unity
     min_order : int, optional
         The minimum allowed order if adjust_order = True.
+    ncpu : int, optional
+        Number of CPUs to use. If 0, all are used
 
     """
     import numpy as np
-    from numpy import newaxis
-    import re
-    import os
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
+    global r_full, weights_full, screen, residual, full_matrices, screen_order, pp
 
     # Get screen type
     screen_type = soltab.getType()
@@ -591,9 +756,9 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
         is_scalar = True
         N_pols = 1
         r_full = r_full.transpose([dir_ind, time_ind, freq_ind, ant_ind])
-        r_full = r_full[:, :, :, :, newaxis]
+        r_full = r_full[:, :, :, :, np.newaxis]
         weights_full = weights_full.transpose([dir_ind, time_ind, freq_ind, ant_ind])
-        weights_full = weights_full[:, :, :, :, newaxis]
+        weights_full = weights_full[:, :, :, :, np.newaxis]
 
     # Collect station and source names and positions and times, making sure
     # that they are ordered correctly.
@@ -616,7 +781,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     N_freqs = len(freqs)
     N_piercepoints = N_sources
 
-    # Set ref station
+    # Set ref station and reference phases if needed
     if type(refAnt) is str:
         if N_stations == 1:
             refAnt = -1
@@ -624,6 +789,10 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
             refAnt = station_names.index(refAnt)
         else:
             refAnt = -1
+    if refAnt != -1 and screen_type == 'phase' or screen_type == 'tec':
+        r_ref = r_full[:, :, :, refAnt, :].copy()
+        for i in range(len(station_names)):
+            r_full[:, :, :, i, :] -= r_ref
 
     if scale_order:
         dist = []
@@ -647,130 +816,28 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     screen = np.zeros((N_sources, N_stations, N_times, N_freqs, N_pols))
     residual = np.zeros((N_sources, N_stations, N_times, N_freqs, N_pols))
     screen_order = np.zeros((N_stations, N_times, N_freqs, N_pols))
+    for s in range(len(station_names)):
+        for freq_ind in range(N_freqs):
+            for pol_ind in range(N_pols):
+                screen_order[s, :, freq_ind, pol_ind] = station_order[s]
     r_0 = 100
-    target_redchi2 = 1.0
 
     # Calculate full piercepoint arrays
-    pp_list = []
-    full_matrices = []
-    for s in range(N_stations):
-        pp_s, midRA, midDec = _calculate_piercepoints(np.array([station_positions[s]]),
-            np.array(source_positions))
-        pp_list.append(pp_s)
-        full_matrices.append(_calculate_svd(pp_s, r_0, beta, N_piercepoints))
+    pp, midRA, midDec = _calculate_piercepoints(np.array([station_positions[0]]),
+                                                np.array(source_positions))
+    full_matrices = _calculate_svd(pp, r_0, beta, N_piercepoints)
 
     # Fit station screens
-    N_total = N_freqs * N_pols * N_stations * niter * N_times
-    pbar = progressbar.ProgressBar(maxval=N_total).start()
-    ipbar = 0
+    mpm = multiprocManager(ncpu, _process_single_freq)
     for freq_ind in range(N_freqs):
-        for pol_ind in range(N_pols):
-            r = r_full[:, :, freq_ind, :, pol_ind] # order is now [dir, time, ant]
-            r = r.transpose([0, 2, 1]) # order is now [dir, ant, time]
-            weights = weights_full[:, :, freq_ind, :, pol_ind]
-            weights = weights.transpose([0, 2, 1])
-
-            # Fit screens
-            for s, stat in enumerate(station_names):
-                if s == refAnt and (screen_type == 'phase' or screen_type == 'tec'):
-                    # skip reference station (phase- or tec-type only)
-                    continue
-                screen_order[s, :, freq_ind, pol_ind] = station_order[s]
-                rr = np.reshape(r[:, s, :], [N_piercepoints, N_times])
-                pp = pp_list[s]
-
-                # Iterate:
-                # 1. fit screens
-                # 2. flag nsigma outliers
-                # 3. refit with new weights
-                # 4. repeat for niter
-                station_weights = weights[:, s, :]
-                init_station_weights = weights[:, s, :].copy() # preserve initial weights
-                for iterindx in range(niter):
-                    if iterindx > 0:
-                        # Flag outliers
-                        if screen_type == 'phase' or screen_type == 'tec':
-                            # Use residuals
-                            screen_diff = residual[:, s, :, freq_ind, pol_ind]
-                        elif screen_type == 'amplitude':
-                            # Use log residuals
-                            screen_diff = np.log10(rr) - np.log10(rr -
-                                residual[:, s, :, freq_ind, pol_ind])
-                        station_weights = _flag_outliers(init_station_weights,
-                                screen_diff, nsigma, screen_type)
-
-                    # Fit the screens
-                    norderiter = 1
-                    if adjust_order:
-                        if iterindx > 0:
-                            norderiter = 4
-                    for tindx, t in enumerate(times):
-                        N_unflagged = np.where(station_weights[:, tindx] > 0.0)[0].size
-                        if N_unflagged == 0:
-                            continue
-                        if screen_order[s, tindx, freq_ind, pol_ind] > N_unflagged-1:
-                            screen_order[s, tindx, freq_ind, pol_ind] = N_unflagged-1
-                        hit_upper = False
-                        hit_lower = False
-                        hit_upper2 = False
-                        hit_lower2 = False
-                        sign = 1.0
-                        for oindx in range(norderiter):
-                            skip_fit = False
-                            if iterindx > 0:
-                                if np.all(station_weights[:, tindx] == prev_station_weights[:, tindx]):
-                                    if not adjust_order:
-                                        # stop fitting if weights did not change
-                                        break
-                                    elif oindx == 0:
-                                        # Skip the fit for first iteration, as it is the same as the prev one
-                                        skip_fit = True
-                            if not np.all(station_weights[:, tindx] == 0.0) and not skip_fit:
-                                scr, res = _fit_screen([stat], source_names, full_matrices[s],
-                                    pp[:, :], rr[:, tindx], station_weights[:, tindx],
-                                    int(screen_order[s, tindx, freq_ind, pol_ind]), r_0, beta, screen_type)
-                                screen[:, s, tindx, freq_ind, pol_ind] = scr[:, 0]
-                                residual[:, s, tindx, freq_ind, pol_ind] = res[:, 0]
-
-                            if hit_lower2 or hit_upper2:
-                                break
-
-                            if adjust_order and iterindx > 0:
-                                if screen_type == 'phase':
-                                    redchi2 =  _circ_chi2(residual[:, s, tindx, freq_ind, pol_ind],
-                                        station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
-                                else:
-                                    redchi2 = np.sum(np.square(residual[:, s, tindx, freq_ind, pol_ind]) *
-                                        station_weights[:, tindx]) / (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])
-                                if oindx > 0:
-                                    if redchi2 > 1.0 and prev_redchi2 < redchi2:
-                                        sign *= -1
-                                    if redchi2 < 1.0 and prev_redchi2 > redchi2:
-                                        sign *= -1
-                                prev_redchi2 = redchi2
-                                order_factor = (N_unflagged - screen_order[s, tindx, freq_ind, pol_ind])**0.2
-                                target_order = float(screen_order[s, tindx, freq_ind, pol_ind]) - sign * order_factor * (target_redchi2 - redchi2)
-                                target_order = max(station_order[s], target_order)
-                                target_order = min(int(round(target_order)), N_unflagged-1)
-                                if target_order <= 0:
-                                    target_order = min(station_order[s], N_unflagged-1)
-                                if target_order == screen_order[s, tindx, freq_ind, pol_ind]:# don't fit again if order is the same as last one
-                                    break
-                                if target_order == N_unflagged-1:# check whether we've been here before. If so, break
-                                    if hit_upper:
-                                        hit_upper2 = True
-                                    hit_upper = True
-                                if target_order == station_order[s]:# check whether we've been here before. If so, break
-                                    if hit_lower:
-                                        hit_lower2 = True
-                                    hit_lower = True
-                                screen_order[s, tindx, freq_ind, pol_ind] = target_order
-                        pbar.update(ipbar)
-                        ipbar += 1
-                    prev_station_weights = station_weights.copy()
-                weights[:, s, :] = station_weights
-            weights_full[:, :, freq_ind, :, pol_ind] = weights.transpose([0, 2, 1]) # order is now [dir, time, ant]
-    pbar.finish()
+         mpm.put([freq_ind, screen_type, niter, nsigma, refAnt,
+                  adjust_order, source_names, station_names, beta, r_0])
+    mpm.wait()
+    for (freq_ind, scr, wgt, res, sord) in mpm.get():
+        screen[:, :, :, freq_ind, :] = scr
+        residual[:, :, :, freq_ind, :] = res
+        weights_full[:, :, freq_ind, :, :] = wgt
+        screen_order[:, :, freq_ind, :] = sord
 
     # Write the results to the output solset
     dirs_out = source_names
@@ -779,6 +846,7 @@ def run(soltab, outsoltab, order=12, beta=5.0/3.0, ncpu=0, niter=2, nsigma=5.0,
     freqs_out = freqs
 
     # Store screen values
+    # Note: amplitude screens are log10() values with non-log residuals!
     vals = screen.transpose([2, 3, 1, 0, 4]) # order is now ['time', 'freq', 'ant', 'dir', 'pol']
     weights = weights_full.transpose([1, 2, 3, 0, 4]) # order is now ['time', 'freq', 'ant', 'dir', 'pol']
     if is_scalar:

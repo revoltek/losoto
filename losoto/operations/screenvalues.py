@@ -3,9 +3,8 @@
 
 # This is the operation to get values from screens
 
-
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading SCREENVALUES module.')
 
@@ -148,10 +147,7 @@ def _screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
 
     """
     import numpy as np
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
+    import losoto.progressbar as progressbar
 
     ra = [r for r, d in directions]
     dec = [d for r, d in directions]

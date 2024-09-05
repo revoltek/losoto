@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading STRUCTURE module.')
 
@@ -25,7 +25,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
     doUnwrap : bool, optional
 
     refAnt : str, optional
-        Reference antenna, by default the first.
+        Reference antenna, by default None.
 
     plotName : str, optional
         Plot file name, by default no plot.
@@ -45,33 +45,41 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
        logging.warning("Soltab type of "+soltab._v_name+" is of type "+solType+", should be phase.")
        return 1
 
-    ants = soltab.getAxisValues('ant')
-    if refAnt != '' and refAnt != 'closest' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
-        logging.error('Reference antenna '+refAnt+' not found. Using: '+ants[1])
-        refAnt = ants[1]
-    if refAnt == '' and doUnwrap:
-        logging.error('Unwrap requires reference antenna. Using: '+ants[1])
-        refAnt = ants[1]
     if refAnt == '': refAnt = None
+    elif refAnt != 'closest' and refAnt != 'auto' and not refAnt in soltab.getAxisValues('ant', ignoreSelection = True):
+        logging.warning('Reference antenna '+refAnt+' not found. Using: atomatic search.')
+        refAnt = 'auto'
+    if refAnt is None and doUnwrap:
+        logging.error('Unwrap requires reference antenna. Using: automatic search')
+        refAnt = 'auto'
 
     soltab.setSelection(ant='CS*', update=True)
 
     posAll = soltab.getSolset().getAnt()
 
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=['freq','pol','ant','time'], weight=True, reference=refAnt):
+    if 'pol' in soltab.getAxesNames(): returnAxes = ['freq','pol','ant','time']
+    else: returnAxes = ['freq','ant','time']
 
-        # reorder axes
-        vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','ant','freq','time'] )
-        weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=returnAxes, weight=True, refAnt=refAnt):
 
         # order positions
         pos = np.array([list(posAll[ant]) for ant in coord['ant']])
 
         # avg pols
-        vals = np.cos(vals) + 1.j * np.sin(vals)
-        vals = np.nansum(vals, axis=0)
-        vals = np.angle(vals)
-        flags = np.array((weights[0]==0)|(weights[1]==0), dtype=bool)
+        if 'pol' in soltab.getAxesNames():
+            # reorder axes
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+            weights = reorderAxes( weights, soltab.getAxesNames(), ['pol','ant','freq','time'] )
+
+            vals = np.cos(vals) + 1.j * np.sin(vals)
+            vals = np.nansum(vals, axis=0)
+            vals = np.angle(vals)
+            flags = np.array((weights[0]==0)|(weights[1]==0), dtype=bool)
+        else:
+            # reorder axes
+            vals = reorderAxes( vals, soltab.getAxesNames(), ['ant','freq','time'] )
+            weights = reorderAxes( weights, soltab.getAxesNames(), ['ant','freq','time'] )
+            flags = np.array((weights==0), dtype=bool)
 
         # unwrap
         if doUnwrap:
@@ -103,18 +111,19 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
 
         variances = []; pars = []
         avgdph = avgdph[...,avgdph.shape[-1]%ndiv:] # remove a few timeslots to make the array divisible by np.split
+        avgdph[avgdph.mask] = np.nan
         for i, avgdphSplit in enumerate( np.split(avgdph, ndiv, axis=-1) ):
-            variance = np.ma.var(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
+            variance = np.nanvar(avgdphSplit, axis=-1)*(np.average(coord['freq'])/150.e6)**2 # get time variance and rescale to 150 MHz
 
             # linear regression
             #A = np.ones((2,D2[myselect].shape[0]),dtype=float)
             #A[1,:] = np.log10(D2[myselect][~variance.mask])
             #par = np.dot(np.linalg.inv(np.dot(A,A.T)),np.dot(A,np.log10(variance[myselect])))
-            mask = variance[myselect].mask
+            mask = np.isnan(variance[myselect])
             A = np.vstack([np.log10(D2[myselect][~mask]), np.ones(len(D2[myselect][~mask]))])
-            par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) )[0] 
+            par = np.linalg.lstsq( A.T, np.log10(variance[myselect][~mask]) ,rcond=None)[0] 
             S0 = 10**(-1*par[1]/par[0])
-            logging.info(r't%i: beta=%.2f - R_diff=%.2f km' % (i, par[0], S0/1.e3))
+            logging.info(r't%i: beta=%.2f - R_diff=%.3f km' % (i, par[0], S0/1.e3))
             variances.append(variance)
             pars.append(par)
 
@@ -149,7 +158,7 @@ def run( soltab, doUnwrap=False, refAnt='', plotName='', ndiv=1 ):
             ax.set_xscale('log')
             ax.set_yscale('log')
 
-            ymin = np.min(variance[myselect])
+            ymin = np.max(1e-9,np.min(variance[myselect]))
             ymax = np.max(variance[myselect])
             ax.set_xlim(xmin=0.1,xmax=3)
             ax.set_ylim(ymin,ymax)

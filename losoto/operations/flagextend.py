@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import logging
 from losoto.lib_operations import *
+from losoto._logging import logger as logging
 
 logging.debug('Loading FLAGEXTEND module.')
 
@@ -22,11 +22,11 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
         percent = percent of surrounding flagged point to extend the flag
-        
+
         return: flags array and final rms
         """
         def extendFlag(flags, percent):
-            #flags = flags.astype(np.int)
+            #flags = flags.astype(int)
             if float(np.sum( flags ))/len(flags) > percent/100.:
                 return 1
             else:
@@ -59,8 +59,8 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
                     % (removeKeys(coord, axesToExt), initPercent, percentFlagged(weights)))
 
         outQueue.put([weights, selection])
-        
-            
+
+
 def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
     """
     This operation for LoSoTo implement a extend flag procedure
