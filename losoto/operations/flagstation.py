@@ -15,12 +15,13 @@ def _run_parser(soltab, parser, step):
     ampRange = parser.getarrayfloat( step, 'ampRange', [0.,0.] )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
+    skipAnts = parser.getarraystr( step, 'skipAnts', [])
     refAnt = parser.getstr( step, 'refAnt', '')
     soltabExport = parser.getstr( step, 'soltabExport', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'maxStddev', 'ampRange', 'telescope', 'skipInternational', 'refAnt', 'soltabExport'])
-    return run( soltab, mode, maxFlaggedFraction, nSigma, maxStddev, ampRange, telescope, skipInternational, refAnt, soltabExport, ncpu )
+    parser.checkSpelling( step, soltab, ['mode', 'maxFlaggedFraction', 'nSigma', 'maxStddev', 'ampRange', 'telescope', 'skipInternational', 'skipAnts', 'refAnt', 'soltabExport'])
+    return run( soltab, mode, maxFlaggedFraction, nSigma, maxStddev, ampRange, telescope, skipInternational, skipAnts, refAnt, soltabExport, ncpu )
 
 
 def _flag_resid(vals, weights, soltype, nSigma, maxFlaggedFraction, maxStddev, ants, s, outQueue):
@@ -219,7 +220,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         Defines the functional form of the LBA bandpass in terms of splines of degree 3
 
         The spline fit was done using LSQUnivariateSpline() on the median bandpass between
-        10 MHz and 78 MHz. The knots were set by hand to acheive a good fit with a
+        10 MHz and 78 MHz. The knots were set by hand to achieve a good fit with a
         minimum number of parameters.
 
         Parameters
@@ -249,7 +250,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         3
 
         The spline fit was done using LSQUnivariateSpline() on the median bandpass between
-        120 MHz and 188 MHz. The knots were set by hand to acheive a good fit with a
+        120 MHz and 188 MHz. The knots were set by hand to achieve a good fit with a
         minimum number of parameters.
 
         Parameters
@@ -385,20 +386,35 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
     median_min = ampRange[0]
     median_max = ampRange[-1]
 
-    # Iterate over polarizations
+    # Find the median for each polarization by taking median over time and
+    # then over frequency
     npols = amps.shape[2]
+    with warnings.catch_warnings():
+        # Filter NaN warnings -- we deal with NaNs below
+        warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
+        amps_med = np.nanmedian(amps_flagged, axis=0)
+        amp_medians = np.nanmedian(amps_med, axis=0)
+
+    # When multiple polarizations are present, check if any have medians very
+    # different from the others and, if so, flag the whole station
+    max_norm_factor = 2
+    if npols > 1:
+        for pol_median in amp_medians:
+            if np.any(abs(amp_medians - pol_median) > np.log10(max_norm_factor)):
+                logging.info('Flagged 100% of solutions for {0} (all pols) due '
+                             'to extreme difference (> {1}) in the bandpass '
+                             'levels between polarizations'.format(ants[s], max_norm_factor))
+                weights[:, :, :] = 0.0
+                break
+
+    # Iterate over polarizations
     for pol in range(npols):
         # Skip fully flagged polarizations
         if np.all(weights[:, :, pol] == 0.0):
             continue
 
-        # Take median over time and divide out the median offset
-        with warnings.catch_warnings():
-            # Filter NaN warnings -- we deal with NaNs below
-            warnings.filterwarnings('ignore', r'All-NaN (slice|axis) encountered')
-            amps_div = np.nanmedian(amps_flagged[:, :, pol], axis=0)
-            median_val = np.nanmedian(amps_div)
-        amps_div /= median_val
+        # Divide out the median offset
+        amps_div = amps_med[:, pol] / amp_medians[pol]
         sigma_div = np.median(sigma[:, :, pol], axis=0)
         sigma_orig = sigma_div.copy()
         unflagged = np.where(~np.isnan(amps_div))
@@ -413,12 +429,12 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
         # Before doing the fitting, renormalize and flag any solutions that deviate from
         # the model bandpass by a large factor to avoid biasing the first fit
         _, bp_sp = _fit_bandpass(freqs, np.log10(amps_div), sigma_div, band, do_fit=False)
-        normval = np.median(np.log10(amps_div) - bp_sp) # value to normalize model to data
+        normval = np.median(np.log10(amps_div) - bp_sp)  # value to normalize model to data
         amps_div /= 10**normval
         bad = np.where(np.abs(np.array(bp_sp) - np.log10(amps_div)) > 0.2)
         sigma_div[bad] = 1e8
         if np.all(sigma_div > 1e7):
-            logging.info('Flagged {0} (pol {1}) due to poor match to '
+            logging.info('Flagged 100% of solutions for {0} (pol {1}) due to poor match to '
                          'baseline bandpass model'.format(ants[s], pol))
             weights[:, :, pol] = 0.0
             outQueue.put([s, weights])
@@ -442,6 +458,11 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             sigma_div = sigma_orig.copy()  # reset flags to original ones
             sigma_div[bad] = 1e8
             niter += 1
+        flagged = np.where(sigma_div >= 1e8)
+        nflagged_orig = len(np.where(weights[:, :, pol] == 0.0)[0])
+        weights[:, flagged[0], pol] = 0.0
+        nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
+        fraction_flagged = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1]))
 
         if plot:
             import matplotlib.pyplot as plt
@@ -450,38 +471,35 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, maxFlagged
             plt.plot(freqs[bad], np.log10(amps_div)[bad], 'o', c='r')
             plt.show()
 
-        # Check whether entire station is bad (high stdev or high flagged fraction). If
-        # so, flag all frequencies and polarizations
+        # Check whether entire polarization is bad (high stdev or high flagged fraction). If
+        # so, flag all times and frequencies
         if stdev_all > nSigma*maxStddev:
             # Station has high stddev relative to median bandpass
-            logging.info('Flagged {0} (pol {1}) due to high stddev '
+            logging.info('Flagged 100% of solutions for {0} (pol {1}) due to high stddev '
                          '({2})'.format(ants[s], pol, stdev_all))
             weights[:, :, pol] = 0.0
-        elif float(len(bad[0]))/float(nsols_unflagged) > maxFlaggedFraction:
+        elif fraction_flagged > maxFlaggedFraction:
             # Station has high fraction of initially unflagged solutions that are now flagged
-            logging.info('Flagged {0} (pol {1}) due to high flagged fraction '
-                         '({2:.2f})'.format(ants[s], pol, float(len(bad[0]))/float(nsols_unflagged)))
+            logging.info('Flagged 100% of solutions for {0} (pol {1}) due to '
+                         'flagged fraction ({2:.3f}) > maxFlaggedFraction '
+                         '({3:.3f})'.format(ants[s], pol, fraction_flagged, maxFlaggedFraction))
             weights[:, :, pol] = 0.0
         else:
-            flagged = np.where(sigma_div > 1e3)
-            nflagged_orig = len(np.where(weights[:, :, pol] == 0.0)[0])
-            weights[:, flagged[0], pol] = 0.0
-            nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
             median_val = np.nanmedian(amps[np.where(weights[:, :, pol] > 0.0)])
             if median_val < median_min or median_val > median_max:
                 # Station has extreme median value
-                logging.info('Flagged {0} (pol {1}) due to extreme median value '
+                logging.info('Flagged 100% of solutions for {0} (pol {1}) due to extreme median value '
                              '({2})'.format(ants[s], pol, median_val))
                 weights[:, :, pol] = 0.0
             else:
                 # Station is OK, flag bad points only
-                prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1])) * 100.0
-                logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(prcnt, ants[s], pol))
+                logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(fraction_flagged*100, ants[s], pol))
 
     outQueue.put([s, weights])
 
 
-def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=None, telescope='lofar', skipInternational=False, refAnt='', soltabExport='', ncpu=0 ):
+def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRange=None, telescope='lofar',
+         skipInternational=False, skipAnts=[], refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
     WEIGHT: compliant
@@ -489,34 +507,46 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
     Parameters
     ----------
     mode: str
-        Fitting algorithm: bandpass or resid. Bandpass mode clips amplitudes relative to a model bandpass (only LOFAR is currently supported). Resid mode clips residual phases or log(amplitudes).
+        Fitting algorithm: bandpass or resid. Bandpass mode clips amplitudes
+        relative to a model bandpass (only LOFAR is currently supported). Resid
+        mode clips residual phases or log(amplitudes).
 
     maxFlaggedFraction : float, optional
-        This sets the maximum allowable fraction of flagged solutions above which the entire station is flagged.
+        This sets the maximum allowable fraction of flagged solutions above
+        which the entire station is flagged.
 
     nSigma : float, optional
-        This sets the number of standard deviations considered when outlier clipping is done.
+        This sets the number of standard deviations considered when outlier
+        clipping is done.
 
     maxStddev : float, optional
-        Maximum allowable standard deviation when outlier clipping is done. For phases, this should value
-        should be in radians, for amplitudes in log(amp). If None (or negative), a value of 0.1 rad is
-        used for phases and 0.01 for amplitudes.
+        Maximum allowable standard deviation when outlier clipping is done. For
+        phases, this should value should be in radians, for amplitudes in
+        log(amp). If None (or negative), a value of 0.1 rad is used for phases
+        and 0.01 for amplitudes.
 
     ampRange : array, optional
-        2-element array of the median amplitude level to be acceptable, ampRange[0]: lower limit, ampRange[1]: upper limit.
-        If None or [0, 0], a reasonable range for typical observations is used.
+        2-element array of the median amplitude level to be acceptable,
+        ampRange[0]: lower limit, ampRange[1]: upper limit. If None or [0, 0], a
+        reasonable range for typical observations is used.
 
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
 
     skipInternational : str, optional
-        If True, skip flagging of international LOFAR stations (only used if telescope = 'lofar')
+        If True, skip flagging of international LOFAR stations (can only be used
+        if telescope = 'lofar' and mode = 'bandpass')
+
+    skipAnts : array, optional
+        Array of antenna names to skip (can only be used if mode = 'bandpass')
 
     refAnt : str, optional
-        If mode = resid, this sets the reference antenna for phase solutions, by default None.
+        If mode = resid, this sets the reference antenna for phase solutions, by
+        default None.
 
     soltabExport : str, optional
-        Soltab to export station flags to. Note: exported flags are not time- or frequency-dependent.
+        Soltab to export station flags to. Note: exported flags are not time- or
+        frequency-dependent.
 
     ncpu : int, optional
         Number of cpu to use, by default all available.
@@ -587,8 +617,9 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
             for d, dirname in enumerate(soltab.dir):
                 mpm = multiprocManager(ncpu, _flag_bandpass)
                 for s in range(len(soltab.ant)):
-                    if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
-                        skipInternational and telescope.lower() == 'lofar'):
+                    if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                         skipInternational and telescope.lower() == 'lofar') or
+                        soltab.ant[s] in skipAnts):
                         continue
                     mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
                              telescope, nSigma, ampRange, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
@@ -598,8 +629,9 @@ def run( soltab, mode, maxFlaggedFraction=0.5, nSigma=5.0, maxStddev=None, ampRa
         else:
             mpm = multiprocManager(ncpu, _flag_bandpass)
             for s in range(len(soltab.ant)):
-                if ('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
-                    skipInternational and telescope.lower() == 'lofar'):
+                if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                     skipInternational and telescope.lower() == 'lofar') or
+                    soltab.ant[s] in skipAnts):
                     continue
                 mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
                          telescope, nSigma, ampRange, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
