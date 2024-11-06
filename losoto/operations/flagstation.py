@@ -510,7 +510,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
                          'flagged fraction ({2:.3f}) < minFlaggedFraction '
                          '({3:.3f})'.format(ants[s], pol, fraction_flagged, minFlaggedFraction))
             weights[:, flagged[0], pol] = 1.0  # unset new flags
-            weights[:, flagged_orig[0], pol] = 0.0  # restore original flags
+            weights[flagged_orig[0], flagged_orig[1], pol] = 0.0  # restore original flags
         else:
             median_val = np.nanmedian(amps[np.where(weights[:, :, pol] > 0.0)])
             if median_val < median_min or median_val > median_max:
