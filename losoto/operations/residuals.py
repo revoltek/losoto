@@ -45,8 +45,11 @@ def run( soltab, soltabsToSub, ratio=False ):
 
         # If the two soltabs have different types, check that they are compatible
         if soltab.getType() != soltabsub.getType():
-            if soltab.getType() != 'phase' and (soltabsub.getType() == 'tec' or soltabsub.getType() == 'clock' or soltabsub.getType() == 'rotationmeasure' or soltabsub.getType() == 'tec3rd'):
-                logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
+            if soltab.getType() != 'phase' and (soltabsub.getType() == 'tec' or soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec3rd'):
+                logging.warning(soltabToSub+' is of type clock/tec/tec3rd and should be subtracted from a phase. Skipping it.')
+                return 1
+            elif (soltab.getType() not in ['rotation','phase']) and soltabsub.getType() == 'rotationmeasure':
+                logging.warning(soltabToSub + ' is of type rm and should be subtracted from a phase or rotation table. Skipping it.')
                 return 1
         logging.info('Subtracting table: '+soltabToSub)
 
