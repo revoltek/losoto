@@ -3,7 +3,9 @@
 
 # Residual operation for LoSoTo
 
-# This operation subtract a clock and/or tec from a phase
+# This operation subtracts/divides two tables, or subtracts a clock/tec/tec3rd/rm
+# from a phase, or subtracts a rotationmeasure from a rotation.
+
 # Operation is flag-only capable
 
 from losoto.lib_operations import *
@@ -21,7 +23,9 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabsToSub, ratio=False ):
     """
-    Subtract/divide two tables or a clock/tec/tec3rd/rm from a phase.
+    Subtract/divide two tables of the same type, or subtract a clock/tec/tec3rd/rm
+    table from a phase table, or subtract a rotationmeasure table from a rotation
+    table.
 
     Parameters
     ----------
@@ -39,9 +43,14 @@ def run( soltab, soltabsToSub, ratio=False ):
     for soltabToSub in soltabsToSub:
         soltabsub = solset.getSoltab(soltabToSub)
 
-        if soltab.getType() != 'phase' and (soltabsub.getType() == 'tec' or soltabsub.getType() == 'clock' or soltabsub.getType() == 'rotationmeasure' or soltabsub.getType() == 'tec3rd'):
-            logging.warning(soltabToSub+' is of type clock/tec/rm and should be subtracted from a phase. Skipping it.')
-            return 1
+        # If the two soltabs have different types, check that they are compatible
+        if soltab.getType() != soltabsub.getType():
+            if soltab.getType() != 'phase' and (soltabsub.getType() == 'tec' or soltabsub.getType() == 'clock' or soltabsub.getType() == 'tec3rd'):
+                logging.warning(soltabToSub+' is of type clock/tec/tec3rd and should be subtracted from a phase. Skipping it.')
+                return 1
+            elif (soltab.getType() not in ['rotation','phase']) and soltabsub.getType() == 'rotationmeasure':
+                logging.warning(soltabToSub + ' is of type rm and should be subtracted from a phase or rotation table. Skipping it.')
+                return 1
         logging.info('Subtracting table: '+soltabToSub)
 
         # a major speed up if tables are assumed with same axes, check that (should be the case in almost any case)
@@ -89,16 +98,16 @@ def run( soltab, soltabsToSub, ratio=False ):
             #print 'vals reshaped', valsSub.shape
 
             # a multiplication will go along the last axis of the array
-            if soltabsub.getType() == 'clock':
+            if soltabsub.getType() == 'clock' and soltab.getType() == 'phase':
                 vals -= 2. * np.pi * valsSub * freq
 
-            elif soltabsub.getType() == 'tec':
+            elif soltabsub.getType() == 'tec' and soltab.getType() == 'phase':
                 vals -= -8.44797245e9 * valsSub / freq
 
-            elif soltabsub.getType() == 'tec3rd':
+            elif soltabsub.getType() == 'tec3rd' and soltab.getType() == 'phase':
                 vals -= - 1.e21 * valsSub / np.power(freq,3)
 
-            elif soltabsub.getType() == 'rotationmeasure':
+            elif soltabsub.getType() == 'rotationmeasure' and soltab.getType() == 'phase':
                 # put pol axis at the beginning
                 idxPol = soltab.getAxesNames().index('pol')
                 if idxPol == len(vals.shape)-1: idxPol = idxFreq # maybe freq swapped with pol
@@ -120,6 +129,10 @@ def run( soltab, soltabsToSub, ratio=False ):
                         vals[1] -= ph[1]
 
                 vals = np.swapaxes(vals, 0, idxPol)
+
+            elif soltabsub.getType() == 'rotationmeasure' and soltab.getType() == 'rotation':
+                wav = 2.99792458e8 / freq
+                vals -= wav * wav * valsSub
 
             else:
                 if ratio:
