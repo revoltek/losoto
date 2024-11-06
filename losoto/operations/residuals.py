@@ -3,7 +3,9 @@
 
 # Residual operation for LoSoTo
 
-# This operation subtracts/divides two tables or a clock/tec/tec3rd/rm from a phase
+# This operation subtracts/divides two tables, or subtracts a clock/tec/tec3rd/rm
+# from a phase, or subtracts a rotationmeasure from a rotation.
+
 # Operation is flag-only capable
 
 from losoto.lib_operations import *
@@ -21,7 +23,9 @@ def _run_parser(soltab, parser, step):
 
 def run( soltab, soltabsToSub, ratio=False ):
     """
-    Subtract/divide two tables or a clock/tec/tec3rd/rm from a phase.
+    Subtract/divide two tables of the same type, or subtract a clock/tec/tec3rd/rm
+    table from a phase table, or subtract a rotationmeasure table from a rotation
+    table.
 
     Parameters
     ----------
@@ -122,6 +126,10 @@ def run( soltab, soltabsToSub, ratio=False ):
                         vals[1] -= ph[1]
 
                 vals = np.swapaxes(vals, 0, idxPol)
+
+            elif soltabsub.getType() == 'rotationmeasure' and soltab.getType() == 'rotation':
+                wav = 2.99792458e8 / freq
+                vals -= wav * wav * valsSub
 
             else:
                 if ratio:
