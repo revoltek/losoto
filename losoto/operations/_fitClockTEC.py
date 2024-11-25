@@ -728,7 +728,6 @@ def doFit(
             'CS007',
             'Super'
         ]]
-        print(stations)
         refstIdx = [i for (i, j) in enumerate(stations) if j in superterpstations]
         if len(refstIdx)==0:
             refstIdx=0
