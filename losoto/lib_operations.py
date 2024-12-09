@@ -12,10 +12,14 @@ def nproc():
     """
     Return the number of CPU cores _available_ to the current process, similar
     to what the Linux `nproc` command does. This can be less than the total
-    number of CPU cores in the machine, which is returned by, e.g.,
-    `multiprocessing.cpu_count()`
+    number of CPU cores in the machine.
+    NOTE: This function uses `os.sched_getaffinity()`, which is not available
+    on every OS. Use `multiprocessing.cpu_count()` as fall-back.
     """
-    return len(os.sched_getaffinity(0))
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return multiprocessing.cpu_count()
 
 
 class multiprocManager(object):
