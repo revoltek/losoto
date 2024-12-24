@@ -135,8 +135,8 @@ def run( soltab, outsoltab, axisToRegrid, newdelta, delta='', maxFlaggedWidth=0,
     orig_shape = soltab.val.shape
     new_shape = list(orig_shape)
     new_shape[axisind] = len(new_axisvals)
-    new_vals = np.zeros(new_shape, dtype='float')
-    new_weights = np.zeros(new_shape, dtype='float')
+    new_vals = np.zeros(new_shape, dtype='float').astype('object')
+    new_weights = np.zeros(new_shape, dtype='float').astype('object')
 
     for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=[axisToRegrid], weight=True):
         flagged = np.logical_or(np.equal(weights, 0.0), np.isnan(vals))
