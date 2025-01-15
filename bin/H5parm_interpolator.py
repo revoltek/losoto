@@ -104,7 +104,9 @@ for h5parmFile in args.h5parmFiles:
 fast_axes_vals = {}
 for axis, all_vals in all_axes_vals.items():
     if axis == 'dir':
-        fast_axes_vals['dir'] = list(set([val[0] for val in all_vals]))
+		# this preserves the order
+        fast_axes_vals['dir'] = list([val[0] for val in all_vals])
+        fast_axes_vals['dir'] = list(dict.fromkeys(fast_axes_vals['dir']))
     else:
         logging.info('Looking for fastest axis in %s...' % axis)
         lens = [len(vals) for vals in all_vals]
