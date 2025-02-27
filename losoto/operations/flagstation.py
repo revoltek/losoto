@@ -14,6 +14,7 @@ def _run_parser(soltab, parser, step):
     nSigma = parser.getfloat( step, 'nSigma', 5.0)
     maxStddev = parser.getfloat( step, 'maxStddev', -1.0)
     ampRange = parser.getarrayfloat( step, 'ampRange', [0.,0.] )
+    thresholdBaddata = parser.getfloat( step, 'thresholdBaddata', 0.5 )
     telescope = parser.getstr( step, 'telescope', 'lofar')
     skipInternational = parser.getbool( step, 'skipInternational', False)
     skipAnts = parser.getarraystr( step, 'skipAnts', [])
@@ -21,8 +22,8 @@ def _run_parser(soltab, parser, step):
     soltabExport = parser.getstr( step, 'soltabExport', '' )
     ncpu = parser.getint( '_global', 'ncpu', 0)
 
-    parser.checkSpelling( step, soltab, ['mode', 'minFlaggedFraction', 'maxFlaggedFraction', 'nSigma', 'maxStddev', 'ampRange', 'telescope', 'skipInternational', 'skipAnts', 'refAnt', 'soltabExport'])
-    return run( soltab, mode, minFlaggedFraction, maxFlaggedFraction, nSigma, maxStddev, ampRange, telescope, skipInternational, skipAnts, refAnt, soltabExport, ncpu )
+    parser.checkSpelling( step, soltab, ['mode', 'minFlaggedFraction', 'maxFlaggedFraction', 'nSigma', 'maxStddev', 'ampRange', 'thresholdBaddata', 'telescope', 'skipInternational', 'skipAnts', 'refAnt', 'soltabExport'])
+    return run( soltab, mode, minFlaggedFraction, maxFlaggedFraction, nSigma, maxStddev, ampRange, thresholdBaddata, telescope, skipInternational, skipAnts, refAnt, soltabExport, ncpu )
 
 
 def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, ants, s, outQueue):
@@ -526,7 +527,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
 
 
 def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.0,
-         maxStddev=None, ampRange=None, telescope='lofar',
+         maxStddev=None, ampRange=None, thresholdBaddata = 0.5, telescope='lofar',
          skipInternational=False, skipAnts=[], refAnt='', soltabExport='', ncpu=0 ):
     """
     This operation for LoSoTo implements a station-flagging procedure. Flags are time-independent.
@@ -535,9 +536,9 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
     Parameters
     ----------
     mode: str
-        Fitting algorithm: bandpass or resid. Bandpass mode clips amplitudes
-        relative to a model bandpass (only LOFAR is currently supported). Resid
-        mode clips residual phases or log(amplitudes).
+        Fitting algorithm: bandpass, relative or resid. Bandpass mode clips amplitudes
+        relative to a model bandpass (only LOFAR is currently supported). Relative uses average antenna
+        behaviour to derive outliers. Resid mode clips residual phases or log(amplitudes).
 
     minFlaggedFraction : float, optional
         Minimum allowable fraction of new flagged frequencies. Stations with
@@ -562,6 +563,10 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
         ampRange[0]: lower limit, ampRange[1]: upper limit. If None or [0, 0], a
         reasonable range for typical observations is used.
 
+    thresholdBaddata : float, optional
+        if the fraction of data that are nSigma times away from the mean in the "relative" mode
+        is larger than thresholdBaddata, then the antenna is flagged.
+    
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
 
@@ -591,8 +596,8 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
         refAnt = None
     if soltabExport == '':
         soltabExport = None
-    if mode is None or mode.lower() not in ['bandpass', 'resid']:
-        logging.error('Mode must be one of bandpass or resid')
+    if mode is None or mode.lower() not in ['bandpass', 'resid', 'relative']:
+        logging.error('Mode must be one of bandpass, relative or resid')
         return 1
     solType = soltab.getType()
     if maxStddev is None or maxStddev <= 0.0:
@@ -687,6 +692,40 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
         soltab.addHistory('FLAGSTATION (mode=bandpass, telescope={0}, minFlaggedFraction={1}, '
                           'maxFlaggedFraction={2}, nSigma={3})'.format(telescope, minFlaggedFraction,
                                                                        maxFlaggedFraction, nSigma))
+    elif mode == "relative":
+        if solType != 'amplitude':
+            logging.error("Soltab must be of type amplitude for relative mode.")
+            return 1
+        
+        #vals_arraytmp = np.log10(vals_arraytmp) # go to log space
+        vals_arraytmp[weights_arraytmp == 0] = np.nan
+        mean_bp = np.nanmean(vals_arraytmp, axis=1) # collapse ant axes making the mean
+        rms_bp = np.nanstd(vals_arraytmp, axis=1)
+        #print(vals_arraytmp[0,:,0,0,0],mean_bp[0,0,0],rms_bp[0,0,0])
+        
+        for s in range(len(soltab.ant)):
+            if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                     skipInternational and telescope.lower() == 'lofar') or
+                    soltab.ant[s] in skipAnts):
+                    continue
+
+            bad_data = np.abs(vals_arraytmp[:, s, ...] - mean_bp) > nSigma * rms_bp
+            ratio = np.sum(bad_data)/bad_data.size
+            if ratio > thresholdBaddata:
+                logging.info('%s: fraction of bad data: %f -> flag' % (soltab.ant[s], ratio))
+                weights_arraytmp[:, s, ...] = 0.0
+            else:
+                logging.info('%s: fraction of bad data: %f' % (soltab.ant[s], ratio))
+
+        # Write new weights
+        if 'dir' in axis_names:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind, dir_ind])
+        else:
+            weights_array = weights_arraytmp.transpose([time_ind, ant_ind, freq_ind, pol_ind])
+        soltab.setValues(weights_array, weight=True)
+        soltab.addHistory('FLAGSTATION (mode=relative, telescope={0}, '
+                          'thresholdBaddata={1}, nSigma={2})'.format(telescope, thresholdBaddata, nSigma))
+
     else:
         if solType not in ['phase', 'amplitude']:
             logging.error("Soltab must be of type phase or amplitude for resid mode.")
