@@ -416,14 +416,11 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
     # When multiple polarizations are present, check if any have medians very
     # different from the others and, if so, flag the whole station
     max_norm_factor = 2
-    if npols > 1:
-        for pol_median in amp_medians:
-            if np.any(abs(amp_medians - pol_median) > np.log10(max_norm_factor)):
-                logging.info('Flagged 100% of solutions for {0} (all pols) due '
-                             'to extreme difference (> {1}) in the bandpass '
-                             'levels between polarizations'.format(ants[s], max_norm_factor))
-                weights[:, :, :] = 0.0
-                break
+    if np.any(abs(np.log10(amp_medians) - np.log10(amp_medians[0])) > np.log10(max_norm_factor)):
+        logging.info('Flagged 100% of solutions for {0} (all pols) due '
+                     'to extreme difference (> {1}) in the bandpass '
+                     'levels between polarizations'.format(ants[s], max_norm_factor))
+        weights[:, :, :] = 0.0
 
     # Iterate over polarizations
     for pol in range(npols):
@@ -566,7 +563,7 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
     thresholdBaddata : float, optional
         if the fraction of data that are nSigma times away from the mean in the "relative" mode
         is larger than thresholdBaddata, then the antenna is flagged.
-    
+
     telescope : str, optional
         Specifies the telescope if mode = 'bandpass'.
 
@@ -696,13 +693,13 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
         if solType != 'amplitude':
             logging.error("Soltab must be of type amplitude for relative mode.")
             return 1
-        
+
         #vals_arraytmp = np.log10(vals_arraytmp) # go to log space
         vals_arraytmp[weights_arraytmp == 0] = np.nan
         mean_bp = np.nanmean(vals_arraytmp, axis=1) # collapse ant axes making the mean
         rms_bp = np.nanstd(vals_arraytmp, axis=1)
         #print(vals_arraytmp[0,:,0,0,0],mean_bp[0,0,0],rms_bp[0,0,0])
-        
+
         for s in range(len(soltab.ant)):
             if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
                      skipInternational and telescope.lower() == 'lofar') or
