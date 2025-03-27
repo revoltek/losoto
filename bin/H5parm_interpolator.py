@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys, os
+import sys, os, gc
 import numpy as np
 from scipy.interpolate import interp1d
 from losoto.h5parm import h5parm, Soltab
@@ -174,6 +174,11 @@ for typ, soltabs in all_soltabs.items():
     soltabOut = solsetOut.makeSoltab(typ, axesNames=all_axes_names[typ],
                 axesVals=[ fast_axes_vals[axis_name] for axis_name in all_axes_names[typ] ],
                 vals=new_vals, weights=new_weights)
+    
+    # try to keep memory usage low
+    del new_vals
+    del new_weights
+    gc.collect()
 
 logging.info(str(h5Out))
 h5Out.close()
