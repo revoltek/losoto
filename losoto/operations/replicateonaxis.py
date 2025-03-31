@@ -25,7 +25,9 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
 
     fromCell : str
         A cell value in axisReplicate from which to copy the data values. If it is the string
-        "first"/"last" then uses the first/last element of the axis.
+        "first"/"last" then uses the first/last element of the axis. "nonflaggedCS" can be used
+        in the case all CS are the same and one wants to expand those to other stations, this solves
+        the issue that might happen if the first/last station has NaNs.
 
     updateWeights : bool
         If False then weights are untoched, if True they are replicated like data. Default: True.
@@ -40,6 +42,8 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
         fromCell = soltab.getAxisValues(axisReplicate)[0]
     elif fromCell == 'last':
         fromCell = soltab.getAxisValues(axisReplicate)[-1]
+    elif fromCell == 'nonflaggedCS':
+        fromCell = 'CS*'
 
     axisType = type(soltab.getAxisValues(axisReplicate)[0])
     try:
@@ -48,7 +52,7 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
         logging.error('Cannot convert to type %s the value in fromCell: %s.' % (str(axisType),fromCell))
         return 1
 
-    if not fromCell in soltab.getAxisValues(axisReplicate):
+    if not fromCell in soltab.getAxisValues(axisReplicate) and not fromCell == 'CS*':
         logging.error('Cannot find %s in %s.' % (fromCell, axisReplicate))
         return 1
 
@@ -64,8 +68,12 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     if updateWeights:
         weights = soltab.getValues(retAxesVals=False, weight=True)
 
-    cellPos = list(soltab.getAxisValues(axisReplicate)).index(fromCell)
+    #cellPos = list(soltab.getAxisValues(axisReplicate)).index(fromCell)
     axisReplicatePos = soltab.getAxesNames().index(axisReplicate)
+    if fromCell == 'CS*':
+        print(vals.shape)
+        vals = np.nanmean(vals, axis=axisReplicatePos)
+        print(vals.shape)
 
     # expand on the right axis
     vals = np.repeat(vals, repeats=axisReplicateLen, axis=axisReplicatePos)
