@@ -9,7 +9,7 @@ logging.debug('Loading REPLICATEONAXIS module.')
 def _run_parser(soltab, parser, step):
     axisReplicate = parser.getstr( step, 'axisReplicate' ) # no default
     fromCell = parser.getstr( step, 'fromCell', '' )
-    updateWeights = parser.getbool( step, 'updateWeights', True )
+    updateWeights = parser.getbool( step, 'updateWeights', False )
 
     parser.checkSpelling( step, soltab, ['axisReplicate', 'fromCell', 'updateWeights'])
     return run(soltab, axisReplicate, fromCell, updateWeights)
@@ -30,7 +30,7 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
         the issue that might happen if the first/last station has NaNs.
 
     updateWeights : bool
-        If False then weights are untoched, if True they are replicated like data. Default: True.
+        If False then weights are untoched, if True they are replicated like data (usable only with fromCell: first or last). Default: False.
     """
     import numpy as np
 
@@ -44,23 +44,27 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
         fromCell = soltab.getAxisValues(axisReplicate)[-1]
     elif fromCell == 'nonflaggedCS':
         fromCell = 'CS*'
+        if updateWeights:
+            logging.error('updateWeights must be false with fromCell=nonflaggedCS.')
+            return 1
 
-    axisType = type(soltab.getAxisValues(axisReplicate)[0])
-    try:
-        fromCell = np.array([fromCell]).astype(axisType)[0]
-    except:
-        logging.error('Cannot convert to type %s the value in fromCell: %s.' % (str(axisType),fromCell))
-        return 1
+    if fromCell == 'first' or fromCell == 'last':  
+        axisType = type(soltab.getAxisValues(axisReplicate)[0])
+        try:
+            fromCell = np.array([fromCell]).astype(axisType)[0]
+        except:
+            logging.error('Cannot convert to type %s the value in fromCell: %s.' % (str(axisType),fromCell))
+            return 1
 
-    if not fromCell in soltab.getAxisValues(axisReplicate) and not fromCell == 'CS*':
-        logging.error('Cannot find %s in %s.' % (fromCell, axisReplicate))
-        return 1
+        if not fromCell in soltab.getAxisValues(axisReplicate):
+            logging.error('Cannot find %s in %s.' % (fromCell, axisReplicate))
+            return 1
 
     logging.info("Replicate axis on soltab: "+soltab.name)
 
     # get the cell to replicate
     axisReplicateLen = soltab.getAxisLen(axisReplicate, ignoreSelection=False) # keep selection into account
-    old_selection = soltab.selection
+    old_selection = np.copy(soltab.selection)
 
     # get slice with 1 value to replicate
     soltab.setSelection(**{axisReplicate:fromCell})
@@ -71,9 +75,7 @@ def run( soltab, axisReplicate, fromCell, updateWeights=True):
     #cellPos = list(soltab.getAxisValues(axisReplicate)).index(fromCell)
     axisReplicatePos = soltab.getAxesNames().index(axisReplicate)
     if fromCell == 'CS*':
-        print(vals.shape)
         vals = np.nanmean(vals, axis=axisReplicatePos)
-        print(vals.shape)
 
     # expand on the right axis
     vals = np.repeat(vals, repeats=axisReplicateLen, axis=axisReplicatePos)
