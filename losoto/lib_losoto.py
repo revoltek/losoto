@@ -130,9 +130,9 @@ class LosotoParser(ConfigParser):
         try:
             # Remove space after [
             x = self.getstr(s, v, default)
-            x = re.sub('\[ +', '[', x.strip())
+            x = re.sub(r'\[ +', '[', x.strip())
             # Replace commas and spaces
-            x = re.sub('[,\s]+', ', ', x)
+            x = re.sub(r'[,\s]+', ', ', x)
             return np.array(ast.literal_eval(x))
         except:
             logging.error('Error interpreting section: %s - values: %s (expected array of float.)' % (s, v))
