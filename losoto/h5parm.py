@@ -187,7 +187,7 @@ class h5parm( object ):
 
         logging.info('Creating a new solution-set: '+solsetName+'.')
         solset = self.H.create_group("/", solsetName)
-        solset._f_setattr('h5parm_version', losoto._version.__h5parmVersion__)
+        solset._f_setattr('h5parm_version', losoto.__h5parmVersion__)
 
         if addTables:
             # add antenna table

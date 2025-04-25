@@ -1,6 +1,5 @@
 [project]
 name = "losoto"
-version="2.5.0"
 description = "LOFAR Solution Tool"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -29,12 +28,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Astronomy",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-# dynamic = ["version"]
+dynamic = ["version"]
 
 [build-system]
 requires = [
     "setuptools",
-    # "setuptools_scm",
+    "setuptools_scm",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
@@ -56,5 +55,5 @@ script-files = [
     "bin/H5parm_interpolator.py",
 ]
 
-# [tool.setuptools_scm]
-# write_to = "losoto/_version.py"
+[tool.setuptools_scm]
+write_to = "losoto/_version.py"

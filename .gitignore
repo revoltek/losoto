@@ -55,3 +55,6 @@ nosetests.xml
 
 # Compiled documentation
 docs/_build/*
+
+# Setuptools SCM
+losoto/_version.py
