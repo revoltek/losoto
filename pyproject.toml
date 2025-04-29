@@ -1,0 +1,59 @@
+[project]
+name = "losoto"
+description = "LOFAR Solution Tool"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+keywords = ["LOFAR", "astronomy", "radio astronomy", "data analysis"]
+authors = [
+    { name = "Francesco Gasperin", email = "rev@voo.it" },
+    { name = "David Rafferty", email = "drafferty@hs.uni-hamburg.de" },
+]
+maintainers = [
+    { name = "Marcel Loose", email = "loose@astron.nl" },
+]
+requires-python = ">=3.9"
+dependencies = [
+    "matplotlib",
+    "numpy<2",
+    "python-casacore>=3.0",
+    "scipy",
+    "tables>=3.4"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["version"]
+
+[build-system]
+requires = [
+    "setuptools",
+    "setuptools_scm",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "losoto",
+    "losoto.operations",
+    "losoto.progressbar",
+]
+script-files = [
+    "bin/losoto",
+    "bin/H5parm_split.py",
+    "bin/H5parm2parmdb.py",
+    "bin/parmdb2H5parm.py",
+    "bin/killMS2H5parm.py",
+    "bin/H5parm_collector.py",
+    "bin/H5parm_copy.py",
+    "bin/H5parm_interpolator.py",
+]
+
+[tool.setuptools_scm]
+write_to = "losoto/_version.py"

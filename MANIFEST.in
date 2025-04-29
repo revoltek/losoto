@@ -1,0 +1,20 @@
+# Setuptools, when combined with setuptools_scm, puts all the files that are
+# under version control in the source distribution. We want to be a bit more
+# selective. With this MANIFEST.in file we exactly mimic the old behaviour.
+
+# Start with an empty slate
+prune *
+
+# Add the following directories
+graft bin
+graft losoto.egg-info
+graft losoto/operations
+graft losoto/progressbar
+
+# Include the following files
+include losoto/*.py
+
+# Exclude the following files
+exclude	.gitignore
+exclude	MANIFEST.in
+exclude	bin/H5parm_benchmark.py
