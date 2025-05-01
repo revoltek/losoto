@@ -30,6 +30,9 @@ classifiers = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+test = ["tox"]
+
 [build-system]
 requires = [
     "setuptools",
@@ -57,3 +60,13 @@ script-files = [
 
 [tool.setuptools_scm]
 write_to = "losoto/_version.py"
+
+[tool.tox]
+requires = ["tox>4"]
+# envlist = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+envlist = ["py3{9,10,11,12,13}"]
+
+[tool.tox.env_run_base]
+commands = [
+    ["python", "{toxinidir}/tools/losoto_test.py"],
+]
