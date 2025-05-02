@@ -14,7 +14,8 @@ maintainers = [
 requires-python = ">=3.9"
 dependencies = [
     "matplotlib",
-    "numpy<2",
+    "numpy<2; python_version=='3.9'",
+    "numpy",
     "python-casacore>=3.0",
     "scipy",
     "tables>=3.4"
@@ -29,6 +30,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+test = ["tox"]
 
 [build-system]
 requires = [
@@ -57,3 +61,12 @@ script-files = [
 
 [tool.setuptools_scm]
 write_to = "losoto/_version.py"
+
+[tool.tox]
+requires = ["tox>4"]
+envlist = ["py3{9,10,11,12,13}"]
+
+[tool.tox.env_run_base]
+commands = [
+    ["python", "{toxinidir}/tools/losoto_test.py"],
+]

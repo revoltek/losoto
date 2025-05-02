@@ -914,7 +914,7 @@ class Soltab( object ):
                 if type(selVal) is np.array or type(selVal) is np.ndarray: selVal = selVal.tolist()
                 if not type(selVal) is list: selVal = [selVal]
                 # convert to correct data type (from parset everything is a str)
-                if not self.getAxisType(axis).type is np.string_:
+                if not self.getAxisType(axis).type is np.bytes_:
                     selVal = np.array(selVal, dtype=self.getAxisType(axis))
                 else:
                     selVal = np.array(selVal)
