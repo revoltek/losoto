@@ -334,6 +334,8 @@ def _calculate_screen(inscreen, residuals, pp, N_piercepoints, k, east, north, u
     from numpy.linalg import pinv, norm
     import numpy as np
 
+    raise RuntimeError("Oopsie!")
+
     screen = np.zeros((Nx, Ny))
 
     if height == 0.0:
@@ -421,6 +423,8 @@ def _plot_frame(screen, fitted_phase1, residuals, weights, x, y, k, lower,
         True if screens are phase screens
 
     """
+    raise RuntimeError("Oopsie!")
+
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
         mpl.rc('figure.subplot',left=0.05, bottom=0.05, right=0.95, top=0.95,wspace=0.22, hspace=0.22 )

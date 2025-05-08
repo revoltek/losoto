@@ -32,6 +32,8 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
     from scipy.ndimage import generic_filter
     import scipy.interpolate
 
+    raise RuntimeError("Oopsie!")
+
     def rolling_rms(a, window):
         """
         Return the rms for each element of the array calculated using the element inside a window,
