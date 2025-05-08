@@ -4,6 +4,10 @@
 from losoto.lib_operations import *
 from losoto._logging import logger as logging
 
+import numpy as np
+import warnings
+np.warnings = warnings
+
 logging.debug('Loading PREFACTOR_BANDPASS module.')
 
 def _run_parser(soltab, parser, step):
@@ -290,6 +294,8 @@ def _flag_amplitudes(freqs, amps, weights, nSigma, maxFlaggedFraction, maxStddev
     indx, weights : int, array
         Station index, modified weights array
     """
+    raise RuntimeError("Oopsie!")
+
     # Determine which band we're in
     if np.median(freqs) < 180e6 and np.median(freqs) > 110e6:
         band = 'hba_low'

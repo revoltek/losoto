@@ -21,6 +21,8 @@ def _run_parser(soltab, parser, step):
 def _run_antenna(vals, vals_e, vals_init, weights, selection, tec_jump, antname, outQueue):
     import itertools, random
 
+    raise RuntimeError("Oopsie!")
+
     extend = 1 # number of point to eaxtend each block
 
     class Block(object):

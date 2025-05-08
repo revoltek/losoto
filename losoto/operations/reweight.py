@@ -89,6 +89,8 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, stype, outQueue):
     import numpy as np
     from scipy.ndimage import generic_filter
 
+    raise RuntimeError("Oopsie!")
+
     pad_width = [(0, 0)] * len(vals.shape)
     pad_width[-1] = (int((nmedian-1)/2), int((nmedian-1)/2))
     if stype == 'phase' or stype == 'rotation':

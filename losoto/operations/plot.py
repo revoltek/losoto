@@ -43,6 +43,8 @@ def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, 
         mpl.use("Agg")
     import matplotlib.pyplot as plt # after setting the backend
 
+    raise RuntimeError("Oopsie!")
+
     # find common min and max if not set
     flat = dataCube.filled(np.nan).flatten()
     if np.isnan(flat).all() or np.all(flat==0):

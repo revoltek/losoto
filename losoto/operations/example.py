@@ -68,10 +68,10 @@ def run( soltab, opt1, opt2 = [1., 2., 3.], opt3 = 0 ):
     logging.info("Get data using soltab.val")
     val = soltab.val
     logging.debug('shape of val: '+str(soltab.val.shape))
-    logging.info("$ val is "+str(val[0,0,0,0,100]))
+    #logging.info("$ val is "+str(val[0,0,0,0,100]))
     weight = soltab.weight
     time = soltab.time
-    thisTime = soltab.time[100]
+    #thisTime = soltab.time[100]
  
     # another way to get the data is using the getValues()
     logging.info("Get data using getValues()")
@@ -95,18 +95,18 @@ def run( soltab, opt1, opt2 = [1., 2., 3.], opt3 = 0 ):
  
     # finally the getValuesIter allaws to iterate across all possible combinations of a set of axes
     logging.info('Iteration on time/freq')
-    for vals, coord, selection in soltab.getValuesIter(returnAxes=['time','freq']):
+    #for vals, coord, selection in soltab.getValuesIter(returnAxes=['time','freq']):
         # writing back the solutions
-        soltab.setValues(vals, selection)
+        #soltab.setValues(vals, selection)
     logging.info('Iteration on time')
-    for vals, coord, selection in soltab.getValuesIter(returnAxes=['time']):
+    #for vals, coord, selection in soltab.getValuesIter(returnAxes=['time']):
         # writing back the solutions
-        soltab.setValues(vals, selection)   
+        #soltab.setValues(vals, selection)   
     logging.info('Iteration on dir after selection to 1 dir')
     soltab.setSelection(dir='pointing') 
-    for vals, coord, selection in t.getValuesIter(returnAxes=['dir']):
+    #for vals, coord, selection in t.getValuesIter(returnAxes=['dir']):
         # writing back the solutions
-        soltab.setValues(vals, selection)
+        #soltab.setValues(vals, selection)
   
     return 0 # if everything went fine, otherwise 1
  
