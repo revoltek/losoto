@@ -9,13 +9,13 @@ _author = "Francesco de Gasperin (astro@voo.it), David Rafferty (drafferty@hs.un
 
 import sys, os, glob, re, time
 import numpy as np
+import progressbar
 import shutil
 import pyrap.tables as pt
 import lofar.parmdb
 from losoto import _version
 from losoto import _logging
 from losoto.h5parm import h5parm
-import losoto.progressbar as progressbar
 
 
 def parmdbToAxes(solEntry):

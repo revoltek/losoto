@@ -16,6 +16,7 @@ dependencies = [
     "matplotlib",
     "numpy<2; python_version=='3.9'",
     "numpy",
+    "progressbar",
     "python-casacore>=3.0",
     "scipy",
     "tables>=3.4"
@@ -46,7 +47,6 @@ build-backend = "setuptools.build_meta"
 packages = [
     "losoto",
     "losoto.operations",
-    "losoto.progressbar",
 ]
 script-files = [
     "bin/losoto",

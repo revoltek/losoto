@@ -147,7 +147,7 @@ def _screens_to_tecsp(pp, screen1, screen2, directions, station_positions,
 
     """
     import numpy as np
-    import losoto.progressbar as progressbar
+    import progressbar
 
     ra = [r for r, d in directions]
     dec = [d for r, d in directions]
@@ -211,10 +211,7 @@ def _screen_to_val(pp, screen, directions, station_positions, beta_val, r_0,
 
     """
     import numpy as np
-    try:
-        import progressbar
-    except ImportError:
-        import losoto.progressbar as progressbar
+    import progressbar
 
     ra = [r for r, d in directions]
     dec = [d for r, d in directions]
