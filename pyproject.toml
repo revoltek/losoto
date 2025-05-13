@@ -67,6 +67,11 @@ requires = ["tox>4"]
 envlist = ["py3{9,10,11,12,13}"]
 
 [tool.tox.env_run_base]
+deps = [
+    "pytest",
+    "pytest-cov",
+]
 commands = [
-    ["python", "{toxinidir}/tools/losoto_test.py"],
+    # ["python", "{toxinidir}/tools/losoto_test.py"],
+    ["python", "-m", "pytest", "--cov-report", "term", "--cov-report", "xml", "--cov-report", "html", "--cov=losoto", "tests/{posargs}"]
 ]
