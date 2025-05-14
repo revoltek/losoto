@@ -79,6 +79,8 @@ def h5parm_file(tmp_path):
 def test_h5parm(h5parm_file):
     """
     Test the h5parm module.
+    TODO: This is a very basic test. We should add more tests to cover
+    different scenarios and functionalities of the h5parm class.
     """
 
     with h5parm(h5parm_file, readonly=False) as h5:
@@ -104,3 +106,17 @@ def test_h5parm(h5parm_file):
 
         assert vals.shape == (2, 3, 5)
         assert axesnames == ["dir", "freq", "time"]
+
+
+def test_solset():
+    """
+    Test the Solset class.
+    """
+    pass
+
+
+def test_soltab():
+    """
+    Test the Soltab class.
+    """
+    pass

@@ -19,7 +19,37 @@ TODO: Here's the complete list of classes/functions in lib_operations.py.
     def normalize_phase(phase):
 """
 
-def test_lib_operations():
+
+def test_nproc():
     """
+    Test the nproc function.
+    """
+    pass
+
+
+def test_multiproc_manager():
+    """
+    Test the multiprocManager class.
+    """
+    pass
+
+
+def test_reorder_axes():
+    """
+    Test the reorderAxes function.
+    """
+    pass
+
+
+def test_remove_keys():
+    """
+    Test the removeKeys function.
+    """
+    pass
+
+
+def test_normalize_phase():
+    """
+    Test the normalize_phase function.
     """
     pass

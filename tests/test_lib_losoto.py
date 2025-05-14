@@ -25,7 +25,37 @@ TODO: Here's the complete list of classes/functions in lib_losoto.py.
     def rename_kwargs(func_name, kwargs, aliases):
 """
 
-def test_lib_losoto():
+
+def test_losoto_parser():
     """
+    Test the LosotoParser class.
+    """
+    pass
+
+
+def test_get_par_axis():
+    """
+    Test the getParAxis function.
+    """
+    pass
+
+
+def test_get_step_soltabs():
+    """
+    Test the getStepSoltabs function.
+    """
+    pass
+
+
+def test_deprecated_alias():
+    """
+    Test the deprecated_alias decorator.
+    """
+    pass
+
+
+def test_rename_kwargs():
+    """
+    Test the rename_kwargs function.
     """
     pass
