@@ -10,4 +10,3 @@ def test_duplicate(soltab):
     Test the Losoto operation duplicate
     """
     assert duplicate.run(soltab, soltabOut="", overwrite=False) == 0
-    pass

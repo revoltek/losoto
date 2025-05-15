@@ -28,4 +28,3 @@ def test_flag(soltab):
         )
         == 0
     )
-    pass

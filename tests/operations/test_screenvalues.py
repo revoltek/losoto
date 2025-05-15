@@ -10,4 +10,3 @@ def test_screenvalues(soltab):
     Test the Losoto operation screenvalues
     """
     assert screenvalues.run(soltab1, source_dict, outsoltab, soltab2=None, ncpu=0) == 0
-    pass

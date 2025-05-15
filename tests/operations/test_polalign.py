@@ -10,4 +10,3 @@ def test_polalign(soltab):
     Test the Losoto operation polalign
     """
     assert polalign.run(soltab, soltabOut="phasediff", minFreq=0, refAnt="") == 0
-    pass

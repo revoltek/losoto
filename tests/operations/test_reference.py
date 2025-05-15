@@ -10,4 +10,3 @@ def test_reference(soltab):
     Test the Losoto operation reference
     """
     assert reference.run(soltab, refAnt="", refDir="") == 0
-    pass

@@ -13,4 +13,3 @@ def test_interpolate(soltab):
         interpolate.run(ssoltab, interp_dirs, soltabOut=None, prefix="interp_", ncpu=0)
         == 0
     )
-    pass

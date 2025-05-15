@@ -25,4 +25,3 @@ def test_prefactor_bandpass(soltab):
         )
         == 0
     )
-    pass

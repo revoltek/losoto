@@ -10,4 +10,3 @@ def test_residuals(soltab):
     Test the Losoto operation residuals
     """
     assert residuals.run(soltab, soltabsToSub, ratio=False) == 0
-    pass

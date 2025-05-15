@@ -22,4 +22,3 @@ def test_reweight(soltab):
         )
         == 0
     )
-    pass

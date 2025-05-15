@@ -10,4 +10,3 @@ def test_deleteaxis(soltab):
     Test the Losoto operation deleteaxis
     """
     assert deleteaxis.run(soltab, axisDelete, fromCell) == 0
-    pass

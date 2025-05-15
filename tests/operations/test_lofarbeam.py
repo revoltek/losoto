@@ -15,4 +15,3 @@ def test_lofarbeam(soltab):
         )
         == 0
     )
-    pass

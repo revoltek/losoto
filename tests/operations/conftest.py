@@ -8,10 +8,7 @@ import os
 import pytest
 import tempfile
 
-from losoto import operations as op
 from losoto.h5parm import h5parm
-from losoto._logging import logger as logging
-
 
 @pytest.fixture
 def h5():

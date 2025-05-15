@@ -22,4 +22,3 @@ def test_smooth(soltab):
         )
         == 0
     )
-    pass

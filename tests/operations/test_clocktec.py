@@ -29,4 +29,3 @@ def test_clocktec(soltab):
         )
         == 0
     )
-    pass

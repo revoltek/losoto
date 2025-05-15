@@ -20,4 +20,3 @@ def test_directionscreen(soltab):
         )
         == 0
     )
-    pass

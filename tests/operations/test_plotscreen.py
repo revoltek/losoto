@@ -22,4 +22,3 @@ def test_plotscreen(soltab):
         )
         == 0
     )
-    pass

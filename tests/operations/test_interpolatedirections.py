@@ -10,4 +10,3 @@ def test_interpolatedirections(soltab):
     Test the Losoto operation interpolatedirections
     """
     assert interpolatedirections.run(soltab=None) == 0
-    pass

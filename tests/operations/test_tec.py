@@ -12,4 +12,3 @@ def test_tec(soltab):
     assert (
         tec.run(soltab, soltabOut, refAnt, maxResidualFlag, maxResidualProp, ncpu) == 0
     )
-    pass

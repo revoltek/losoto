@@ -10,4 +10,3 @@ def test_tecjump(soltab):
     Test the Losoto operation tecjump
     """
     assert tecjump.run(soltab, refAnt="", soltabError="", ncpu=0) == 0
-    pass

@@ -10,4 +10,3 @@ def test_reset(soltab):
     Test the Losoto operation reset
     """
     assert reset.run(soltab, dataVal=-999.0) == 0
-    pass

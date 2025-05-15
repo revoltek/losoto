@@ -12,4 +12,3 @@ def test_clip(soltab):
     assert (
         clip.run(soltab, axesToClip=None, clipLevel=5.0, log=False, mode="median") == 0
     )
-    pass

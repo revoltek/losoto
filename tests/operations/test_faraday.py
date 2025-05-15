@@ -15,4 +15,3 @@ def test_faraday(soltab):
         )
         == 0
     )
-    pass

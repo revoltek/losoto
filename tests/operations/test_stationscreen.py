@@ -26,4 +26,3 @@ def test_stationscreen(soltab):
         )
         == 0
     )
-    pass

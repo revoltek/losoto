@@ -33,4 +33,3 @@ def test_plot(soltab):
         )
         == 0
     )
-    pass

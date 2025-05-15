@@ -12,4 +12,3 @@ def test_flagextend(soltab):
     assert (
         flagextend.run(soltab, axesToExt, size, percent=50.0, maxCycles=3, ncpu=0) == 0
     )
-    pass

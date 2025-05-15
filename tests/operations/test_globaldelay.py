@@ -10,4 +10,3 @@ def test_globaldelay(soltab):
     Test the Losoto operation globaldelay
     """
     assert globaldelay.run(soltab, soltabOut="tec000", refAnt="") == 0
-    pass

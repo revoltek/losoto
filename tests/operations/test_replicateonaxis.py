@@ -10,4 +10,3 @@ def test_replicateonaxis(soltab):
     Test the Losoto operation replicateonaxis
     """
     assert replicateonaxis.run(soltab, axisReplicate, fromCell, updateWeights=True) == 0
-    pass

@@ -10,4 +10,3 @@ def test_structure(soltab):
     Test the Losoto operation structure
     """
     assert structure.run(soltab, doUnwrap=False, refAnt="", plotName="", ndiv=1) == 0
-    pass

@@ -10,4 +10,3 @@ def test_splitleak(soltab):
     Test the Losoto operation splitleak
     """
     assert splitleak.run(soltab, soltabOutG=None, soltabOutD=None) == 0
-    pass
