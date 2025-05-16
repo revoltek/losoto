@@ -10,6 +10,14 @@ def test_interpolate(soltab):
     Test the Losoto operation interpolate
     """
     assert (
-        interpolate.run(ssoltab, interp_dirs, soltabOut=None, prefix="interp_", ncpu=0)
+        interpolate.run(
+            soltab,
+            outsoltab,
+            axisToRegrid,
+            newdelta,
+            delta="",
+            maxFlaggedWidth=0,
+            log=False,
+        )
         == 0
     )

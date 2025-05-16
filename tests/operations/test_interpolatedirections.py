@@ -9,4 +9,9 @@ def test_interpolatedirections(soltab):
     """
     Test the Losoto operation interpolatedirections
     """
-    assert interpolatedirections.run(soltab=None) == 0
+    assert (
+        interpolatedirections.run(
+            soltab, interp_dirs, soltabOut=None, prefix="interp_", ncpu=0
+        )
+        == 0
+    )

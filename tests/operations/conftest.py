@@ -31,7 +31,7 @@ def soltab(h5):
     weights = numpy.ones(len(phases))
     freqs = numpy.arange(len(phases))
     return solset.makeSoltab(
-        soltype="amplitude",
+        soltype="phase",
         soltabName="phase000",
         axesNames=["phase"],
         axesVals=[freqs],
