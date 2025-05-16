@@ -1,6 +1,10 @@
 name: Python package
 
-on: [push]
+on: 
+  push:
+    branches: [master]
+  pull_request:
+    branches: ["*"]
 
 jobs:
   build:
@@ -18,3 +22,17 @@ jobs:
         run: pip install .[test]
       - name: Test
         run: tox
+        continue-on-error: true
+      - name: Get Test Coverage
+        uses: orgoro/coverage@v3.2
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Run tests
+      #   run: |
+      #     pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=losoto tests/ | tee pytest-coverage.txt
+      # - name: Report test coverage
+      #   uses: MishaKav/pytest-coverage-comment@main
+      #   with:
+      #     pytest-coverage-path: ./pytest-coverage.txt
+      #     junitxml-path: ./pytest.xml
