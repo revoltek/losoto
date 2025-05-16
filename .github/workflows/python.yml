@@ -24,7 +24,8 @@ jobs:
       #   with:
       #     coverageFile: coverage.xml
       #     token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Coverage comment
-      #   uses: py-cov-action/python-coverage-comment-action@v3
-      #   with:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pytest coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          # pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: coverage.xml
