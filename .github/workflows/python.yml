@@ -19,8 +19,12 @@ jobs:
       - name: Test
         run: tox
         continue-on-error: true
-      - name: Get Test Coverage
-        uses: orgoro/coverage@v3.2
+      # - name: Get Test Coverage
+      #   uses: orgoro/coverage@v3.2
+      #   with:
+      #     coverageFile: coverage.xml
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coverage comment
+        uses: py-cov-action/python-coverage-comment-action@v3
         with:
-          coverageFile: coverage.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
