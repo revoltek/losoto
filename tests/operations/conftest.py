@@ -11,7 +11,7 @@ import tempfile
 from losoto.h5parm import h5parm
 
 @pytest.fixture
-def h5():
+def empty_h5parm():
     """Fixture to create a temporary h5parm file."""
     fname = tempfile.mktemp(suffix=".h5")
     h5p = h5parm(fname, readonly=False)
@@ -21,12 +21,12 @@ def h5():
 
 
 @pytest.fixture
-def soltab(h5):
+def soltab(empty_h5parm):
     """
     Fixture to create a sample solution table for testing.
     This should be replaced with actual code to create a solution table.
     """
-    solset = h5.makeSolset("sol000")
+    solset = empty_h5parm.makeSolset("sol000")
     phases = numpy.array([2, 3, 5])
     weights = numpy.ones(len(phases))
     freqs = numpy.arange(len(phases))
@@ -37,4 +37,4 @@ def soltab(h5):
         axesVals=[freqs],
         vals=phases,
         weights=weights,
-    )  # , axes=['time', 'frequency', 'antenna'])
+    )
