@@ -66,8 +66,6 @@ def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFr
     indx, weights : int, array
         Station index, modified weights array
     """
-    raise RuntimeError("Oopsie!")
-
     # Skip fully flagged stations
     if np.all(weights == 0.0):
         outQueue.put([s, weights])
@@ -204,8 +202,6 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
     indx, weights : int, array
         Station index, modified weights array
     """
-    raise RuntimeError("Oopsie!")
-
     def _B(x, k, i, t, extrap, invert):
         if k == 0:
             if extrap:

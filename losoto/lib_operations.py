@@ -5,8 +5,6 @@
 import multiprocessing
 import os
 import numpy as np
-import queue
-import traceback
 from losoto.h5parm import h5parm
 from losoto._logging import logger as logging
 
@@ -48,17 +46,8 @@ class multiprocManager(object):
                     self.inQueue.task_done()
                     break
 
-                # self.funct(*parms, outQueue=self.outQueue)
-                # self.inQueue.task_done()
-                try:
-                    self.funct(*parms, outQueue=self.outQueue)
-                    return 0
-                except Exception as err:
-                    print(f"==> Something went terribly wrong: {err}")
-                    traceback.print_exc()
-                    return 1
-                finally:
-                    self.inQueue.task_done()
+                self.funct(*parms, outQueue=self.outQueue)
+                self.inQueue.task_done()
 
 
     def __init__(self, procs=0, funct=None):
@@ -80,7 +69,6 @@ class multiprocManager(object):
         for proc in range(self.procs):
             t = self.multiThread(self.inQueue, self.outQueue, funct)
             self._threads.append(t)
-            print(f"==> Starting thread {t.name} ({t.pid})")
             t.start()
 
     def put(self, args):
@@ -98,10 +86,6 @@ class multiprocManager(object):
         # https://docs.python.org/2/library/multiprocessing.html
         for run in range(self.runs):
             yield self.outQueue.get()
-            # try:
-            #     yield self.outQueue.get(timeout=1)
-            # except queue.Empty:
-            #     return None
 
     def wait(self):
         """
@@ -110,7 +94,6 @@ class multiprocManager(object):
         """
         for t in self._threads:
             self.inQueue.put(None)
-            print(f"==> Exit code for {t.name}: {t.exitcode}")
 
         # wait for all jobs to finish
         self.inQueue.join()

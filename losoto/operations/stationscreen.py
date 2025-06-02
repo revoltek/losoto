@@ -645,8 +645,6 @@ def _process_single_freq(freq_ind, screen_type, niter, nsigma, refAnt,
                          adjust_order, source_names, station_names, beta, r_0, outQueue):
     global r_full, weights_full, screen, residual, full_matrices, screen_order, pp
 
-    raise RuntimeError("Oopsie!")
-
     N_sources, N_stations, N_times, N_freqs, N_pols = screen.shape
     weights_out = np.zeros(weights_full[:, :, 0, :, :].shape)
     screen_out = np.zeros(screen[:, :, :, 0, :].shape)

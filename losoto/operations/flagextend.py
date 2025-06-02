@@ -25,8 +25,6 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
 
         return: flags array and final rms
         """
-        raise RuntimeError("Oopsie!")
-
         def extendFlag(flags, percent):
             #flags = flags.astype(int)
             if float(np.sum( flags ))/len(flags) > percent/100.:

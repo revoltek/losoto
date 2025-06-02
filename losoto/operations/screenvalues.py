@@ -50,8 +50,6 @@ def _calculate_tecsp(screen1, screen2, pp, directions, k, sindx, beta_val,
     import numpy as np
     from losoto.operations.stationscreen import _radec2xy
 
-    raise RuntimeError("Oopsie!")
-
     # Convert direction (RA, Dec) to (x, y)
     x, y = _radec2xy(directions[0], directions[1], midRA, midDec)
 
@@ -96,8 +94,6 @@ def _calculate_val(screen, pp, directions, k, sindx, beta_val, r_0, midRA,
     """
     import numpy as np
     from losoto.operations.stationscreen import _radec2xy
-
-    raise RuntimeError("Oopsie!")
 
     # Convert direction (RA, Dec) to (x, y)
     x, y = _radec2xy(directions[0], directions[1], midRA, midDec)

@@ -226,8 +226,6 @@ def _fit_phase_screen(station_names, source_names, pp, airmass, rr, weights, tim
 
     logging.info('Fitting screens...')
 
-    raise RuntimeError("Oopsie!")
-
     # Initialize arrays
     N_stations = len(station_names)
     N_sources = len(source_names)
@@ -325,8 +323,6 @@ def _fit_tec_screen(station_names, source_names, pp, airmass, rr, weights, times
     from pylab import kron, concatenate, pinv, norm, newaxis, find, amin, svd, eye
 
     logging.info('Fitting screens...')
-
-    raise RuntimeError("Oopsie!")
 
     # Initialize arrays
     N_stations = len(station_names)
