@@ -8,8 +8,6 @@ Subpackages
    :maxdepth: 4
 
    losoto.operations
-   losoto.progressbar
-   losoto.tests
 
 Submodules
 ----------

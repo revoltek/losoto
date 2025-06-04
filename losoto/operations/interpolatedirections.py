@@ -146,6 +146,7 @@ def interpolate_directions3d(cal_vals, cal_weights, cal_dirs, dir_axis, interp_d
 def run( soltab, interp_dirs, soltabOut=None, prefix='interp_', ncpu=0):
     """
     Add interpolated directions to h5parm
+
     Parameters
     ----------
     interp_dirs : 2d array of floats
