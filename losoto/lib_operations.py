@@ -95,14 +95,6 @@ class multiprocManager(object):
         for t in self._threads:
             self.inQueue.put(None)
 
-        # Wait for all threads to finish
-        for t in self._threads:
-            t.join()
-
-        # Check if any thread exited with an error
-        if any(t.exitcode for t in self._threads):
-            raise RuntimeError("One or more worker threads exited with an error.")
-
         # wait for all jobs to finish
         self.inQueue.join()
         self.inQueue.close()
