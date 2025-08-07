@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import multiprocessing
+
 from losoto.lib_operations import *
 from losoto._logging import logger as logging
 
@@ -25,7 +27,7 @@ def _run_parser(soltab, parser, step):
     return run( soltab, axesToFlag, order, maxCycles, maxRms, maxRmsNoise, fixRms, fixRmsNoise, windowNoise, replace, preflagzeros, mode, refAnt, ncpu )
 
 
-def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection, outQueue):
+def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection):
 
     import numpy as np
     import itertools
@@ -240,8 +242,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
     # check if everything flagged
     if (weights == 0).all() == True:
         logging.debug('Percentage of data flagged/replaced (%s): already completely flagged' % (removeKeys(coord, axesToFlag)))
-        outQueue.put([vals, weights, selection])
-        return
+        return vals, weights, selection
 
     if preflagzeros:
         if solType == 'amplitude': np.putmask(weights, vals == 1, 0)
@@ -277,8 +278,7 @@ def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, m
         logging.debug('Percentage of data flagged/replaced (%s): %.3f -> %.3f %% (rms: %.5f)' \
             % ((removeKeys(coord, axesToFlag), initPercentFlag, percentFlagged(weights), rms)))
 
-    outQueue.put([vals, weights, selection])
-#    return vals, weights, selection
+    return vals, weights, selection
 
 
 def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixRms=0., fixRmsNoise=0., windowNoise=11, replace=False, preflagzeros=False, mode='smooth', refAnt='', ncpu=0 ):
@@ -354,9 +354,6 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
 
     if len(order) >= 2: order = list(order)
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, _flag)
-
     # reorder axesToFlag as axes in the table
     axesToFlag_orig = axesToFlag
     axesToFlag = [coord for coord in soltab.getAxesNames() if coord in axesToFlag]
@@ -364,13 +361,16 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
 
     solType = soltab.getType()
 
-    # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, refAnt=refAnt):
-        mpm.put([vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection])
+    args = [
+        (vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection)
+        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToFlag, weight=True, refAnt=refAnt)
+    ]
 
-    mpm.wait()
+    ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
+    with multiprocessing.Pool(ncpu) as pool:
+        results = pool.starmap(_flag, args)
 
-    for v, w, sel in mpm.get():
+    for v, w, sel in results:
         if replace:
             # rewrite solutions (flagged values are overwritten)
             soltab.setValues(v, sel, weight=False)
