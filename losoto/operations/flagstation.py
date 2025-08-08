@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from losoto.lib_operations import *
-from losoto._logging import logger as logging
+import multiprocessing
+import numpy as np
 import warnings
+
+from losoto.lib_operations import normalize_phase, nproc
+from losoto._logging import logger as logging
 
 logging.debug('Loading FLAGSTATION module.')
 
@@ -26,7 +29,7 @@ def _run_parser(soltab, parser, step):
     return run( soltab, mode, minFlaggedFraction, maxFlaggedFraction, nSigma, maxStddev, ampRange, thresholdBaddata, telescope, skipInternational, skipAnts, refAnt, soltabExport, ncpu )
 
 
-def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, ants, s, outQueue):
+def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, ants, s):
     """
     Flags bad residuals relative to mean by setting the corresponding weights to 0.0
 
@@ -68,8 +71,7 @@ def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFr
     """
     # Skip fully flagged stations
     if np.all(weights == 0.0):
-        outQueue.put([s, weights])
-        return
+        return s, weights
 
     # Iterate over polarizations
     npols = vals.shape[2] # number of polarizations
@@ -142,14 +144,14 @@ def _flag_resid(vals, weights, soltype, nSigma, minFlaggedFraction, maxFlaggedFr
             nflagged_orig = len(np.where(weights_orig == 0.0)[0])
             nflagged_new = len(np.where(weights_copy == 0.0)[0])
             weights[:, :, pol] = weights_copy
-            prcnt = float(nflagged_new - nflagged_orig) / float(np.product(weights_orig.shape)) * 100.0
+            prcnt = float(nflagged_new - nflagged_orig) / float(np.prod(weights_orig.shape)) * 100.0
             logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(prcnt, ants[s], pol))
 
-    outQueue.put([s, weights])
+    return s, weights
 
 
 def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlaggedFraction, maxFlaggedFraction, maxStddev,
-                   plot, ants, s, outQueue):
+                   plot, ants, s):
     """
     Flags bad amplitude solutions relative to median bandpass (in log space) by setting
     the corresponding weights to 0.0
@@ -370,18 +372,15 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
         else:
             logging.warning('The median frequency of {} Hz is outside of the currently supported LOFAR bands '
                             '(LBA and HBA-low). Flagging will be skipped'.format(np.median(freqs)))
-            outQueue.put([s, weights])
-            return
+            return s, weights
     else:
         logging.warning("Only telescope = 'lofar' is currently supported for bandpass mode. "
                         "Flagging will be skipped")
-        outQueue.put([s, weights])
-        return
+        return s, weights
 
     # Skip fully flagged stations
     if np.all(weights == 0.0):
-        outQueue.put([s, weights])
-        return
+        return s, weights
 
     # Build arrays for fitting
     flagged = np.where(np.logical_or(weights == 0.0, np.isnan(amps)))
@@ -452,8 +451,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
             logging.info('Flagged 100% of solutions for {0} (pol {1}) due to poor match to '
                          'baseline bandpass model'.format(ants[s], pol))
             weights[:, :, pol] = 0.0
-            outQueue.put([s, weights])
-            return
+            return s, weights
 
         # Iteratively fit and flag
         maxiter = 5
@@ -478,7 +476,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
         nflagged_orig = len(flagged_orig[0])
         weights[:, flagged[0], pol] = 0.0
         nflagged_new = len(np.where(weights[:, :, pol] == 0.0)[0])
-        fraction_flagged = float(nflagged_new - nflagged_orig) / float(np.product(weights.shape[:-1]))
+        fraction_flagged = float(nflagged_new - nflagged_orig) / float(np.prod(weights.shape[:-1]))
 
         if plot:
             import matplotlib.pyplot as plt
@@ -520,7 +518,7 @@ def _flag_bandpass(freqs, amps, weights, telescope, nSigma, ampRange, minFlagged
                 # Station is OK, keep new flags of bad points only
                 logging.info('Flagged {0:.1f}% of solutions for {1} (pol {2})'.format(fraction_flagged*100, ants[s], pol))
 
-    outQueue.put([s, weights])
+    return s, weights
 
 
 def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.0,
@@ -641,36 +639,40 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
     flagged = np.where(np.isnan(vals_arraytmp))
     weights_arraytmp[flagged] = 0.0
 
+    ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
+    logging.debug("Using %s CPU(s) for flag station.", ncpu)
+
     if mode == 'bandpass':
         if solType != 'amplitude':
             logging.error("Soltab must be of type amplitude for bandpass mode.")
             return 1
 
-        # Fill the queue
         if 'dir' in axis_names:
             for d, dirname in enumerate(soltab.dir):
-                mpm = multiprocManager(ncpu, _flag_bandpass)
-                for s in range(len(soltab.ant)):
-                    if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
-                         skipInternational and telescope.lower() == 'lofar') or
-                        soltab.ant[s] in skipAnts):
-                        continue
-                    mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
-                             telescope, nSigma, ampRange, minFlaggedFraction, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
-                mpm.wait()
-                for (s, w) in mpm.get():
+                args = [
+                    (soltab.freq[:], vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
+                     telescope, nSigma, ampRange, minFlaggedFraction, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s)
+                    for s in range(len(soltab.ant))
+                    if not (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                             skipInternational and telescope.lower() == 'lofar') or
+                            soltab.ant[s] in skipAnts)
+                ]
+                with multiprocessing.Pool(ncpu) as pool:
+                    results = pool.starmap(_flag_bandpass, args)
+                for s, w in results:
                     weights_arraytmp[:, s, :, :, d] = w
         else:
-            mpm = multiprocManager(ncpu, _flag_bandpass)
-            for s in range(len(soltab.ant)):
-                if (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
-                     skipInternational and telescope.lower() == 'lofar') or
-                    soltab.ant[s] in skipAnts):
-                    continue
-                mpm.put([soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
-                         telescope, nSigma, ampRange, minFlaggedFraction, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s])
-            mpm.wait()
-            for (s, w) in mpm.get():
+            args = [
+                (soltab.freq[:], vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :],
+                 telescope, nSigma, ampRange, minFlaggedFraction, maxFlaggedFraction, maxStddev, False, soltab.ant[:], s)
+                for s in range(len(soltab.ant))
+                if not (('CS' not in soltab.ant[s] and 'RS' not in soltab.ant[s] and
+                         skipInternational and telescope.lower() == 'lofar') or
+                        soltab.ant[s] in skipAnts)
+            ]
+            with multiprocessing.Pool(ncpu) as pool:
+                results = pool.starmap(_flag_bandpass, args)
+            for s, w in results:
                 weights_arraytmp[:, s, :, :] = w
 
         # Make sure that fully flagged stations have all pols flagged
@@ -767,20 +769,24 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
         # Fill the queue
         if 'dir' in axis_names:
             for d, dirname in enumerate(soltab.dir):
-                mpm = multiprocManager(ncpu, _flag_resid)
-                for s in range(len(soltab.ant)):
-                    mpm.put([vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
-                             solType, nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
-                mpm.wait()
-                for (s, w) in mpm.get():
+                args = [
+                    (vals_arraytmp[:, s, :, :, d], weights_arraytmp[:, s, :, :, d],
+                     solType, nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, soltab.ant[:], s)
+                    for s in range(len(soltab.ant))
+                ]
+                with multiprocessing.Pool(ncpu) as pool:
+                    results = pool.starmap(_flag_resid, args)
+                for s, w in results:
                     weights_arraytmp[:, s, :, :, d] = w
         else:
-            mpm = multiprocManager(ncpu, _flag_resid)
-            for s in range(len(soltab.ant)):
-                mpm.put([vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], solType,
-                         nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, soltab.ant[:], s])
-            mpm.wait()
-            for (s, w) in mpm.get():
+            args = [
+                (vals_arraytmp[:, s, :, :], weights_arraytmp[:, s, :, :], solType,
+                 nSigma, minFlaggedFraction, maxFlaggedFraction, maxStddev, soltab.ant[:], s)
+                for s in range(len(soltab.ant))
+            ]
+            with multiprocessing.Pool(ncpu) as pool:
+                results = pool.starmap(_flag_resid, args)
+            for s, w in results:
                 weights_arraytmp[:, s, :, :] = w
 
         # Make sure that fully flagged stations have all pols flagged
