@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import numpy as np
 
-from losoto.lib_operations import normalize_phase, nproc
+import numpy as np
 from losoto._logging import logger as logging
+from losoto.lib_operations import normalize_phase, nproc
 from losoto.lib_unwrap import unwrap, unwrap_2d
 
 logging.debug('Loading PLOT module.')
@@ -38,13 +38,13 @@ def _run_parser(soltab, parser, step):
 def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords):
  
     import sys
-    from itertools import cycle, chain
+    from itertools import chain, cycle
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
         mpl.rcParams['xtick.labelsize'] = 20
         mpl.rcParams['font.size'] = 20
         mpl.use("Agg")
-    import matplotlib.pyplot as plt # after setting the backend
+    import matplotlib.pyplot as plt  # after setting the backend
 
     # find common min and max if not set
     flat = dataCube.filled(np.nan).flatten()
@@ -288,6 +288,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     """
 
     import os
+
     import numpy as np
 
     logging.info("Plotting soltab: "+soltab.name)

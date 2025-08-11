@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
+import sys
 
-from losoto.lib_operations import *
 from losoto._logging import logger as logging
+from losoto.lib_operations import normalize_phase, nproc, removeKeys
 
 logging.debug('Loading FLAG module.')
 
@@ -29,10 +30,11 @@ def _run_parser(soltab, parser, step):
 
 def _flag(vals, weights, coord, solType, order, mode, preflagzeros, maxCycles, maxRms, maxRmsNoise, windowNoise, fixRms, fixRmsNoise, replace, axesToFlag, selection):
 
-    import numpy as np
     import itertools
-    from scipy.ndimage import generic_filter
+
+    import numpy as np
     import scipy.interpolate
+    from scipy.ndimage import generic_filter
 
     def rolling_rms(a, window):
         """
@@ -367,6 +369,7 @@ def run( soltab, axesToFlag, order, maxCycles=5, maxRms=5., maxRmsNoise=0., fixR
     ]
 
     ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
+    logging.debug("Using %s CPU(s) for operation FLAG.", ncpu)
     with multiprocessing.Pool(ncpu) as pool:
         results = pool.starmap(_flag, args)
 

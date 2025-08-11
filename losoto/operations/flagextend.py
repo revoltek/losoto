@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-from losoto.lib_operations import nproc, removeKeys
+
 from losoto._logging import logger as logging
+from losoto.lib_operations import nproc, removeKeys
 
 logging.debug('Loading FLAGEXTEND module.')
 
@@ -37,8 +38,8 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
             return 100.*(weights.size-np.count_nonzero(weights))/float(weights.size)
 
 
-        import scipy.ndimage
         import numpy as np
+        import scipy.ndimage
         initPercent = percentFlagged(weights)
 
         # if size=0 then extend to all 2*axis, this otherwise create issues with mirroring
@@ -108,7 +109,7 @@ def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
     ]
 
     ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
-    logging.debug('Using %s CPUs for flag extension.' % ncpu)
+    logging.debug("Using %s CPU(s) for operation FLAGEXTEND.", ncpu)
     with multiprocessing.Pool(ncpu) as pool:
         results = pool.starmap(_flag, args)
 

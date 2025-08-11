@@ -3,8 +3,8 @@
 
 import multiprocessing
 
-from losoto.lib_operations import normalize_phase, nproc
 from losoto._logging import logger as logging
+from losoto.lib_operations import normalize_phase, nproc
 
 logging.debug('Loading REWEIGHT module.')
 
@@ -230,7 +230,7 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
             if not (np.all(sval == 0.0) or np.all(np.isnan(sval)))  # skip reference station
         ]
         ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
-        logging.debug("Using %s CPUs for operation REWEIGHT.", ncpu)
+        logging.debug("Using %s CPU(s) for operation REWEIGHT.", ncpu)
         with multiprocessing.Pool(ncpu) as pool:
             results = pool.starmap(_estimate_weights_window, args)
         weights = np.ones(vals.shape)

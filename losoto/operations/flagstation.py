@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import numpy as np
 import warnings
 
-from losoto.lib_operations import normalize_phase, nproc
+import numpy as np
 from losoto._logging import logger as logging
+from losoto.lib_operations import normalize_phase, nproc
 
 logging.debug('Loading FLAGSTATION module.')
 
@@ -640,7 +640,7 @@ def run( soltab, mode, minFlaggedFraction=0.0, maxFlaggedFraction=0.5, nSigma=5.
     weights_arraytmp[flagged] = 0.0
 
     ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
-    logging.debug("Using %s CPU(s) for flag station.", ncpu)
+    logging.debug("Using %s CPU(s) for operation FLAGSTATION.", ncpu)
 
     if mode == 'bandpass':
         if solType != 'amplitude':
