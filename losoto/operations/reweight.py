@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from losoto.lib_operations import *
+import multiprocessing
+
+from losoto.lib_operations import normalize_phase, nproc
 from losoto._logging import logger as logging
 
 logging.debug('Loading REWEIGHT module.')
@@ -68,7 +70,7 @@ def _nancircstd(samples, axis=None, is_phase=True):
     return np.sqrt(-2*np.log(R))
 
 
-def _estimate_weights_window(sindx, vals, nmedian, nstddev, stype, outQueue):
+def _estimate_weights_window(sindx, vals, nmedian, nstddev, stype):
     """
     Set weights using a median-filter method
 
@@ -157,7 +159,7 @@ def _estimate_weights_window(sindx, vals, nmedian, nstddev, stype, outQueue):
     if np.max(w) > float16max:
         w *= float16max / np.max(w)
 
-    outQueue.put([sindx, w])
+    return sindx, w
 
 
 def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
@@ -222,15 +224,17 @@ def run( soltab, mode='uniform', weightVal=1., nmedian=3, nstddev=251,
         vals = soltab.val[:].swapaxes(antindx, 0)
         if tindx == 0:
             tindx = antindx
-        mpm = multiprocManager(ncpu, _estimate_weights_window)
-        for sindx, sval in enumerate(vals):
-            if np.all(sval == 0.0) or np.all(np.isnan(sval)):
-                # skip reference station
-                continue
-            mpm.put([sindx, sval.swapaxes(tindx-1, -1), nmedian, nstddev, soltab.getType()])
-        mpm.wait()
+        args = [
+            (sindx, sval.swapaxes(tindx-1, -1), nmedian, nstddev, soltab.getType())
+            for sindx, sval in enumerate(vals)
+            if not (np.all(sval == 0.0) or np.all(np.isnan(sval)))  # skip reference station
+        ]
+        ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
+        logging.debug("Using %s CPUs for operation REWEIGHT.", ncpu)
+        with multiprocessing.Pool(ncpu) as pool:
+            results = pool.starmap(_estimate_weights_window, args)
         weights = np.ones(vals.shape)
-        for (sindx, w) in mpm.get():
+        for (sindx, w) in results:
             weights[sindx, :] = w.swapaxes(-1, tindx-1)
         weights = weights.swapaxes(0, antindx)
 
