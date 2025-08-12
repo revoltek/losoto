@@ -1,0 +1,4 @@
+soltab = sol000/amplitude000
+[PLOT]
+operation=PLOT
+axesInPlot=time,freq

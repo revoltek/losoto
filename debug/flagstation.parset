@@ -1,0 +1,4 @@
+soltab = sol000/amplitude000
+[FLAGSTATION]
+operation=FLAGSTATION
+mode=bandpass

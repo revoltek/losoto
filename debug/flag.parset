@@ -1,0 +1,10 @@
+soltab = sol000/amplitude000
+[FLAG]
+operation=FLAG
+axesToFlag=time,freq
+order=100,40
+maxCycles=1
+maxRms=5
+mode=smooth
+preflagzeros=false
+replace=false

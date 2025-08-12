@@ -1,0 +1,5 @@
+soltab = sol000/amplitude000
+[FLAGEXTEND]
+operation=FLAGEXTEND
+axesToExt=time,freq
+size=3,5
