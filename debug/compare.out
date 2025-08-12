@@ -1,0 +1,71 @@
+
+
+**** Comparing reference and output for operation FLAG ...
+
+Differences between log files:
+DEBUG - [35mSpawning 20 threads...[0m			      |	DEBUG - [35mUsing 20 CPU(s) for operation FLAG.[0m
+INFO - [32mTime for all steps: 83 s.[0m			      |	INFO - [32mTime for all steps: 84 s.[0m
+INFO - [32mTime for FLAG step: 83 s (cpu: 83 s).[0m	      |	INFO - [32mTime for FLAG step: 84 s (cpu: 84 s).[0m
+
+Differences between H5 modifications:
+
+Differences in execution times:
+real	1m23,548s	     |	real	1m24,775s
+user	25m55,084s	     |	user	25m7,538s
+sys	0m2,285s	     |	sys	0m3,359s
+
+
+**** Comparing reference and output for operation FLAGEXTEND ...
+
+Differences between log files:
+DEBUG - [35mSpawning 20 threads...[0m			      |	DEBUG - [35mUsing 20 CPU(s) for operation FLAGEXTEND.[0m
+INFO - [32mTime for all steps: 16 s.[0m			      |	INFO - [32mTime for all steps: 17 s.[0m
+INFO - [32mTime for FLAGEXTEND step: 16 s (cpu: 16 s).[0m     |	INFO - [32mTime for FLAGEXTEND step: 17 s (cpu: 17 s).[0m
+
+Differences between H5 modifications:
+
+Differences in execution times:
+real	0m16,847s	     |	real	0m17,954s
+user	3m13,095s	     |	user	3m26,919s
+sys	0m6,500s	     |	sys	0m6,780s
+
+
+**** Comparing reference and output for operation FLAGSTATION ...
+
+Differences between log files:
+DEBUG - [35mSpawning 20 threads...[0m			      |	DEBUG - [35mUsing 20 CPU(s) for operation FLAGSTATION.[0m
+
+Differences between H5 modifications:
+
+Differences in execution times:
+real	1m35,887s	     |	real	1m36,114s
+user	28m19,984s	     |	user	28m13,252s
+sys	0m0,921s	     |	sys	0m1,011s
+
+
+**** Comparing reference and output for operation PLOT ...
+
+Differences between log files:
+DEBUG - [35mSpawning 20 threads...[0m			      |	DEBUG - [35mUsing 20 CPU(s) for operation PLOT.[0m
+INFO - [32mTime for all steps: 3 s.[0m			      |	INFO - [32mTime for all steps: 4 s.[0m
+INFO - [32mTime for PLOT step: 3 s (cpu: 3 s).[0m	      |	INFO - [32mTime for PLOT step: 4 s (cpu: 4 s).[0m
+
+Differences between generated plots:
+
+Differences in execution times:
+real	0m3,658s	     |	real	0m4,655s
+user	0m52,442s	     |	user	0m55,578s
+sys	0m2,498s	     |	sys	0m5,151s
+
+
+**** Comparing reference and output for operation REWEIGHT ...
+
+Differences between log files:
+DEBUG - [35mSpawning 20 threads...[0m			      |	DEBUG - [35mUsing 20 CPU(s) for operation REWEIGHT.[0m
+
+Differences between H5 modifications:
+
+Differences in execution times:
+real	0m9,914s	     |	real	0m9,934s
+user	2m28,621s	     |	user	2m30,565s
+sys	0m26,085s	     |	sys	0m25,599s
