@@ -14,14 +14,14 @@ Bas van der Tol (vdtol@strw.leidenuniv.nl)"
 
 import sys, os, re
 import logging
-import lofar.parameterset
+from lofar_parameterset.parameterset import parameterset
 import losoto._version
 import losoto._logging
 
 def splitgds(gdsFile, wd='', id='part'):
     """Split gds file in multiple files
     """
-    ps = lofar.parameterset.parameterset(gdsFile)
+    ps = parameterset.fromFile(gdsFile)
     clusterdesc = ps.getString('ClusterDesc')
     starttime = ps.getString('StartTime')
     endtime = ps.getString('EndTime')
@@ -110,7 +110,7 @@ if __name__=='__main__':
     # Collect all the instrument tables
     instrumentdbFiles = []
     for instrumentdbGdsFile in instrumentdbGdsFiles:
-        instrumentdbParset = lofar.parameterset.parameterset(instrumentdbGdsFile)
+        instrumentdbParset = parameterset.fromFile(instrumentdbGdsFile)
         instrumentdbRemoteFile = instrumentdbParset.getString('Part0.FileName')
         instrumentdbHostname = instrumentdbParset.getString('Part0.FileSys').split(':')[0]
         instrumentdbFile = os.path.splitext(instrumentdbGdsFile)[0]
@@ -124,7 +124,7 @@ if __name__=='__main__':
             logging.info("Skipping "+instrumentdbFile)
         instrumentdbFiles.append(instrumentdbFile)
 
-    gdsParset = lofar.parameterset.parameterset(gdsFiles[0])
+    gdsParset = parameterset.fromFile(gdsFiles[0])
     # instrumentdbParset =
 
     hostname = gdsParset.getString('Part0.FileSys').split(':')[0]

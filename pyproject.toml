@@ -11,10 +11,10 @@ authors = [
 maintainers = [
     { name = "Marcel Loose", email = "loose@astron.nl" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
+    "lofar-parameterset>=1.1",
     "matplotlib",
-    "numpy<2; python_version=='3.9'",
     "numpy",
     "progressbar",
     "python-casacore>=3.0",
@@ -64,7 +64,7 @@ write_to = "losoto/_version.py"
 
 [tool.tox]
 requires = ["tox>4"]
-envlist = ["py3{9,10,11,12,13}"]
+envlist = ["py3{10,11,12,13}"]
 
 [tool.tox.env_run_base]
 deps = [
