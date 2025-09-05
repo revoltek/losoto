@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from losoto.lib_operations import *
+import multiprocessing
+
 from losoto._logging import logger as logging
+from losoto.lib_operations import nproc, removeKeys
 
 logging.debug('Loading FLAGEXTEND module.')
 
@@ -17,7 +19,7 @@ def _run_parser(soltab, parser, step):
     return run(soltab, axesToExt, size, percent, maxCycles, ncpu)
 
 
-def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=3, outQueue=None):
+def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=3):
         """
         Flag data if surreounded by other flagged data
         weights = the weights to convert into flags
@@ -36,8 +38,8 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
             return 100.*(weights.size-np.count_nonzero(weights))/float(weights.size)
 
 
-        import scipy.ndimage
         import numpy as np
+        import scipy.ndimage
         initPercent = percentFlagged(weights)
 
         # if size=0 then extend to all 2*axis, this otherwise create issues with mirroring
@@ -58,7 +60,7 @@ def _flag(weights, coord, axesToExt, selection, percent=50, size=[0], maxCycles=
             logging.debug('Percentage of data flagged (%s): %.3f -> %.3f %%' \
                     % (removeKeys(coord, axesToExt), initPercent, percentFlagged(weights)))
 
-        outQueue.put([weights, selection])
+        return weights, selection
 
 
 def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
@@ -96,23 +98,23 @@ def run( soltab, axesToExt, size, percent=50., maxCycles=3, ncpu=0 ):
         logging.error("Please specify at least one axis to extend flag.")
         return 1
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, _flag)
-
     for axisToExt in axesToExt:
         if axisToExt not in soltab.getAxesNames():
             logging.error('Axis \"'+axisToExt+'\" not found.')
-            mpm.wait()
             return 1
 
-    # fill the queue (note that sf and sw cannot be put into a queue since they have file references)
-    for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToExt, weight=True):
-        mpm.put([weights, coord, axesToExt, selection, percent, size, maxCycles])
+    args = [
+        (weights, coord, axesToExt, selection, percent, size, maxCycles)
+        for vals, weights, coord, selection in soltab.getValuesIter(returnAxes=axesToExt, weight=True)
+    ]
 
-    mpm.wait()
+    ncpu = ncpu if ncpu > 0 else nproc()  # use all available CPUs if ncpu is not set
+    logging.debug("Using %s CPU(s) for operation FLAGEXTEND.", ncpu)
+    with multiprocessing.Pool(ncpu) as pool:
+        results = pool.starmap(_flag, args)
 
     logging.info('Writing solutions')
-    for w, sel in mpm.get():
+    for w, sel in results:
         soltab.setValues(w, sel, weight=True)
 
     soltab.addHistory('FLAG EXTENDED (over %s)' % (str(axesToExt)))

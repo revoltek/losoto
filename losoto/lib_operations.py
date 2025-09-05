@@ -5,8 +5,6 @@
 import multiprocessing
 import os
 import numpy as np
-from losoto.h5parm import h5parm
-from losoto._logging import logger as logging
 
 def nproc():
     """
@@ -20,89 +18,6 @@ def nproc():
         return len(os.sched_getaffinity(0))
     except AttributeError:
         return multiprocessing.cpu_count()
-
-
-class multiprocManager(object):
-
-    class multiThread(multiprocessing.Process):
-        """
-        This class is a working thread which load parameters from a queue and
-        return in the output queue
-        """
-
-        def __init__(self, inQueue, outQueue, funct):
-            multiprocessing.Process.__init__(self)
-            self.inQueue = inQueue
-            self.outQueue = outQueue
-            self.funct = funct
-
-        def run(self):
-
-            while True:
-                parms = self.inQueue.get()
-
-                # poison pill
-                if parms is None:
-                    self.inQueue.task_done()
-                    break
-
-                self.funct(*parms, outQueue=self.outQueue)
-                self.inQueue.task_done()
-
-
-    def __init__(self, procs=0, funct=None):
-        """
-        Manager for multiprocessing
-        procs: number of processors, if 0 use all available
-        funct: function to parallelize / note that the last parameter of this function must be the outQueue
-        and it will be linked to the output queue
-        """
-        if procs == 0:
-            procs = nproc()
-        self.procs = procs
-        self._threads = []
-        self.inQueue = multiprocessing.JoinableQueue()
-        self.outQueue = multiprocessing.Queue()
-        self.runs = 0
-        
-        logging.debug('Spawning %i threads...' % self.procs)
-        for proc in range(self.procs):
-            t = self.multiThread(self.inQueue, self.outQueue, funct)
-            self._threads.append(t)
-            t.start()
-
-    def put(self, args):
-        """
-        Parameters to give to the next jobs sent into queue
-        """
-        self.inQueue.put(args)
-        self.runs += 1
-
-    def get(self):
-        """
-        Return all the results as an iterator
-        """
-        # NOTE: do not use queue.empty() check which is unreliable
-        # https://docs.python.org/2/library/multiprocessing.html
-        for run in range(self.runs):
-            yield self.outQueue.get()
-
-    def wait(self):
-        """
-        Send poison pills to jobs and wait for them to finish
-        The join() should kill all the processes
-        """
-        for t in self._threads:
-            self.inQueue.put(None)
-
-        # wait for all jobs to finish
-        self.inQueue.join()
-        self.inQueue.close()
-
-    def __del__(self):
-        for t in self._threads:
-            t.terminate()
-            del t
 
 
 def reorderAxes( a, oldAxes, newAxes ):

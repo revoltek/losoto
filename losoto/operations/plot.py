@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from losoto.lib_operations import *
+import multiprocessing
+
+import numpy as np
 from losoto._logging import logger as logging
+from losoto.lib_operations import normalize_phase, nproc
 from losoto.lib_unwrap import unwrap, unwrap_2d
 
 logging.debug('Loading PLOT module.')
@@ -32,16 +35,16 @@ def _run_parser(soltab, parser, step):
     return run(soltab, axesInPlot, axisInTable, axisInCol, axisDiff, NColFig, figSize, markerSize, minmax, log, \
                plotFlag, doUnwrap, refAnt, refDir, soltabsToAdd, makeAntPlot, makeMovie, prefix, ncpu)
 
-def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, outQueue):
+def _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords):
  
     import sys
-    from itertools import cycle, chain
+    from itertools import chain, cycle
     if not 'matplotlib' in sys.modules:
         import matplotlib as mpl
         mpl.rcParams['xtick.labelsize'] = 20
         mpl.rcParams['font.size'] = 20
         mpl.use("Agg")
-    import matplotlib.pyplot as plt # after setting the backend
+    import matplotlib.pyplot as plt  # after setting the backend
 
     # find common min and max if not set
     flat = dataCube.filled(np.nan).flatten()
@@ -285,6 +288,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     """
 
     import os
+
     import numpy as np
 
     logging.info("Plotting soltab: "+soltab.name)
@@ -343,6 +347,10 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
     elif len(axesInPlot) != 1:
         logging.error('Axes must be a len 1 or 2 array.')
         return 1
+
+    # use all available CPUs if ncpu is not set
+    ncpu = ncpu if ncpu > 0 else nproc()
+
     # end input check
 
     # all axes that are not iterated by anything else
@@ -371,9 +379,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     datatype = soltab.getType()
 
-    # start processes for multi-thread
-    mpm = multiprocManager(ncpu, _plot)
-
     # compute dataCube size
     shape = []
     if axisInTable != []: shape.append(soltab.getAxisLen(axisInTable[0]))
@@ -391,6 +396,7 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
     # cycle on files
     if makeMovie: pngs = [] # store png filenames
+    plot_args = []  # store args for parallel plotting
     for vals, coord, selection in soltab.getValuesIter(returnAxes=axisDiff+axisInTable+axisInCol+axesInPlot):
 
         # set filename
@@ -432,7 +438,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 
             if len(xvals) <= 1 or len(yvals) <=1:
                 logging.error('3D plot must have more then one value per axes.')
-                mpm.wait()
                 return 1
 
             ylabelunit=''
@@ -491,11 +496,9 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
                     names = [axis for axis in soltab.getAxesNames() if axis in axisDiff+axesInPlot]
                     if axisDiff[0] not in names:
                         logging.error("Axis to differentiate (%s) not found." % axisDiff[0])
-                        mpm.wait()
                         return 1
                     if len(coord[axisDiff[0]]) != 2:
                         logging.error("Axis to differentiate (%s) has too many values, only 2 is allowed." % axisDiff[0])
-                        mpm.wait()
                         return 1
 
                     # find position of interesting axis
@@ -543,7 +546,6 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
 #
 #                    if valsAdd.shape != vals.shape:
 #                        logging.error('Cannot combine the table '+soltabToAdd.getType()+' with '+soltab.getType()+'. Wrong shape.')
-#                        mpm.wait()
 #                        return 1
 #
 #                    vals += valsAdd
@@ -585,17 +587,19 @@ def run(soltab, axesInPlot, axisInTable='', axisInCol='', axisDiff='', NColFig=0
         # if dataCube too large (> 500 MB) do not go parallel
         if np.array(dataCube).nbytes > 1024*1024*500:
             logging.debug('Big plot, parallel not possible.')
-            _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords, None)
+            _plot(Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, dataCube, minZ, maxZ, plotFlag, makeMovie, antCoords)
         else:
-            mpm.put([Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, np.ma.copy(dataCube), minZ, maxZ, plotFlag, makeMovie, antCoords]) # copy is necessary otherwise other cycles overwrite the dataCube
+            plot_args.append((Nplots, NColFig, figSize, markerSize, cmesh, axesInPlot, axisInTable, xvals, yvals, xlabelunit, ylabelunit, datatype, prefix+filename, titles, log, np.ma.copy(dataCube), minZ, maxZ, plotFlag, makeMovie, antCoords))  # copy is necessary otherwise other cycles overwrite the dataCube
 
         if makeMovie: pngs.append(prefix+filename+'.png')
 
         soltab.selection = soltab1Selection
         ### end cycle on tables
 
-    mpm.wait()
-    del mpm
+    if plot_args:
+        logging.debug("Using %s CPU(s) for operation PLOT.", ncpu)
+        with multiprocessing.Pool(ncpu) as pool:
+            pool.starmap(_plot, plot_args)
 
     if makeMovie:
         def long_substr(strings):
