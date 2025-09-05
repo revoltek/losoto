@@ -1,4 +1,0 @@
-soltab = sol000/amplitude000
-[REWEIGHT]
-operation=REWEIGHT
-mode=window
