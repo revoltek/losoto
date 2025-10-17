@@ -11,8 +11,8 @@ on: [push] #, pull_request]
 
 jobs:
 
-  build_sdist:
-    name: Build source distribution
+  build_package:
+    name: Build package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,42 +23,61 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
+      - name: Build wheel
+        run: pipx run build --wheel
+
       - uses: actions/upload-artifact@v4
         with:
-          name: tarball
-          path: dist/*.tar.gz
+          path: dist
 
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest] #, macos-latest]
+  # build_sdist:
+  #   name: Build source distribution
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         # Needed for `setuptools-scm`
+  #         fetch-depth: 0
 
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          # Needed for `setuptools-scm`
-          fetch-depth: 0
+  #     - name: Build sdist
+  #       run: pipx run build --sdist
 
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v3.2
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: tarball
+  #         path: dist/*.tar.gz
 
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-${{ matrix.os }}
-          path: wheelhouse/*.whl
+  # build_wheels:
+  #   name: Build wheels on ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest] #, macos-latest]
 
-  upload_pypi:
-    name: Upload release to PyPI
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         # Needed for `setuptools-scm`
+  #         fetch-depth: 0
+
+  #     - name: Build wheels
+  #       uses: pypa/cibuildwheel@v3.2
+
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: wheels-${{ matrix.os }}
+  #         path: wheelhouse/*.whl
+
+  upload_package:
+    name: Upload package to PyPI
     runs-on: ubuntu-latest
-    needs: [build_sdist, build_wheels]
+    needs: build_package
     environment:
       name: pypi
-      # url: https://pypi.org/p/python-casacore
+      # url: https://pypi.org/p/losoto
       # For testing, use TestPyPI
-      url: https://test.pypi.org/p/python-casacore
+      url: https://test.pypi.org/p/losoto
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     # Upload to PyPI on every tag starting with 'v'
