@@ -1,10 +1,7 @@
 name: Build and upload to PyPI
 
-# Only run this action when a new tag is created
-on:
-  push:
-    tags:
-      - '*'
+# Only run this action when a new release is 
+on: [release]
 
 jobs:
 
@@ -28,7 +25,7 @@ jobs:
           path: dist
 
       - name: Debug
-        run: echo "github.event_name = ${{ github.event_name }}; github.ref_type = ${{ github.ref_type }}"
+        run: echo "github.event_name = ${{ github.event_name }}; github.event.action = ${{ github.event.action }}"
 
   upload_package:
     name: Upload package to PyPI
@@ -41,8 +38,9 @@ jobs:
       url: https://test.pypi.org/p/losoto
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
-    # # Upload to PyPI on every tag
-    # if: github.ref_type == 'tag'
+    # Upload to PyPI when release is released
+    # Ref: https://docs.github.com/en/webhooks/webhook-events-and-payloads?actionType=released#release
+    if: github.event_name == 'release' && github.event.action == 'released'
     steps:
       - uses: actions/download-artifact@v4
         with:
