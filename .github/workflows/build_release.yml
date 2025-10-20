@@ -2,7 +2,7 @@ name: Build and upload to PyPI
 
 # Only build when a new release is created
 # on: [release]
-on: [tags]
+on: [push]
 
 jobs:
 
