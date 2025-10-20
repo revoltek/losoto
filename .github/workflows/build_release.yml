@@ -33,9 +33,9 @@ jobs:
     needs: build_package
     environment:
       name: pypi
-      # url: https://pypi.org/p/losoto
+      url: https://pypi.org/p/losoto
       # For testing, use TestPyPI
-      url: https://test.pypi.org/p/losoto
+      # url: https://test.pypi.org/p/losoto
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     # Upload to PyPI when release is released
@@ -49,6 +49,6 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1.13
         with:
           # For testing, use TestPyPI
-          repository-url: https://test.pypi.org/legacy/
+          # repository-url: https://test.pypi.org/legacy/
           skip-existing: true
           verbose: true
