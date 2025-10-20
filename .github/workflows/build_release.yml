@@ -1,8 +1,10 @@
 name: Build and upload to PyPI
 
-# Only build when a new release is created
-# on: [release]
-on: [push]
+# Only run this action when a new tag is created
+on:
+  push:
+    tags:
+      - '*'
 
 jobs:
 
@@ -39,11 +41,8 @@ jobs:
       url: https://test.pypi.org/p/losoto
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
-    # Upload to PyPI on every tag starting with 'v'
-    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    # Alternatively, to publish when a GitHub Release is created, use the following rule:
-    # if: github.event_name == 'release' && github.event.action == 'published'
-    if: github.ref_type == 'tag'
+    # # Upload to PyPI on every tag
+    # if: github.ref_type == 'tag'
     steps:
       - uses: actions/download-artifact@v4
         with:
