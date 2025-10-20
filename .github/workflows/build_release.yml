@@ -24,6 +24,9 @@ jobs:
         with:
           path: dist
 
+      - name: Debug
+        run: echo "github.even_name = {{ github.event_name }}; github.event.action = {{ github.event.action }}"
+
   upload_package:
     name: Upload package to PyPI
     runs-on: ubuntu-latest
