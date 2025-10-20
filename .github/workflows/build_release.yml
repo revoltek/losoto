@@ -2,7 +2,7 @@ name: Build and upload to PyPI
 
 # Only build when a new release is created
 # on: [release]
-on: push
+on: [tags]
 
 jobs:
 
@@ -26,7 +26,7 @@ jobs:
           path: dist
 
       - name: Debug
-        run: echo "github.event_name = ${{ github.event_name }}; github.event.action = ${{ github.event.action }}"
+        run: echo "github.event_name = ${{ github.event_name }}; github.ref_type = ${{ github.ref_type }}"
 
   upload_package:
     name: Upload package to PyPI
