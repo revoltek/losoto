@@ -1,7 +1,8 @@
 name: Build and upload to PyPI
 
 # Only build when a new release is created
-on: [release]
+# on: [release]
+on: push
 
 jobs:
 
