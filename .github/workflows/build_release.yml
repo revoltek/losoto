@@ -1,13 +1,7 @@
 name: Build and upload to PyPI
 
-# Only build and upload when a new release tag is created
-on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-      - "v[0-9]+.[0-9]+.[0-9]+[a-z]+[0-9]+"
-# Alternatively, build on every branch push, tag push, and pull request change
-# on: [push] #, pull_request]
+# Only build when a new release is created
+on: [release]
 
 jobs:
 
@@ -36,15 +30,15 @@ jobs:
     needs: build_package
     environment:
       name: pypi
-      url: https://pypi.org/p/losoto
+      # url: https://pypi.org/p/losoto
       # For testing, use TestPyPI
-      # url: https://test.pypi.org/p/losoto
+      url: https://test.pypi.org/p/losoto
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     # Upload to PyPI on every tag starting with 'v'
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     # Alternatively, to publish when a GitHub Release is created, use the following rule:
-    # if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -53,6 +47,6 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1.13
         with:
           # For testing, use TestPyPI
-          # repository-url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
           skip-existing: true
           verbose: true
