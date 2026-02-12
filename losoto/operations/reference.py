@@ -34,9 +34,10 @@ def run( soltab, refAnt='', refDir=''):
         logging.error('Reference antenna '+refAnt+' not found.')
         return 1
 
-    if not refDir in soltab.getAxisValues('dir', ignoreSelection = True) and refDir != '':
-        logging.error('Reference direction '+refDir+' not found.')
-        return 1
+    if refDir != '':
+        if not refDir in soltab.getAxisValues('dir', ignoreSelection = True):
+            logging.error('Reference direction '+refDir+' not found.')
+            return 1
 
     if refDir != '' and refAnt != '':
         vals = soltab.getValues(retAxesVals=False, refAnt=refAnt, refDir=refDir)
