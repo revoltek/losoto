@@ -17,6 +17,7 @@ parser.add_argument('h5parmFiles', nargs='+', help='List of h5parms')
 parser.add_argument('--insolset', '-s', default='sol000', dest='insolset', help='Input solset name [default: sol000]')
 parser.add_argument('--outsolset', '-u', default='sol000', dest='outsolset', help='Output solset name [default: sol000]')
 parser.add_argument('--insoltab', '-t', default=None, dest='insoltab', help='Input soltab name (e.g. tabin000) or comma-separated list of soltab names - if not given use all')
+parser.add_argument('--outsoltab', '-l', default=None, dest='outsoltab', help='Output soltab name (e.g. tabout000)')
 parser.add_argument('--outh5parm', '-o', default='output.h5', dest='outh5parm', help='Output h5parm name [default: output.h5]')
 parser.add_argument('--verbose', '-V', '-v', default=False, action='store_true', help='Go Vebose! (default=False)')
 parser.add_argument('--squeeze', '-q', default=False, action='store_true', help='Remove all axes with a length of 1 (default=False)')
@@ -145,7 +146,7 @@ for insoltab in insoltabs:
 
     logging.info('Writing output...')
     solsetOutName = args.outsolset
-    soltabOutName = insoltab
+    soltabOutName = outsoltab or insoltab
 
     # create solset (and add all antennas and directions of other solsets)
     if solsetOutName in h5Out.getSolsetNames():
