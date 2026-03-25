@@ -146,7 +146,7 @@ for insoltab in insoltabs:
 
     logging.info('Writing output...')
     solsetOutName = args.outsolset
-    soltabOutName = outsoltab or insoltab
+    soltabOutName = args.outsoltab or insoltab
 
     # create solset (and add all antennas and directions of other solsets)
     if solsetOutName in h5Out.getSolsetNames():
