@@ -1285,6 +1285,17 @@ class Soltab( object ):
                     refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                     dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
+                    if 'pol' in self.getAxesNames() and not weight:
+                        ref_pol = False
+                        if 'XX' in self.getAxisValues('pol'): ref_pol = 'XX'
+                        elif 'RR' in self.getAxisValues('pol'): ref_pol = 'RR'
+                        logging.warning(f'Detected ref pol {ref_pol}')
+                        # reference to XX/RR only:
+                        if ref_pol:
+                            polAxis = self.getAxesNames().index('pol')
+                            refpolidx = list(self.getAxisValues('pol')).index(ref_pol) # most likely 0
+                            dataValsRef_polref = result = np.take(dataValsRef, [refpolidx], axis=polAxis)
+                            dataValsRef =  np.repeat(dataValsRef_polref, axis=polAxis, repeats=len(self.getAxisValues('pol')))
                     if weight:
                         dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                     else:
@@ -1470,7 +1481,7 @@ class Soltab( object ):
 
     def autoRefAnt(self):
         """
-        Get the least flagged antennas usign the 10 closest to the array centre
+        Get the least flagged antennas usign (up to) the 10 closest to the array centre
         """
         if self.cacheAutoRefAnt:
             return self.cacheAutoRefAnt
@@ -1488,11 +1499,12 @@ class Soltab( object ):
         # count of good datapoints
         nonflagged = np.count_nonzero(weights, axis=tuple([i for i in range(len(self.getAxesNames())) if i != antAxis]))
 
-        # get 10 closest antennas to the centroid
+        # get up to 10 closest antennas to the centroid
         usable_ants = self.getAxisValues('ant', ignoreSelection=True)
         dists_from_centroid = self.getSolset().getAntDist(ant_subset=usable_ants)
         dists =  np.array([dists_from_centroid[_] for _ in usable_ants])
-        idxCentralAnts = np.argpartition(dists, 10)[:10]
+        no_ants = min([10,len(dists)])
+        idxCentralAnts = np.argpartition(dists, no_ants)[:no_ants]
 
         autoRefAnt = usable_ants[idxCentralAnts][ np.argmax(nonflagged[idxCentralAnts]) ]
         logging.info('Auto-selected reference antenna: %s' % autoRefAnt)
