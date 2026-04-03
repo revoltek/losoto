@@ -41,6 +41,27 @@ def run( soltab, dataVal=-999. ):
 
     if dataVal == -999.:
         if solType == 'amplitude':
+            axesNames = soltab.getAxesNames()
+            # special case full-Jones matrix
+            if 'pol' in axesNames:
+                polAxis = axesNames.index('pol')
+                if soltab.val.shape[polAxis] == 4: # assume four dimensions == full Jones
+                    logging.info("Detected full-Jones amplitudes")
+                    val, axesval = soltab.getValues()
+                    pols = axesval['pol']
+                    # iterate polarizations and set to one/zero depending on diagonal/off-diagonal
+                    for i, pol in enumerate(pols):
+                        # Build a slicing tuple
+                        slicer = [slice(None)] * val.ndim
+                        slicer[polAxis] = i # in the polarization dimension, pick the i-th entry
+                        resetval = 1. if pol in ['XX', 'YY', 'RR', 'LL'] else 0.
+                        # logging.info(f"Reset pol {pol} to {resetval}")
+                        val[tuple(slicer)] = resetval
+                    print(val.shape)
+                    soltab.setValues(val)
+                    soltab.addHistory('RESET')
+                    return 0
+
             dataVal = 1.
         else:
             dataVal = 0.
