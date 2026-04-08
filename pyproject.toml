@@ -17,7 +17,7 @@ dependencies = [
     "matplotlib",
     "numpy",
     "progressbar",
-    "python-casacore>=3.0",
+#    "python-casacore>=3.0",
     "scipy",
     "tables>=3.4"
 ]
