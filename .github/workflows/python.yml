@@ -29,13 +29,17 @@ jobs:
       #   with:
       #     coverageFile: coverage.xml
       #     token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Code Coverage Summary Report
-        uses: irongut/CodeCoverageSummary@v1.3.0
+      # - name: Code Coverage Summary Report
+      #   uses: irongut/CodeCoverageSummary@v1.3.0
+      #   with:
+      #     filename: coverage.xml
+      #     badge: true
+      #     format: markdown
+      #     output: both
+      - name: Get Test Coverage
+        uses: insightsengineering/coverage-action@v3
         with:
-          filename: coverage.xml
-          badge: true
-          format: markdown
-          output: both
+          path: ./cobertura.xml
 
       # - name: Run tests
       #   run: |
