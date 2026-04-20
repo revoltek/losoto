@@ -36,10 +36,10 @@ jobs:
       #     badge: true
       #     format: markdown
       #     output: both
-      # - name: Get Test Coverage
-      #   uses: insightsengineering/coverage-action@v3
-      #   with:
-      #     path: ./cobertura.xml
+      - name: Get Test Coverage
+        uses: insightsengineering/coverage-action@v3.0.3
+        # with:
+        #   path: ./cobertura.xml
 
       # - name: Run tests
       #   run: |
