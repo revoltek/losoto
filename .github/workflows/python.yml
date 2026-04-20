@@ -39,8 +39,12 @@ jobs:
       - name: Get Test Coverage
         uses: insightsengineering/coverage-action@v3.0.2
         with:
-          # path: ./cobertura.xml
+          path: coverage.xml
           publish: true
+          diff: true
+          diff-branch: master
+          togglable-report: true
+          # exclude-detailed-coverage: true
 
       # - name: Run tests
       #   run: |
