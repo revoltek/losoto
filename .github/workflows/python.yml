@@ -29,13 +29,6 @@ jobs:
       #   with:
       #     coverageFile: coverage.xml
       #     token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Code Coverage Summary Report
-      #   uses: irongut/CodeCoverageSummary@v1.3.0
-      #   with:
-      #     filename: coverage.xml
-      #     badge: true
-      #     format: markdown
-      #     output: both
       - name: Get Test Coverage
         uses: insightsengineering/coverage-action@v3
         with:
@@ -44,13 +37,3 @@ jobs:
           diff: true
           diff-branch: master
           togglable-report: true
-          # exclude-detailed-coverage: true
-
-      # - name: Run tests
-      #   run: |
-      #     pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=losoto tests/ | tee pytest-coverage.txt
-      # - name: Report test coverage
-      #   uses: MishaKav/pytest-coverage-comment@main
-      #   with:
-      #     pytest-coverage-path: ./pytest-coverage.txt
-      #     junitxml-path: ./pytest.xml
