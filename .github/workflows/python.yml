@@ -31,6 +31,8 @@ jobs:
       #     token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Test Coverage
         uses: insightsengineering/coverage-action@v2
+        # Coverage should be the same for each python version, just pick one
+        if: matrix.python-version == '3.12'
         with:
           path: coverage.xml
           publish: true
