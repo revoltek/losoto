@@ -30,7 +30,7 @@ jobs:
       #     coverageFile: coverage.xml
       #     token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get Test Coverage
-        uses: insightsengineering/coverage-action@v3
+        uses: insightsengineering/coverage-action@v2
         with:
           path: coverage.xml
           publish: true
