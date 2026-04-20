@@ -37,7 +37,7 @@ jobs:
       #     format: markdown
       #     output: both
       - name: Get Test Coverage
-        uses: insightsengineering/coverage-action@v3.0.3
+        uses: insightsengineering/coverage-action@v2
         # with:
         #   path: ./cobertura.xml
 
