@@ -38,8 +38,9 @@ jobs:
       #     output: both
       - name: Get Test Coverage
         uses: insightsengineering/coverage-action@v3.0.2
-        # with:
-        #   path: ./cobertura.xml
+        with:
+          # path: ./cobertura.xml
+          publish: true
 
       # - name: Run tests
       #   run: |
