@@ -13,26 +13,29 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
       - name: Install
         run: pip install .[test]
       - name: Test
         run: tox
         continue-on-error: true
-      - name: Get Test Coverage
-        uses: orgoro/coverage@v3.2
-        with:
-          coverageFile: coverage.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Run tests
-      #   run: |
-      #     pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=losoto tests/ | tee pytest-coverage.txt
-      # - name: Report test coverage
-      #   uses: MishaKav/pytest-coverage-comment@main
+      # - name: Get Test Coverage
+      #   uses: orgoro/coverage@v3.2
       #   with:
-      #     pytest-coverage-path: ./pytest-coverage.txt
-      #     junitxml-path: ./pytest.xml
+      #     coverageFile: coverage.xml
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Test Coverage
+        uses: insightsengineering/coverage-action@v2
+        # Coverage should be the same for each python version, just pick one
+        if: matrix.python-version == '3.12'
+        with:
+          path: coverage.xml
+          publish: true
+          diff: true
+          diff-branch: master
+          togglable-report: true

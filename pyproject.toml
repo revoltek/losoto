@@ -72,6 +72,5 @@ deps = [
     "pytest-cov",
 ]
 commands = [
-    # ["python", "{toxinidir}/tools/losoto_test.py"],
     ["python", "-m", "pytest", "--cov-report", "term", "--cov-report", "xml", "--cov-report", "html", "--cov=losoto", "tests/{posargs}"]
 ]

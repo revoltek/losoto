@@ -9,7 +9,7 @@ jobs:
     name: Build package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # Needed for `setuptools-scm`
           fetch-depth: 0
@@ -20,7 +20,7 @@ jobs:
       - name: Build wheel
         run: pipx run build --wheel
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: dist
 
@@ -42,11 +42,11 @@ jobs:
     # Ref: https://docs.github.com/en/webhooks/webhook-events-and-payloads?actionType=released#release
     if: github.event_name == 'release' && github.event.action == 'released'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: dist  # put artifacts where next action expects them to be
           merge-multiple: true
-      - uses: pypa/gh-action-pypi-publish@release/v1.13
+      - uses: pypa/gh-action-pypi-publish@release/v1.14
         with:
           # For testing, use TestPyPI
           # repository-url: https://test.pypi.org/legacy/
