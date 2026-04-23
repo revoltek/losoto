@@ -1200,7 +1200,7 @@ class Soltab( object ):
 
 
     @deprecated_alias(reference='refAnt') # Add alias for backwards compatibility
-    def getValues(self, retAxesVals=True, weight=False, refAnt=None, refDir=None):
+    def getValues(self, retAxesVals=True, weight=False, refAnt=None, refDir=None, preservePol=False):
         """
         Creates a simple matrix of values. Fetching a copy of all selected rows into memory.
 
@@ -1219,6 +1219,9 @@ class Soltab( object ):
         refDir : str, optional
             In case of phase or rotation solutions, reference to this Direction. By default no reference.
             If "center", reference to the central direction.
+        preservePol : bool, optional.
+            If True: When referencing a diagonal matrix, preserve the global X-Y offset by referencing only to X.
+            If False (default): reference both polarizations independently.
 
         Returns
         -------
@@ -1285,17 +1288,19 @@ class Soltab( object ):
                     refSelection[antAxis] = [self.getAxisValues('ant', ignoreSelection=True).tolist().index(refAnt)]
                     dataValsRef = self._applyAdvSelection(dataValsRef, refSelection)
 
+                    # for fullJones, or if preservePol is given, reference only to X/R polarization to preserve global X-Y delay
                     if 'pol' in self.getAxesNames() and not weight:
-                        ref_pol = False
-                        if 'XX' in self.getAxisValues('pol'): ref_pol = 'XX'
-                        elif 'RR' in self.getAxisValues('pol'): ref_pol = 'RR'
-                        logging.warning(f'Detected ref pol {ref_pol}')
-                        # reference to XX/RR only:
-                        if ref_pol:
-                            polAxis = self.getAxesNames().index('pol')
-                            refpolidx = list(self.getAxisValues('pol')).index(ref_pol) # most likely 0
-                            dataValsRef_polref = result = np.take(dataValsRef, [refpolidx], axis=polAxis)
-                            dataValsRef =  np.repeat(dataValsRef_polref, axis=polAxis, repeats=len(self.getAxisValues('pol')))
+                        if len(self.getAxisValues('pol')) == 4 or preservePol:
+                            ref_pol = False
+                            if 'XX' in self.getAxisValues('pol'): ref_pol = 'XX'
+                            elif 'RR' in self.getAxisValues('pol'): ref_pol = 'RR'
+                            logging.warning(f'Detected ref pol {ref_pol}')
+                            # reference to XX/RR only:
+                            if ref_pol:
+                                polAxis = self.getAxesNames().index('pol')
+                                refpolidx = list(self.getAxisValues('pol')).index(ref_pol) # most likely 0
+                                dataValsRef_polref = result = np.take(dataValsRef, [refpolidx], axis=polAxis)
+                                dataValsRef =  np.repeat(dataValsRef_polref, axis=polAxis, repeats=len(self.getAxisValues('pol')))
                     if weight:
                         dataVals[ np.repeat(dataValsRef, axis=antAxis, repeats=len(self.getAxisValues('ant'))) == 0. ] = 0.
                     else:

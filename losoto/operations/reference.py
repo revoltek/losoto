@@ -9,12 +9,13 @@ logging.debug('Loading REFERENCE module.')
 def _run_parser(soltab, parser, step):
     refAnt = parser.getstr( step, 'refAnt', '' )
     refDir = parser.getstr( step, 'refDir', '' )
+    preservePol = parser.getbool( step, 'preservePol', False)
 
-    parser.checkSpelling( step, soltab, ['refAnt','refDir'])
-    return run(soltab, refAnt, refDir)
+    parser.checkSpelling( step, soltab, ['refAnt','refDir','preservePol'])
+    return run(soltab, refAnt, refDir, preservePol)
 
 
-def run( soltab, refAnt='', refDir=''):
+def run( soltab, refAnt='', refDir='', preservePol=False):
     """
     Reference to an antenna
 
@@ -24,6 +25,8 @@ def run( soltab, refAnt='', refDir=''):
         Reference antenna for phases. Empty string does not change phases. Default: ''.
     refDir : str, optional
         Reference direction for phases. Empty string does not change phases. Default: ''.
+    preservePol : bool, optional
+        For fullJones, or if preservePol is given, reference only to X/R polarization to preserve global X-Y delay
     """
 
     if not soltab.getType() in ['phase', 'scalarphase', 'rotation', 'tec', 'clock', 'tec3rd', 'rotationmeasure']:
@@ -40,16 +43,16 @@ def run( soltab, refAnt='', refDir=''):
             return 1
 
     if refDir != '' and refAnt != '':
-        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt, refDir=refDir)
+        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt, refDir=refDir, preservePol=preservePol)
 
     elif refDir != '':
-        vals = soltab.getValues(retAxesVals=False, refDir=refDir)
+        vals = soltab.getValues(retAxesVals=False, refDir=refDir, preservePol=preservePol)
 
     elif refAnt != '':
-        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt)
+        vals = soltab.getValues(retAxesVals=False, refAnt=refAnt, preservePol=preservePol)
 
     soltab.setValues(vals)
 
-    if refAnt != '': soltab.addHistory('REFERENCED (to antenna: %s)' % (refAnt))
+    if refAnt != '': soltab.addHistory('REFERENCED (to antenna: %s, preservePol: %s)' % (refAnt, preservePol))
     if refDir != '': soltab.addHistory('REFERENCED (to direction: %s)' % (refDir))
     return 0
