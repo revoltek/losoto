@@ -13,6 +13,8 @@ maintainers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "astropy",
+    "lofar-clocktec>=1.0.2",
     "lofar-parameterset>=1.1",
     "matplotlib",
     "numpy",
