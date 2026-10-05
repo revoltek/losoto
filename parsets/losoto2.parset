@@ -34,12 +34,25 @@ axes = [time] # axis along which to calculate the median
 log = True # clip is done in log10 space
 
 [clocktec]
-operation = CLOCKTEC
-flagBadChannels = True # detect and remove bad channel before fitting
-flagCut = 1.5
-chi2cut = 30000.
+operation = CLOCKTEC # clock/TEC separation with the lofar_clocktec package (pip install lofar-clocktec)
+clocksoltabOut = clock000 # output clock table name (in s), same solset
+tecsoltabOut = tec000 # output TEC table name (in TECU), same solset
+offsetsoltabOut = phase_offset000 # output phase offset table name (in rad), same solset
+tec3rdsoltabOut = tec3rd000 # output 3rd order TEC table name, written only if numParams = 4
+refAnt = '' # reference antenna, if '' use CS002 (or ST001, or the first antenna)
+numParams = 0 # 2: clock+TEC, 3: +phase offset, 4: +3rd order TEC (< 40 MHz), 0: automatic
 combinePol = False # find a combined polarization solution
-fitOffset = False
+circular = False # circular polarization with FR not removed (only used with combinePol)
+weightMode = kappa # channel weights: kappa (Von Mises concentration, robust) or complex
+initMode = robust # initialisation: robust (brute-force phasor search) or linear (faster)
+initWithPrevious = True # initialise each timestep with the previous solution (much faster)
+removeSteps = False # correct clock/TEC ambiguity jumps between timesteps (recommended for HBA)
+spatialFit = False # fit a spatial TEC polynomial to fix ambiguities and derive phase offsets
+allowPiWraps = False # allow pi phase jumps (e.g. international stations)
+smoothSolutions = False # smooth clock and TEC in time after fitting
+lofar2Mode = True # restrict delays to < 20 ns (LOFAR2), set False for LOFAR1 data
+finalPh0Fit = 0 # experimental constant phase offset fit: 0 off, 1 ph0, 2 ph0 and clock
+logFile = '' # write the detailed lofar_clocktec log to this file
 
 [crossdaly]
 operation = CROSSDELAY

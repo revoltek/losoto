@@ -30,12 +30,25 @@ LoSoTo.Steps.clip.ClipLevel = 5 # factor above/below median at which to clip
 LoSoTo.Steps.clip.Axes = [time] # axis along which to calculate the median
 LoSoTo.Steps.clip.Log = True # clip is done in log space
 
-LoSoTo.Steps.clocktec.Operation = CLOCKTEC
-LoSoTo.Steps.clocktec.FlagBadChannels = True # detect and remove bad channel before fitting
-LoSoTo.Steps.clocktec.FlagCut = 1.5
-LoSoTo.Steps.clocktec.Chi2cut = 30000.
+LoSoTo.Steps.clocktec.Operation = CLOCKTEC # clock/TEC separation with the lofar_clocktec package (pip install lofar-clocktec)
+LoSoTo.Steps.clocktec.ClocksoltabOut = clock000 # output clock table name (in s), same solset
+LoSoTo.Steps.clocktec.TecsoltabOut = tec000 # output TEC table name (in TECU), same solset
+LoSoTo.Steps.clocktec.OffsetsoltabOut = phase_offset000 # output phase offset table name (in rad), same solset
+LoSoTo.Steps.clocktec.Tec3rdsoltabOut = tec3rd000 # output 3rd order TEC table name, written only if numParams = 4
+LoSoTo.Steps.clocktec.RefAnt = '' # reference antenna, if '' use CS002 (or ST001, or the first antenna)
+LoSoTo.Steps.clocktec.NumParams = 0 # 2: clock+TEC, 3: +phase offset, 4: +3rd order TEC (< 40 MHz), 0: automatic
 LoSoTo.Steps.clocktec.CombinePol = False # find a combined polarization solution
-LoSoTo.Steps.clocktec.FitOffset = False
+LoSoTo.Steps.clocktec.Circular = False # circular polarization with FR not removed (only used with combinePol)
+LoSoTo.Steps.clocktec.WeightMode = kappa # channel weights: kappa (Von Mises concentration, robust) or complex
+LoSoTo.Steps.clocktec.InitMode = robust # initialisation: robust (brute-force phasor search) or linear (faster)
+LoSoTo.Steps.clocktec.InitWithPrevious = True # initialise each timestep with the previous solution (much faster)
+LoSoTo.Steps.clocktec.RemoveSteps = False # correct clock/TEC ambiguity jumps between timesteps (recommended for HBA)
+LoSoTo.Steps.clocktec.SpatialFit = False # fit a spatial TEC polynomial to fix ambiguities and derive phase offsets
+LoSoTo.Steps.clocktec.AllowPiWraps = False # allow pi phase jumps (e.g. international stations)
+LoSoTo.Steps.clocktec.SmoothSolutions = False # smooth clock and TEC in time after fitting
+LoSoTo.Steps.clocktec.Lofar2Mode = True # restrict delays to < 20 ns (LOFAR2), set False for LOFAR1 data
+LoSoTo.Steps.clocktec.FinalPh0Fit = 0 # experimental constant phase offset fit: 0 off, 1 ph0, 2 ph0 and clock
+LoSoTo.Steps.clocktec.LogFile = '' # write the detailed lofar_clocktec log to this file
 
 LoSoTo.Steps.crossdelay.Operation = CROSSDELAY
 LoSoTo.Steps.crossdelay.OutTable = phasediff # output table name, same solset
