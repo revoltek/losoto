@@ -45,14 +45,30 @@ def _run_parser(soltab, parser, step):
                 finalPh0Fit=finalPh0Fit, logFile=logFile )
 
 
-def _select_ref_station(stations, refAnt):
-    """Return the index of the reference station."""
+def _select_ref_station(soltab, stations, refAnt):
+    """
+    Return the index of the reference station.
+
+    With refAnt '' or 'auto' the least flagged of the (up to) 10 antennas closest to the array
+    centre is used (Soltab.autoRefAnt). If that fails (e.g. no antenna positions in the solset,
+    10 or fewer antennas, or the chosen antenna is not selected), fall back to CS002, ST001 or
+    the first antenna.
+    """
     stations = list(stations)
-    if refAnt:
+    if refAnt and refAnt.lower() != 'auto':
         if refAnt not in stations:
             raise ValueError('Reference antenna %s not found in the selected antennas.' % refAnt)
         return stations.index(refAnt)
-    # default: CS002 (centre of the superterp), otherwise the superterp station, otherwise the first one
+
+    try:
+        autoAnt = str(soltab.autoRefAnt())
+        if autoAnt in stations:
+            return stations.index(autoAnt)
+        logging.warning('Auto-selected reference antenna %s is not in the selected antennas.' % autoAnt)
+    except Exception as e:
+        logging.warning('Automatic reference antenna selection failed (%s).' % e)
+
+    # fallback: CS002 (centre of the superterp), otherwise the superterp station, otherwise the first one
     for prefix in ['CS002', 'ST001']:
         for i, st in enumerate(stations):
             if st.startswith(prefix):
@@ -116,7 +132,8 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
 
     refAnt : str, optional
         Reference antenna. All phases are referenced to it before fitting, so its solutions are zero.
-        By default the first CS002 station (or ST001, or the first antenna).
+        By default '' (same as 'auto'): the least flagged of the (up to) 10 antennas closest to the
+        array centre. If that is not possible, the first CS002 station (or ST001, or the first antenna).
 
     numParams : int, optional
         Number of fitted parameters: 2 (clock + TEC), 3 (+ phase offset), 4 (+ 3rd order TEC,
@@ -213,7 +230,7 @@ def run( soltab, tecsoltabOut='tec000', clocksoltabOut='clock000', offsetsoltabO
         return 1
 
     try:
-        refIdx = _select_ref_station(stations, refAnt)
+        refIdx = _select_ref_station(soltab, stations, refAnt)
     except ValueError as e:
         logging.error(str(e))
         return 1
